@@ -63,6 +63,7 @@ src/
 - **Efficient**: Minimize re-renders. Use `useMemo` and `useCallback` appropriately (but pragmatically).
 - **Pragmatic**: Don't over-engineer. Solve the problem at hand with the simplest clean solution.
 - **DRY (Don't Repeat Yourself)**: Extract repeated logic into hooks or components. Use constants for repeated values (e.g. language options).
+- **Error Handling**: **NEVER** suppress errors with a simple `console.error` in a catch block. All errors must be exposed to the user at the UI level (e.g., via toast notifications, inline error messages, or alert dialogs). Failures must be visible.
 
 ## 7. Living Document Policy
 This file (`gemini.md`) is a **living document**.
