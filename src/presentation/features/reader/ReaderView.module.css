@@ -1,0 +1,79 @@
+.container {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-lg) 0;
+}
+
+.textArea {
+    font-size: 1.25rem;
+    line-height: 1.8;
+    color: var(--color-text-primary);
+    white-space: pre-wrap;
+    padding: var(--spacing-lg);
+    background: var(--glass-bg);
+    /* Glassmorphic background if desired, or transparent */
+    border-radius: var(--radius-md);
+}
+
+.token {
+    border-radius: 4px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.interactive {
+    cursor: pointer;
+}
+
+.interactive:hover {
+    background-color: var(--color-highlight);
+    color: var(--color-accent);
+}
+
+.selected {
+    background-color: var(--color-accent) !important;
+    color: var(--color-bg-primary) !important;
+}
+
+.hoverPopup {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    margin-bottom: 4px;
+}
+
+.selectionPopup {
+    position: sticky;
+    top: 1rem;
+    z-index: 20;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-accent);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    margin-bottom: var(--spacing-md);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
