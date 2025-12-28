@@ -61,3 +61,8 @@ src/
 - **Scalable**: Design components to be reusable. Isolate state where it belongs.
 - **Efficient**: Minimize re-renders. Use `useMemo` and `useCallback` appropriately (but pragmatically).
 - **Pragmatic**: Don't over-engineer. Solve the problem at hand with the simplest clean solution.
+
+## 7. Living Document Policy
+This file (`gemini.md`) is a **living document**.
+- **Must be Updated**: It should be modified by the AI assistant as the project evolves, architecture changes, or new patterns are adopted.
+- **Source of Truth**: Always consult this file first. Re-read and update it after significant modifications to ensure it reflects the current state of the codebase.
