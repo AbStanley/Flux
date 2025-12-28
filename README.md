@@ -29,12 +29,10 @@ We follow **Clean Architecture** principles with a strict **Presentation-Domain-
 
 ### Features
 - **Clean, Premium UI**: Glassmorphism design, smooth transitions, distraction-free reading.
-- **Local AI Integration**: Seamless connection to local Ollama models (Llama2, Mistral, etc.).
-- **Smart Translation**:
-    - Single word hover translation.
-    - Multi-word grouped selection translation.
-    - Context-aware processing.
-- **Language Controls**: Top-level controls to set Source (Auto/Manual) and Target languages.
+- **Unified Design System**: Built with **shadcn/ui** and **Tailwind CSS** for consistency and accessibility.
+- **Local AI Integration**: Seamless connection to local Ollama models.
+- **Smart Translation**: Hover and selection-based translations.
+- **Language Controls**: Top-level source/target language selection.
 
 ### Source Tree
 ```
