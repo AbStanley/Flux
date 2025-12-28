@@ -33,37 +33,46 @@ export class OllamaService implements IAIService {
         }
     }
 
-    async translateText(text: string, targetLanguage: string = 'en', context?: string): Promise<string> {
+    async translateText(text: string, targetLanguage: string = 'en', context?: string, sourceLanguage?: string): Promise<string> {
         // Ollama translation usually requires a specific prompt engineering or a translation model.
-        // For MVP, we'll use a prompt.
-        let prompt = `You are a precise translator assistant. Translate the following to ${targetLanguage}.
-Rules:
-1. Translate ONLY the "Target Text".
-2. The "Target Text" is a specific fragment extracted from the "Context".
-3. Provide the translation for that fragment primarily.
-4. If the fragment is an idiom or phrase, translate its meaning in that context.
-5. If the fragment is a single word, provide its specific meaning in that context.
-6. DO NOT output the whole sentence.
-7. DO NOT be chatty. Just return the translated text.
+        // DEBUGGING: Log parameters
+        console.log(`[OllamaService] translateText`, { text, target: targetLanguage, source: sourceLanguage });
+
+        const fromLang = (sourceLanguage && sourceLanguage !== 'Auto') ? `from ${sourceLanguage} ` : '';
+
+        // Dictionary-style prompt to force isolation
+        let prompt = `Role: Dictionary and Translation Engine.
+Task: Provide the meaning of a specific text segment ${fromLang}into ${targetLanguage}.
+
+Input Data:
+- Full Sentence (Context): "${context || 'None'}"
+- Segment to Translate: "${text}"
+
+Instructions:
+1. Look at the "Segment to Translate".
+2. Identify its meaning within the "Full Sentence".
+3. Negation Check: If the segment itself does not contain "no"/"not", the translation MUST be positive.
+4. Preposition Check: If the segment does not include a preposition, do not add one.
+5. Return ONLY the translation of the segment.
 
 Examples:
-Context: "El gato negro salta la valla"
-Target Text: "El gato"
-Output: The cat
+Input: Context="yo no veo donde estas", Segment="estas"
+Output: you are
 
-Context: "No creo que sea verdad lo que dices"
-Target Text: "que sea"
-Output: that it is
+Input: Context="yo no veo donde estas", Segment="donde estas"
+Output: where you are
 
-Context: "Por favor dame el pan"
-Target Text: "dame"
-Output: give me
+Input: Context="para todos ustedes", Segment="todos ustedes"
+Output: all of you
 
-Context: "She is running a business"
-Target Text: "running"
-Output: managing
+Input: Context="hasta aqui ya no se que hacer", Segment="se que hacer"
+Output: know what to do
 
-Strictly output only the translation.`;
+Input: Context="I like to run", Segment="run"
+Output: corrrer
+
+Required Output:
+(Just the translation text)`;
 
         if (context) {
             prompt += `\n\nContext: "${context}"`;

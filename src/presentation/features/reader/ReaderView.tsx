@@ -15,6 +15,9 @@ export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
     // Map group key "start-end" to translation
     const [selectionTranslations, setSelectionTranslations] = useState<Map<string, string>>(new Map());
 
+    const [sourceLang, setSourceLang] = useState<string>('Auto');
+    const [targetLang, setTargetLang] = useState<string>('English');
+
     // Tokenize text on change, preserving whitespace
     useEffect(() => {
         // Split by whitespace but keep delimiters.
@@ -173,6 +176,32 @@ export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
 
     return (
         <div className={styles.container}>
+            <div className={styles.controls}>
+                <label>
+                    Source:
+                    <select value={sourceLang} onChange={(e) => setSourceLang(e.target.value)}>
+                        <option value="Auto">Auto Detect</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="English">English</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Japanese">Japanese</option>
+                    </select>
+                </label>
+                <label>
+                    Target:
+                    <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}>
+                        <option value="English">English</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Japanese">Japanese</option>
+                    </select>
+                </label>
+            </div>
+
             <div className={styles.textArea}>
                 {tokens.map((token, index) => {
                     const isSelected = selectedIndices.has(index);

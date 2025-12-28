@@ -12,7 +12,7 @@ export interface IAIService {
      * @param targetLanguage The language code (e.g., 'en', 'es', 'fr'). Defaults to user preference or 'en'.
      * @returns The translated text.
      */
-    translateText(text: string, targetLanguage?: string, context?: string): Promise<string>;
+    translateText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string): Promise<string>;
 
     /**
      * Checks if the service is available/healthy.
