@@ -1,73 +1,107 @@
-# React + TypeScript + Vite
+# Reader Helper
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A premium reading assistant application built with React, TypeScript, and Ollama.
 
-Currently, two official plugins are available:
+## 📖 Current Modifications (v1.1)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Logic
+The application core logic revolves around text tokenization and interaction.
+1. **Input**: User pastes text or generates it via AI.
+2. **Processing**: Text is split into tokens (words/whitespace), preserving structure.
+3. **Interaction**:
+    - **Click**: Users click words to add them to a selection set. Contiguous selections form groupings.
+    - **Hover**: Users hover over words to get instant "dictionary-style" translations.
+4. **Translation**:
+    - **Context-Aware**: Translations use surrounding context (sentences) to ensure accuracy.
+    - **Target Language**: Users select a target language (e.g., Spanish), and all AI prompts are tailored to this target.
+    - **Provider**: Defaults to **Ollama** (Local LLM) for privacy and zero-cost, with a fallback Mock mode.
 
-## React Compiler
+### Architecture
+We follow **Clean Architecture** principles with a strict **Presentation-Domain-Infrastructure** separation.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Presentation Layer** (`src/presentation`):
+    - **Components**: Pure UI elements (e.g., `ReaderView`, `ControlPanel`).
+    - **State**: React Context (`ServiceContext`) handles dependency injection. `App.tsx` manages high-level application state (Source/Target languages).
+- **Infrastructure Layer** (`src/infrastructure`):
+    - **AI Services**: Concrete implementations of `IAIService`.
+        - `OllamaService`: Connects to local Ollama instance.
+- **Dependency Injection**: Services are injected via `ServiceContext`, allowing easy swapping (e.g., Mock vs. Live).
 
-## Expanding the ESLint configuration
+### Features
+- **Clean, Premium UI**: Glassmorphism design, smooth transitions, distraction-free reading.
+- **Local AI Integration**: Seamless connection to local Ollama models (Llama2, Mistral, etc.).
+- **Smart Translation**:
+    - Single word hover translation.
+    - Multi-word grouped selection translation.
+    - Context-aware processing.
+- **Language Controls**: Top-level controls to set Source (Auto/Manual) and Target languages.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Source Tree
+```
+src/
+├── core/                  # Interfaces & Models
+│   └── interfaces/        # IAIService contract
+├── infrastructure/        # External Communication
+│   └── ai/                # OllamaService & MockAIService
+├── presentation/          # UI Layer
+│   ├── components/        # Shared components
+│   ├── contexts/          # DI Container (ServiceContext)
+│   ├── features/
+│   │   ├── controls/      # ControlPanel (Input/Settings)
+│   │   └── reader/        # ReaderView (Main reading area)
+│   ├── App.tsx            # Root & Global State
+│   └── main.tsx           # Entry Point
+└── styles/                # Global CSS & Variables
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Diagrams
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+#### Core Logic Flow
+```mermaid
+graph TD
+    User[User] -->|Input Text| CP[Control Panel]
+    User -->|Select Target Lang| CP
+    CP -->|Set Global State| App[App State]
+    App -->|Props| RV[Reader View]
+    
+    subgraph Reader Interaction
+        RV -->|Tokenize| Tokens[Tokens Array]
+        User -->|Click Word| Select[Selection Logic]
+        User -->|Hover Word| Hover[Hover Logic]
+        
+        Select -->|Form Groups| Grouping[Group Logic]
+        Grouping -->|Request Translation| Service[AI Service]
+    end
+    
+    Service -->|Ollama API| LLM[Local LLM]
+    LLM -->|Translation| Service
+    Service -->|Update UI| RV
 ```
+
+#### Architecture Layers
+```mermaid
+classDiagram
+    class Presentation {
+        +App
+        +ReaderView
+        +ControlPanel
+    }
+    class Domain {
+        <<interface>>
+        +IAIService
+    }
+    class Infrastructure {
+        +OllamaService
+        +MockAIService
+    }
+    
+    Presentation ..> Domain : Depends On
+    Infrastructure --|> Domain : Implements
+    Presentation --> Infrastructure : Injected via Context
+```
+
+## 🛠 Setup & Usage
+1. **Prerequisites**: [Ollama](https://ollama.ai/) installed and running (`ollama serve`).
+2. **Install**: `npm install`
+3. **Run**: `npm run dev`
+4. **Build**: `npm run build`

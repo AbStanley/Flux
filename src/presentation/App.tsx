@@ -6,6 +6,8 @@ import styles from './App.module.css';
 
 function App() {
   const [text, setText] = useState('');
+  const [sourceLang, setSourceLang] = useState<string>('Auto');
+  const [targetLang, setTargetLang] = useState<string>('English');
 
   return (
     <ServiceProvider>
@@ -15,8 +17,18 @@ function App() {
         </header>
 
         <main className={styles.main}>
-          <ControlPanel onTextChange={setText} />
-          {text && <ReaderView text={text} />}
+          <ControlPanel
+            onTextChange={setText}
+            sourceLang={sourceLang}
+            targetLang={targetLang}
+            setSourceLang={setSourceLang}
+            setTargetLang={setTargetLang}
+          />
+          {text && <ReaderView
+            text={text}
+            sourceLang={sourceLang}
+            targetLang={targetLang}
+          />}
         </main>
       </div>
     </ServiceProvider>

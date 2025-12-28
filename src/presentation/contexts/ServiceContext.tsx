@@ -12,8 +12,8 @@ interface ServiceContextType {
 const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [aiService, setAiService] = useState<IAIService>(new MockAIService());
-    const [currentServiceType, setCurrentServiceType] = useState<'mock' | 'ollama'>('mock');
+    const [aiService, setAiService] = useState<IAIService>(new OllamaService());
+    const [currentServiceType, setCurrentServiceType] = useState<'mock' | 'ollama'>('ollama');
 
     const setServiceType = (type: 'mock' | 'ollama', config?: any) => {
         setCurrentServiceType(type);

@@ -4,9 +4,19 @@ import styles from './ControlPanel.module.css';
 
 interface ControlPanelProps {
     onTextChange: (text: string) => void;
+    sourceLang: string;
+    targetLang: string;
+    setSourceLang: (lang: string) => void;
+    setTargetLang: (lang: string) => void;
 }
 
-export const ControlPanel: React.FC<ControlPanelProps> = ({ onTextChange }) => {
+export const ControlPanel: React.FC<ControlPanelProps> = ({
+    onTextChange,
+    sourceLang,
+    targetLang,
+    setSourceLang,
+    setTargetLang
+}) => {
     const { aiService, setServiceType, currentServiceType } = useServices();
     const [inputText, setInputText] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -25,7 +35,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ onTextChange }) => {
         setIsGenerating(true);
         try {
             const result = await aiService.generateText(
-                "Write a short, interesting story about a robot learning to paint."
+                `Write a short, interesting story in ${targetLang} about a robot learning to paint.`
             );
             setInputText(result);
             onTextChange(result);
@@ -58,34 +68,62 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ onTextChange }) => {
     return (
         <div className={`${styles.panel} glass-panel`}>
             <div className={styles.header}>
-                <h2 className={styles.title}>Reader Input</h2>
-                <div className={styles.controls}>
-                    {currentServiceType === 'ollama' && (
-                        <select
-                            className={styles.select}
-                            style={{ marginRight: '0.5rem' }}
-                            onChange={(e) => setServiceType('ollama', { model: e.target.value })}
-                            defaultValue=""
-                        >
-                            <option value="" disabled>Select Model</option>
-                            {availableModels.length > 0 ? (
-                                availableModels.map(m => <option key={m} value={m}>{m}</option>)
-                            ) : (
-                                <>
-                                    <option value="llama2">llama2 (Default)</option>
-                                    <option value="mistral">mistral</option>
-                                </>
-                            )}
+                <div className={styles.languageControls}>
+                    <div className={styles.selectGroup}>
+                        <label>Source</label>
+                        <select value={sourceLang} onChange={(e) => setSourceLang(e.target.value)}>
+                            <option value="Auto">Auto Detect</option>
+                            <option value="Spanish">Spanish</option>
+                            <option value="English">English</option>
+                            <option value="French">French</option>
+                            <option value="German">German</option>
+                            <option value="Italian">Italian</option>
+                            <option value="Japanese">Japanese</option>
                         </select>
-                    )}
-                    <select
-                        value={currentServiceType}
-                        onChange={(e) => setServiceType(e.target.value as 'mock' | 'ollama')}
-                        className={styles.select}
-                    >
-                        <option value="mock">Mock AI</option>
-                        <option value="ollama">Ollama (Local)</option>
-                    </select>
+                    </div>
+                    <div className={styles.selectGroup}>
+                        <label>Target</label>
+                        <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}>
+                            <option value="English">English</option>
+                            <option value="Spanish">Spanish</option>
+                            <option value="French">French</option>
+                            <option value="German">German</option>
+                            <option value="Italian">Italian</option>
+                            <option value="Japanese">Japanese</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className={styles.headerTop}>
+                    <h2 className={styles.title}>Reader Input</h2>
+                    <div className={styles.controls}>
+                        {currentServiceType === 'ollama' && (
+                            <select
+                                className={styles.select}
+                                style={{ marginRight: '0.5rem' }}
+                                onChange={(e) => setServiceType('ollama', { model: e.target.value })}
+                                defaultValue=""
+                            >
+                                <option value="" disabled>Select Model</option>
+                                {availableModels.length > 0 ? (
+                                    availableModels.map(m => <option key={m} value={m}>{m}</option>)
+                                ) : (
+                                    <>
+                                        <option value="llama2">llama2 (Default)</option>
+                                        <option value="mistral">mistral</option>
+                                    </>
+                                )}
+                            </select>
+                        )}
+                        <select
+                            value={currentServiceType}
+                            onChange={(e) => setServiceType(e.target.value as 'mock' | 'ollama')}
+                            className={styles.select}
+                        >
+                            <option value="mock">Mock AI</option>
+                            <option value="ollama">Ollama (Local)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

@@ -4,9 +4,11 @@ import styles from './ReaderView.module.css';
 
 interface ReaderViewProps {
     text: string;
+    sourceLang: string;
+    targetLang: string;
 }
 
-export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
+export const ReaderView: React.FC<ReaderViewProps> = ({ text, sourceLang, targetLang }) => {
     const { aiService } = useServices();
     const [tokens, setTokens] = useState<string[]>([]);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
@@ -14,9 +16,6 @@ export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
     const [hoverTranslation, setHoverTranslation] = useState<string | null>(null);
     // Map group key "start-end" to translation
     const [selectionTranslations, setSelectionTranslations] = useState<Map<string, string>>(new Map());
-
-    const [sourceLang, setSourceLang] = useState<string>('Auto');
-    const [targetLang, setTargetLang] = useState<string>('English');
 
     // Tokenize text on change, preserving whitespace
     useEffect(() => {
@@ -123,7 +122,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
                 // We should probably strip leading/trailing whitespace for the translation payload, but keep it for display if needed.
                 const cleanText = textToTranslate.trim();
 
-                const result = await aiService.translateText(cleanText, undefined, context);
+                const result = await aiService.translateText(cleanText, targetLang, context, sourceLang);
                 newTranslations.set(key, result);
             } catch (e) {
                 console.error(e);
@@ -146,7 +145,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
         const context = getContextForIndex(index);
 
         try {
-            const result = await aiService.translateText(token, undefined, context);
+            const result = await aiService.translateText(token, targetLang, context, sourceLang);
             if (hoverRef.current === index) {
                 setHoverTranslation(result);
             }
@@ -177,32 +176,6 @@ export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
 
     return (
         <div className={styles.container}>
-            <div className={styles.controls}>
-                <label>
-                    Source:
-                    <select value={sourceLang} onChange={(e) => setSourceLang(e.target.value)}>
-                        <option value="Auto">Auto Detect</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="English">English</option>
-                        <option value="French">French</option>
-                        <option value="German">German</option>
-                        <option value="Italian">Italian</option>
-                        <option value="Japanese">Japanese</option>
-                    </select>
-                </label>
-                <label>
-                    Target:
-                    <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}>
-                        <option value="English">English</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="French">French</option>
-                        <option value="German">German</option>
-                        <option value="Italian">Italian</option>
-                        <option value="Japanese">Japanese</option>
-                    </select>
-                </label>
-            </div>
-
             <div className={styles.textArea}>
                 {tokens.map((token, index) => {
                     const isSelected = selectedIndices.has(index);
@@ -224,7 +197,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
                             style={{ position: 'relative' }}
                         >
                             {/* Selection Translation Popup - Rendered at start of group */}
-                            {isValidAndPresent(groupTranslation) && (
+                            {groupTranslation && (
                                 <span className={styles.selectionPopupValid}>
                                     {groupTranslation}
                                 </span>
@@ -244,6 +217,4 @@ export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
     );
 };
 
-function isValidAndPresent(str: string | undefined): boolean {
-    return !!str;
-}
+

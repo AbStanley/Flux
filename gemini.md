@@ -4,7 +4,9 @@
 This project aims to be a **premium** reading assistant. High-quality code implementation and a high-quality user experience are equally important.
 
 ## 2. Architecture & Design Patterns
-We strictly adhere to **SOLID** principles to ensure the codebase remains maintainable and scalable (eventually to Flutter).
+We strictly adhere to **SOLID** principles to ensure the codebase remains maintainable and scalable.
+- **Modular Development**: Each feature or component should be self-contained and modular.
+- **Senior Approach**: Code must be modern, secure, scalable, efficient, pragmatic, and clean.
 
 ### 2.1 Clean Architecture Layers
 The application should be structured into clear layers:
@@ -44,8 +46,18 @@ src/
   └── styles/           # Global styles and themes
 ```
 
-## 6. Development Rules
+## 6. Development Rules & Standards
+### 6.1 Code Implementation Rules
+- **Limit File Size**: **NO FILE** should exceed **250 lines**. If a file grows larger, refactor and split it into smaller, modular sub-components or utility files.
 - **No hard dependencies**: UI components should not instantiate services directly.
 - **Type safety**: Strict TypeScript usage. No `any` unless absolutely necessary.
 - **Immutability**: Prefer immutable data structures.
 - **Testing**: Code should be testable by design (thanks to DI).
+
+### 6.2 Best Practices (Senior Approach)
+- **Avoid Bad Practices**: Do not write spaghetti code, magic numbers, or tightly coupled components.
+- **Modern Syntax**: Use modern ES6+ features (arrow functions, destructuring, spread operator) and modern React patterns (Hooks, Functional Components).
+- **Secure**: Sanitize inputs where necessary (though React handles most XSS). Avoid storing sensitive keys in client-side code.
+- **Scalable**: Design components to be reusable. Isolate state where it belongs.
+- **Efficient**: Minimize re-renders. Use `useMemo` and `useCallback` appropriately (but pragmatically).
+- **Pragmatic**: Don't over-engineer. Solve the problem at hand with the simplest clean solution.
