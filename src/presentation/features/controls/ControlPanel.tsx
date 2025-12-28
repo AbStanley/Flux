@@ -90,9 +90,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     };
 
     return (
-        <Card className="w-full mb-8 backdrop-blur-sm bg-white/5 border-white/10 text-card-foreground">
+        <Card className="w-full mb-8 glass text-card-foreground">
             <CardHeader className="space-y-4">
-                <div className="flex gap-4 pb-4 border-b border-white/10 items-end">
+                <div className="flex gap-4 pb-4 border-b border-border/40 items-end">
                     <LanguageSelect
                         label="Source Language"
                         value={sourceLang}
@@ -106,7 +106,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                         variant="ghost"
                         size="icon"
                         onClick={handleSwapLanguages}
-                        className="mb-[2px] hover:bg-white/10"
+                        className="mb-[2px] hover:bg-secondary/80"
                         title="Swap Languages"
                     >
                         <ArrowRightLeft className="h-4 w-4" />
@@ -139,7 +139,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                                 value={((aiService as any).model) || ""} // Type casting for now, ideally fix Interface
                                 onValueChange={(val) => setServiceType('ollama', { model: val })}
                             >
-                                <SelectTrigger className="w-[180px]">
+                                <SelectTrigger className="w-[180px] bg-secondary/30 border-border/50">
                                     <SelectValue placeholder="Select Model" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -158,7 +158,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                             value={currentServiceType}
                             onValueChange={(val) => setServiceType(val as 'mock' | 'ollama')}
                         >
-                            <SelectTrigger className="w-[150px]">
+                            <SelectTrigger className="w-[150px] bg-secondary/30 border-border/50">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -176,7 +176,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <CardContent className="space-y-4">
                 <Textarea
                     placeholder="Paste text here, or generate..."
-                    className="min-h-[160px] font-mono text-lg shadow-sm resize-none focus-visible:ring-primary"
+                    className="min-h-[160px] font-mono text-lg shadow-sm resize-none focus-visible:ring-primary bg-secondary/30 border-border/50"
                     value={inputText}
                     onChange={handleManualChange}
                 />

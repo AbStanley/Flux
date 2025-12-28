@@ -27,15 +27,15 @@
 
 .selected {
     background-color: transparent;
-    border-bottom: 2px solid hsl(var(--primary));
-    color: hsl(var(--primary));
+    border-bottom: 2px solid hsl(var(--link-color));
+    color: hsl(var(--link-color));
     font-weight: 500;
     margin-top: 2.2rem;
     vertical-align: baseline;
 }
 
 .selected:hover {
-    background-color: hsl(var(--primary) / 0.1);
+    background-color: hsl(var(--link-color) / 0.1);
 }
 
 /* Grouping Styles ensuring seamless connection */
@@ -83,15 +83,15 @@
     position: absolute;
     top: -2.3rem;
     left: 0;
-    background-color: hsl(var(--primary));
+    background-color: hsl(var(--link-color));
     color: hsl(var(--primary-foreground));
     padding: 0.25rem 0.75rem;
     border-radius: 0.5rem;
     font-size: 0.9rem;
     white-space: nowrap;
     z-index: 20;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    font-weight: 500;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
     animation: fadeUp 0.2s ease-out;
 }
 
