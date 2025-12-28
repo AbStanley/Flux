@@ -109,7 +109,8 @@ export const ReaderView: React.FC<ReaderViewProps> = ({ text }) => {
             // Actually, let's just re-fetch to be safe or maybe simple cache?
             // For now, re-fetch to ensure context updates if context relies on grouping (though it usually doesn't).
 
-            const textToTranslate = group.map(i => tokens[i]).join('');
+            // Correctly reconstruct the text by including the whitespace between the start and end of the group
+            const textToTranslate = tokens.slice(start, end + 1).join('');
 
             // Get context from the full sentence(s) the group spans
             // Simplify: just get context of the first word for now, or merge contexts.
