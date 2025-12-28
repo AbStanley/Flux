@@ -6,6 +6,8 @@ import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { LanguageSelect } from "../../components/LanguageSelect";
 import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../../../core/constants/languages";
+import { LearningControls } from "./LearningControls";
+import { ArrowRightLeft } from "lucide-react";
 
 interface ControlPanelProps {
     onTextChange: (text: string) => void;
@@ -27,6 +29,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
 
+    // Learning Mode State
+    const [isLearningMode, setIsLearningMode] = useState(true);
+    const [proficiencyLevel, setProficiencyLevel] = useState("B1");
+    const [topic, setTopic] = useState("");
+
     React.useEffect(() => {
         if (currentServiceType === 'ollama') {
             aiService.getAvailableModels().then(models => {
@@ -38,9 +45,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     const handleGenerate = async () => {
         setIsGenerating(true);
         try {
-            const result = await aiService.generateText(
-                `Write a short, interesting story in ${targetLang} about a robot learning to paint.`
-            );
+            let prompt = `Write a short, interesting story in ${sourceLang}. Output ONLY the story text. Do not include any introductory or concluding remarks. Do not include translations.`;
+
+            if (isLearningMode) {
+                const topicPhrase = topic ? ` about "${topic}"` : " about a random interesting topic";
+                prompt = `Write a short story${topicPhrase} in ${sourceLang} suitable for a ${proficiencyLevel} proficiency level learner. The vocabulary and grammar should be appropriate for ${proficiencyLevel}. Output ONLY the story text.`;
+            } else {
+                prompt = `Write a short, interesting story in ${sourceLang} about a robot learning to paint. Output ONLY the story text.`;
+            }
+
+            const result = await aiService.generateText(prompt);
             setInputText(result);
             onTextChange(result);
         } catch (error) {
@@ -69,27 +83,53 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         onTextChange(e.target.value);
     };
 
+    const handleSwapLanguages = () => {
+        const temp = sourceLang;
+        setSourceLang(targetLang);
+        setTargetLang(temp);
+    };
+
     return (
         <Card className="w-full mb-8 backdrop-blur-sm bg-white/5 border-white/10 text-card-foreground">
             <CardHeader className="space-y-4">
-                <div className="flex gap-4 pb-4 border-b border-white/10">
+                <div className="flex gap-4 pb-4 border-b border-white/10 items-end">
                     <LanguageSelect
                         label="Source Language"
                         value={sourceLang}
                         onChange={setSourceLang}
                         options={SOURCE_LANGUAGES}
                         placeholder="Select Source"
-                        className="w-1/2"
+                        className="flex-1"
                     />
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSwapLanguages}
+                        className="mb-[2px] hover:bg-white/10"
+                        title="Swap Languages"
+                    >
+                        <ArrowRightLeft className="h-4 w-4" />
+                    </Button>
+
                     <LanguageSelect
                         label="Target Language"
                         value={targetLang}
                         onChange={setTargetLang}
                         options={TARGET_LANGUAGES}
                         placeholder="Select Target"
-                        className="w-1/2"
+                        className="flex-1"
                     />
                 </div>
+
+                <LearningControls
+                    isLearningMode={isLearningMode}
+                    setIsLearningMode={setIsLearningMode}
+                    proficiencyLevel={proficiencyLevel}
+                    setProficiencyLevel={setProficiencyLevel}
+                    topic={topic}
+                    setTopic={setTopic}
+                />
 
                 <div className="flex justify-between items-center pt-2">
                     <CardTitle className="text-xl">Reader Input</CardTitle>

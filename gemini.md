@@ -49,7 +49,7 @@ src/
 
 ## 6. Development Rules & Standards
 ### 6.1 Code Implementation Rules
-- **Limit File Size**: **NO FILE** should exceed **250 lines**. If a file grows larger, refactor and split it into smaller, modular sub-components or utility files.
+- **Limit File Size**: **NO FILE** should exceed **200 lines**. If a file grows larger, refactor and split it into smaller, modular sub-components or utility files.
 - **No hard dependencies**: UI components should not instantiate services directly.
 - **Type safety**: Strict TypeScript usage. No `any` unless absolutely necessary.
 - **Immutability**: Prefer immutable data structures.
