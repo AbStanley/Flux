@@ -18,4 +18,9 @@ export interface IAIService {
      * Checks if the service is available/healthy.
      */
     checkHealth(): Promise<boolean>;
+
+    /**
+     * Get available models (specific to the service).
+     */
+    getAvailableModels(): Promise<string[]>;
 }

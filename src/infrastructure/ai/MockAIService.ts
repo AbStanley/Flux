@@ -16,4 +16,8 @@ export class MockAIService implements IAIService {
     async checkHealth(): Promise<boolean> {
         return true;
     }
+
+    async getAvailableModels(): Promise<string[]> {
+        return ["mock-model"];
+    }
 }

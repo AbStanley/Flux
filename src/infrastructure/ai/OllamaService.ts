@@ -36,8 +36,23 @@ export class OllamaService implements IAIService {
     async translateText(text: string, targetLanguage: string = 'en'): Promise<string> {
         // Ollama translation usually requires a specific prompt engineering or a translation model.
         // For MVP, we'll use a prompt.
-        const prompt = `Translate the following text to ${targetLanguage}. Only output the translation, no explanation.\n\nText: "${text}"`;
-        return this.generateText(prompt);
+        const prompt = `Translate the following text to ${targetLanguage}. Return ONLY the translation. Do not include any explanations, thinking process, or tags.\n\nText: "${text}"`;
+        const rawResponse = await this.generateText(prompt);
+
+        // Post-processing to remove <think> blocks and whitespace
+        return rawResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    }
+
+    async getAvailableModels(): Promise<string[]> {
+        try {
+            const response = await fetch(`${this.baseUrl}/api/tags`);
+            if (!response.ok) return [];
+            const data = await response.json();
+            return data.models?.map((m: any) => m.name) || [];
+        } catch (error) {
+            console.error('Failed to fetch Ollama models:', error);
+            return [];
+        }
     }
 
     async checkHealth(): Promise<boolean> {
