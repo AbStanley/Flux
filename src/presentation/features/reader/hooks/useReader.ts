@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 
 import { useReaderStore } from '../store/useReaderStore';
 
@@ -27,14 +27,14 @@ export const useReader = () => {
     const handleSelection = useReaderStore(state => state.handleSelection);
 
     // View Event Handlers
-    const handleTokenClick = (index: number) => {
+    const handleTokenClick = useCallback((index: number) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
-        handleSelection(globalIndex); // Remove aiService arg as it is no longer used in store
-    };
+        handleSelection(globalIndex);
+    }, [currentPage, PAGE_SIZE, handleSelection]);
 
 
     // Duplicate helper for View rendering (pure visual logic)
-    const getSelectionGroups = (indices: Set<number>): number[][] => {
+    const getSelectionGroups = useCallback((indices: Set<number>): number[][] => {
         const sorted = Array.from(indices).sort((a, b) => a - b);
         if (sorted.length === 0) return [];
 
@@ -67,7 +67,7 @@ export const useReader = () => {
         }
         groups.push(currentGroup);
         return groups;
-    };
+    }, [tokens]);
 
 
 

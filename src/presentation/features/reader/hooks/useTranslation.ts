@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useServices } from '../../../contexts/ServiceContext';
 import { useTranslationStore } from '../store/useTranslationStore';
 import { useReaderStore } from '../store/useReaderStore';
@@ -47,7 +47,7 @@ export const useTranslation = (enableAutoFetch = false) => {
     }, [enableAutoFetch, selectedIndices, tokens, sourceLang, targetLang, aiService, translateSelection]);
 
     // Derived Actions (Inject Service)
-    const handleHover = (index: number) => {
+    const handleHover = useCallback((index: number) => {
         // Clear any previous hover actions if we move fast? 
         // Actually, debounce here is tricky because we want immediate feedback for UI state (hoveredIndex), but delayed fetch.
         // The store handles immediate `hoveredIndex` set. We just need to delay the *call* or let the store handle it?
@@ -63,19 +63,19 @@ export const useTranslation = (enableAutoFetch = false) => {
         hoverTimeoutRef.current = setTimeout(() => {
             handleHoverAction(index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
         }, 300);
-    };
+    }, [hoveredIndex, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService, handleHoverAction]);
 
-    const handleClearHover = () => {
+    const handleClearHover = useCallback(() => {
         if (hoverTimeoutRef.current) {
             clearTimeout(hoverTimeoutRef.current);
             hoverTimeoutRef.current = null;
         }
         clearHover();
-    };
+    }, [clearHover]);
 
-    const fetchRichTranslation = (text: string, context: string) => {
+    const fetchRichTranslation = useCallback((text: string, context: string) => {
         fetchRichTranslationAction(text, context, sourceLang, targetLang, aiService);
-    };
+    }, [fetchRichTranslationAction, sourceLang, targetLang, aiService]);
 
     return {
         // State

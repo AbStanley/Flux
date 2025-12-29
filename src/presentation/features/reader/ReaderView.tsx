@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import styles from './ReaderView.module.css';
 import { Card, CardContent } from "../../components/ui/card";
 import { useReader } from './hooks/useReader';
@@ -41,58 +41,58 @@ export const ReaderView: React.FC = () => {
     const { playSingle } = useAudioStore();
 
     // Calculate grouping for rendering
-    const groups = getSelectionGroups(selectedIndices);
-    const groupStarts = new Map<number, string>(); // index -> translation
+    const groups = useMemo(() => getSelectionGroups(selectedIndices), [getSelectionGroups, selectedIndices]);
 
     // Map to store position of each token in a group for styling
     // 'single' | 'start' | 'middle' | 'end'
-    const tokenPositions = new Map<number, string>();
-
     // Visual Translation Splitting Logic
     const textAreaRef = useRef<HTMLDivElement>(null);
     const visualGroupStarts = useVisualSplits({
         groups,
         selectionTranslations,
-        paginatedTokens, // Note: Hook signature asked for this but didn't strictly use it for logic other than deps, passing ensures correctness
+        paginatedTokens,
         currentPage,
         PAGE_SIZE,
         textAreaRef
     });
 
+    // Map to store position of each token in a group for styling
+    // 'single' | 'start' | 'middle' | 'end'
+    const { groupStarts, tokenPositions } = useMemo(() => {
+        const starts = new Map<number, string>(); // index -> translation
+        const positions = new Map<number, string>();
 
-
-
-    groups.forEach(group => {
-        const start = group[0];
-        const end = group[group.length - 1];
-        const key = `${start}-${end}`;
-        const translation = selectionTranslations.get(key);
-        if (translation) {
-            groupStarts.set(start, translation);
-        }
-
-        // Iterate through the full range including whitespace
-        for (let i = start; i <= end; i++) {
-
-
-            if (start === end) {
-                tokenPositions.set(i, 'single');
-            } else if (i === start) {
-                tokenPositions.set(i, 'start');
-            } else if (i === end) {
-                tokenPositions.set(i, 'end');
-            } else {
-                tokenPositions.set(i, 'middle');
+        groups.forEach(group => {
+            const start = group[0];
+            const end = group[group.length - 1];
+            const key = `${start}-${end}`;
+            const translation = selectionTranslations.get(key);
+            if (translation) {
+                starts.set(start, translation);
             }
-        }
-    });
+
+            // Iterate through the full range including whitespace
+            for (let i = start; i <= end; i++) {
+                if (start === end) {
+                    positions.set(i, 'single');
+                } else if (i === start) {
+                    positions.set(i, 'start');
+                } else if (i === end) {
+                    positions.set(i, 'end');
+                } else {
+                    positions.set(i, 'middle');
+                }
+            }
+        });
+        return { groupStarts: starts, tokenPositions: positions };
+    }, [groups, selectionTranslations]);
 
     const highlightIndices = useHighlighting(tokens, groups, richTranslation);
 
 
 
     // Better More Info handler:
-    const onMoreInfoClick = (index: number) => {
+    const onMoreInfoClick = useCallback((index: number) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
 
         // Check if this token is part of a selected group
@@ -115,9 +115,9 @@ export const ReaderView: React.FC = () => {
         if (textToTranslate) {
             fetchRichTranslation(textToTranslate, "");
         }
-    };
+    }, [currentPage, PAGE_SIZE, groups, tokens, fetchRichTranslation]);
 
-    const onPlayClick = (index: number) => {
+    const onPlayClick = useCallback((index: number) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
         const group = groups.find(g => g.includes(globalIndex));
 
@@ -134,7 +134,7 @@ export const ReaderView: React.FC = () => {
         if (textToPlay) {
             playSingle(textToPlay);
         }
-    };
+    }, [currentPage, PAGE_SIZE, groups, tokens, playSingle]);
 
     return (
         <div className="relative flex flex-col min-[1200px]:flex-row w-full h-[90vh] min-[1200px]:h-[92vh] max-w-full mx-auto my-4 transition-all duration-300 gap-6">
