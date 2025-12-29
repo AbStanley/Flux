@@ -16,6 +16,7 @@ interface ReaderTokenProps {
     groupTranslation: string | undefined;
     position: string | undefined;
     isHovered?: boolean;
+    isHoveredWord?: boolean; // New prop for specific word highlight
     hoverPosition?: HoverPosition;
     onClick: (index: number) => void;
     onMoreInfo: (index: number) => void;
@@ -28,6 +29,7 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
     groupTranslation,
     position,
     isHovered: propIsHovered,
+    isHoveredWord,
     hoverPosition,
     onClick,
     onMoreInfo,
@@ -117,9 +119,13 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
                 ${styles.token} 
                 ${isSelected ? styles.selected : ''} 
                 ${!isWhitespace ? styles.interactive : ''}
-                ${position ? styles[position] : ''}
+                ${position ? styles[position] : ''} 
                 ${isAudioHighlighted ? styles.audioHighlight : ''}
-                ${(isHovered && !isSelected) ? cn(styles.hovered, hoverPosition && styles[hoverPosition]) : ''} 
+                ${(isHovered && !isSelected) ? cn(
+                styles.hoveredSentence,
+                hoverPosition && styles[hoverPosition] // This handles border radius/shape for sentence
+            ) : ''} 
+                ${isHoveredWord ? styles.hoveredWord : ''}
             `}
             onClick={() => {
                 if (!isWhitespace) {

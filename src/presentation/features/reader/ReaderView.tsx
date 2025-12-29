@@ -77,18 +77,21 @@ export const ReaderView: React.FC = () => {
     });
 
     const hoveredIndex = useTranslationStore(s => s.hoveredIndex);
-    const selectionMode = useReaderStore(s => s.selectionMode);
 
     const highlightIndices = React.useMemo(() => {
         if (hoveredIndex === null || hoveredIndex === undefined || hoveredIndex === -1 || richTranslation) return new Set<number>();
 
+        const selectionMode = useReaderStore.getState().selectionMode;
+
         if (selectionMode === SelectionMode.Sentence) {
+            // Highlight full sentence in Sentence Mode
             const range = getSentenceRange(hoveredIndex, tokens);
             return new Set(range);
         } else {
+            // Just the word in Word Mode
             return new Set([hoveredIndex]);
         }
-    }, [hoveredIndex, selectionMode, tokens, richTranslation]);
+    }, [hoveredIndex, tokens, richTranslation]);
 
 
 
@@ -151,17 +154,17 @@ export const ReaderView: React.FC = () => {
 
 
                             // Use the index from the hook if available
+                            // Calculate hover ranges (always sentence level for highlighting visual)
                             if (hoveredIndex !== null && hoveredIndex !== undefined) {
-                                if (useReaderStore.getState().selectionMode === SelectionMode.Sentence) {
-                                    // Check for sentence mode
-                                }
+                                // we calculate highlightIndices in the memo above
                             }
 
                             // Calculate hover position
                             let hoverPosition: HoverPosition | undefined;
-                            const isHovered = highlightIndices.has(globalIndex);
+                            const isHoveredSentence = highlightIndices.has(globalIndex);
+                            const isHoveredWord = hoveredIndex === globalIndex;
 
-                            if (isHovered) {
+                            if (isHoveredSentence) {
                                 const prev = highlightIndices.has(globalIndex - 1);
                                 const next = highlightIndices.has(globalIndex + 1);
 
@@ -178,7 +181,8 @@ export const ReaderView: React.FC = () => {
                                     token={token}
                                     groupTranslation={groupTranslation}
                                     position={position}
-                                    isHovered={isHovered}
+                                    isHovered={isHoveredSentence} // Now represents the full sentence hover
+                                    isHoveredWord={isHoveredWord} // Specific word
                                     hoverPosition={hoverPosition}
                                     onClick={handleTokenClick}
                                     onMoreInfo={onMoreInfoClick}

@@ -120,16 +120,52 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
 
 // Helper to find sentence boundaries
 export const getSentenceRange = (index: number, tokens: string[]): number[] => {
-    const isSentenceEnd = (token: string) => /[.!?]['"”’\)]*$/.test(token.trim());
+    // Common abbreviations that shouldn't end a sentence
+    const abbreviations = new Set([
+        'mr.', 'mrs.', 'ms.', 'dr.', 'prof.', 'sr.', 'jr.', 'vs.', 'etc.', 'fig.', 'al.', 'gen.', 'rep.', 'sen.', 'gov.', 'est.', 'no.', 'op.', 'vol.', 'pp.'
+    ]);
+
+    const isSentenceEnd = (token: string) => {
+        const t = token.trim();
+        if (!t) return false;
+
+        // Basic punctuation check
+        const hasPunctuation = /[.!?]['"”’\)]*$/.test(t);
+        if (!hasPunctuation) return false;
+
+        // Check if it's an abbreviation
+        const lowerToken = t.toLowerCase();
+        // Remove trailing quotes/brackets for abbreviation check
+        const cleaned = lowerToken.replace(/['"”’\)]+$/, '');
+
+        if (abbreviations.has(cleaned)) {
+            return false;
+        }
+
+        return true;
+    };
 
     // Search start
     let start = index;
-    // If current token is purely whitespace, it might be part of previous or next. 
-    // Better to anchor on the clicked word. 
-    // Walk backwards from globalIndex
     while (start > 0) {
         // If the PREVIOUS token was an end, then start is current.
-        const prevToken = tokens[start - 1];
+        // We need to look at non-whitespace tokens to decide
+        let prevIndex = start - 1;
+        while (prevIndex >= 0 && !tokens[prevIndex].trim()) {
+            prevIndex--;
+        }
+
+        if (prevIndex < 0) {
+            start = 0;
+            break;
+        }
+
+        const prevToken = tokens[prevIndex];
+        // We don't have enough context to check 'prevToken's' previous token for abbreviation 
+        // effectively without linear scan, but since we are scanning linearly here:
+        // ideally we check if prevToken IS a sentence end.
+
+        // Use a simpler check for localized "previous" token or just rely on the heuristic
         if (isSentenceEnd(prevToken)) {
             break;
         }
@@ -140,6 +176,11 @@ export const getSentenceRange = (index: number, tokens: string[]): number[] => {
     let end = index;
     while (end < tokens.length - 1) {
         const token = tokens[end];
+        if (!token.trim()) {
+            end++;
+            continue;
+        }
+
         if (isSentenceEnd(token)) {
             break;
         }
@@ -147,10 +188,14 @@ export const getSentenceRange = (index: number, tokens: string[]): number[] => {
     }
 
     // OPTIMIZATION: Trim leading whitespace from the range
-    // This prevents the visual "growth" on the left side when hovering/selecting a sentence that starts with a space.
     while (start < end && !tokens[start].trim()) {
         start++;
     }
+
+    // OPTIMIZATION: Trim trailing whitespace from the range (optional, but good for UI)
+    // while (end > start && !tokens[end].trim()) {
+    //     end--;
+    // }
 
     const range: number[] = [];
     for (let i = start; i <= end; i++) {

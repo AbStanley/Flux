@@ -41,12 +41,15 @@
 }
 
 /* Grouping Styles ensuring seamless connection without layout shift */
-/* Grouping Styles ensuring seamless connection without layout shift */
 .start {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+}
+
+/* Apply margin ONLY when selected to reserve space for the popup */
+.selected.start,
+.selected.single {
     margin-top: 2.2rem;
-    /* Reserve space for popup ONLY on the start token */
 }
 
 .middle {
@@ -59,8 +62,27 @@
 }
 
 .single {
-    margin-top: 2.2rem;
-    /* Reserve space for popup on single tokens */
+    /* No margin by default to allow hover without jump */
+}
+
+/* Hover States */
+.hoveredSentence {
+    background-color: hsl(var(--accent) / 0.3);
+    /* Lighter highlight for full sentence */
+    border-radius: 0;
+    /* Remove rounding to avoid gaps/separation appearance */
+    transition: background-color 0.15s ease;
+}
+
+.hoveredWord {
+    background-color: hsl(var(--accent) / 0.8) !important;
+    /* Stronger highlight for the specific word */
+    box-shadow: 0 0 0 1px hsl(var(--accent));
+    /* increased visibility */
+    border-radius: 0.25em;
+    z-index: 2;
+    position: relative;
+    /* Ensure it sits on top */
 }
 
 /* Popups still use custom CSS for precise absolute positioning relative to span */
