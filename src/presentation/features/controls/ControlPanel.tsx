@@ -39,7 +39,7 @@ export const ControlPanel: React.FC = () => {
                     // Only default if current model is not set
                     const currentModel = (aiService as any).model;
                     if (!currentModel) {
-                        setServiceType('ollama', { model: models[0] });
+                        setServiceType('ollama', { model: models[1] });
                     }
                 }
             });

@@ -120,20 +120,17 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
     isRichInfoLoading: false,
 
     translateSelection: async (indices, tokens, sourceLang, targetLang, aiService) => {
-        // Clear previous if selection is empty
+        // If selection is empty, just return (don't clear cache)
         if (indices.size === 0) {
-            set({ selectionTranslations: new Map() });
             return;
         }
 
         const groups = getSelectionGroups(indices, tokens);
         const currentTranslations = get().selectionTranslations;
 
-        // Identify which groups need translation (not already cached)
-        // Note: For simplicity, we re-verify or just check cache.
-        // To properly sync with changes (deselection), we really should rebuild the Map based on current groups,
-        // but taking values from the old Map if available.
-        const nextTranslations = new Map<string, string>();
+        // Clone map only if we add new items
+        let nextTranslations = new Map(currentTranslations);
+        let hasChanges = false;
 
         await Promise.all(groups.map(async (group) => {
             if (group.length === 0) return;
@@ -141,9 +138,8 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
             const end = group[group.length - 1];
             const key = `${start}-${end}`;
 
-            // Cache hit from existing state
-            if (currentTranslations.has(key)) {
-                nextTranslations.set(key, currentTranslations.get(key)!);
+            // Cache hit
+            if (nextTranslations.has(key)) {
                 return;
             }
 
@@ -152,10 +148,13 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
             const context = getContextForIndex(tokens, start);
             const result = await fetchTranslationHelper(textToTranslate, context, sourceLang, targetLang, aiService);
 
-            nextTranslations.set(key, result ?? "Error");
+            nextTranslations.set(key, result || "Error");
+            hasChanges = true;
         }));
 
-        set({ selectionTranslations: nextTranslations });
+        if (hasChanges) {
+            set({ selectionTranslations: nextTranslations });
+        }
     },
 
     handleHover: async (index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService) => {
@@ -164,7 +163,17 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
 
         if (!token?.trim()) return;
 
+        // Set hover index immediately for UI feedback
         set({ hoveredIndex: index, hoverTranslation: null });
+
+        // Check cache (single token key)
+        const key = `${globalIndex}-${globalIndex}`;
+        const cache = get().selectionTranslations;
+
+        if (cache.has(key)) {
+            set({ hoverTranslation: cache.get(key)! });
+            return;
+        }
 
         const context = getContextForIndex(tokens, globalIndex);
         const result = await fetchTranslationHelper(token, context, sourceLang, targetLang, aiService);
@@ -172,6 +181,12 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
         // Check race condition
         if (get().hoveredIndex === index && result) {
             set({ hoverTranslation: result });
+
+            // Cache the result!
+            const newCache = new Map(get().selectionTranslations);
+            // Ensure result is string (truthy check confirms it's not null/empty string, but TS might need help)
+            newCache.set(key, result as string);
+            set({ selectionTranslations: newCache });
         }
     },
 

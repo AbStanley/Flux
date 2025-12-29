@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useServices } from '../../../contexts/ServiceContext';
 import { useTranslationStore } from '../store/useTranslationStore';
 import { useReaderStore } from '../store/useReaderStore';
 
 export const useTranslation = () => {
     const { aiService } = useServices();
+
+    // Ref for hover timeout to debounce calls
+    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Reader Store State (Dependencies)
     const tokens = useReaderStore(state => state.tokens);
@@ -34,12 +37,34 @@ export const useTranslation = () => {
 
     // Effect: Automatically trigger translation when selection changes
     useEffect(() => {
-        translateSelection(selectedIndices, tokens, sourceLang, targetLang, aiService);
+        const timeoutId = setTimeout(() => {
+            translateSelection(selectedIndices, tokens, sourceLang, targetLang, aiService);
+        }, 500); // 500ms debounce for selection to allow grouping
+
+        return () => clearTimeout(timeoutId);
     }, [selectedIndices, tokens, sourceLang, targetLang, aiService, translateSelection]);
 
     // Derived Actions (Inject Service)
     const handleHover = (index: number) => {
-        handleHoverAction(index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
+        // Clear any previous hover actions if we move fast? 
+        // Actually, debounce here is tricky because we want immediate feedback for UI state (hoveredIndex), but delayed fetch.
+        // The store handles immediate `hoveredIndex` set. We just need to delay the *call* or let the store handle it?
+        // Since `ReaderToken` calls this on MouseEnter, let's debounce the *fetching* part.
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+        }
+
+        hoverTimeoutRef.current = setTimeout(() => {
+            handleHoverAction(index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
+        }, 300);
+    };
+
+    const handleClearHover = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        clearHover();
     };
 
     const fetchRichTranslation = (text: string, context: string) => {
@@ -57,7 +82,7 @@ export const useTranslation = () => {
 
         // Actions
         handleHover,
-        clearHover,
+        clearHover: handleClearHover,
         fetchRichTranslation,
         closeRichInfo,
         toggleRichInfo
