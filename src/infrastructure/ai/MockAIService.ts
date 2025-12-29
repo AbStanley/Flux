@@ -13,6 +13,20 @@ export class MockAIService implements IAIService {
         return `[Translated to ${targetLanguage}]: ${text}`;
     }
 
+    async getRichTranslation(text: string, _targetLanguage?: string, _context?: string): Promise<import('../../core/interfaces/IAIService').RichTranslationResult> {
+        console.log(`[MockAI] Getting rich translation for "${text}"`);
+        return {
+            translation: `[Mock Rich] ${text}`,
+            segment: text,
+            grammar: {
+                partOfSpeech: "noun",
+                explanation: "Mock explanation"
+            },
+            examples: [],
+            alternatives: ["Mock alt 1", "Mock alt 2"]
+        };
+    }
+
     async checkHealth(): Promise<boolean> {
         return true;
     }

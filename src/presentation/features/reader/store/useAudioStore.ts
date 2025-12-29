@@ -73,7 +73,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         set({ tokenOffsets: offsets, tokens: tokens });
     },
 
-    play: (text) => {
+    play: (_text) => {
         // Just an alias for playing from start
         // NOTE: For consistency, if we have tokens, we should probably prefer playing from tokens[0] 
         // to ensure offsets match, but `text` passed here is usually the full text.

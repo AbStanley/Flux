@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Card } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Slider } from "../../../components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
@@ -81,7 +80,7 @@ export const PlayerControls: React.FC = () => {
     if (!text.trim()) return null;
 
     return (
-        <Card className="sticky top-0 w-full p-4 mb-6 glass border-b border-border/40 backdrop-blur-xl shadow-md z-50 flex flex-col gap-4 rounded-xl">
+        <div className="w-full p-4 border-b border-border/40 bg-background/95 backdrop-blur z-40 flex flex-col gap-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between w-full">
                 <div className="flex items-center gap-2">
                     <Button
@@ -174,6 +173,6 @@ export const PlayerControls: React.FC = () => {
                     {maxTokens}
                 </span>
             </div>
-        </Card>
+        </div>
     );
 };
