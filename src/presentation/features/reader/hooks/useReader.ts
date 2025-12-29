@@ -54,6 +54,10 @@ export const useReader = () => {
                 }
             }
 
+            if (isContiguous && /[.!?]['"”’\)]*$/.test(tokens[prev].trim())) {
+                isContiguous = false;
+            }
+
             if (isContiguous) {
                 currentGroup.push(curr);
             } else {

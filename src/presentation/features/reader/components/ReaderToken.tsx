@@ -141,9 +141,6 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
             {/* Render token with markdown support */}
             {(() => {
                 // Simple parser for **bold** and *italic*
-                // Note: This simple regex approach has limitations but works for basic cases.
-                // We handle **bold** first, then inner *italic*? Or handled recursively?
-                // Let's keep it simple: Split by ** first, then checks parts for *
 
                 const renderParts = (text: string, bold: boolean) => {
                     const italicRegex = /\*([^*]+)\*/g;

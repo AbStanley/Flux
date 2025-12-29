@@ -120,7 +120,7 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
 
 // Helper to find sentence boundaries
 export const getSentenceRange = (index: number, tokens: string[]): number[] => {
-    const isSentenceEnd = (token: string) => /[.!?]$/.test(token.trim());
+    const isSentenceEnd = (token: string) => /[.!?]['"”’\)]*$/.test(token.trim());
 
     // Search start
     let start = index;
