@@ -46,31 +46,51 @@ export const useTranslation = (enableAutoFetch = false) => {
         return () => clearTimeout(timeoutId);
     }, [enableAutoFetch, selectedIndices, tokens, sourceLang, targetLang, aiService, translateSelection]);
 
-    // Derived Actions (Inject Service)
     // Track last hovered index locally to prevent redundant dispatches without adding state dependency
     const lastHoveredIndexRef = useRef<number | null>(null);
+    const clearHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleHover = useCallback((index: number) => {
-        // Prevent redundant triggers if we are hovering over the same effective "item"
-        if (lastHoveredIndexRef.current === index) return;
+        // 1. Cancel any pending clear (sticky hover)
+        if (clearHoverTimeoutRef.current) {
+            clearTimeout(clearHoverTimeoutRef.current);
+            clearHoverTimeoutRef.current = null;
+        }
+
+        // 2. Prevent redundant triggers if we are hovering over the same effective "item"
+        if (lastHoveredIndexRef.current === index) {
+            return;
+        }
 
         lastHoveredIndexRef.current = index;
 
+        // 3. Cancel any pending start-hover from previous rapid movements
         if (hoverTimeoutRef.current) {
             clearTimeout(hoverTimeoutRef.current);
         }
 
+        // 4. Schedule the new hover action (Debounce fetch/state update)
         hoverTimeoutRef.current = setTimeout(() => {
             handleHoverAction(index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
-        }, 300);
+        }, 150); // Reduced delay for better responsiveness while still debouncing
     }, [tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService, handleHoverAction]);
 
     const handleClearHover = useCallback(() => {
+        // Cancel any pending fetch
         if (hoverTimeoutRef.current) {
             clearTimeout(hoverTimeoutRef.current);
             hoverTimeoutRef.current = null;
         }
-        clearHover();
+
+        // Debounce the clear to prevent flicker when moving between close elements or over gaps
+        if (clearHoverTimeoutRef.current) {
+            clearTimeout(clearHoverTimeoutRef.current);
+        }
+
+        clearHoverTimeoutRef.current = setTimeout(() => {
+            lastHoveredIndexRef.current = null;
+            clearHover();
+        }, 50);
     }, [clearHover]);
 
     const fetchRichTranslation = useCallback((text: string, context: string) => {

@@ -7,7 +7,6 @@ import { useTranslationStore } from '../store/useTranslationStore';
 import { useAudioStore } from '../store/useAudioStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { useHighlighting } from '../hooks/useHighlighting';
-import { useWhyDidYouUpdate } from '../hooks/useWhyDidYouUpdate';
 
 interface ReaderTextContentProps {
     tokens: string[]; // Needed for highlighting logic
@@ -25,24 +24,21 @@ interface ReaderTextContentProps {
     onPlayClick: (index: number) => void;
 }
 
-const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = (props) => {
-    const {
-        tokens,
-        paginatedTokens,
-        groups,
-        richTranslation,
-        currentPage,
-        PAGE_SIZE,
-        visualGroupStarts,
-        groupStarts,
-        tokenPositions,
-        textAreaRef,
-        handleTokenClick,
-        onMoreInfoClick,
-        onPlayClick
-    } = props;
-
-    useWhyDidYouUpdate('ReaderTextContent', props);
+const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
+    tokens,
+    paginatedTokens,
+    groups,
+    richTranslation,
+    currentPage,
+    PAGE_SIZE,
+    visualGroupStarts,
+    groupStarts,
+    tokenPositions,
+    textAreaRef,
+    handleTokenClick,
+    onMoreInfoClick,
+    onPlayClick
+}) => {
     // State Consumption
     const hoveredIndex = useTranslationStore(s => s.hoveredIndex);
     const hoverTranslation = useTranslationStore(s => s.hoverTranslation);
