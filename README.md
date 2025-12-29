@@ -2,7 +2,7 @@
 
 A premium reading assistant application built with React, TypeScript, and Ollama.
 
-## 📖 Current Modifications (v1.1)
+## 📖 Current Modifications (v1.2)
 
 ### Logic
 The application core logic revolves around text tokenization and interaction.
@@ -16,20 +16,22 @@ The application core logic revolves around text tokenization and interaction.
     - **Target Language**: Users select a target language (e.g., Spanish), and all AI prompts are tailored to this target.
     - **Provider**: Defaults to **Ollama** (Local LLM) for privacy and zero-cost, with a fallback Mock mode.
 
-### Architecture
-We follow **Clean Architecture** principles with a strict **Presentation-Domain-Infrastructure** separation.
+### 🏗 Architecture & Performance
+> **[Read the full Architecture Guide](./ARCHITECTURE.md)** for a deep dive into state management, rendering strategies, and optimizations.
+
+We follow **Clean Architecture** principles backed by **Zustand** for high-performance state management.
 
 - **Presentation Layer** (`src/presentation`):
-    - **Components**: Pure UI elements (e.g., `ReaderView`, `ControlPanel`).
-    - **State**: React Context (`ServiceContext`) handles dependency injection. `App.tsx` manages high-level application state (Source/Target languages).
+    - **Optimized Rendering**: `ReaderToken` and `ReaderTextContent` are heavily optimized with `React.memo` and scoped prop passing to ensure 60fps performance even with large texts.
+    - **State**: Granular Zustand stores (`useReaderStore`, `useTranslationStore`, `useAudioStore`) prevent unnecessary re-renders.
 - **Infrastructure Layer** (`src/infrastructure`):
     - **AI Services**: Concrete implementations of `IAIService`.
         - `OllamaService`: Connects to local Ollama instance.
-- **Dependency Injection**: Services are injected via `ServiceContext`, allowing easy swapping (e.g., Mock vs. Live).
 
 ### Features
 - **Clean, Premium UI**: Glassmorphism design, smooth transitions, distraction-free reading.
 - **Unified Design System**: Built with **shadcn/ui** and **Tailwind CSS** for consistency and accessibility.
+- **High Performance**: Optimized rendering engine ensuring zero lag on hover/interaction.
 - **MCP Server Ready**: Configured for AI assistants (VS Code/Cursor) to browse and install components.
 - **Local AI Integration**: Seamless connection to local Ollama models.
 - **Smart Translation**: 
