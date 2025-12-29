@@ -147,7 +147,7 @@ export const ReaderView: React.FC = () => {
                 <CardContent className={`p-0 relative flex-1 overflow-y-auto ${styles.textAreaContainer} flex flex-col`}>
 
                     {/* Player Controls - Sticky Top */}
-                    <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b shadow-sm">
+                    <div className="sticky top-0 z-[60] bg-background/95 backdrop-blur-sm border-b shadow-sm">
                         <PlayerControls />
                     </div>
 
@@ -209,14 +209,17 @@ export const ReaderView: React.FC = () => {
             </Card>
 
             {/* Right Column: Info Panel - Sticky Sidebar */}
-            <div className="hidden md:flex flex-col w-72 flex-shrink-0 relative overflow-y-auto h-full pl-2">
-                {/* Translation Info Panel */}
-                <RichInfoPanel
-                    isOpen={isRichInfoOpen}
-                    isLoading={isRichInfoLoading}
-                    data={richTranslation}
-                    onClose={closeRichInfo}
-                />
+            <div className={`hidden md:flex flex-col flex-shrink-0 relative overflow-y-auto h-full transition-all duration-300 ${isRichInfoOpen ? 'w-[500px] pl-2' : 'w-0 pl-0'
+                }`}>
+                <div className="w-[450px]"> {/* Fixed width inner container to prevent content squashing during transition */}
+                    {/* Translation Info Panel */}
+                    <RichInfoPanel
+                        isOpen={isRichInfoOpen}
+                        isLoading={isRichInfoLoading}
+                        data={richTranslation}
+                        onClose={closeRichInfo}
+                    />
+                </div>
             </div>
 
             {/* Mobile Bottom Sheet (Info Panel) - Managed by RichInfoPanel internally with media queries */}
