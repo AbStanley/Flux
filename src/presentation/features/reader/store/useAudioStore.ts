@@ -13,6 +13,7 @@ interface AudioState {
 
     // Data for sync
     tokenOffsets: number[]; // Start index of each token in the full text string
+    tokens: string[];       // Full list of tokens
 
     // Actions
     init: () => void;
@@ -23,6 +24,7 @@ interface AudioState {
     setTokens: (tokens: string[]) => void;
 
     play: (text: string) => void;
+    seek: (tokenIndex: number) => void;
     playSingle: (text: string) => void;
     pause: () => void;
     resume: () => void;
@@ -39,6 +41,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     playbackRate: 1,
     selectedVoice: null,
     availableVoices: [],
+    tokens: [],
     tokenOffsets: [],
 
     init: () => {
@@ -67,41 +70,56 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             offsets.push(currentLen);
             currentLen += token.length;
         });
-        set({ tokenOffsets: offsets });
+        set({ tokenOffsets: offsets, tokens: tokens });
     },
 
     play: (text) => {
-        const { selectedVoice, playbackRate, tokenOffsets } = get();
+        // Just an alias for playing from start
+        // NOTE: For consistency, if we have tokens, we should probably prefer playing from tokens[0] 
+        // to ensure offsets match, but `text` passed here is usually the full text.
+        get().seek(0);
+    },
 
-        // Stop any current playback first
+    seek: (tokenIndex: number) => {
+        const { selectedVoice, playbackRate, tokenOffsets, tokens } = get();
+
+        // Validate index
+        if (tokenIndex < 0 || tokenIndex >= tokens.length) return;
+
+        // Stop any current playback
         audioService.stop();
 
-        set({ isPlaying: true, isPaused: false });
+        // Calculate text to play (from tokenIndex to end)
+        const textToPlay = tokens.slice(tokenIndex).join('');
+
+        // The offset in the original full text where this slice begins
+        const startCharOffset = tokenOffsets[tokenIndex];
+
+        set({ isPlaying: true, isPaused: false, currentWordIndex: tokenIndex });
 
         audioService.play(
-            text,
+            textToPlay,
             selectedVoice,
             playbackRate,
             (charIndex: number) => {
-                // Map charIndex to tokenIndex using binary search or simple find
-                // Since onBoundary emits boundaries for words, we expect charIndex to match a token start
+                // charIndex is relative to the start of textToPlay
+                // We need absolute index in full text
+                const absoluteCharIndex = startCharOffset + charIndex;
 
-                // Simple loop for now (optimize to binary search if performance issues arise)
-                // We want the largest offset <= charIndex
-                let tokenIndex = -1;
+                // Map charIndex to tokenIndex 
+                // We want the largest offset <= absoluteCharIndex
+                let foundIndex = -1;
 
-                // Optimization: Start search from previous index? 
-                // For now, let's just find it. `tokenOffsets` is sorted.
-                // findLastIndex is not always available in all envs, so use simple loop backwards
+                // Simple loop backwards from end (optimize later if needed)
                 for (let i = tokenOffsets.length - 1; i >= 0; i--) {
-                    if (tokenOffsets[i] <= charIndex) {
-                        tokenIndex = i;
+                    if (tokenOffsets[i] <= absoluteCharIndex) {
+                        foundIndex = i;
                         break;
                     }
                 }
 
-                if (tokenIndex !== -1) {
-                    set({ currentWordIndex: tokenIndex });
+                if (foundIndex !== -1) {
+                    set({ currentWordIndex: foundIndex });
                 }
             },
             () => {
@@ -141,3 +159,4 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         );
     }
 }));
+
