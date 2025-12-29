@@ -29,23 +29,28 @@ interface ReaderTokenProps {
     onPlay: (index: number) => void;
 }
 
-const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
-    token,
-    index,
-    globalIndex,
-    groupTranslation,
-    position,
-    isHovered,
-    isHoveredWord,
-    hoverPosition,
-    hoverTranslation,
-    isAudioHighlighted,
-    onClick,
-    onHover,
-    onClearHover,
-    onMoreInfo,
-    onPlay
-}) => {
+import { useWhyDidYouUpdate } from '../hooks/useWhyDidYouUpdate';
+
+const ReaderTokenComponent: React.FC<ReaderTokenProps> = (props) => {
+    const {
+        token,
+        index,
+        globalIndex,
+        groupTranslation,
+        position,
+        isHovered,
+        isHoveredWord,
+        hoverPosition,
+        hoverTranslation,
+        isAudioHighlighted,
+        onClick,
+        onHover,
+        onClearHover,
+        onMoreInfo,
+        onPlay
+    } = props;
+
+    useWhyDidYouUpdate(`ReaderToken`, props);
     const isWhitespace = !token.trim();
     const isSelected = !!position; // If position is assigned, it's selected/grouped
 

@@ -15,6 +15,7 @@ import { PlayerControls } from './components/PlayerControls';
 
 
 export const ReaderView: React.FC = () => {
+    console.log('[ReaderView] Rendering');
     const {
         tokens,
         paginatedTokens,
