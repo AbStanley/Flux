@@ -1,73 +1,64 @@
-import React from 'react';
+import React, { memo } from 'react';
 import styles from '../ReaderView.module.css';
 
 import { Search, Volume2 } from 'lucide-react'; // Import icon
 import { cn } from '../../../../lib/utils';
-
-
-import { useReaderStore } from '../store/useReaderStore';
-import { useTranslation } from '../hooks/useTranslation';
-import { useAudioStore } from '../store/useAudioStore';
 import { HoverPosition } from '../../../../core/types';
 
 interface ReaderTokenProps {
     token: string;
     index: number;
+    globalIndex: number; // Passed from parent to avoid recalculation
     groupTranslation: string | undefined;
     position: string | undefined;
-    isHovered?: boolean;
-    isHoveredWord?: boolean; // New prop for specific word highlight
+
+    // Hover State (Passed from parent)
+    isHovered: boolean;
+    isHoveredWord: boolean;
     hoverPosition?: HoverPosition;
+    hoverTranslation?: string;
+
+    // Audio State (Passed from parent)
+    isAudioHighlighted: boolean;
+
+    // Event Handlers
     onClick: (index: number) => void;
+    onHover: (index: number) => void;
+    onClearHover: () => void;
     onMoreInfo: (index: number) => void;
     onPlay: (index: number) => void;
 }
 
-export const ReaderToken: React.FC<ReaderTokenProps> = ({
+const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
     token,
     index,
+    globalIndex,
     groupTranslation,
     position,
-    isHovered: propIsHovered,
+    isHovered,
     isHoveredWord,
     hoverPosition,
+    hoverTranslation,
+    isAudioHighlighted,
     onClick,
+    onHover,
+    onClearHover,
     onMoreInfo,
     onPlay
 }) => {
-    // Hooks
-    const {
-        handleHover,
-        clearHover,
-        hoveredIndex,
-        hoverTranslation
-    } = useTranslation();
-
-    const { currentWordIndex, play } = useAudioStore();
-
-    const currentPage = useReaderStore(s => s.currentPage);
-    const PAGE_SIZE = useReaderStore(s => s.PAGE_SIZE);
-
-    // Derived State
-    const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
     const isWhitespace = !token.trim();
     const isSelected = !!position; // If position is assigned, it's selected/grouped
 
-    // Use prop if provided, fallback to local check (for compatibility or simplified usage)
-    const isHovered = propIsHovered !== undefined ? propIsHovered : hoveredIndex === index;
-
-    const isAudioHighlighted = currentWordIndex === globalIndex;
-
     const handleMouseEnter = () => {
         if (!isWhitespace) {
-            handleHover(index);
+            onHover(index);
         }
     };
 
     const handleContextMenu = (e: React.MouseEvent) => {
         if (!isWhitespace) {
             e.preventDefault();
-            play(token);
+            onPlay(index);
         }
     };
 
@@ -131,12 +122,12 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
             `}
             onClick={() => {
                 if (!isWhitespace) {
-                    clearHover();
+                    onClearHover();
                     onClick(index);
                 }
             }}
             onMouseEnter={handleMouseEnter}
-            onMouseLeave={clearHover}
+            onMouseLeave={onClearHover}
             onContextMenu={handleContextMenu}
             style={{ position: 'relative' }}
         >
@@ -184,7 +175,7 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
                 }
             })()}
 
-            {(hoveredIndex === index) && hoverTranslation && !isSelected && (
+            {(isHoveredWord) && hoverTranslation && !isSelected && (
                 <span className={styles.hoverPopup}>
                     {renderPopup(hoverTranslation)}
                 </span>
@@ -192,3 +183,5 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
         </span>
     );
 };
+
+export const ReaderToken = memo(ReaderTokenComponent);

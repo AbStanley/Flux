@@ -12,7 +12,7 @@ import { RichInfoPanel } from './components/RichInfoPanel';
 
 import { useAudioStore } from './store/useAudioStore';
 import { PlayerControls } from './components/PlayerControls';
-import { useHighlighting } from './hooks/useHighlighting';
+
 
 export const ReaderView: React.FC = () => {
     const {
@@ -87,7 +87,7 @@ export const ReaderView: React.FC = () => {
         return { groupStarts: starts, tokenPositions: positions };
     }, [groups, selectionTranslations]);
 
-    const highlightIndices = useHighlighting(tokens, groups, richTranslation);
+
 
 
 
@@ -148,13 +148,15 @@ export const ReaderView: React.FC = () => {
                     </div>
 
                     <ReaderTextContent
+                        tokens={tokens}
                         paginatedTokens={paginatedTokens}
+                        groups={groups}
+                        richTranslation={richTranslation}
                         currentPage={currentPage}
                         PAGE_SIZE={PAGE_SIZE}
                         visualGroupStarts={visualGroupStarts}
                         groupStarts={groupStarts}
                         tokenPositions={tokenPositions}
-                        highlightIndices={highlightIndices}
                         textAreaRef={textAreaRef}
                         handleTokenClick={handleTokenClick}
                         onMoreInfoClick={onMoreInfoClick}

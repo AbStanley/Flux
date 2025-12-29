@@ -1,41 +1,54 @@
-import React from 'react';
+import React, { memo } from 'react';
 import styles from '../ReaderView.module.css';
 import { ReaderToken } from './ReaderToken';
 import { HoverPosition } from '../../../../core/types';
 
 import { useTranslationStore } from '../store/useTranslationStore';
+import { useAudioStore } from '../store/useAudioStore';
+import { useTranslation } from '../hooks/useTranslation';
+import { useHighlighting } from '../hooks/useHighlighting';
 
 interface ReaderTextContentProps {
+    tokens: string[]; // Needed for highlighting logic
     paginatedTokens: string[];
+    groups: number[][]; // Needed for highlighting
+    richTranslation: any; // Needed for highlighting
     currentPage: number;
     PAGE_SIZE: number;
     visualGroupStarts: Map<number, string>;
     groupStarts: Map<number, string>;
     tokenPositions: Map<number, string>;
-    highlightIndices: Set<number>;
     textAreaRef: React.RefObject<HTMLDivElement | null>;
     handleTokenClick: (index: number) => void;
     onMoreInfoClick: (index: number) => void;
     onPlayClick: (index: number) => void;
 }
 
-export const ReaderTextContent: React.FC<ReaderTextContentProps> = ({
+const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
+    tokens,
     paginatedTokens,
+    groups,
+    richTranslation,
     currentPage,
     PAGE_SIZE,
     visualGroupStarts,
     groupStarts,
     tokenPositions,
-    highlightIndices,
     textAreaRef,
     handleTokenClick,
     onMoreInfoClick,
     onPlayClick
 }) => {
-    // We can access hoveredIndex directly from store for the specific word highlight check
-    // to avoid passing it down if strictly needed, or pass as prop if we prefer purity.
-    // For specific word highlight 'isHoveredWord', we need the index.
+    // State Consumption
     const hoveredIndex = useTranslationStore(s => s.hoveredIndex);
+    const hoverTranslation = useTranslationStore(s => s.hoverTranslation);
+    const currentWordIndex = useAudioStore(s => s.currentWordIndex);
+
+    // Actions
+    const { handleHover, clearHover } = useTranslation();
+
+    // Highlighting Logic (Local to this component now)
+    const highlightIndices = useHighlighting(tokens, groups, richTranslation);
 
     return (
         <div
@@ -52,6 +65,7 @@ export const ReaderTextContent: React.FC<ReaderTextContentProps> = ({
                 let hoverPosition: HoverPosition | undefined;
                 const isHoveredSentence = highlightIndices.has(globalIndex);
                 const isHoveredWord = hoveredIndex === globalIndex;
+                const isAudioHighlighted = currentWordIndex === globalIndex;
 
                 if (isHoveredSentence) {
                     const prev = highlightIndices.has(globalIndex - 1);
@@ -67,13 +81,18 @@ export const ReaderTextContent: React.FC<ReaderTextContentProps> = ({
                     <ReaderToken
                         key={index}
                         index={index}
+                        globalIndex={globalIndex}
                         token={token}
                         groupTranslation={groupTranslation}
                         position={position}
                         isHovered={isHoveredSentence} // Now represents the full sentence hover
                         isHoveredWord={isHoveredWord} // Specific word
                         hoverPosition={hoverPosition}
+                        hoverTranslation={isHoveredWord ? (hoverTranslation || undefined) : undefined}
+                        isAudioHighlighted={isAudioHighlighted}
                         onClick={handleTokenClick}
+                        onHover={handleHover}
+                        onClearHover={clearHover}
                         onMoreInfo={onMoreInfoClick}
                         onPlay={onPlayClick}
                     />
@@ -82,3 +101,5 @@ export const ReaderTextContent: React.FC<ReaderTextContentProps> = ({
         </div>
     );
 };
+
+export const ReaderTextContent = memo(ReaderTextContentComponent);

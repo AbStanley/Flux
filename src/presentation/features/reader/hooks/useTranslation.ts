@@ -19,8 +19,8 @@ export const useTranslation = (enableAutoFetch = false) => {
 
     // Translation Store State
     const selectionTranslations = useTranslationStore(state => state.selectionTranslations);
-    const hoveredIndex = useTranslationStore(state => state.hoveredIndex);
-    const hoverTranslation = useTranslationStore(state => state.hoverTranslation);
+    // hoveredIndex and hoverTranslation removed to prevent top-level re-renders. 
+    // Consumers like ReaderTextContent should select them directly.
 
     // Rich Info State
     const richTranslation = useTranslationStore(state => state.richTranslation);
@@ -47,14 +47,14 @@ export const useTranslation = (enableAutoFetch = false) => {
     }, [enableAutoFetch, selectedIndices, tokens, sourceLang, targetLang, aiService, translateSelection]);
 
     // Derived Actions (Inject Service)
-    const handleHover = useCallback((index: number) => {
-        // Clear any previous hover actions if we move fast? 
-        // Actually, debounce here is tricky because we want immediate feedback for UI state (hoveredIndex), but delayed fetch.
-        // The store handles immediate `hoveredIndex` set. We just need to delay the *call* or let the store handle it?
-        // Since `ReaderToken` calls this on MouseEnter, let's debounce the *fetching* part.
+    // Track last hovered index locally to prevent redundant dispatches without adding state dependency
+    const lastHoveredIndexRef = useRef<number | null>(null);
 
+    const handleHover = useCallback((index: number) => {
         // Prevent redundant triggers if we are hovering over the same effective "item"
-        if (hoveredIndex === index) return;
+        if (lastHoveredIndexRef.current === index) return;
+
+        lastHoveredIndexRef.current = index;
 
         if (hoverTimeoutRef.current) {
             clearTimeout(hoverTimeoutRef.current);
@@ -63,7 +63,7 @@ export const useTranslation = (enableAutoFetch = false) => {
         hoverTimeoutRef.current = setTimeout(() => {
             handleHoverAction(index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
         }, 300);
-    }, [hoveredIndex, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService, handleHoverAction]);
+    }, [tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService, handleHoverAction]);
 
     const handleClearHover = useCallback(() => {
         if (hoverTimeoutRef.current) {
@@ -80,8 +80,6 @@ export const useTranslation = (enableAutoFetch = false) => {
     return {
         // State
         selectionTranslations,
-        hoveredIndex,
-        hoverTranslation,
         richTranslation,
         isRichInfoOpen,
         isRichInfoLoading,
