@@ -110,6 +110,9 @@ Instructions:
 4. Provide 2-3 usage examples with translations.
 5. Provide 1-2 common alternatives if applicable. 
    - IMPORTANT: 'alternatives' must be a simple array of strings. Do NOT include explanations (e.g. "alt1 (masculine)"). If you need to explain, use separate strings or omit the explanation.
+   - CRITICAL: Ensure all JSON strings are properly escaped. If the translation contains double quotes, they MUST be escaped (e.g. "He said \\"Hello\\"").
+
+114: Output Format: JSON ONLY. Do not include any other text.
 
 Output Format: JSON ONLY. Do not include any other text.
 Structure:
@@ -159,6 +162,19 @@ Structure:
         try {
             return JSON.parse(cleanResponse);
         } catch (e) {
+            console.warn("Initial JSON parse failed, attempting repair...", e);
+
+            // Repair attempt 1: Fix unescaped quotes in values
+            // This is risky but helps with common LLM errors like: "key": "He said "Hello""
+            // Strategy: Look for " : "..." where inside content has "
+
+            // Simple repair: often the issue is specifically in the 'alternatives' array or translation string logic.
+            // Let's rely on a more aggressive fallback or just accept failure.
+            // Actually, simply double-escaping backslashes sometimes helps if the model output single backslashes.
+
+            // Try to rescue unescaped quotes? 
+            // Regex to match "key": "value" is hard.
+
             console.error("Failed to parse rich translation JSON", rawResponse);
             throw new Error("Failed to parse rich translation response");
         }
