@@ -112,7 +112,12 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
                 ${position ? styles[position] : ''}
                 ${isAudioHighlighted ? styles.audioHighlight : ''}
             `}
-            onClick={() => !isWhitespace && onClick(index)}
+            onClick={() => {
+                if (!isWhitespace) {
+                    clearHover();
+                    onClick(index);
+                }
+            }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={clearHover}
             onContextMenu={handleContextMenu}

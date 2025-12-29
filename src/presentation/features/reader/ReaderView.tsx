@@ -33,7 +33,7 @@ export const ReaderView: React.FC = () => {
         isRichInfoLoading,
         fetchRichTranslation,
         closeRichInfo
-    } = useTranslation();
+    } = useTranslation(true);
 
     // Audio Store consumption
     const { playSingle } = useAudioStore();
@@ -123,9 +123,9 @@ export const ReaderView: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-row gap-4 max-w-[90%] mx-auto my-8 h-[80vh]">
+        <div className="flex flex-col md:flex-row gap-4 w-full h-[90vh] md:h-[92vh] max-w-[98%] mx-auto my-4 transition-all duration-300">
             <Card className="flex-1 h-full border-none shadow-sm glass overflow-hidden flex flex-col">
-                <CardContent className="p-8 md:p-12 relative flex-1 overflow-y-auto">
+                <CardContent className={`p-8 md:p-12 relative flex-1 overflow-y-auto ${styles.textAreaContainer}`}>
                     <PlayerControls />
                     <div className={styles.textArea}>
                         {paginatedTokens.map((token, index) => {

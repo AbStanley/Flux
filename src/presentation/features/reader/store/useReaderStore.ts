@@ -34,7 +34,7 @@ export const useReaderStore = create<ReaderState>((set, get) => ({
     currentPage: 1,
     selectedIndices: new Set(),
     text: "",
-    sourceLang: "German",
+    sourceLang: "Spanish",
     targetLang: "English",
     isReading: false,
     PAGE_SIZE: 500,

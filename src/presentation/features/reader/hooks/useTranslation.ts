@@ -3,7 +3,7 @@ import { useServices } from '../../../contexts/ServiceContext';
 import { useTranslationStore } from '../store/useTranslationStore';
 import { useReaderStore } from '../store/useReaderStore';
 
-export const useTranslation = () => {
+export const useTranslation = (enableAutoFetch = false) => {
     const { aiService } = useServices();
 
     // Ref for hover timeout to debounce calls
@@ -37,12 +37,14 @@ export const useTranslation = () => {
 
     // Effect: Automatically trigger translation when selection changes
     useEffect(() => {
+        if (!enableAutoFetch) return;
+
         const timeoutId = setTimeout(() => {
             translateSelection(selectedIndices, tokens, sourceLang, targetLang, aiService);
         }, 500); // 500ms debounce for selection to allow grouping
 
         return () => clearTimeout(timeoutId);
-    }, [selectedIndices, tokens, sourceLang, targetLang, aiService, translateSelection]);
+    }, [enableAutoFetch, selectedIndices, tokens, sourceLang, targetLang, aiService, translateSelection]);
 
     // Derived Actions (Inject Service)
     const handleHover = (index: number) => {
