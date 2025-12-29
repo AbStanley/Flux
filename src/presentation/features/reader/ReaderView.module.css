@@ -75,6 +75,29 @@
     transition: background-color 0.15s ease;
 }
 
+.selected.hoveredSentence {
+    background-color: hsl(var(--accent) / 0.8);
+    color: hsl(var(--accent-foreground));
+    border-radius: 0.25rem;
+    box-shadow: none;
+    /* Shadow creates seams between joined words */
+}
+
+/* Ensure shape helpers override the base radius */
+.selected.hoveredSentence.middle {
+    border-radius: 0;
+}
+
+.selected.hoveredSentence.start {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.selected.hoveredSentence.end {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
 .hoveredWord {
     background-color: hsl(var(--accent) / 0.8) !important;
     /* Stronger highlight for the specific word */

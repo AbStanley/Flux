@@ -123,11 +123,11 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
                 ${position ? styles[position] : ''} 
                 ${groupTranslation ? styles.visualStart : ''}
                 ${isAudioHighlighted ? styles.audioHighlight : ''}
-                ${(isHovered && !isSelected) ? cn(
+                ${isHovered ? cn(
                 styles.hoveredSentence,
                 hoverPosition && styles[hoverPosition] // This handles border radius/shape for sentence
             ) : ''} 
-                ${isHoveredWord ? styles.hoveredWord : ''}
+                ${(isHoveredWord && !isSelected) ? styles.hoveredWord : ''}
             `}
             onClick={() => {
                 if (!isWhitespace) {

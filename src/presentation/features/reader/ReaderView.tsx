@@ -93,6 +93,17 @@ export const ReaderView: React.FC = () => {
     const highlightIndices = React.useMemo(() => {
         if (hoveredIndex === null || hoveredIndex === undefined || hoveredIndex === -1 || richTranslation) return new Set<number>();
 
+        // 1. Priority: Check if hovered index is part of an existing selection group
+        // groups is array of number[] (indices)
+        const existingGroup = groups.find(g => g.includes(hoveredIndex));
+        if (existingGroup) {
+            const min = existingGroup[0];
+            const max = existingGroup[existingGroup.length - 1];
+            // Create range to ensure gaps (like spaces) are included
+            const range = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+            return new Set(range);
+        }
+
         const selectionMode = useReaderStore.getState().selectionMode;
 
         if (selectionMode === SelectionMode.Sentence) {
@@ -103,7 +114,7 @@ export const ReaderView: React.FC = () => {
             // Just the word in Word Mode
             return new Set([hoveredIndex]);
         }
-    }, [hoveredIndex, tokens, richTranslation]);
+    }, [hoveredIndex, tokens, richTranslation, groups]);
 
 
 
