@@ -1,9 +1,10 @@
 
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useRef } from 'react';
 import styles from './ReaderView.module.css';
 import { Card, CardContent } from "../../components/ui/card";
 import { useReader } from './hooks/useReader';
 import { useTranslation } from './hooks/useTranslation';
+import { useVisualSplits } from './hooks/useVisualSplits';
 import { useReaderStore, getSentenceRange } from './store/useReaderStore';
 import { useTranslationStore } from './store/useTranslationStore';
 import { SelectionMode, HoverPosition } from '../../../core/types';
@@ -49,74 +50,15 @@ export const ReaderView: React.FC = () => {
     const tokenPositions = new Map<number, string>();
 
     // Visual Translation Splitting Logic
-    const [visualGroupStarts, setVisualGroupStarts] = useState<Map<number, string>>(new Map());
-
-    useLayoutEffect(() => {
-        const newVisualStarts = new Map<number, string>();
-
-        groups.forEach(group => {
-            const start = group[0];
-            const end = group[group.length - 1];
-            const key = `${start}-${end}`;
-            const fullTranslation = selectionTranslations.get(key);
-
-            if (!fullTranslation) return;
-
-            // 1. Get DOM elements
-            const tokenElements: { index: number, el: HTMLElement, top: number }[] = [];
-            for (let i = start; i <= end; i++) {
-                const el = document.getElementById(`token-${i}`);
-                if (el) {
-                    tokenElements.push({ index: i, el, top: el.getBoundingClientRect().top });
-                }
-            }
-
-            if (tokenElements.length === 0) return;
-
-            // 2. Group by visual line (allow small tolerance for float layout)
-            const lines: { startIndex: number, count: number }[] = [];
-            let currentLineStart = tokenElements[0];
-            let currentCount = 1;
-            let lastTop = currentLineStart.top;
-
-            for (let i = 1; i < tokenElements.length; i++) {
-                const token = tokenElements[i];
-                if (Math.abs(token.top - lastTop) > 5) {
-                    // New Line detected
-                    lines.push({ startIndex: currentLineStart.index, count: currentCount });
-                    currentLineStart = token;
-                    currentCount = 1;
-                    lastTop = token.top;
-                } else {
-                    currentCount++;
-                }
-            }
-            // Push last line
-            lines.push({ startIndex: currentLineStart.index, count: currentCount });
-
-            // 3. Split translation string
-            // Heuristic: Split proportional to token count
-            const words = fullTranslation.split(' ');
-            const totalTokens = tokenElements.length;
-
-            let wordCursor = 0;
-            lines.forEach((line, lineIdx) => {
-                if (lineIdx === lines.length - 1) {
-                    // Last line gets the rest
-                    const segment = words.slice(wordCursor).join(' ');
-                    if (segment) newVisualStarts.set(line.startIndex, segment);
-                } else {
-                    const lineShare = line.count / totalTokens;
-                    const wordCountForLine = Math.max(1, Math.round(words.length * lineShare));
-                    const segment = words.slice(wordCursor, wordCursor + wordCountForLine).join(' ');
-                    if (segment) newVisualStarts.set(line.startIndex, segment);
-                    wordCursor += wordCountForLine;
-                }
-            });
-        });
-
-        setVisualGroupStarts(newVisualStarts);
-    }, [selectedIndices, selectionTranslations, currentPage, paginatedTokens]); // Re-run on selection/page change
+    const textAreaRef = useRef<HTMLDivElement>(null);
+    const visualGroupStarts = useVisualSplits({
+        groups,
+        selectionTranslations,
+        paginatedTokens, // Note: Hook signature asked for this but didn't strictly use it for logic other than deps, passing ensures correctness
+        currentPage,
+        PAGE_SIZE,
+        textAreaRef
+    });
 
 
 
@@ -221,7 +163,10 @@ export const ReaderView: React.FC = () => {
                         <PlayerControls />
                     </div>
 
-                    <div className={`${styles.textArea} p-8 min-[1200px]:p-12 pb-12`}>
+                    <div
+                        ref={textAreaRef}
+                        className={`${styles.textArea} p-8 min-[1200px]:p-12 pb-12`}
+                    >
                         {paginatedTokens.map((token, index) => {
                             const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
                             // Prefer visual split translation, fallback (should cover initial render) to basic group start
