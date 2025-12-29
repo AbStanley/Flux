@@ -22,12 +22,17 @@ Use **Dependency Injection** (via React Context or Hook factories) to decouple t
 - **Framework**: React (Vite) + TypeScript
 - **Styling**: **Tailwind CSS** + **shadcn/ui** (MCP Configured). *Focus on maintainability, scalability, and premium design tokens.*
 - **State Management**: **Zustand** (Global Store) + Hooks (Connector pattern). *Single Source of Truth.*
+    - `useReaderStore`: Manages text content, pagination, and selection.
+    - `useAudioStore`: Manages TTS playback, voice selection, and timeline scrubbing (via token index seeking).
 
 ## 4. Design & Aesthetics (The "Premium" Look)
 The UI must be **clean**, **minimalist**, and **animated**.
 - **Typography**: Use high-quality sans-serif fonts (e.g., *Inter*, *Outfit*). Readable and elegant.
 - **Colors**: Deep, harmonious palettes. Glassmorphism (blur effects) for overlays.
 - **Micro-interactions**: Hover effects, smooth transitions for translation popups, satisfying clicks.
+- **Responsive Layout**:
+    - **Desktop**: Side-by-side flex layout for panels (e.g., Translation Details) to avoid obscuring content.
+    - **Mobile**: Bottom sheet overlays for maximum reachability.
 - **Layout**: Distraction-free reading environment.
 
 ## 5. Directory Structure
@@ -43,9 +48,10 @@ src/
   ├── presentation/     # UI Components and Pages
   │   ├── components/   # Shared UI components (Buttons, Modals)
   │   ├── features/     # Feature-specific components (Reader, Settings)
-  │   │   ├── components/ # Sub-components
-  │   │   ├── hooks/      # View Models / Connectors
-  │   │   └── store/      # Zustand Stores (Business Logic)
+  │   │   ├── components/ # Sub-components (e.g. RichInfoPanel, PlayerControls)
+  │   │   ├── hooks/      # View Models / Connectors (e.g. useTranslation)
+  │   │   └── store/      # Zustand Stores (useReaderStore, useAudioStore)
+
   ├── services/         # Application logic (Service classes/functions)
   └── styles/           # Global styles and themes
 ```

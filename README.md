@@ -32,7 +32,13 @@ We follow **Clean Architecture** principles with a strict **Presentation-Domain-
 - **Unified Design System**: Built with **shadcn/ui** and **Tailwind CSS** for consistency and accessibility.
 - **MCP Server Ready**: Configured for AI assistants (VS Code/Cursor) to browse and install components.
 - **Local AI Integration**: Seamless connection to local Ollama models.
-- **Smart Translation**: Hover and selection-based translations.
+- **Smart Translation**: 
+    - Hover and selection-based translations.
+    - **Non-blocking Details Panel**: Detailed translation insights in a non-intrusive sidebar (Desktop) or bottom sheet (Mobile).
+- **Audio Reading**:
+    - **Natural TTS**: Reads text aloud using browser synthesis.
+    - **Karaoke Highlighting**: Highlights words in real-time as they are spoken.
+    - **Scrubbing Timeline**: Interactive slider to seek and jump to any part of the text.
 - **Language Controls**: Top-level source/target language selection.
 
 ### Source Tree
@@ -67,9 +73,11 @@ graph TD
         RV -->|Tokenize| Tokens[Tokens Array]
         User -->|Click Word| Select[Selection Logic]
         User -->|Hover Word| Hover[Hover Logic]
-        
+        User -->|Play/Scrub| Audio[Audio Store]
+
         Select -->|Form Groups| Grouping[Group Logic]
         Grouping -->|Request Translation| Service[AI Service]
+        Audio -->|Highlight| Tokens
     end
     
     Service -->|Ollama API| LLM[Local LLM]
