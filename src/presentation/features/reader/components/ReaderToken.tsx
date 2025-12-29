@@ -138,7 +138,28 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
                 </span>
             )}
 
-            {token}
+            {/* Render token with markdown support */}
+            {(() => {
+                // Check if token contains bold markdown **text**
+                const boldRegex = /\*\*(.*?)\*\*/g;
+                if (boldRegex.test(token)) {
+                    const parts = token.split(boldRegex);
+                    return (
+                        <>
+                            {parts.map((part, i) =>
+                                // The split with capturing group returns: [pre, match, post, match, ...]
+                                // If original was "A **bold** word", split is ["A ", "bold", " word"]
+                                // Even indices are normal, odd are the captured group (bold)
+                                // Wait, standard split does this. Let's verify.
+                                // "A **B** C".split(/\*\*(.*?)\*\*/) -> ["A ", "B", " C"]
+                                // So i % 2 === 1 is the bold part.
+                                i % 2 === 1 ? <strong key={i} className="font-bold text-foreground">{part}</strong> : part
+                            )}
+                        </>
+                    );
+                }
+                return token;
+            })()}
 
             {(hoveredIndex === index) && hoverTranslation && !isSelected && (
                 <span className={styles.hoverPopup}>
