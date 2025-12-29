@@ -140,25 +140,43 @@ export const ReaderToken: React.FC<ReaderTokenProps> = ({
 
             {/* Render token with markdown support */}
             {(() => {
-                // Check if token contains bold markdown **text**
+                // Simple parser for **bold** and *italic*
+                // Note: This simple regex approach has limitations but works for basic cases.
+                // We handle **bold** first, then inner *italic*? Or handled recursively?
+                // Let's keep it simple: Split by ** first, then checks parts for *
+
+                const renderParts = (text: string, bold: boolean) => {
+                    const italicRegex = /\*([^*]+)\*/g;
+                    if (italicRegex.test(text)) {
+                        const parts = text.split(italicRegex);
+                        return parts.map((part, i) => {
+                            if (i % 2 === 1) {
+                                // Italic
+                                return <em key={i} className={`italic ${bold ? 'font-bold' : ''} text-foreground`}>{part}</em>;
+                            }
+                            return bold ? <strong key={i} className="font-bold text-foreground">{part}</strong> : part;
+                        });
+                    }
+                    return bold ? <strong className="font-bold text-foreground">{text}</strong> : text;
+                };
+
                 const boldRegex = /\*\*(.*?)\*\*/g;
                 if (boldRegex.test(token)) {
                     const parts = token.split(boldRegex);
                     return (
                         <>
                             {parts.map((part, i) =>
-                                // The split with capturing group returns: [pre, match, post, match, ...]
-                                // If original was "A **bold** word", split is ["A ", "bold", " word"]
-                                // Even indices are normal, odd are the captured group (bold)
-                                // Wait, standard split does this. Let's verify.
-                                // "A **B** C".split(/\*\*(.*?)\*\*/) -> ["A ", "B", " C"]
-                                // So i % 2 === 1 is the bold part.
-                                i % 2 === 1 ? <strong key={i} className="font-bold text-foreground">{part}</strong> : part
+                                // Odd indices are bold captures
+                                <React.Fragment key={i}>
+                                    {renderParts(part, i % 2 === 1)}
+                                </React.Fragment>
                             )}
                         </>
                     );
+                } else {
+                    // unexpected, check for just italic
+                    return renderParts(token, false);
                 }
-                return token;
             })()}
 
             {(hoveredIndex === index) && hoverTranslation && !isSelected && (

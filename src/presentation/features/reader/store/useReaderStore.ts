@@ -146,6 +146,12 @@ export const getSentenceRange = (index: number, tokens: string[]): number[] => {
         end++;
     }
 
+    // OPTIMIZATION: Trim leading whitespace from the range
+    // This prevents the visual "growth" on the left side when hovering/selecting a sentence that starts with a space.
+    while (start < end && !tokens[start].trim()) {
+        start++;
+    }
+
     const range: number[] = [];
     for (let i = start; i <= end; i++) {
         range.push(i);
