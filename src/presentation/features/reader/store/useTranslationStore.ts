@@ -169,7 +169,7 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
         if (!token?.trim()) return;
 
         // Set hover index immediately for UI feedback
-        set({ hoveredIndex: index, hoverTranslation: null });
+        set({ hoveredIndex: globalIndex, hoverTranslation: null });
 
         // Check cache (single token key)
         const key = `${globalIndex}-${globalIndex}`;
