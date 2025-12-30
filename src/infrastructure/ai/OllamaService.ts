@@ -9,28 +9,72 @@ export class OllamaService implements IAIService {
         this.model = model;
     }
 
-    async generateText(prompt: string, options?: any): Promise<string> {
+    async generateText(prompt: string, options?: {
+        onProgress?: (chunk: string, fullText: string) => void;
+        signal?: AbortSignal;
+        [key: string]: any
+    }): Promise<string> {
         try {
+            const isStreaming = !!options?.onProgress;
+
             const body = {
                 model: this.model,
                 prompt: prompt,
-                stream: false,
+                stream: isStreaming,
                 ...options
             };
+
+            // Remove our custom options from the body sent to Ollama
+            delete body.onProgress;
+            delete body.signal;
 
             const response = await fetch(`${this.baseUrl}/api/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                body: JSON.stringify(body),
+                signal: options?.signal
             });
 
             if (!response.ok) {
                 throw new Error(`Ollama API error: ${response.statusText}`);
             }
 
-            const data = await response.json();
-            return data.response;
-        } catch (error) {
+            if (isStreaming && response.body) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        try {
+                            const json = JSON.parse(line);
+                            if (json.response) {
+                                fullText += json.response;
+                                options.onProgress?.(json.response, fullText);
+                            }
+                            if (json.done) return fullText;
+                        } catch (e) {
+                            console.warn('Error parsing JSON chunk', e);
+                        }
+                    }
+                }
+                return fullText;
+            } else {
+                const data = await response.json();
+                return data.response;
+            }
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.log('Ollama generation aborted');
+                throw error;
+            }
             console.error('Ollama generation failed:', error);
             throw error;
         }

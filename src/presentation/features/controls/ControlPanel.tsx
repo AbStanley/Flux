@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { LanguageSelect } from "../../components/LanguageSelect";
 import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../../../core/constants/languages";
 import { LearningControls } from "./LearningControls";
-import { ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, Loader2 } from "lucide-react";
 import { useReaderStore } from '../reader/store/useReaderStore';
 
 export const ControlPanel: React.FC = () => {
@@ -24,6 +24,8 @@ export const ControlPanel: React.FC = () => {
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
+
+    const abortControllerRef = React.useRef<AbortController | null>(null);
 
     // Learning Mode State
     const [isLearningMode, setIsLearningMode] = useState(true);
@@ -51,6 +53,11 @@ export const ControlPanel: React.FC = () => {
 
     const handleGenerate = async () => {
         setIsGenerating(true);
+        // Clear previous text to start fresh
+        setText('');
+
+        abortControllerRef.current = new AbortController();
+
         try {
             let prompt = `Write a short, interesting story in ${sourceLang}. Output ONLY the story text. Do not include any introductory or concluding remarks. Do not include translations.`;
 
@@ -61,13 +68,28 @@ export const ControlPanel: React.FC = () => {
                 prompt = `Write a short, interesting story in ${sourceLang} about a robot learning to paint. Output ONLY the story text.`;
             }
 
-            const result = await aiService.generateText(prompt);
-            setText(result);
-        } catch (error) {
-            console.error(error);
-            alert("Failed to generate text");
+            await aiService.generateText(prompt, {
+                signal: abortControllerRef.current.signal,
+                onProgress: (_chunk, fullText) => {
+                    setText(fullText);
+                }
+            });
+        } catch (error: any) {
+            if (error.name === 'AbortError' || error.message === 'Aborted') {
+                console.log('Generation aborted by user');
+            } else {
+                console.error(error);
+                alert("Failed to generate text");
+            }
         } finally {
             setIsGenerating(false);
+            abortControllerRef.current = null;
+        }
+    };
+
+    const handleStopGeneration = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
         }
     };
 
@@ -88,6 +110,7 @@ export const ControlPanel: React.FC = () => {
     };
 
     const handleSwapLanguages = () => {
+        if (isGenerating) return;
         const temp = sourceLang;
         setSourceLang(targetLang);
         setTargetLang(temp);
@@ -110,6 +133,7 @@ export const ControlPanel: React.FC = () => {
                         options={SOURCE_LANGUAGES}
                         placeholder="Select Source"
                         className="flex-1"
+                        disabled={isGenerating}
                     />
 
                     <Button
@@ -118,6 +142,7 @@ export const ControlPanel: React.FC = () => {
                         onClick={handleSwapLanguages}
                         className="mb-[2px] hover:bg-secondary/80"
                         title="Swap Languages"
+                        disabled={isGenerating}
                     >
                         <ArrowRightLeft className="h-4 w-4" />
                     </Button>
@@ -129,17 +154,20 @@ export const ControlPanel: React.FC = () => {
                         options={TARGET_LANGUAGES}
                         placeholder="Select Target"
                         className="flex-1"
+                        disabled={isGenerating}
                     />
                 </div>
 
-                <LearningControls
-                    isLearningMode={isLearningMode}
-                    setIsLearningMode={setIsLearningMode}
-                    proficiencyLevel={proficiencyLevel}
-                    setProficiencyLevel={setProficiencyLevel}
-                    topic={topic}
-                    setTopic={setTopic}
-                />
+                <div className={isGenerating ? 'opacity-50 pointer-events-none' : ''}>
+                    <LearningControls
+                        isLearningMode={isLearningMode}
+                        setIsLearningMode={setIsLearningMode}
+                        proficiencyLevel={proficiencyLevel}
+                        setProficiencyLevel={setProficiencyLevel}
+                        topic={topic}
+                        setTopic={setTopic}
+                    />
+                </div>
 
                 <div className="flex justify-between items-center pt-2">
                     <CardTitle className="text-xl">Reader Input</CardTitle>
@@ -148,6 +176,7 @@ export const ControlPanel: React.FC = () => {
                             <Select
                                 value={((aiService as any).model) || ""} // Type casting for now, ideally fix Interface
                                 onValueChange={(val) => setServiceType('ollama', { model: val })}
+                                disabled={isGenerating}
                             >
                                 <SelectTrigger className="w-[180px] bg-secondary/30 border-border/50">
                                     <SelectValue placeholder="Select Model" />
@@ -167,6 +196,7 @@ export const ControlPanel: React.FC = () => {
                         <Select
                             value={currentServiceType}
                             onValueChange={(val) => setServiceType(val as 'mock' | 'ollama')}
+                            disabled={isGenerating}
                         >
                             <SelectTrigger className="w-[150px] bg-secondary/30 border-border/50">
                                 <SelectValue />
@@ -189,29 +219,41 @@ export const ControlPanel: React.FC = () => {
                     className="min-h-[160px] font-mono text-lg shadow-sm resize-none focus-visible:ring-primary bg-secondary/30 border-border/50"
                     value={text}
                     onChange={handleManualChange}
+                    disabled={isGenerating}
                 />
 
                 <div className="flex gap-4 flex-wrap">
-                    <Button
-                        onClick={handleGenerate}
-                        disabled={isGenerating}
-                        className="w-full sm:w-auto"
-                    >
-                        {isGenerating ? 'Generating...' : 'Generate with AI'}
-                    </Button>
+                    {isGenerating ? (
+                        <Button
+                            onClick={handleStopGeneration}
+                            variant="destructive"
+                            className="w-full sm:w-auto"
+                        >
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Stop Generating
+                        </Button>
+                    ) : (
+                        <Button
+                            onClick={handleGenerate}
+                            className="w-full sm:w-auto"
+                        >
+                            Generate Story
+                        </Button>
+                    )}
 
-                    <Button variant="outline" className="relative w-full sm:w-auto cursor-pointer">
+                    <Button variant="outline" className="relative w-full sm:w-auto cursor-pointer" disabled={isGenerating}>
                         Load File
                         <input
                             type="file"
                             onChange={handleFileUpload}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            disabled={isGenerating}
                         />
                     </Button>
 
                     <Button
                         onClick={handleStartReading}
-                        disabled={!text.trim()}
+                        disabled={!text.trim() || isGenerating}
                         className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all"
                     >
                         Start Reading

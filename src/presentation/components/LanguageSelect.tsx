@@ -14,6 +14,7 @@ interface LanguageSelectProps {
     options: LanguageOption[];
     placeholder?: string;
     className?: string;
+    disabled?: boolean;
 }
 
 export const LanguageSelect: React.FC<LanguageSelectProps> = ({
@@ -22,12 +23,13 @@ export const LanguageSelect: React.FC<LanguageSelectProps> = ({
     onChange,
     options,
     placeholder = "Select Language",
-    className
+    className,
+    disabled
 }) => {
     return (
         <div className={`flex flex-col gap-2 ${className}`}>
             <Label className="uppercase text-xs text-muted-foreground tracking-wider">{label}</Label>
-            <Select value={value} onValueChange={onChange}>
+            <Select value={value} onValueChange={onChange} disabled={disabled}>
                 <SelectTrigger>
                     <SelectValue placeholder={placeholder} />
                 </SelectTrigger>

@@ -1,10 +1,29 @@
 import type { IAIService } from '../../core/interfaces/IAIService';
 
 export class MockAIService implements IAIService {
-    async generateText(prompt: string): Promise<string> {
+    async generateText(prompt: string, options?: { onProgress?: (chunk: string, fullText: string) => void, signal?: AbortSignal }): Promise<string> {
         console.log(`[MockAI] Generating text for prompt: ${prompt}`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
-        return `[Mock Generated] content based on: "${prompt}". This is a placeholder for actual AI generation.`;
+
+        const responseText = `[Mock Generated] content based on: "${prompt}". This is a placeholder for actual AI generation.`;
+
+        if (options?.onProgress) {
+            // Simulate streaming
+            const words = responseText.split(' ');
+            let accumulated = '';
+
+            for (const word of words) {
+                if (options.signal?.aborted) {
+                    throw new Error('Aborted');
+                }
+                await new Promise(resolve => setTimeout(resolve, 100)); // Simulate token delay
+                accumulated += (accumulated ? ' ' : '') + word;
+                options.onProgress(word + ' ', accumulated);
+            }
+            return accumulated;
+        } else {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+            return responseText;
+        }
     }
 
     async translateText(text: string, targetLanguage: string = 'en', context?: string): Promise<string> {

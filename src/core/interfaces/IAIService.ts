@@ -23,9 +23,14 @@ export interface IAIService {
     /**
      * Generates text based on a prompt.
      * @param prompt The input prompt.
+     * @param options Optional configuration for generation (streaming, signal, etc.)
      * @returns The generated text.
      */
-    generateText(prompt: string): Promise<string>;
+    generateText(prompt: string, options?: {
+        onProgress?: (chunk: string, fullText: string) => void;
+        signal?: AbortSignal;
+        [key: string]: any
+    }): Promise<string>;
 
     /**
      * Translates text to a target language.
