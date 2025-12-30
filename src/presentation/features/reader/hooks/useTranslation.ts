@@ -17,6 +17,7 @@ export const useTranslation = (enableAutoFetch = false) => {
     const sourceLang = useReaderStore(state => state.sourceLang);
     const targetLang = useReaderStore(state => state.targetLang);
 
+
     // Translation Store State
     const selectionTranslations = useTranslationStore(state => state.selectionTranslations);
     // hoveredIndex and hoverTranslation removed to prevent top-level re-renders. 

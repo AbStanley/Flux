@@ -34,7 +34,6 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
     richTranslation,
     currentPage,
     PAGE_SIZE,
-    selectionMode, // Destructure
     visualGroupStarts,
     groupStarts,
     tokenPositions,
@@ -69,9 +68,7 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
                 // Calculate hover position
                 let hoverPosition: HoverPosition | undefined;
                 const isHoveredSentence = highlightIndices.has(globalIndex);
-                // Only show word-specific highlight if we are in Word mode OR if the sentence highlight is effectively just one word
-                // This prevents the "First word strong, rest weak" visual discrepancy in Sentence/Group mode.
-                const isHoveredWord = (hoveredIndex === globalIndex) && (selectionMode === SelectionMode.Word);
+                const isHoveredWord = (hoveredIndex === globalIndex);
                 const isAudioHighlighted = currentWordIndex === globalIndex;
 
                 if (isHoveredSentence) {
