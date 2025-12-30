@@ -1,9 +1,10 @@
 import React, { memo } from 'react';
 import styles from '../ReaderView.module.css';
 
-import { Search, Volume2 } from 'lucide-react'; // Import icon
+import { Search, Volume2, RefreshCcw } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 import { HoverPosition } from '../../../../core/types';
+import { useLongPress } from '../hooks/useLongPress';
 
 interface ReaderTokenProps {
     token: string;
@@ -27,6 +28,8 @@ interface ReaderTokenProps {
     onClearHover: () => void;
     onMoreInfo: (index: number) => void;
     onPlay: (index: number) => void;
+    onSeek: (index: number) => void;
+    onRegenerate: (index: number) => void;
 }
 
 const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
@@ -44,7 +47,9 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
     onHover,
     onClearHover,
     onMoreInfo,
-    onPlay
+    onPlay,
+    onSeek,
+    onRegenerate
 }) => {
     const isWhitespace = !token.trim();
     const isSelected = !!position; // If position is assigned, it's selected/grouped
@@ -62,7 +67,21 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
         }
     };
 
-    // Render helper for popup content
+    const longPressHandlers = useLongPress({
+        onLongPress: (_e) => {
+            if (!isWhitespace) {
+                onSeek(index);
+            }
+        },
+        onClick: () => {
+            if (!isWhitespace) {
+                onClearHover();
+                onClick(index);
+            }
+        },
+        threshold: 500
+    });
+
     const renderPopup = (translation: string) => {
         const buttonClass = cn(
             "ml-1 p-1 rounded-full cursor-pointer shadow-sm border border-white/10",
@@ -75,29 +94,52 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
             "min-[1200px]:group-hover:opacity-100 min-[1200px]:group-hover:scale-100 min-[1200px]:group-hover:w-auto min-[1200px]:group-hover:p-1 min-[1200px]:group-hover:ml-1"
         );
 
+        const handleInteraction = (e: React.MouseEvent | React.TouchEvent, action: () => void) => {
+            e.stopPropagation();
+            // Prevent the long-press hook from seeing this as a start of a press
+            // This is key because the hook might be listening on the parent
+            action();
+        };
+
         return (
-            <span className="flex items-center group">
+            <span
+                className="flex items-center group"
+                onMouseDown={(e) => e.stopPropagation()}
+                onMouseUp={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+            >
                 {translation}
                 <div className="flex items-center overflow-hidden transition-all duration-300 ease-in-out">
                     <button
                         className={buttonClass}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onPlay(index);
-                        }}
+                        onClick={(e) => handleInteraction(e, () => onPlay(index))}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onMouseUp={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
                         title="Listen"
                     >
                         <Volume2 size={14} strokeWidth={3} />
                     </button>
                     <button
                         className={buttonClass}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onMoreInfo(index);
-                        }}
+                        onClick={(e) => handleInteraction(e, () => onMoreInfo(index))}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onMouseUp={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
                         title="More Info"
                     >
                         <Search size={14} strokeWidth={3} />
+                    </button>
+                    <button
+                        className={buttonClass}
+                        onClick={(e) => handleInteraction(e, () => onRegenerate(index))}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onMouseUp={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        title="Regenerate Translation"
+                    >
+                        <RefreshCcw size={14} strokeWidth={3} />
                     </button>
                 </div>
             </span>
@@ -120,12 +162,7 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
             ) : ''} 
                 ${(isHoveredWord && !isSelected) ? styles.hoveredWord : ''}
             `}
-            onClick={() => {
-                if (!isWhitespace) {
-                    onClearHover();
-                    onClick(index);
-                }
-            }}
+            {...longPressHandlers}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={onClearHover}
             onContextMenu={handleContextMenu}
