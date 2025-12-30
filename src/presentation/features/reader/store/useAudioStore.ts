@@ -60,7 +60,14 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     },
 
     setVoice: (voice) => set({ selectedVoice: voice }),
-    setRate: (rate) => set({ playbackRate: rate }),
+    setRate: (rate) => {
+        set({ playbackRate: rate });
+        // If playing, we must restart to apply the new rate
+        const { isPlaying, currentWordIndex } = get();
+        if (isPlaying && currentWordIndex !== null) {
+            get().seek(currentWordIndex);
+        }
+    },
 
     setTokens: (tokens) => {
         // Pre-calculate start indices for performance

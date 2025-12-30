@@ -109,6 +109,7 @@ export const useTranslation = (enableAutoFetch = false) => {
         clearHover: handleClearHover,
         fetchRichTranslation,
         closeRichInfo,
-        toggleRichInfo
+        toggleRichInfo,
+        regenerateSelection: () => translateSelection(selectedIndices, tokens, sourceLang, targetLang, aiService, true)
     };
 };

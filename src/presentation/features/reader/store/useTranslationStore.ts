@@ -20,7 +20,8 @@ interface TranslationState {
         tokens: string[],
         sourceLang: string,
         targetLang: string,
-        aiService: IAIService
+        aiService: IAIService,
+        force?: boolean
     ) => Promise<void>;
 
     handleHover: (
@@ -124,7 +125,7 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
     isRichInfoOpen: false,
     isRichInfoLoading: false,
 
-    translateSelection: async (indices, tokens, sourceLang, targetLang, aiService) => {
+    translateSelection: async (indices, tokens, sourceLang, targetLang, aiService, force = false) => {
         // If selection is empty, just return (don't clear cache)
         if (indices.size === 0) {
             return;
@@ -143,8 +144,8 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
             const end = group[group.length - 1];
             const key = `${start}-${end}`;
 
-            // Cache hit
-            if (nextTranslations.has(key)) {
+            // Cache hit (skip if not forced)
+            if (!force && nextTranslations.has(key)) {
                 return;
             }
 
@@ -153,8 +154,10 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
             const context = getContextForIndex(tokens, start);
             const result = await fetchTranslationHelper(textToTranslate, context, sourceLang, targetLang, aiService);
 
-            nextTranslations.set(key, result || "Error");
-            hasChanges = true;
+            if (result) {
+                nextTranslations.set(key, result);
+                hasChanges = true;
+            }
         }));
 
         if (hasChanges) {
