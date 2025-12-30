@@ -22,6 +22,9 @@ interface ReaderTokenProps {
     // Audio State (Passed from parent)
     isAudioHighlighted: boolean;
 
+    // Styling
+    isTitle?: boolean;
+
     // Event Handlers
     onClick: (index: number) => void;
     onHover: (index: number) => void;
@@ -43,6 +46,7 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
     hoverPosition,
     hoverTranslation,
     isAudioHighlighted,
+    isTitle,
     onClick,
     onHover,
     onClearHover,
@@ -51,6 +55,12 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
     onSeek,
     onRegenerate
 }) => {
+    // Hide visual header markers (##, ###) completely
+    const isHeaderMarker = /^#+$/.test(token.trim());
+    if (isHeaderMarker) {
+        return null; // Don't render
+    }
+
     const isWhitespace = !token.trim();
     // Check if it contains newline
     const hasNewline = isWhitespace && token.includes('\n');
@@ -156,6 +166,7 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
                 hoverPosition && styles[hoverPosition] // This handles border radius/shape for sentence
             ) : ''} 
                 ${(isHoveredWord && !isSelected) ? styles.hoveredWord : ''}
+                ${isTitle ? 'text-xl font-bold text-foreground inline-block my-2' : ''}
             `}
             onClick={() => {
                 if (!isWhitespace) {
@@ -183,40 +194,43 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
 
             {/* Render token with markdown support */}
             {(() => {
-                // Simple parser for **bold** and *italic* and hastags
+                // Simplified parser for **bold** and *italic*
 
                 const renderParts = (text: string, bold: boolean) => {
                     const italicRegex = /\*([^*]+)\*/g;
                     if (italicRegex.test(text)) {
-                        const parts = text.split(italicRegex);
-                        return parts.map((part, i) => {
-                            if (i % 2 === 1) {
-                                // Italic
-                                return <em key={i} className={`italic ${bold ? 'font-bold' : ''} text-foreground`}>{part}</em>;
-                            }
-                            return bold ? <strong key={i} className="font-bold text-foreground">{part}</strong> : part;
-                        });
+                        return (
+                            <>
+                                {text.split(italicRegex).map((part, i) => {
+                                    const isItalic = i % 2 === 1;
+                                    const classes = cn(
+                                        bold && "font-bold",
+                                        isItalic && "italic",
+                                        "text-foreground"
+                                    );
+                                    return <span key={i} className={classes}>{part}</span>;
+                                })}
+                            </>
+                        );
                     }
-                    return bold ? <strong className="font-bold text-foreground">{text}</strong> : text;
+                    if (bold) {
+                        return <strong className="font-bold text-foreground">{text}</strong>;
+                    }
+                    return text;
                 };
 
                 const boldRegex = /\*\*(.*?)\*\*/g;
-                const hashtagRegex = /#\w+/g;
-
                 if (boldRegex.test(token)) {
-                    const parts = token.split(boldRegex);
                     return (
                         <>
-                            {parts.map((part, i) =>
-                                // Odd indices are bold captures
+                            {token.split(boldRegex).map((part, i) => (
                                 <React.Fragment key={i}>
                                     {renderParts(part, i % 2 === 1)}
                                 </React.Fragment>
-                            )}
+                            ))}
                         </>
                     );
                 } else {
-                    // unexpected, check for just italic
                     return renderParts(token, false);
                 }
             })()}

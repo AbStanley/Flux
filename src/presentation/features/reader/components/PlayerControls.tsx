@@ -52,7 +52,10 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({ vertical = false
 
     // Sync tokens
     useEffect(() => {
-        setTokens(readerTokens);
+        // Sanitize tokens for audio: remove # tags (headers)
+        // We replace them with empty strings to keep indices in sync for highlighting
+        const sanitizedTokens = readerTokens.map(t => /^#+$/.test(t.trim()) ? "" : t);
+        setTokens(sanitizedTokens);
     }, [readerTokens, setTokens]);
 
     // Sync slider with playback only when not dragging

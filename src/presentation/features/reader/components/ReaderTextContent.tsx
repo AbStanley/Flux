@@ -56,6 +56,10 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
     // Highlighting Logic (Local to this component now)
     const highlightIndices = useHighlighting(tokens, groups, richTranslation);
 
+    // Track title state across tokens (linear scan)
+    let inTitle = false;
+    let skipNextSpace = false;
+
     return (
         <div
             ref={textAreaRef}
@@ -63,6 +67,33 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
         >
             {paginatedTokens.map((token, index) => {
                 const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
+
+                // Title Detection Logic
+                const isHeaderMarker = /^#+$/.test(token.trim());
+                if (isHeaderMarker) {
+                    inTitle = true;
+                    skipNextSpace = true;
+                    return null; // Hide the marker itself
+                }
+
+                // If we just saw a header, we want to skip the immediate next space
+                // so the title starts flush left (or centered) without a leading space
+                if (skipNextSpace) {
+                    if (!token.trim()) {
+                        skipNextSpace = false;
+                        return null; // Hide the space
+                    }
+                    // If we hit non-whitespace, stop skipping but render this token
+                    skipNextSpace = false;
+                }
+
+                // Capture the current title state for this token
+                const isTitleToken = inTitle;
+
+                if (token.includes('\n')) {
+                    inTitle = false;
+                }
+
                 // Prefer visual split translation, fallback (should cover initial render) to basic group start
                 const visualTrans = visualGroupStarts.get(globalIndex) || groupStarts.get(globalIndex);
                 // Respect global show/hide switch
@@ -99,6 +130,7 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
                         hoverPosition={hoverPosition}
                         hoverTranslation={isHoveredWord ? (hoverTranslation || undefined) : undefined}
                         isAudioHighlighted={isAudioHighlighted}
+                        isTitle={isTitleToken}
                         onClick={handleTokenClick}
                         onHover={handleHover}
                         onClearHover={clearHover}
