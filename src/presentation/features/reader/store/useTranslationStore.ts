@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import type { IAIService, RichTranslationResult } from '../../../../core/interfaces/IAIService';
 
+// In-flight request tracker (module-level singleton is fine for this store)
+const pendingRequests = new Set<string>();
+
 interface TranslationState {
     // Selection Translations
     selectionTranslations: Map<string, string>;
@@ -191,18 +194,30 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
             return;
         }
 
+        // Prevent duplicate in-flight requests
+        if (pendingRequests.has(key)) {
+            return;
+        }
+
+        pendingRequests.add(key);
         const context = getContextForIndex(tokens, globalIndex);
-        const result = await fetchTranslationHelper(token, context, sourceLang, targetLang, aiService);
 
-        // Check race condition (Use globalIndex)
-        if (get().hoveredIndex === globalIndex && result) {
-            set({ hoverTranslation: result });
+        try {
+            const result = await fetchTranslationHelper(token, context, sourceLang, targetLang, aiService);
 
-            // Cache the result!
-            const newCache = new Map(get().selectionTranslations);
-            // Ensure result is string (truthy check confirms it's not null/empty string, but TS might need help)
-            newCache.set(key, result as string);
-            set({ selectionTranslations: newCache });
+            // Check race condition (Use globalIndex) -> Only update UI if still hovered
+            if (get().hoveredIndex === globalIndex && result) {
+                set({ hoverTranslation: result });
+            }
+
+            // Cache the result (even if no longer hovered, so next time it's instant)
+            if (result) {
+                const newCache = new Map(get().selectionTranslations);
+                newCache.set(key, result);
+                set({ selectionTranslations: newCache });
+            }
+        } finally {
+            pendingRequests.delete(key);
         }
     },
 

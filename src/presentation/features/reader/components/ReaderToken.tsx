@@ -214,8 +214,9 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
             {/* Show hover popup:
                 - If NOT selected: Standard position (above).
                 - If SELECTED: Show below to avoid clash with group translation + user request.
+                - EXCEPTION: If selected is SINGLE word, disable below popup (green popup handles it).
              */}
-            {(isHoveredWord) && hoverTranslation && (
+            {(isHoveredWord) && hoverTranslation && !(isSelected && position === 'single') && (
                 <span className={isSelected ? styles.hoverPopupBelow : styles.hoverPopup}>
                     {renderPopup(hoverTranslation)}
                 </span>
