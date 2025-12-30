@@ -72,6 +72,21 @@ src/
 - **Fat Store, Thin Components**: Move complex business logic (e.g., grouping algorithms, API orchestration) into Store Actions/Thunks. keep UI components purely presentational.
 - **Avoid Derived State**: Do not store state that can be calculated on-the-fly from other state variables. Calculate it in the selector or the hook.
 
+#### Design Patterns
+**React Specific:**
+- **Slot Pattern**: Use for Layouts (e.g., `FocusLayout`) to inject content components, ensuring loose coupling.
+- **Compound Components**: Use for complex UI elements (like `Select`, `Tabs`) where parent and child components communicate implicitly.
+- **Container/Presentation**: Separate data fetching/state logic (Container) from rendering logic (Presentation).
+- **Custom Hooks**: Encapsulate logic and side effects; act as the "Controller" in MVC terms.
+- **Context/Provider**: Use for dependency injection of services or global themes, but avoid for rapidly changing state (use Zustand).
+
+**General Object-Oriented/Functional:**
+- **Strategy Pattern**: Use for interchangeable algorithms, such as switching between different AI Translation Services (`OllamaService` vs `OpenAIService`) behind a common interface.
+- **Adapter Pattern**: Use to adapt external libraries or APIs (e.g., browser `SpeechSynthesis`) to our domain interfaces (`IAudioService`).
+- **Facade Pattern**: Use custom hooks or service aggregators to provide a simplified interface to a complex subsystem (e.g., `useReader` abstracts away the complexity of the store and calculation logic).
+- **Singleton**: Service instances (e.g., API clients) are singletons enforced by the module system.
+- **Observer Pattern**: Utilized by Zustand for state subscription. Components subscribe to slice updates.
+
 #### Code Quality & Comments
 - **Clean Comments**: Comments should explain **WHY**, not *WHAT*.
 - **No Thought Process or Markers**: ABSOLUTELY NO "thought process" commentary, `// new`, `// fix`, or `// todo` markers. Remove them immediately after writing. The final code must be clean and look like it was written by a human expert.
