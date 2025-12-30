@@ -74,7 +74,7 @@ src/
 
 #### Code Quality & Comments
 - **Clean Comments**: Comments should explain **WHY**, not *WHAT*.
-- **No Stream of Consciousness**: Remove "TO DO" notes, self-corrections, or "maybe later" thoughts from production code. If it's not implemented, don't write about it in the comments.
+- **No Thought Process or Markers**: ABSOLUTELY NO "thought process" commentary, `// new`, `// fix`, or `// todo` markers. Remove them immediately after writing. The final code must be clean and look like it was written by a human expert.
 - **Self-Documenting Code**: Variable and function names should be descriptive enough to minimize the need for comments.
 
 #### Error Handling
