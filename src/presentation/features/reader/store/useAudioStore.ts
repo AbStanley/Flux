@@ -49,10 +49,26 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         const loadVoices = () => {
             const voices = audioService.getVoices();
             set({ availableVoices: voices });
-            if (voices.length > 0 && !get().selectedVoice) {
-                // Try to find a good default voice (Google, Microsoft)
-                const defaultVoice = voices.find((v: SpeechSynthesisVoice) => v.default) || voices[0];
-                set({ selectedVoice: defaultVoice });
+
+            const currentVoice = get().selectedVoice;
+
+            // Should we update the selected voice?
+            if (voices.length > 0) {
+                if (currentVoice) {
+                    // Try to match by name (reference might have changed)
+                    const sameVoice = voices.find(v => v.name === currentVoice.name);
+                    if (sameVoice) {
+                        // Update reference but keep selection
+                        set({ selectedVoice: sameVoice });
+                        return;
+                    }
+                }
+
+                // If no current voice or it's gone, pick default
+                if (!currentVoice) {
+                    const defaultVoice = voices.find((v: SpeechSynthesisVoice) => v.default) || voices[0];
+                    set({ selectedVoice: defaultVoice });
+                }
             }
         };
 

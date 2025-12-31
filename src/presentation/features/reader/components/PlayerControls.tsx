@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Button } from "../../../components/ui/button";
 import { Slider } from "../../../components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
-import { Play, Pause, Square, Volume2, Eye, EyeOff, Eraser } from "lucide-react";
+import { Play, Pause, Square, Volume2, Eye, EyeOff, Eraser, ChevronsUp, ChevronsDown } from "lucide-react";
 import { useAudioStore } from '../store/useAudioStore';
 import { useReaderStore } from '../store/useReaderStore';
 import { useTranslation } from '../hooks/useTranslation';
@@ -34,6 +34,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({ vertical = false
 
     // Reader Store Actions
     const { text, tokens: readerTokens, clearSelection } = useReaderStore();
+    const selectionMode = useReaderStore(state => state.selectionMode);
 
     // Translation Controls
     const {
@@ -44,6 +45,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({ vertical = false
 
     // Local state for smooth slider movement
     const [sliderValue, setSliderValue] = React.useState([0]);
+    const [isCollapsed, setIsCollapsed] = React.useState(false);
     const isDragging = React.useRef(false);
 
     useEffect(() => {
@@ -95,6 +97,48 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({ vertical = false
 
     if (!text.trim()) return null;
 
+    if (isCollapsed) {
+        return (
+            <div className={`p-2 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-2 items-center ${vertical
+                ? 'flex-col border rounded-xl shadow-sm w-16'
+                : 'border-b w-full justify-between'
+                }`}>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setIsCollapsed(false)}
+                    title="Expand Player"
+                >
+                    <ChevronsDown className="h-4 w-4" />
+                </Button>
+
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
+                    onClick={handlePlayPause}
+                >
+                    {isPlaying ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current ml-0.5" />}
+                </Button>
+
+                {/* Mini slider for collapsed view */}
+                <div className={`flex-1 ${vertical ? 'w-2 h-20' : 'mx-4'}`}>
+                    <Slider
+                        orientation={vertical ? "vertical" : "horizontal"}
+                        value={sliderValue}
+                        min={0}
+                        max={maxTokens}
+                        step={1}
+                        onValueChange={handleSliderChange}
+                        onValueCommit={handleSliderCommit}
+                        className={vertical ? "h-full" : "w-full"}
+                    />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={`w-full p-4 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-4 ${vertical
             ? 'flex-col border rounded-xl shadow-sm'
@@ -129,7 +173,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({ vertical = false
                     <div className={`flex items-center gap-2 ${vertical ? 'flex-col items-end' : ''}`}>
                         {!vertical && <div className="text-xs font-medium text-muted-foreground mb-1.5 ml-1">Selection Mode</div>}
                         <Select
-                            value={useReaderStore(state => state.selectionMode)}
+                            value={selectionMode}
                             onValueChange={(val) => useReaderStore.getState().setSelectionMode(val as SelectionMode)}
                         >
                             <SelectTrigger className={`bg-secondary/50 border-border/50 h-8 text-xs ${vertical ? 'w-[140px]' : 'w-full'}`}>
@@ -177,6 +221,17 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({ vertical = false
                             className="flex-1"
                         />
                     </div>
+
+                    {/* Collapse Button - Relative Row */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
+                        onClick={() => setIsCollapsed(true)}
+                        title="Collapse Player"
+                    >
+                        <ChevronsUp className="h-4 w-4" />
+                    </Button>
                 </div>
             </div>
 
