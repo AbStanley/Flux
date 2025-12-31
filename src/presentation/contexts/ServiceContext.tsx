@@ -18,7 +18,10 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     const setServiceType = (type: 'mock' | 'ollama', config?: any) => {
         setCurrentServiceType(type);
         if (type === 'ollama') {
-            setAiService(new OllamaService(config?.url, config?.model));
+            // Use config.url if provided, otherwise fallback to env var. 
+            // IMPORTANT: If config.url is NOT provided, we MUST use the env var to preserve the proxy setup.
+            const url = config?.url !== undefined ? config.url : import.meta.env.VITE_OLLAMA_URL;
+            setAiService(new OllamaService(url, config?.model));
         } else {
             setAiService(new MockAIService());
         }
