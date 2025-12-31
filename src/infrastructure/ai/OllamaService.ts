@@ -4,7 +4,7 @@ export class OllamaService implements IAIService {
     private baseUrl: string;
     private model: string;
 
-    constructor(baseUrl: string = 'http://localhost:11434', model: string = 'llama2') {
+    constructor(baseUrl: string = '', model: string = 'llama2') {
         console.log('[OllamaService] Initializing adapter with baseUrl:', baseUrl || '(empty/relative)');
         this.baseUrl = baseUrl;
         this.model = model;
