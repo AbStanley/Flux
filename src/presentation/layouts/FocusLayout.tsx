@@ -18,7 +18,7 @@ export const FocusLayout: React.FC<FocusLayoutProps> = ({
     readerViewSlot,
 }) => {
     return (
-        <div className="flex flex-col gap-4 relative w-full flex-1 h-full overflow-hidden">
+        <div className={`flex flex-col gap-4 relative w-full flex-1 ${isReading ? 'h-full overflow-hidden' : ''}`}>
             <AnimatePresence>
                 {!isReading && (
                     <motion.div

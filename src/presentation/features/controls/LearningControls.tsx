@@ -23,18 +23,18 @@ export const LearningControls: React.FC<LearningControlsProps> = ({
     setTopic
 }) => {
     return (
-        <div className="space-y-4 pt-2 border-t border-white/10">
+        <div className="space-y-2 pt-2 border-t border-white/10">
             <div className="flex items-center space-x-2">
                 <Switch
                     id="learning-mode"
                     checked={isLearningMode}
                     onCheckedChange={setIsLearningMode}
                 />
-                <Label htmlFor="learning-mode" className="cursor-pointer">Enable Learning Mode</Label>
+                <Label htmlFor="learning-mode" className="cursor-pointer text-sm">Enable Learning Mode</Label>
             </div>
 
             {isLearningMode && (
-                <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
                     <LanguageSelect
                         label="Proficiency Level"
                         value={proficiencyLevel}

@@ -23,6 +23,9 @@ export class WebSpeechAudioService implements IAudioService {
 
         const safeText = text.replace(/\*/g, ' ');
         this.utterance = new SpeechSynthesisUtterance(safeText);
+        // HACK: Assign to window to prevent garbage collection in Chrome/Safari
+        (window as any)._speechUtterance = this.utterance;
+
         if (voice) {
             this.utterance.voice = voice;
         }
@@ -52,5 +55,6 @@ export class WebSpeechAudioService implements IAudioService {
     stop(): void {
         this.synthesis.cancel();
         this.utterance = null;
+        (window as any)._speechUtterance = null;
     }
 }

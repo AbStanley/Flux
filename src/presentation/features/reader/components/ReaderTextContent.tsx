@@ -63,7 +63,7 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
     return (
         <div
             ref={textAreaRef}
-            className={`${styles.textArea} p-8 min-[1200px]:p-12 pb-12`}
+            className={`${styles.textArea} p-4 sm:p-8 min-[1200px]:p-12 pb-12`}
         >
             {paginatedTokens.map((token, index) => {
                 const globalIndex = (currentPage - 1) * PAGE_SIZE + index;

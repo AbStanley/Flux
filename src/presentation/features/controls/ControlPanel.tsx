@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useServices } from '../../contexts/ServiceContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card";
+import { Card, CardContent, CardHeader, CardDescription } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
@@ -123,9 +123,9 @@ export const ControlPanel: React.FC = () => {
     };
 
     return (
-        <Card className="w-full mb-8 glass text-card-foreground">
-            <CardHeader className="space-y-4">
-                <div className="flex gap-4 pb-4 border-b border-border/40 items-end">
+        <Card className="w-full mb-2 glass text-card-foreground">
+            <CardHeader className="space-y-2 p-4">
+                <div className="flex flex-col sm:flex-row gap-2 pb-2 border-b border-border/40 items-stretch sm:items-end">
                     <LanguageSelect
                         label="Source Language"
                         value={sourceLang}
@@ -169,16 +169,16 @@ export const ControlPanel: React.FC = () => {
                     />
                 </div>
 
-                <div className="flex justify-between items-center pt-2">
-                    <CardTitle className="text-xl">Reader Input</CardTitle>
-                    <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-1 gap-2">
+                    <span className="uppercase text-xs text-muted-foreground tracking-wider font-semibold">Reader Input</span>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         {currentServiceType === 'ollama' && (
                             <Select
                                 value={((aiService as any).model) || ""} // Type casting for now, ideally fix Interface
                                 onValueChange={(val) => setServiceType('ollama', { model: val })}
                                 disabled={isGenerating}
                             >
-                                <SelectTrigger className="w-[180px] bg-secondary/30 border-border/50">
+                                <SelectTrigger className="w-full sm:w-[180px] bg-secondary/30 border-border/50 h-8 sm:h-10 text-xs sm:text-sm">
                                     <SelectValue placeholder="Select Model" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -198,7 +198,7 @@ export const ControlPanel: React.FC = () => {
                             onValueChange={(val) => setServiceType(val as 'mock' | 'ollama')}
                             disabled={isGenerating}
                         >
-                            <SelectTrigger className="w-[150px] bg-secondary/30 border-border/50">
+                            <SelectTrigger className="w-full sm:w-[150px] bg-secondary/30 border-border/50 h-8 sm:h-10 text-xs sm:text-sm">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -208,16 +208,16 @@ export const ControlPanel: React.FC = () => {
                         </Select>
                     </div>
                 </div>
-                <CardDescription>
+                <CardDescription className="text-xs hidden sm:block">
                     Enter text below or generate a story to practice reading.
                 </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-2 p-4 pt-0">
                 <div className="relative">
                     <Textarea
                         placeholder="Paste text here, or generate..."
-                        className={`min-h-[160px] font-mono text-lg shadow-sm resize-none focus-visible:ring-primary bg-secondary/30 border-border/50 ${isGenerating ? 'overflow-hidden select-none' : ''}`}
+                        className={`min-h-[100px] font-mono text-base shadow-sm resize-none focus-visible:ring-primary bg-secondary/30 border-border/50 ${isGenerating ? 'overflow-hidden select-none' : ''}`}
                         value={text}
                         onChange={handleManualChange}
                         disabled={isGenerating}
