@@ -52,6 +52,10 @@ export class WebSpeechAudioService implements IAudioService {
         };
 
         this.utterance.onerror = (e) => {
+
+            if (e.error === 'interrupted' || e.error === 'canceled') {
+                return;
+            }
             console.error("SpeechSynthesis error:", e);
             // Attempt to recover or notify
             onEnd();
@@ -75,6 +79,13 @@ export class WebSpeechAudioService implements IAudioService {
 
     stop(): void {
         if (!this.synthesis) return;
+
+        // Prevent existing utterance from firing callbacks during manual cancel
+        if (this.utterance) {
+            this.utterance.onend = null;
+            this.utterance.onerror = null;
+        }
+
         this.synthesis.cancel();
         this.utterance = null;
         (window as any)._speechUtterance = null;
