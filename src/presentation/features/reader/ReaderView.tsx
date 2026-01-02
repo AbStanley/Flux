@@ -107,7 +107,19 @@ export const ReaderView: React.FC = () => {
         }
 
         if (textToTranslate) {
-            fetchRichTranslation(textToTranslate, "");
+            // Calculate Context (Surrounding Sentence)
+            let startIndex = globalIndex;
+            while (startIndex > 0 && !tokens[startIndex - 1].includes('\n') && !/[.!?]['"”’\)]*$/.test(tokens[startIndex - 1])) {
+                startIndex--;
+            }
+
+            let endIndex = globalIndex;
+            while (endIndex < tokens.length - 1 && !tokens[endIndex + 1].includes('\n') && !/[.!?]['"”’\)]*$/.test(tokens[endIndex])) {
+                endIndex++;
+            }
+
+            const context = tokens.slice(startIndex, endIndex + 1).join('');
+            fetchRichTranslation(textToTranslate, context);
         }
     }, [currentPage, PAGE_SIZE, groups, tokens, fetchRichTranslation]);
 

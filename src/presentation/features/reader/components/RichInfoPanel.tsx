@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { Button } from "../../../components/ui/button";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { Loader2, X } from "lucide-react";
 import type { RichTranslationResult } from '../../../../core/interfaces/IAIService';
+import { ConjugationsDisplay } from './ConjugationsDisplay';
 
 interface RichInfoPanelProps {
     isOpen: boolean;
@@ -118,40 +118,7 @@ export const RichInfoPanel: React.FC<RichInfoPanelProps> = ({ isOpen, isLoading,
 
                             {/* Conjugations (Verbs Only) */}
                             {data.conjugations && Object.keys(data.conjugations).length > 0 && (
-                                <div>
-                                    <h4 className="text-sm font-semibold mb-3">Conjugations</h4>
-                                    <Tabs defaultValue={Object.keys(data.conjugations)[0]} className="w-full">
-                                        <TabsList className="w-full grid grid-cols-3 mb-4">
-                                            {Object.keys(data.conjugations).map((tense) => (
-                                                <TabsTrigger key={tense} value={tense} className="text-xs">
-                                                    {tense}
-                                                </TabsTrigger>
-                                            ))}
-                                        </TabsList>
-                                        {Object.entries(data.conjugations).map(([tense, forms]) => (
-                                            <TabsContent key={tense} value={tense}>
-                                                <div className="rounded-md border">
-                                                    <Table>
-                                                        <TableHeader>
-                                                            <TableRow>
-                                                                <TableHead className="w-[100px]">Pronoun</TableHead>
-                                                                <TableHead>Form</TableHead>
-                                                            </TableRow>
-                                                        </TableHeader>
-                                                        <TableBody>
-                                                            {Array.isArray(forms) && forms.map((item, idx) => (
-                                                                <TableRow key={idx}>
-                                                                    <TableCell className="font-medium text-muted-foreground">{item.pronoun}</TableCell>
-                                                                    <TableCell>{item.conjugation}</TableCell>
-                                                                </TableRow>
-                                                            ))}
-                                                        </TableBody>
-                                                    </Table>
-                                                </div>
-                                            </TabsContent>
-                                        ))}
-                                    </Tabs>
-                                </div>
+                                <ConjugationsDisplay conjugations={data.conjugations} />
                             )}
 
                             {/* Explanation */}

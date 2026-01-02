@@ -149,22 +149,31 @@ Input Data:
 - Segment to Analyze: "${text}"
 
 Instructions:
-1. Determine if "Segment to Analyze" is a SINGLE WORD or a SENTENCE (phrases/multiple words).
+1. Determine if "Segment to Analyze" is a SINGLE WORD or a SENTENCE.
+   - HINT: If the segment matches a single lexical unit (no spaces, or a standard compound word), treat it as a WORD.
+   - HINT: If it is a conjugated verb form (like "era", "fui", "running"), treat it as a WORD.
+
 2. Translate the segment accurately within the given context.
+   - CRITICAL: "Segment to Analyze" MUST be translated based on the "Full Sentence". Do not provide a generic dictionary definition if it doesn't fit the context.
 
 IF IT IS A *SENTENCE* (or Phrase):
    - Set "type" to "sentence".
-   - Provide a "syntaxAnalysis": Improve understanding by breaking down the sentence structure (Subject + Verb + Object, etc).
-   - Provide "grammarRules": A list of specific grammar rules applied in this sentence (e.g., "Imperfect Tense used for background description").
-   - OMIT "conjugations".
-   - OMIT "grammar" object usually used for single words (Part of Speech, etc) unless relevant to the *whole* sentence structure.
+   - Provide a "syntaxAnalysis": Breakdown (Subject + Verb + Object).
+   - Provide "grammarRules".
+   - OMIT "conjugations" UNLESS the phrase is effectively a phrasal verb acting as a single verb unit.
 
 IF IT IS A *SINGLE WORD*:
    - Set "type" to "word".
    - Identify the Part of Speech.
-   - If it's a VERB, include "conjugations" (Present, Past, Future).
+   - If it's a VERB (or acts as one in context):
+     - MUST include "conjugations":
+       - Include "Present".
+       - For Romance languages (Spanish, French, etc), MUST include BOTH "Preterite" AND "Imperfect".
+       - Include "Future".
+       - CRITICAL: You MUST include the specific tense of the "Segment to Analyze" if it is not one of the above (e.g. if the word is "Conditional", include "Conditional").
+     - IMPORTANT: Use SOURCE language pronouns.
    - If it's NOT a verb, OMIT "conjugations".
-   - Provide "grammar" details: Part of Speech, Tense, Gender, Number, Infinitive, etc.
+   - OMIT "grammar" object usually used for single words (Part of Speech, etc) unless relevant to the *whole* sentence structure.
 
 3. Provide 2-3 usage examples with translations.
 4. Provide 1-2 common alternatives.
@@ -184,7 +193,11 @@ Structure:
     "infinitive": "...",
     "explanation": "..."
   },
-  "conjugations": { ... }, // Only if VERB
+  "conjugations": { 
+      "Present": [ {"pronoun": "...", "conjugation": "..."} ],
+      "Preterite": [ ... ],
+      "Future": [ ... ]
+  }, // Only if VERB
 
   // IF SENTENCE:
   "syntaxAnalysis": "Subject (...) + Verb (...) ...",
