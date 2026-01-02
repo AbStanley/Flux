@@ -9,6 +9,8 @@ import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../../../core/constants/lang
 import { LearningControls } from "./LearningControls";
 import { ArrowRightLeft, Loader2 } from "lucide-react";
 import { useReaderStore } from '../reader/store/useReaderStore';
+import { useStoryGeneration } from './hooks/useStoryGeneration';
+
 
 export const ControlPanel: React.FC = () => {
     const { aiService, setServiceType, currentServiceType } = useServices();
@@ -26,12 +28,20 @@ export const ControlPanel: React.FC = () => {
 
     const [availableModels, setAvailableModels] = useState<string[]>([]);
 
-    const abortControllerRef = React.useRef<AbortController | null>(null);
-
     // Learning Mode State
     const [isLearningMode, setIsLearningMode] = useState(true);
     const [proficiencyLevel, setProficiencyLevel] = useState("B1");
     const [topic, setTopic] = useState("");
+
+    const { generateStory, stopGeneration } = useStoryGeneration({
+        aiService,
+        setText,
+        setIsGenerating,
+        sourceLang,
+        isLearningMode,
+        topic,
+        proficiencyLevel
+    });
 
     React.useEffect(() => {
         if (currentServiceType === 'ollama') {
@@ -52,46 +62,8 @@ export const ControlPanel: React.FC = () => {
         }
     }, [aiService, currentServiceType]);
 
-    const handleGenerate = async () => {
-        setIsGenerating(true);
-        // Clear previous text to start fresh
-        setText('');
-
-        abortControllerRef.current = new AbortController();
-
-        try {
-            let prompt = "";
-            if (isLearningMode) {
-                const topicPhrase = topic ? ` about "${topic}"` : " about a random interesting topic";
-                prompt = `Write a short story ${topicPhrase} in ${sourceLang} suitable for a ${proficiencyLevel} proficiency level learner. The vocabulary and grammar should be appropriate for ${proficiencyLevel}. Include a title starting with '## '. Output ONLY the title and the story text. Do not include any introductory or concluding remarks. Do NOT include translations.`;
-            } else {
-                prompt = `Write a short, interesting story in ${sourceLang} about a robot learning to paint. Include a title starting with '## '. Output ONLY the title and the story text. Do not include any introductory or concluding remarks. Do NOT include translations.`;
-            }
-
-            await aiService.generateText(prompt, {
-                signal: abortControllerRef.current.signal,
-                onProgress: (_chunk, fullText) => {
-                    setText(fullText);
-                }
-            });
-        } catch (error: any) {
-            if (error.name === 'AbortError' || error.message === 'Aborted') {
-                console.log('Generation aborted by user');
-            } else {
-                console.error(error);
-                alert("Failed to generate text");
-            }
-        } finally {
-            setIsGenerating(false);
-            abortControllerRef.current = null;
-        }
-    };
-
-    const handleStopGeneration = () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-    };
+    const handleGenerate = generateStory;
+    const handleStopGeneration = stopGeneration;
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

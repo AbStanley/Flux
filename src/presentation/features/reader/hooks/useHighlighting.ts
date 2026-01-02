@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 import { useReaderStore } from '../store/useReaderStore';
 import { useTranslationStore } from '../store/useTranslationStore';
 import { SelectionMode } from '../../../../core/types';
-import { getSentenceRange } from '../store/useReaderStore';
+import { getSentenceRange } from '../../../../core/utils/text-utils';
+
 
 export const useHighlighting = (tokens: string[], groups: number[][], richTranslation: any) => {
     const hoveredIndex = useTranslationStore(s => s.hoveredIndex);
