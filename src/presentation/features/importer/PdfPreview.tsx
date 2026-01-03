@@ -14,11 +14,8 @@ import { Loader2 } from 'lucide-react';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-// Fix for worker
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
-    import.meta.url,
-).toString();
+// Fix for worker - using CDN for reliability across environments
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PdfPreviewProps {
     file: File;
@@ -77,9 +74,14 @@ export const PdfPreview: React.FC<PdfPreviewProps> = ({ file, onExtract, onCance
                     .map((item: any) => item.str)
                     .join(' ');
 
+                if (!pageText.trim()) {
+                    console.warn(`Page ${pageNum} text is empty.`);
+                }
+
                 fullText += `--- Page ${pageNum} ---\n\n${pageText}\n\n`;
             }
 
+            console.log(`Extracted ${fullText.length} characters from PDF.`);
             onExtract(fullText);
         } catch (error) {
             console.error('Failed to extract text from PDF', error);
