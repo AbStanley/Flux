@@ -1,5 +1,6 @@
 // In-Page UI Component
 import { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { OllamaService } from '../infrastructure/ai/OllamaService';
 
 // Simple types for internal state
@@ -41,7 +42,7 @@ export const FluxContentApp: React.FC = () => {
     const isHoveringRef = useRef(false);
     const viewRef = useRef<ViewState>('HIDDEN');
     const selectionRef = useRef<{ text: string, x: number, y: number } | null>(null);
-    const stateRef = useRef({ mode, targetLang, loading }); // To access current state in callbacks
+    const stateRef = useRef({ mode, targetLang, loading });
 
     // Sync refs
     useEffect(() => { viewRef.current = view; }, [view]);
@@ -56,11 +57,8 @@ export const FluxContentApp: React.FC = () => {
 
         try {
             let response = '';
-            // Determine source language (simple heuristic or passed to service)
-            // For now, assume auto-detect in prompt
             if (currentMode === 'EXPLAIN') {
-                const prompt = `Explain this text briefly and clearly: \n\n"${currentSelection.text}"`;
-                response = await aiService.generateText(prompt);
+                response = await aiService.explainText(currentSelection.text, currentLang);
             } else {
                 response = await aiService.translateText(currentSelection.text, currentLang);
             }
@@ -87,8 +85,16 @@ export const FluxContentApp: React.FC = () => {
         };
         initModel();
 
-        const handleMouseUp = () => {
+        const handleMouseUp = (e: MouseEvent) => {
             setTimeout(() => {
+                // Safeguard: Do not trigger if selection is inside our Shadow Host
+                // The event target from document perspective will be the Host element itself
+                const host = document.getElementById('flux-reader-host');
+                if (host && (e.target === host || e.composedPath().includes(host))) {
+                    console.log('[Flux] Selection ignored (inside extension UI)');
+                    return;
+                }
+
                 const winSelection = window.getSelection();
                 const text = winSelection?.toString().trim();
 
@@ -319,9 +325,21 @@ export const FluxContentApp: React.FC = () => {
                             padding: '12px',
                             borderRadius: '8px',
                             border: '1px solid #334155',
-                            whiteSpace: 'pre-wrap'
+                            fontSize: '14px',
+                            lineHeight: '1.6'
                         }}>
-                            {result}
+                            <ReactMarkdown
+                                components={{
+                                    // Override basic elements to ensure they look good with inline styles/Tailwind classes
+                                    p: ({ node, ...props }) => <p style={{ marginBottom: '8px' }} {...props} />,
+                                    ul: ({ node, ...props }) => <ul style={{ marginLeft: '16px', listStyleType: 'disc', marginBottom: '8px' }} {...props} />,
+                                    ol: ({ node, ...props }) => <ol style={{ marginLeft: '16px', listStyleType: 'decimal', marginBottom: '8px' }} {...props} />,
+                                    li: ({ node, ...props }) => <li style={{ marginBottom: '4px' }} {...props} />,
+                                    strong: ({ node, ...props }) => <strong style={{ color: '#bae6fd', fontWeight: '600' }} {...props} />
+                                }}
+                            >
+                                {result}
+                            </ReactMarkdown>
                         </div>
                     )}
                 </div>
