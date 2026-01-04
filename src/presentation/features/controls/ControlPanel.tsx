@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { LanguageSelect } from "../../components/LanguageSelect";
 import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../../../core/constants/languages";
 import { LearningControls } from "./LearningControls";
-import { ArrowRightLeft, Loader2 } from "lucide-react";
+import { ArrowRightLeft, Loader2, X } from "lucide-react";
 import { useReaderStore } from '../reader/store/useReaderStore';
 import { useStoryGeneration } from './hooks/useStoryGeneration';
 import { FileImporter } from '../importer/FileImporter';
@@ -187,6 +187,18 @@ export const ControlPanel: React.FC = () => {
                         disabled={isGenerating}
                     />
 
+                    {text && !isGenerating && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-foreground bg-background/50 hover:bg-background/80 backdrop-blur-sm"
+                            onClick={() => setText('')}
+                            title="Clear text"
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    )}
+
                     {isGenerating && (
                         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/10 backdrop-blur-[2px] rounded-md transition-all duration-500">
                             <div className="flex items-center gap-3 p-4 bg-background/60 rounded-xl shadow-xl border border-primary/10 backdrop-blur-md animate-pulse">
@@ -230,7 +242,7 @@ export const ControlPanel: React.FC = () => {
                         disabled={!text.trim() || isGenerating}
                         className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all"
                     >
-                        Start Reading
+                        Open Reading Mode
                     </Button>
                 </div>
             </CardContent>
