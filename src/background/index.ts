@@ -1,8 +1,13 @@
-/// <reference types="chrome" />
-
-// Background service worker for handling API requests
-// This bypasses CORS/PNA restrictions by fetching from the background context
-
+/**
+ * Background Service Worker
+ * 
+ * This is the central hub for the Extension side of the architecture.
+ * 
+ * Role:
+ * - Cross-Origin Proxy: Proxies requests from Content Script -> Ollama to bypass CORS/PNA.
+ * - Context Menu Manager: Handles the "Analyze with Flux" right-click action.
+ * - Coordinator: Opens the Side Panel in response to user actions from the In-Page UI.
+ */
 
 // @ts-ignore
 chrome.runtime.onInstalled.addListener(() => {

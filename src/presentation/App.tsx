@@ -7,6 +7,16 @@ import { ModeToggle } from './components/ui/mode-toggle';
 import { FocusLayout } from './layouts/FocusLayout';
 import { useFocusMode } from './features/reader/hooks/useFocusMode';
 
+/**
+ * App: The Main Application Root
+ * 
+ * This component serves two distinct purposes in the Hybrid Architecture:
+ * 1. **Standalone Web App**: The main dashboard/reader interface.
+ * 2. **Extension Side Panel**: The view shown in the Chrome Side Panel.
+ * 
+ * It listens for messages from the Extension (if present) to handle
+ * cross-component actions like "Read in Flux".
+ */
 function App() {
   // Use the selector to subscribe to updates
   const isReading = useReaderStore(state => state.isReading);

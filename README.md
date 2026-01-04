@@ -43,6 +43,32 @@ We utilize **Zustand** for high-performance, granular state management, split in
 - **Memoization**: Critical components like `ReaderToken` are memoized (`React.memo`) to prevent wasted renders during high-frequency events (like audio highlighting).
 - **Scoped Props**: Data is passed intelligently to ensure that changing the state of one word does not force the entire page to re-render.
 
+## 🧩 App vs. Extension Architecture
+
+Flux operates as a **Hybrid Application**, reusing core logic across two distinct environments:
+
+### 1. The Chrome Extension
+Designed for seamless, in-context assistance while browsing.
+- **In-Page Reader (`src/content/`)**:
+    - Injects a lightweight React app (`FluxContentApp`) into every visited page via Shadow DOM.
+    - Provides the "Popup" interface for instant translation/summarization.
+- **Background Worker (`src/background/`)**:
+    - Acts as the central hub for the extension.
+    - Handles cross-origin requests (CORS proxies) to the local Ollama instance.
+    - Manages context menus and side panel coordination.
+
+### 2. The Web Application (Side Panel)
+Designed for deep reading, library management, and configuration.
+- **Main Interface (`src/presentation/`)**:
+    - This is the "Full App". It functions as both the standalone web dashboard and the Extension's Side Panel.
+    - **Dual Mode**: `App.tsx` detects if it's running inside the extension to listen for events (like text selection from the content script), otherwise acts as a standard web app.
+
+### 3. Shared Infrastructure
+- **Smart Services (`src/infrastructure/`)**:
+    - Services like `OllamaService` context-switch automatically.
+    - **Web Mode**: Fetches directly from localhost.
+    - **Extension Mode**: Delegates requests to the Background Worker to bypass browser security restrictions.
+
 ## 🛠 Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite

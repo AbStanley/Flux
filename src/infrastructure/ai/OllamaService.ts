@@ -3,6 +3,14 @@ import type { IAIService } from '../../core/interfaces/IAIService';
 import { getTranslatePrompt, getRichTranslationPrompt } from './prompts/TranslationPrompts';
 import { cleanResponse, extractJson, normalizeRichTranslation } from './utils/ResponseParser';
 
+/**
+ * OllamaService: The AI Connector
+ * 
+ * This service implements the Hybrid Architecture pattern by detecting its environment:
+ * 1. **Web App Mode**: Connects directly to localhost via `fetch()`.
+ * 2. **Extension Mode**: Delegates requests to the Background Worker via `runtime.sendMessage()`
+ *    to bypass browser security restrictions (CSP/CORS).
+ */
 export class OllamaService implements IAIService {
     private baseUrl: string;
     private model: string;

@@ -14,6 +14,18 @@ const LANGUAGES = [
     'Portuguese', 'Japanese', 'Chinese', 'Russian', 'Korean'
 ];
 
+/**
+ * FluxContentApp: The In-Page Extension UI
+ * 
+ * This is the entry point for the "Content Script" portion of the extension.
+ * It is injected into every webpage via Shadow DOM (`src/content/index.tsx`).
+ * 
+ * Role:
+ * - Monitors text selection on the host page.
+ * - Displays the "Quick Actions" popup (Translate/Explain).
+ * - Communicates with the Background Script (`src/background/index.ts`) for AI processing.
+ * - Syncs data to the Side Panel (Main App) via Chrome Storage.
+ */
 export const FluxContentApp: React.FC = () => {
     const [view, setView] = useState<ViewState>('HIDDEN');
     const [selection, setSelection] = useState<{ text: string, x: number, y: number } | null>(null);
