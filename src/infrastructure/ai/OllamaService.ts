@@ -176,6 +176,14 @@ export class OllamaService implements IAIService {
         return cleanResponse(rawResponse);
     }
 
+    async explainText(text: string, targetLanguage: string = 'en', context?: string): Promise<string> {
+        console.log(`[OllamaService] explainText`, { text, target: targetLanguage });
+        const { getExplainPrompt } = await import('./prompts/TranslationPrompts');
+        const prompt = getExplainPrompt(text, targetLanguage, context);
+        const rawResponse = await this.generateText(prompt);
+        return cleanResponse(rawResponse);
+    }
+
     async getRichTranslation(text: string, targetLanguage: string = 'en', context?: string, sourceLanguage?: string): Promise<any> {
         console.log(`[OllamaService] getRichTranslation`, { text, target: targetLanguage, source: sourceLanguage });
         const prompt = getRichTranslationPrompt(text, targetLanguage, context, sourceLanguage);

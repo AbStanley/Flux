@@ -138,9 +138,30 @@ Structure:
   "grammarRules": ["Rule 1...", "Rule 2..."],
 
   "examples": [
-    { "sentence": "Example usage...", "translation": "Translated example..." }
-  ],
   "alternatives": ["Alternative 1", "Alternative 2"]
 }
 `;
+};
+
+export const getExplainPrompt = (
+  text: string,
+  targetLanguage: string = 'en',
+  context?: string
+): string => {
+  return `Role: Educational Encyclopedia and Teacher.
+Task: Explain the following text clearly and concisely IN ${targetLanguage}.
+
+Input Text: "${text}"
+${context ? `Context: "${context}"` : ''}
+
+Instructions:
+1. Provide a clear definition or explanation of the concept/phrase.
+2. If it's a difficult word, provide a simple synonym.
+3. If it's a cultural reference, explain the background briefly.
+4. CRITICAL: The explanation MUST be written in ${targetLanguage}.
+5. CRITICAL: Do NOT start with "Sure", "Here is", or "In this context". Just give the explanation.
+6. Keep it under 3 sentences unless complex.
+
+Output:
+(The explanation text only)`;
 };
