@@ -5,6 +5,7 @@ import checker from 'vite-plugin-checker'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [
     react(),
     checker({ typescript: true }),
@@ -14,6 +15,22 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:11434',
         changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        content: path.resolve(__dirname, 'src/content/index.ts'),
+      },
+      output: {
+        entryFileNames: (chunkInfo) => {
+          if (chunkInfo.name === 'content') {
+            return 'assets/content.js';
+          }
+          return 'assets/[name]-[hash].js';
+        },
       },
     },
   },

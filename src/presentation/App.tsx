@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ServiceProvider } from './contexts/ServiceContext';
 import { ControlPanel } from './features/controls/ControlPanel';
 import { ReaderView } from './features/reader/ReaderView';
@@ -9,6 +10,25 @@ import { useFocusMode } from './features/reader/hooks/useFocusMode';
 function App() {
   // Use the selector to subscribe to updates
   const isReading = useReaderStore(state => state.isReading);
+  const setText = useReaderStore(state => state.setText);
+  const setIsReading = useReaderStore(state => state.setIsReading);
+
+  useEffect(() => {
+    // Check if running in extension context
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    if (w.chrome && w.chrome.runtime && w.chrome.runtime.onMessage) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const handleMessage = (message: any) => {
+        if (message.type === 'TEXT_SELECTED' && message.text) {
+          setText(message.text);
+          setIsReading(true);
+        }
+      };
+      w.chrome.runtime.onMessage.addListener(handleMessage);
+      return () => w.chrome.runtime.onMessage.removeListener(handleMessage);
+    }
+  }, [setText, setIsReading]);
 
   return (
     <ServiceProvider>
