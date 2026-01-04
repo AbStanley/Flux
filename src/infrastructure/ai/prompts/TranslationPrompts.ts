@@ -1,12 +1,29 @@
 export const getTranslatePrompt = (
-    text: string,
-    targetLanguage: string = 'en',
-    context?: string,
-    sourceLanguage?: string
+  text: string,
+  targetLanguage: string = 'en',
+  context?: string,
+  sourceLanguage?: string
 ): string => {
-    const fromLang = (sourceLanguage && sourceLanguage !== 'Auto') ? `from ${sourceLanguage} ` : '';
+  const fromLang = (sourceLanguage && sourceLanguage !== 'Auto') ? `from ${sourceLanguage} ` : '';
 
-    let prompt = `Role: Dictionary and Translation Engine.
+  // Heuristic: If text is long (> 100 chars) or has newlines, treat as Block Translation
+  const isBlock = text.length > 100 || text.includes('\n');
+
+  if (isBlock) {
+    return `Role: Professional Translator.
+Task: Translate the following text ${fromLang}into ${targetLanguage}.
+
+Instructions:
+1. Translate the full text faithfully.
+2. Maintain original formatting.
+3. Output ONLY the translation. No introductory text.
+
+Text to Translate:
+"${text}"`;
+  }
+
+  // Existing "Dictionary/Contextual" prompt for short phrases/words
+  let prompt = `Role: Dictionary and Translation Engine.
 Task: Provide the meaning of a specific text segment ${fromLang}into ${targetLanguage}.
 
 Input Data:
@@ -38,27 +55,27 @@ Input: Context="I like to run", Segment="run"
 Output: corrrer
 
 Required Output:
-(Just the translation text)`;
+(Just the translation text. Do not include 'Here is the translation' or quotes around the result.)`;
 
-    if (context) {
-        prompt += `\n\nContext: "${context}"`;
-        prompt += `\nTarget Text: "${text}"`;
-    } else {
-        prompt += `\n\nTarget Text: "${text}"`;
-    }
+  if (context) {
+    prompt += `\n\nContext: "${context}"`;
+    prompt += `\nTarget Text: "${text}"`;
+  } else {
+    prompt += `\n\nTarget Text: "${text}"`;
+  }
 
-    return prompt;
+  return prompt;
 };
 
 export const getRichTranslationPrompt = (
-    text: string,
-    targetLanguage: string = 'en',
-    context?: string,
-    sourceLanguage?: string
+  text: string,
+  targetLanguage: string = 'en',
+  context?: string,
+  sourceLanguage?: string
 ): string => {
-    const fromLang = (sourceLanguage && sourceLanguage !== 'Auto') ? `from ${sourceLanguage} ` : '';
+  const fromLang = (sourceLanguage && sourceLanguage !== 'Auto') ? `from ${sourceLanguage} ` : '';
 
-    return `Role: Expert Linguist and Translator.
+  return `Role: Expert Linguist and Translator.
 Task: Analyze the text segment "${text}" ${fromLang}and translate it to ${targetLanguage}. Provide detailed grammatical information, usage examples, and alternatives.
 
 Input Data:

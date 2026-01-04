@@ -13,7 +13,8 @@
     },
     "permissions": [
         "sidePanel",
-        "declarativeNetRequest"
+        "declarativeNetRequest",
+        "contextMenus"
     ],
     "declarative_net_request": {
         "rule_resources": [
@@ -40,7 +41,18 @@
                 "<all_urls>"
             ],
             "js": [
-                "assets/content.js"
+                "content-loader.js"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "assets/*.js",
+                "assets/*.css"
+            ],
+            "matches": [
+                "<all_urls>"
             ]
         }
     ],

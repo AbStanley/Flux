@@ -22,7 +22,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
-        content: path.resolve(__dirname, 'src/content/index.ts'),
+        content: path.resolve(__dirname, 'src/content/index.tsx'),
         background: path.resolve(__dirname, 'src/background/index.ts'),
       },
       output: {

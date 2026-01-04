@@ -12,9 +12,20 @@ export class OllamaService implements IAIService {
         if (baseUrl && !baseUrl.startsWith('http')) {
             baseUrl = `http://${baseUrl}`;
         }
+        if (baseUrl.endsWith('/')) {
+            baseUrl = baseUrl.slice(0, -1);
+        }
         console.log('[OllamaService] Initializing adapter with baseUrl:', baseUrl || '(empty/relative)');
         this.baseUrl = baseUrl;
         this.model = model;
+    }
+
+    setModel(model: string) {
+        this.model = model;
+    }
+
+    getModel(): string {
+        return this.model;
     }
 
     private isExtension(): boolean {

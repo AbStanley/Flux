@@ -3,6 +3,24 @@
 // Background service worker for handling API requests
 // This bypasses CORS/PNA restrictions by fetching from the background context
 
+
+// @ts-ignore
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.contextMenus.create({
+        id: "open_flux_panel",
+        title: "Analyze with Flux",
+        contexts: ["selection"]
+    });
+});
+
+// @ts-ignore
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === "open_flux_panel" && tab?.windowId) {
+        // Open the side panel
+        chrome.sidePanel.open({ windowId: tab.windowId });
+    }
+});
+
 // @ts-ignore
 chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
     if (message.type === 'PROXY_REQUEST') {
@@ -62,7 +80,8 @@ async function handleStreamRequest(config: { url: string, method?: string, heade
         });
 
         if (!response.ok) {
-            port.postMessage({ type: 'ERROR', error: `HTTP error! status: ${response.status}` });
+            const errorText = await response.text();
+            port.postMessage({ type: 'ERROR', error: `Ollama Error (${response.status}): ${errorText || response.statusText}` });
             port.disconnect();
             return;
         }
