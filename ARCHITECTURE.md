@@ -21,6 +21,42 @@ The application follows a **Clean Architecture** approach with a strong emphasis
 
 ---
 
+## 🧩 Extension Architecture
+
+The Chrome Extension shares the same core logic and UI as the web app but operates in a constrained environment.
+
+### 1. Integration Strategy
+*   **Shared Codebase**: ~95% of the code (Components, Hooks, Services) is shared.
+*   **Entry Points**:
+    *   **Side Panel**: Loads `index.html` (same as the Web App) but configured as a Side Panel in `manifest.json`.
+    *   **Content Scripts** (`src/content`): Isolated JavaScript environments that run on visited web pages to extract text.
+    *   **Background Script** (`src/background`): Handles extension lifecycle events.
+
+### 2. Limitations
+*   **Router**: The generic `react-router` or URL-based routing may behave differently. We rely on internal state (Zustand) for view switching rather than URLs where possible.
+*   **Permissions**: `manifest.json` governs permissions. External API calls (like Ollama) must be CORS-compatible or proxied if necessary (though strictly local Ollama usually works).
+
+---
+
+## 🐳 Docker Infrastructure
+
+The Docker setup is designed for **local network usage**, allowing you to use the Reader Helper on mobile devices or other computers on your LAN while connecting to a locally running LLM (Ollama) on your host machine.
+
+### 1. Networking (`host.docker.internal`)
+*   **Challenge**: Docker containers are isolated. They cannot normally "see" `localhost:11434` on your Windows host.
+*   **Solution**: We map the host gateway in `docker-compose.yml`.
+    ```yaml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ```
+*   **Usage**: The proxy configuration in `vite.config.ts` or the API service must point to `http://host.docker.internal:11434` when running inside Docker.
+
+### 2. Nginx
+*   The `Dockerfile` builds the static assets and serves them via **Nginx**.
+*   This generic server handles SPA routing (redirecting 404s to `index.html`) to ensure the React app loads correctly.
+
+---
+
 ## ⚡ State Management (Zustand)
 
 We use **Zustand** for granular state management to avoid the "Context Hell" and excessive re-renders associated with complex React Context usage.
