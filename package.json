@@ -9,7 +9,8 @@
         "dev": "npm run dev --workspace=@reader-helper/client",
         "build": "npm run build --workspaces",
         "test": "npm run test --workspaces",
-        "lint": "npm run lint --workspaces"
+        "lint": "npm run lint --workspaces",
+        "prisma-studio": "npx prisma studio --schema=apps/server/prisma/schema.prisma"
     },
     "devDependencies": {
         "concurrently": "^8.2.2"
