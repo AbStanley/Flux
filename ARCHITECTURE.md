@@ -7,12 +7,12 @@ This project is architected as a **Personal Cloud Platform**. It is designed to 
 ```mermaid
 graph TD
     subgraph "Frontend Layer (Browser)"
-        UI[React Client]
+        UI["React Client"]
         Ext["Chrome Extension (Future)"]
     end
 
     subgraph "Backend Layer (NestJS)"
-        API[API Gateway (Port 3000)]
+        API["API Gateway (Port 3000)"]
         Auth[Auth Guard]
         Proxy[AI Proxy Service]
     end
