@@ -61,7 +61,7 @@ export const ReaderMainPanel: React.FC = () => {
     }, [sourceLang, availableVoices, setVoiceByLanguageName]);
 
     const requiredAudioPage = useAudioStore(useCallback(s => {
-        if (s.currentWordIndex === null) return null;
+        if (!s.isPlaying || s.currentWordIndex === null) return null;
         return Math.floor(s.currentWordIndex / PAGE_SIZE) + 1;
     }, [PAGE_SIZE]));
 
