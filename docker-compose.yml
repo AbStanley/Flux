@@ -1,8 +1,14 @@
 services:
   web:
-    build: .
+    build:
+      context: ./apps/client
+      dockerfile: Dockerfile
     ports:
-      - "0.0.0.0:8080:80"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "8080:80"
     restart: always
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
