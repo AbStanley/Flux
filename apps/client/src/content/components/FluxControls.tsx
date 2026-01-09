@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import type { Mode } from '../hooks/useAIHandler';
 
 const LANGUAGES = [
@@ -16,7 +16,7 @@ interface FluxControlsProps {
     onAction: () => void;
 }
 
-export const FluxControls: React.FC<FluxControlsProps> = ({
+export function FluxControls({
     mode,
     targetLang,
     result,
@@ -24,10 +24,10 @@ export const FluxControls: React.FC<FluxControlsProps> = ({
     onModeChange,
     onLangChange,
     onAction
-}) => {
+}: FluxControlsProps) {
     const [copied, setCopied] = useState(false);
 
-    const handleCopy = (e: React.MouseEvent) => {
+    const handleCopy = (e: MouseEvent) => {
         e.stopPropagation();
         if (result) {
             navigator.clipboard.writeText(result);
@@ -36,27 +36,19 @@ export const FluxControls: React.FC<FluxControlsProps> = ({
         }
     };
 
-    const handleSave = (e: React.MouseEvent) => {
+    const handleSave = (e: MouseEvent) => {
         e.stopPropagation();
         if (selection) {
-            // @ts-ignore
             if (window.chrome?.storage?.local) {
-                // @ts-ignore
                 window.chrome.storage.local.set({ pendingText: selection.text }, () => {
-                    // @ts-ignore
                     if (window.chrome?.runtime) {
-                        // @ts-ignore
                         window.chrome.runtime.sendMessage({ type: 'TEXT_SELECTED', text: selection.text });
-                        // @ts-ignore
                         window.chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' });
                     }
                 });
-            } else {
-                // @ts-ignore
-                if (window.chrome?.runtime) {
-                    window.chrome.runtime.sendMessage({ type: 'TEXT_SELECTED', text: selection.text });
-                    window.chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' });
-                }
+            } else if (window.chrome?.runtime) {
+                window.chrome.runtime.sendMessage({ type: 'TEXT_SELECTED', text: selection.text });
+                window.chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' });
             }
         }
     };
@@ -138,4 +130,4 @@ export const FluxControls: React.FC<FluxControlsProps> = ({
             </div>
         </div>
     );
-};
+}

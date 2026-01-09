@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface FluxContentProps {
@@ -7,7 +6,7 @@ interface FluxContentProps {
     result: string;
 }
 
-export const FluxContent: React.FC<FluxContentProps> = ({ loading, error, result }) => {
+export function FluxContent({ loading, error, result }: FluxContentProps) {
     return (
         <div>
             {loading && (
@@ -47,4 +46,4 @@ export const FluxContent: React.FC<FluxContentProps> = ({ loading, error, result
             )}
         </div>
     );
-};
+}

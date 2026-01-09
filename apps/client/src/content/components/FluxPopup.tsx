@@ -1,4 +1,3 @@
-import React from 'react';
 import type { Mode } from '../hooks/useAIHandler';
 import { FluxHeader } from './FluxHeader';
 import { FluxControls } from './FluxControls';
@@ -19,7 +18,7 @@ interface FluxPopupProps {
     onMouseLeave: () => void;
 }
 
-export const FluxPopup: React.FC<FluxPopupProps> = ({
+export function FluxPopup({
     selection,
     result,
     loading,
@@ -32,7 +31,7 @@ export const FluxPopup: React.FC<FluxPopupProps> = ({
     onClose,
     onMouseEnter,
     onMouseLeave
-}) => {
+}: FluxPopupProps) {
     return (
         <div
             onMouseEnter={onMouseEnter}
@@ -80,5 +79,4 @@ export const FluxPopup: React.FC<FluxPopupProps> = ({
             </div>
         </div>
     );
-};
-
+}

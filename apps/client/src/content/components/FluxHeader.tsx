@@ -1,10 +1,8 @@
-import React from 'react';
-
 interface FluxHeaderProps {
     onClose: () => void;
 }
 
-export const FluxHeader: React.FC<FluxHeaderProps> = ({ onClose }) => {
+export function FluxHeader({ onClose }: FluxHeaderProps) {
     return (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 'bold', color: '#94a3b8' }}>Flux Analysis</span>
@@ -14,4 +12,4 @@ export const FluxHeader: React.FC<FluxHeaderProps> = ({ onClose }) => {
             >✕</button>
         </div>
     );
-};
+}
