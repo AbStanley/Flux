@@ -91,6 +91,7 @@ export const ReaderMainPanel: React.FC = () => {
         tokens,
         targetLang,
         translateIndices,
+        regenerateHover: useTranslation(true).regenerateHover, // Pass the new action
         sourceLang,
         selectionMode,
         fetchRichTranslation,

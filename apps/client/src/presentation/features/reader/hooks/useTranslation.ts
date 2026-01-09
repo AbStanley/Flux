@@ -35,6 +35,7 @@ export const useTranslation = (enableAutoFetch = false) => {
     // Translation Store Actions
     const translateSelection = useTranslationStore(state => state.translateSelection);
     const handleHoverAction = useTranslationStore(state => state.handleHover);
+    const regenerateHoverAction = useTranslationStore(state => state.regenerateHover);
     const clearHover = useTranslationStore(state => state.clearHover);
     const fetchRichTranslationAction = useTranslationStore(state => state.fetchRichTranslation);
     const closeRichInfo = useTranslationStore(state => state.closeRichInfo);
@@ -107,7 +108,7 @@ export const useTranslation = (enableAutoFetch = false) => {
         clearHoverTimeoutRef.current = setTimeout(() => {
             lastHoveredIndexRef.current = null;
             clearHover();
-        }, 50);
+        }, 300);
     }, [clearHover]);
 
     const fetchRichTranslation = useCallback((text: string, context: string) => {
@@ -161,6 +162,9 @@ export const useTranslation = (enableAutoFetch = false) => {
         // Exposed helper for manual triggering (e.g. click-to-merge)
         translateIndices: (indices: Set<number>, force: boolean = false) => {
             translateSelection(indices, tokens, sourceLang, targetLang, aiService, force);
+        },
+        regenerateHover: (index: number) => {
+            regenerateHoverAction(index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
         }
     };
 };

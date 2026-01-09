@@ -25,7 +25,7 @@ interface ReaderTextContentProps {
     handleTokenClick: (index: number, e: React.MouseEvent) => void;
     onMoreInfoClick: (index: number, forceSingle?: boolean) => void;
     onPlayClick: (index: number, forceSingle?: boolean) => void;
-    onRegenerateClick: (index: number) => void; // New Prop
+    onRegenerateClick: (index: number, forceSingle?: boolean) => void; // New Prop
     showTranslations: boolean;
 }
 

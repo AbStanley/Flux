@@ -12,6 +12,7 @@ interface UseReaderInteractionsProps {
     tokens: any[]; // Using any[] to match usage if string[], but safe if string[]
     targetLang: string;
     translateIndices: (indices: Set<number>, force?: boolean) => void;
+    regenerateHover: (index: number) => void;
     sourceLang: string;
     selectionMode: SelectionMode;
     fetchRichTranslation: (text: string, context: string) => void;
@@ -28,6 +29,7 @@ export const useReaderInteractions = ({
     tokens,
     targetLang,
     translateIndices,
+    regenerateHover,
     sourceLang,
     selectionMode,
     fetchRichTranslation,
@@ -174,19 +176,30 @@ export const useReaderInteractions = ({
         }
     }, [currentPage, PAGE_SIZE, groups, tokens, playSingle]);
 
-    const onRegenerateClick = useCallback((index: number) => {
+    const onRegenerateClick = useCallback((index: number, forceSingle: boolean = false) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
         const group = groups.find(g => g.includes(globalIndex));
 
-        if (group) {
+        if (group && !forceSingle) {
             const indices = new Set(group);
             translateIndices(indices, true); // Force = true
         } else {
             // Single word regeneration
-            const indices = new Set([globalIndex]);
-            translateIndices(indices, true);
+            // FIX: If we just hovered, we don't want to SELECT it (SelectionTranslations).
+            // We just want to re-fetch the cache and update the hover.
+
+            // Check if it's already selected as a single word?
+            const isAlreadySelected = selectionTranslations.has(`${globalIndex}-${globalIndex}`);
+
+            if (isAlreadySelected) {
+                const indices = new Set([globalIndex]);
+                translateIndices(indices, true);
+            } else {
+                // Pure hover regeneration
+                regenerateHover(index);
+            }
         }
-    }, [currentPage, PAGE_SIZE, groups, translateIndices]);
+    }, [currentPage, PAGE_SIZE, groups, translateIndices, regenerateHover, selectionTranslations]);
 
     return {
         onTokenClick,

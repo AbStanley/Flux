@@ -31,6 +31,16 @@ export interface TranslationSlice {
         aiService: IAIService
     ) => Promise<void>;
 
+    regenerateHover: (
+        index: number,
+        tokens: string[],
+        currentPage: number,
+        PAGE_SIZE: number,
+        sourceLang: string,
+        targetLang: string,
+        aiService: IAIService
+    ) => Promise<void>;
+
     clearHover: () => void;
     toggleShowTranslations: () => void;
     clearSelectionTranslations: () => void;
@@ -342,6 +352,38 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
                 hoverTranslation: result,
                 translationCache: new Map(state.translationCache).set(cacheKey, result!)
             }));
+        }
+    },
+
+    regenerateHover: async (index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService) => {
+        const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
+        const token = tokens[globalIndex];
+        if (!token?.trim()) return;
+
+        // Force Loading State for Hover
+        set({ hoverTranslation: "..." });
+
+        const context = getContextForIndex(tokens, globalIndex);
+        const cacheKey = `${token.trim()}_${targetLang}`;
+
+        // Force Fetch (bypass cache check initially)
+        const result = await fetchTranslationHelper(token, context, sourceLang, targetLang, aiService);
+
+        if (result) {
+            // Update Cache AND Current Hover if still matching
+            set(state => {
+                const newCache = new Map(state.translationCache);
+                newCache.set(cacheKey, result);
+
+                // Only update hover display if user is still hovering same word
+                if (state.hoveredIndex === globalIndex) {
+                    return {
+                        translationCache: newCache,
+                        hoverTranslation: result
+                    };
+                }
+                return { translationCache: newCache };
+            });
         }
     },
 

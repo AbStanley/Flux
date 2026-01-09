@@ -36,7 +36,7 @@ interface ReaderTokenProps {
     onMoreInfo: (index: number, forceSingle?: boolean) => void;
     onPlay: (index: number, forceSingle?: boolean) => void;
     onSeek: (index: number) => void;
-    onRegenerate: (index: number) => void;
+    onRegenerate: (index: number, forceSingle?: boolean) => void;
     // New:
     containerRef?: React.RefObject<HTMLDivElement | null>;
     groupEndId?: string;
@@ -190,7 +190,7 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
                         translation={groupTranslation}
                         onPlay={() => onPlay(index, false)}
                         onMoreInfo={() => onMoreInfo(index, false)}
-                        onRegenerate={() => onRegenerate(index)}
+                        onRegenerate={() => onRegenerate(index, false)}
                         onSave={() => handleSave(groupTranslation)}
                         isSaved={isSaved}
                     />
@@ -211,14 +211,14 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
                     style={{ maxWidth: dynamicMaxWidth ? `${dynamicMaxWidth}px` : undefined }}
                     onMouseOver={(e) => {
                         e.stopPropagation();
-                        onHover(index, 'popup');
+                        onHover(index, 'token');
                     }}
                 >
                     <ReaderTokenPopup
                         translation={hoverTranslation}
                         onPlay={() => onPlay(index, true)}
                         onMoreInfo={() => onMoreInfo(index, true)}
-                        onRegenerate={() => onRegenerate(index)}
+                        onRegenerate={() => onRegenerate(index, true)}
                         onSave={() => handleSave(hoverTranslation)}
                         isSaved={isSaved}
                     />
