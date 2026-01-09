@@ -15,10 +15,7 @@
     cursor: pointer;
 }
 
-.interactive:hover {
-    background-color: hsl(var(--accent));
-    color: hsl(var(--accent-foreground));
-}
+/* .interactive:hover removed to rely on JS state */
 
 .selected {
     background-color: transparent;
@@ -29,9 +26,7 @@
     vertical-align: baseline;
 }
 
-.selected.interactive:hover {
-    background-color: hsl(var(--link-color) / 0.1);
-}
+/* .selected.interactive:hover removed */
 
 .hovered {
     background-color: hsl(var(--accent) / 0.5);
@@ -125,7 +120,12 @@
     box-shadow: 0 0 0 1px hsl(var(--accent));
     border-radius: 0.25em;
     z-index: 50;
+    z-index: 50;
     position: relative;
+}
+
+.hoveredSelected {
+    background-color: hsl(var(--link-color) / 0.1);
 }
 
 .zIndexTop {

@@ -7,6 +7,7 @@ export interface TranslationSlice {
     selectionTranslations: Map<string, string>;
     hoveredIndex: number | null;
     hoverTranslation: string | null;
+    hoverSource: 'token' | 'popup' | null;
     showTranslations: boolean;
 
     translateSelection: (
@@ -21,6 +22,7 @@ export interface TranslationSlice {
 
     handleHover: (
         index: number,
+        source: 'token' | 'popup', // New param
         tokens: string[],
         currentPage: number,
         PAGE_SIZE: number,
@@ -90,12 +92,15 @@ const fetchTranslationHelper = async (
     let attempt = 0;
     while (attempt < retries) {
         try {
-            return await aiService.translateText(text.trim(), targetLang, context, sourceLang);
+            // Add 15s timeout to prevent infinite hanging
+            const fetchPromise = aiService.translateText(text.trim(), targetLang, context, sourceLang);
+            const timeoutPromise = new Promise<null>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000));
+
+            return await Promise.race([fetchPromise, timeoutPromise]) as string;
         } catch (error: any) {
             console.warn(`Translation attempt ${attempt + 1} failed:`, error);
             attempt++;
-            if (attempt >= retries) return null; // Return null on final failure (do not cache error)
-            // Optional: small delay between retries
+            if (attempt >= retries) return null;
             await new Promise(resolve => setTimeout(resolve, 500 * attempt));
         }
     }
@@ -109,6 +114,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
     selectionTranslations: new Map(),
     hoveredIndex: null,
     hoverTranslation: null,
+    hoverSource: null,
     showTranslations: true,
 
     translateSelection: async (indices, tokens, sourceLang, targetLang, aiService, force = false, targetIndex?: number) => {
@@ -120,7 +126,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
 
         let nextTranslations = new Map(currentTranslations);
         let nextCache = new Map(currentCache);
-        let hasSyncChanges = false;
+        let updatesPending = false;
 
         // Groups to recursively process (from overlaps)
         const additionalGroupsToTranslate: Set<number>[] = [];
@@ -184,10 +190,10 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             } else {
                 nextTranslations.set(key, "..."); // Loading state
             }
-            hasSyncChanges = true;
+            updatesPending = true;
         }
 
-        if (hasSyncChanges) {
+        if (updatesPending) {
             set({ selectionTranslations: nextTranslations });
         }
 
@@ -201,7 +207,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         // We re-read state in case it changed
         let finalTranslations = new Map(get().selectionTranslations);
         let finalCache = new Map(get().translationCache);
-        let hasAsyncChanges = false;
+
 
         await Promise.all(groups.map(async (group) => {
             if (group.length === 0) return;
@@ -222,8 +228,15 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             // Check Cache
             // If FORCE is true, we SKIP returning from cache here, ensuring a fetch.
             if (!force && finalCache.has(cacheKey)) {
-                finalTranslations.set(key, finalCache.get(cacheKey)!);
-                hasAsyncChanges = true;
+                const cachedVal = finalCache.get(cacheKey)!;
+                set(state => {
+                    const current = new Map(state.selectionTranslations);
+                    if (current.get(key) !== cachedVal) {
+                        current.set(key, cachedVal);
+                        return { selectionTranslations: current };
+                    }
+                    return state;
+                });
                 return;
             }
 
@@ -231,10 +244,8 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             let result: string | null = null;
 
             if (pendingRequests.has(cacheKey)) {
-                // Wait for existing promise
                 result = await pendingRequests.get(cacheKey)!;
             } else {
-                // Start new request
                 const context = getContextForIndex(tokens, start);
                 const promise = fetchTranslationHelper(textToTranslate, context, sourceLang, targetLang, aiService);
                 pendingRequests.set(cacheKey, promise);
@@ -245,50 +256,63 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
                 }
             }
 
-            // Apply Result
-            if (result) {
-                finalCache.set(cacheKey, result);
+            // Apply Result Safely using Functional Set
+            set((state) => {
+                const currentTranslations = new Map(state.selectionTranslations);
+                const currentCache = new Map(state.translationCache);
+                let stateChanged = false;
 
-                // Race Condition / Superset Check
-                const currentLiveTranslations = get().selectionTranslations;
-                let isSuperseded = false;
-                for (const existingKey of currentLiveTranslations.keys()) {
-                    const [exStart, exEnd] = existingKey.split('-').map(Number);
-                    if (existingKey !== key && exStart <= start && exEnd >= end) {
-                        isSuperseded = true;
-                        break;
+                if (result) {
+                    currentCache.set(cacheKey, result);
+
+                    // Race Condition / Superset Check against LATEST state
+                    let isSuperseded = false;
+                    for (const existingKey of currentTranslations.keys()) {
+                        const [exStart, exEnd] = existingKey.split('-').map(Number);
+                        if (existingKey !== key && exStart <= start && exEnd >= end) {
+                            isSuperseded = true;
+                            break;
+                        }
                     }
-                }
 
-                if (!isSuperseded) {
-                    finalTranslations.set(key, result);
-                    hasAsyncChanges = true;
+                    if (!isSuperseded) {
+                        currentTranslations.set(key, result);
+                        stateChanged = true;
+                    } else {
+                        // If superseded but still stuck in loading, remove it
+                        if (currentTranslations.get(key) === "...") {
+                            currentTranslations.delete(key);
+                            stateChanged = true;
+                        }
+                    }
                 } else {
-                    if (finalTranslations.get(key) === "...") {
-                        finalTranslations.delete(key);
-                        hasAsyncChanges = true;
-                    }
+                    // Failed to translate
+                    currentTranslations.delete(key);
+                    stateChanged = true;
                 }
-            } else {
-                finalTranslations.delete(key);
-                hasAsyncChanges = true;
-            }
-        }));
 
-        if (hasAsyncChanges) {
-            set({
-                selectionTranslations: finalTranslations,
-                translationCache: finalCache
+                if (!stateChanged) return state;
+
+                return {
+                    selectionTranslations: currentTranslations,
+                    translationCache: currentCache
+                };
             });
-        }
+        }));
     },
 
-    handleHover: async (index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService) => {
+    handleHover: async (index, source, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
         const token = tokens[globalIndex];
         if (!token?.trim()) return;
 
-        set({ hoveredIndex: globalIndex, hoverTranslation: null });
+        set({ hoveredIndex: globalIndex, hoverTranslation: null, hoverSource: source });
+
+        // If hovering via popup, we DO NOT fetch single word translation to avoid confusion.
+        // We only want to highlight the group.
+        if (source === 'popup') {
+            return;
+        }
 
         const cacheKey = `${token.trim()}_${targetLang}`;
         const currentCache = get().translationCache;
@@ -348,7 +372,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         }
     },
 
-    clearHover: () => set({ hoveredIndex: null, hoverTranslation: null }),
+    clearHover: () => set({ hoveredIndex: null, hoverTranslation: null, hoverSource: null }),
     toggleShowTranslations: () => set(state => ({ showTranslations: !state.showTranslations })),
     clearSelectionTranslations: () => set({ selectionTranslations: new Map() }), // Optional: Clear cache here too if desired, but User wants session persistence.
 });

@@ -33,4 +33,4 @@ dist-ssr
 *.sw?
 
 # Agent
-*.agent
+.agent

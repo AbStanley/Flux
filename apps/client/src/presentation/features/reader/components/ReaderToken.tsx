@@ -31,7 +31,7 @@ interface ReaderTokenProps {
 
     // Event Handlers
     onClick: (index: number, e: React.MouseEvent) => void;
-    onHover: (index: number) => void;
+    onHover: (index: number, source?: 'token' | 'popup') => void;
     onClearHover: () => void;
     onMoreInfo: (index: number, forceSingle?: boolean) => void;
     onPlay: (index: number, forceSingle?: boolean) => void;
@@ -76,11 +76,7 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
 
     const isSelected = !!position; // If position is assigned, it's selected/grouped
 
-    const handleMouseEnter = () => {
-        if (!isWhitespace) {
-            onHover(index);
-        }
-    };
+
 
     const handleContextMenu = (e: React.MouseEvent) => {
         if (!isWhitespace) {
@@ -146,6 +142,7 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
                 hoverPosition && tokenStyles[hoverPosition] // This handles border radius/shape for sentence
             ) : ''} 
                 ${(isHoveredWord && !isSelected) ? tokenStyles.hoveredWord : ''}
+                ${(isHoveredWord && isSelected) ? tokenStyles.hoveredSelected : ''} 
                 ${isHoveredWord ? tokenStyles.zIndexTop : ''}
                 ${isTitle ? 'text-xl font-bold text-foreground inline-block my-2' : ''}
             `}
@@ -155,7 +152,11 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
                     onClick(index, e);
                 }
             }}
-            onMouseEnter={handleMouseEnter}
+            onMouseOver={() => {
+                if (!isWhitespace) {
+                    onHover(index, 'token');
+                }
+            }}
             onMouseLeave={onClearHover}
             onDoubleClick={(e) => {
                 // Double click gesture for audio seeking
@@ -178,6 +179,10 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
                     className={cn(popupStyles.selectionPopupValid, isRightAligned && popupStyles.popupRight)}
                     style={{
                         maxWidth: dynamicMaxWidth ? `${dynamicMaxWidth}px` : undefined,
+                    }}
+                    onMouseOver={(e) => {
+                        e.stopPropagation();
+                        onHover(index, 'popup');
                     }}
                 >
                     {/* DEBUG RENDER */}
@@ -204,6 +209,10 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
                 <span
                     className={cn(isSelected ? popupStyles.hoverPopupBelow : popupStyles.hoverPopup, isRightAligned && popupStyles.popupRight)}
                     style={{ maxWidth: dynamicMaxWidth ? `${dynamicMaxWidth}px` : undefined }}
+                    onMouseOver={(e) => {
+                        e.stopPropagation();
+                        onHover(index, 'popup');
+                    }}
                 >
                     <ReaderTokenPopup
                         translation={hoverTranslation}

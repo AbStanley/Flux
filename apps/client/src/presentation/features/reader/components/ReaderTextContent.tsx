@@ -48,6 +48,7 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
 }) => {
     // State Consumption
     const hoveredIndex = useTranslationStore(s => s.hoveredIndex);
+    const hoverSource = useTranslationStore(s => s.hoverSource);
     const hoverTranslation = useTranslationStore(s => s.hoverTranslation);
     const currentWordIndex = useAudioStore(s => s.currentWordIndex);
     const seek = useAudioStore(s => s.seek);
@@ -105,13 +106,25 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
 
                 // Calculate hover position
                 let hoverPosition: HoverPosition | undefined;
+
+                // isHoveredSentence includes:
+                // 1. Rich Info highlights (highlightIndices)
+                // 2. The group containing the currently hovered word (handled inside useHighlighting)
+                // We rely solely on highlightIndices now as it already contains the group logic.
                 const isHoveredSentence = highlightIndices.has(globalIndex);
-                const isHoveredWord = (hoveredIndex === globalIndex);
+
+                // If we are highlighting a full sentence group, we generally DON'T want the specific word 
+                // under the cursor to look different (darker) IF IT'S FROM THE POPUP.
+                // But if the user explicitly hovers the token ('token' source), we DO want the single word highlight to appear.
+                const isHoveredWord = (hoveredIndex === globalIndex) && hoverSource === 'token';
                 const isAudioHighlighted = currentWordIndex === globalIndex;
 
                 if (isHoveredSentence) {
-                    const prev = highlightIndices.has(globalIndex - 1);
-                    const next = highlightIndices.has(globalIndex + 1);
+                    // We need to check neighbors based on the SAME logic
+                    const checkIsHovered = (idx: number) => highlightIndices.has(idx);
+
+                    const prev = checkIsHovered(globalIndex - 1);
+                    const next = checkIsHovered(globalIndex + 1);
 
                     if (!prev && !next) hoverPosition = HoverPosition.Single;
                     else if (!prev && next) hoverPosition = HoverPosition.Start;

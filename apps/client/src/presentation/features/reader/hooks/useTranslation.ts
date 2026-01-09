@@ -67,7 +67,7 @@ export const useTranslation = (enableAutoFetch = false) => {
     const lastHoveredIndexRef = useRef<number | null>(null);
     const clearHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const handleHover = useCallback((index: number) => {
+    const handleHover = useCallback((index: number, source: 'token' | 'popup' = 'token') => {
         // 1. Cancel any pending clear (sticky hover)
         if (clearHoverTimeoutRef.current) {
             clearTimeout(clearHoverTimeoutRef.current);
@@ -75,9 +75,9 @@ export const useTranslation = (enableAutoFetch = false) => {
         }
 
         // 2. Prevent redundant triggers if we are hovering over the same effective "item"
-        if (lastHoveredIndexRef.current === index) {
-            return;
-        }
+        // Note: checking source is tricky here if we switch source on same index. 
+        // We allow re-trigger if source effectively changes how we handle it? 
+        // For simplicity, we just pass through.
 
         lastHoveredIndexRef.current = index;
 
@@ -88,7 +88,7 @@ export const useTranslation = (enableAutoFetch = false) => {
 
         // 4. Schedule the new hover action (Debounce fetch/state update)
         hoverTimeoutRef.current = setTimeout(() => {
-            handleHoverAction(index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
+            handleHoverAction(index, source, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
         }, 150); // Reduced delay for better responsiveness while still debouncing
     }, [tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService, handleHoverAction]);
 
