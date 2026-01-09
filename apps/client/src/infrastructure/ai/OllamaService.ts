@@ -58,7 +58,7 @@ export class OllamaService implements IAIService {
     }
 
     async translateText(text: string, targetLanguage: string = 'en', context?: string, sourceLanguage?: string): Promise<string> {
-
+        console.log('Translating: ', text);
         const prompt = getTranslatePrompt(text, targetLanguage, context, sourceLanguage);
         const rawResponse = await this.generateText(prompt);
         return cleanResponse(rawResponse);

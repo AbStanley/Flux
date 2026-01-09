@@ -1,4 +1,5 @@
 import React, { useRef, useCallback, useMemo } from 'react';
+import { SelectionMode } from '../../../../core/types';
 import { Card, CardContent } from "../../../components/ui/card";
 import { Loader2 } from 'lucide-react';
 import styles from '../ReaderView.module.css';
@@ -26,8 +27,9 @@ export const ReaderMainPanel: React.FC = () => {
         PAGE_SIZE,
         selectionMode,
         sourceLang,
+        targetLang,
         setCurrentPage,
-        handleTokenClick,
+        handleTokenClick: handleTokenClickAction,
         getSelectionGroups
     } = useReader();
 
@@ -44,30 +46,10 @@ export const ReaderMainPanel: React.FC = () => {
         closeTab,
         closeAllTabs,
         regenerateTab,
-        showTranslations
+        showTranslations,
+        removeTranslation,
+        translateIndices
     } = useTranslation(true);
-
-    const activeTabData = React.useMemo(() => {
-        return richDetailsTabs.find(t => t.id === activeTabId)?.data || null;
-    }, [richDetailsTabs, activeTabId]);
-
-    const playSingle = useAudioStore(s => s.playSingle);
-    const availableVoices = useAudioStore(s => s.availableVoices);
-    const setVoiceByLanguageName = useAudioStore(s => s.setVoiceByLanguageName);
-
-    React.useEffect(() => {
-        if (sourceLang) {
-            setVoiceByLanguageName(sourceLang);
-        }
-    }, [sourceLang, availableVoices, setVoiceByLanguageName]);
-
-    const requiredAudioPage = useAudioPageSync(PAGE_SIZE);
-
-    React.useEffect(() => {
-        if (requiredAudioPage !== null && requiredAudioPage !== currentPage) {
-            setCurrentPage(requiredAudioPage);
-        }
-    }, [requiredAudioPage, currentPage, setCurrentPage]);
 
     const selectionGroups = useMemo(() => getSelectionGroups(selectedIndices), [getSelectionGroups, selectedIndices]);
 
@@ -98,6 +80,125 @@ export const ReaderMainPanel: React.FC = () => {
         }
         return uniqueGroups;
     }, [selectionGroups, selectionTranslations]);
+
+    const onTokenClick = useCallback((index: number, e: React.MouseEvent) => {
+        const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
+        const isMultiSelecting = e.shiftKey || e.ctrlKey || e.metaKey;
+
+        // 1. Check if clicking inside an existing group (Toggle/Select logic)
+        // We look at 'groups' which includes both persisted and active selections
+        const validGroups = groups.filter(g => g.length > 0);
+        const existingGroup = validGroups.find(g => g.includes(globalIndex));
+
+        if (existingGroup && !isMultiSelecting) {
+            // Identifier for this group (if persisted)
+            const groupKey = `${existingGroup[0]}-${existingGroup[existingGroup.length - 1]}`;
+
+            // 1a. SAFETY GUARD (Word Mode):
+            // If we are in Word Mode, and the user clicks a Multi-Word Translation (Sentence),
+            // DO NOT Remove/Toggle it off. This prevents accidental destruction of sentence views.
+            // We just let it fall through to 'handleTokenClickAction' (select word) or do nothing.
+            // 1a. SPLIT LOGIC (Word Mode):
+            // If in Word Mode and clicking a group (Sentence or Phrase),
+            // We "Split" it: Remove the clicked word, re-translate the remainders.
+            if (selectionMode === SelectionMode.Word && selectionTranslations.has(groupKey)) {
+                // 1. Remove the original translation
+                const text = tokens.slice(existingGroup[0], existingGroup[existingGroup.length - 1] + 1).join('');
+                removeTranslation(groupKey, text, targetLang);
+
+                // 2. Calculate remaining indices
+                const remainingIndices = new Set<number>();
+                existingGroup.forEach(i => {
+                    if (i !== globalIndex) remainingIndices.add(i);
+                });
+
+                // 3. Trigger translation for remainders (if any)
+                if (remainingIndices.size > 0) {
+                    translateIndices(remainingIndices);
+                }
+                return;
+            }
+            // 1b. Standard Toggle (Sentence Mode or otherwise)
+            else if (selectionTranslations.has(groupKey)) {
+                // If it's a persisted translation, Remove/Toggle Off
+                // Reconstruct text for cache seeding
+                const text = tokens.slice(existingGroup[0], existingGroup[existingGroup.length - 1] + 1).join('');
+                removeTranslation(groupKey, text, targetLang);
+                return;
+            }
+
+            // If it's just a selection (green highlight), fall through to default properties (toggle/deselect)
+            // handleTokenClickAction will handle toggling it off.
+        }
+
+        // 2. Click-to-Extend/Merge Logic (Only if NOT multi-selecting, NOT clicking inside existing, AND in WORD mode)
+        // In Sentence mode, we want distinct selections, not auto-merging of sentences.
+        if (!existingGroup && !isMultiSelecting && selectionMode === SelectionMode.Word) {
+            // Check for adjacent groups to merge with
+            // Adjacency radius = 2 (allows for 1 intervening space/punct)
+            const adjacentGroups = validGroups.filter(g => {
+                const groupStart = g[0];
+                const groupEnd = g[g.length - 1];
+                // Check dist to left or right
+                const distLeft = globalIndex - groupEnd;
+                const distRight = groupStart - globalIndex;
+
+                // Allow distance 1 (direct neighbor) or 2 (space in between)
+                return (distLeft > 0 && distLeft <= 2) || (distRight > 0 && distRight <= 2);
+            });
+
+            if (adjacentGroups.length > 0) {
+                // MERGE STRATEGY
+                const mergedIndices = new Set<number>();
+                mergedIndices.add(globalIndex); // Add clicked word
+
+                adjacentGroups.forEach(g => g.forEach(i => mergedIndices.add(i))); // Add neighbors
+
+                // Check for any gaps between bridged components and fill them
+                // (e.g. if we merge [0] and [2], ensure [1] is added if it's gap material)
+                const sorted = Array.from(mergedIndices).sort((a, b) => a - b);
+                const min = sorted[0];
+                const max = sorted[sorted.length - 1];
+
+                for (let i = min; i <= max; i++) {
+                    // We naively fill the range. 
+                    // Since we validated adjacency, we assume the user satisfies the "single sentence" intent.
+                    mergedIndices.add(i);
+                }
+
+                // Trigger Translation for the new merged group
+                // Trigger Translation for the new merged group
+                translateIndices(mergedIndices);
+                return;
+            }
+        }
+
+        handleTokenClickAction(index);
+    }, [currentPage, PAGE_SIZE, groups, selectionTranslations, handleTokenClickAction, removeTranslation, tokens, targetLang, translateIndices, sourceLang]);
+
+    const activeTabData = React.useMemo(() => {
+        return richDetailsTabs.find(t => t.id === activeTabId)?.data || null;
+    }, [richDetailsTabs, activeTabId]);
+
+    const playSingle = useAudioStore(s => s.playSingle);
+    const availableVoices = useAudioStore(s => s.availableVoices);
+    const setVoiceByLanguageName = useAudioStore(s => s.setVoiceByLanguageName);
+
+    React.useEffect(() => {
+        if (sourceLang) {
+            setVoiceByLanguageName(sourceLang);
+        }
+    }, [sourceLang, availableVoices, setVoiceByLanguageName]);
+
+    const requiredAudioPage = useAudioPageSync(PAGE_SIZE);
+
+    React.useEffect(() => {
+        if (requiredAudioPage !== null && requiredAudioPage !== currentPage) {
+            setCurrentPage(requiredAudioPage);
+        }
+    }, [requiredAudioPage, currentPage, setCurrentPage]);
+
+
 
     const textAreaRef = useRef<HTMLDivElement>(null);
     const visualGroupStarts = useVisualSplits({
@@ -159,6 +260,20 @@ export const ReaderMainPanel: React.FC = () => {
         }
     }, [currentPage, PAGE_SIZE, groups, tokens, playSingle]);
 
+    const onRegenerateClick = useCallback((index: number) => {
+        const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
+        const group = groups.find(g => g.includes(globalIndex));
+
+        if (group) {
+            const indices = new Set(group);
+            translateIndices(indices, true); // Force = true
+        } else {
+            // Single word regeneration
+            const indices = new Set([globalIndex]);
+            translateIndices(indices, true);
+        }
+    }, [currentPage, PAGE_SIZE, groups, translateIndices]);
+
     return (
         <>
             <Card className="flex-1 h-full border-none shadow-sm glass overflow-hidden flex flex-col">
@@ -181,9 +296,10 @@ export const ReaderMainPanel: React.FC = () => {
                             groupStarts={groupStarts}
                             tokenPositions={tokenPositions}
                             textAreaRef={textAreaRef}
-                            handleTokenClick={handleTokenClick}
+                            handleTokenClick={onTokenClick}
                             onMoreInfoClick={onMoreInfoClick}
                             onPlayClick={onPlayClick}
+                            onRegenerateClick={onRegenerateClick}
                             showTranslations={showTranslations}
                         />
                     )}

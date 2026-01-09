@@ -47,10 +47,13 @@ export const useReader = () => {
             const prev = sorted[i - 1];
             const curr = sorted[i];
 
-            // Check if there are only whitespace tokens between prev and curr
+            // Check if there are only whitespace/punctuation tokens between prev and curr
             let isContiguous = true;
             for (let k = prev + 1; k < curr; k++) {
-                if (tokens[k].trim().length > 0) {
+                // Only break continuity if we hit something that looks like a "word" (letters/numbers)
+                const hasContent = /[\p{L}\p{N}]/u.test(tokens[k]);
+
+                if (hasContent) {
                     isContiguous = false;
                     break;
                 }
@@ -59,10 +62,6 @@ export const useReader = () => {
                     isContiguous = false;
                     break;
                 }
-            }
-
-            if (isContiguous && /[.!?]['"”’\)]*$/.test(tokens[prev].trim())) {
-                isContiguous = false;
             }
 
             if (isContiguous) {
@@ -88,6 +87,7 @@ export const useReader = () => {
         PAGE_SIZE,
         selectionMode,
         sourceLang,
+        targetLang: useReaderStore(state => state.targetLang),
 
         // Actions
         setCurrentPage: setPage,

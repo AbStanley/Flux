@@ -94,17 +94,6 @@ export const useTokenLayout = ({
                 viewportSoftCap
             );
 
-            // DEBUG LOGGING
-            if (groupTranslation) {
-                console.log('[ReaderToken] Width Calc:', {
-                    containerAvailable,
-                    groupVisualWidth,
-                    viewportSoftCap,
-                    finalWidth,
-                    isRight
-                });
-            }
-
             setDynamicMaxWidth(Math.max(200, finalWidth));
 
         } else {

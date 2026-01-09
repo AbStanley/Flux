@@ -1,4 +1,4 @@
-
+/* Token Styles */
 /* Token Styles */
 .token {
     display: inline-block;
@@ -7,6 +7,8 @@
     transition: all 0.15s ease;
     padding: 0 0.1em;
     margin: 0;
+    border-bottom: 2px solid transparent;
+    /* Reserve space for underline */
 }
 
 .interactive {
@@ -20,9 +22,10 @@
 
 .selected {
     background-color: transparent;
-    border-bottom: 2px solid hsl(var(--link-color));
+    border-bottom-color: hsl(var(--link-color));
+    /* Just change color */
     color: hsl(var(--link-color));
-    font-weight: 500;
+    /* font-weight: 500; <-- REMOVED to prevent layout shift */
     vertical-align: baseline;
 }
 
@@ -39,18 +42,49 @@
 .start {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+    /* margin-right: 0; */
+    /* padding-right: 0; */
 }
 
 .middle {
     border-radius: 0;
+    /* margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0; */
 }
 
 .end {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+    /* margin-left: 0;
+    padding-left: 0; */
 }
 
-.selected.start,
+/* Ensure selected items connect visually */
+.selected.token {
+    /* Remove default margin to allow connection */
+    margin: 0;
+}
+
+/* Specific adjustments for the underline connection */
+.selected.start {
+    padding-right: 0;
+    margin-right: 0;
+}
+
+.selected.middle {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.selected.end {
+    padding-left: 0;
+    margin-left: 0;
+}
+
 .selected.single,
 .visualStart {
     margin-top: 0;
@@ -109,7 +143,7 @@
     color: hsl(var(--primary-foreground));
     box-shadow: 0 0 10px hsl(var(--primary) / 0.5);
     border-radius: 0.25em;
-    transform: scale(1.05);
+    /* transform: scale(1.05); <-- REMOVED */
     z-index: 5;
     position: relative;
 }

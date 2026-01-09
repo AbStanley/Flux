@@ -30,7 +30,7 @@ interface ReaderTokenProps {
     isTitle?: boolean;
 
     // Event Handlers
-    onClick: (index: number) => void;
+    onClick: (index: number, e: React.MouseEvent) => void;
     onHover: (index: number) => void;
     onClearHover: () => void;
     onMoreInfo: (index: number, forceSingle?: boolean) => void;
@@ -149,10 +149,10 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
                 ${isHoveredWord ? tokenStyles.zIndexTop : ''}
                 ${isTitle ? 'text-xl font-bold text-foreground inline-block my-2' : ''}
             `}
-            onClick={() => {
+            onClick={(e) => {
                 if (!isWhitespace) {
                     onClearHover();
-                    onClick(index);
+                    onClick(index, e);
                 }
             }}
             onMouseEnter={handleMouseEnter}

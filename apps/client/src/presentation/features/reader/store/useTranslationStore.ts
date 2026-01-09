@@ -28,6 +28,7 @@ export const useTranslationStore = create<TranslationState>()(
                         state: {
                             ...parsed.state,
                             selectionTranslations: new Map(parsed.state.selectionTranslations),
+                            translationCache: new Map(parsed.state.translationCache),
                         },
                     };
                 },
@@ -36,6 +37,7 @@ export const useTranslationStore = create<TranslationState>()(
                         state: {
                             ...value.state,
                             selectionTranslations: Array.from(value.state.selectionTranslations.entries()),
+                            translationCache: Array.from(value.state.translationCache.entries()),
                         },
                     });
                     localStorage.setItem(name, str);
@@ -44,6 +46,7 @@ export const useTranslationStore = create<TranslationState>()(
             },
             partialize: (state) => ({
                 selectionTranslations: state.selectionTranslations,
+                translationCache: state.translationCache,
                 showTranslations: state.showTranslations
             } as any),
         }

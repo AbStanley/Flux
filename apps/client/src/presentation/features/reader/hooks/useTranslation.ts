@@ -134,12 +134,33 @@ export const useTranslation = (enableAutoFetch = false) => {
         toggleRichInfo,
         toggleShowTranslations,
         clearSelectionTranslations,
-        regenerateSelection: (index?: number) => translateSelection(selectedIndices, tokens, sourceLang, targetLang, aiService, true, index),
+        removeTranslation: useTranslationStore(state => state.removeTranslation),
+        regenerateSelection: (index?: number) => {
+            if (index !== undefined) {
+                // Check if this index is part of an existing translation group
+                for (const [key] of selectionTranslations) {
+                    const [start, end] = key.split('-').map(Number);
+                    if (index >= start && index <= end) {
+                        const indices = new Set<number>();
+                        for (let i = start; i <= end; i++) indices.add(i);
+                        translateSelection(indices, tokens, sourceLang, targetLang, aiService, true, index);
+                        return;
+                    }
+                }
+            }
+            // Fallback to currently selected indices
+            translateSelection(selectedIndices, tokens, sourceLang, targetLang, aiService, true, index);
+        },
 
         // Tab Actions
         closeTab,
         closeAllTabs,
         setActiveTab,
-        regenerateTab
+        regenerateTab,
+
+        // Exposed helper for manual triggering (e.g. click-to-merge)
+        translateIndices: (indices: Set<number>, force: boolean = false) => {
+            translateSelection(indices, tokens, sourceLang, targetLang, aiService, force);
+        }
     };
 };
