@@ -19,6 +19,141 @@ interface UseReaderInteractionsProps {
     playSingle: (text: string) => void;
 }
 
+// --- Helper Functions ---
+
+const resolveTarget = (
+    globalIndex: number,
+    groups: number[][],
+    tokens: any[],
+    forceSingle: boolean
+) => {
+    const group = groups.find(g => g.includes(globalIndex));
+    if (group && !forceSingle) {
+        const start = group[0];
+        const end = group[group.length - 1];
+        return {
+            text: tokens.slice(start, end + 1).join(''),
+            isGroup: true,
+            group
+        };
+    }
+    return {
+        text: tokens[globalIndex],
+        isGroup: false,
+        group: undefined
+    };
+};
+
+const handleGroupInteraction = (params: {
+    globalIndex: number;
+    existingGroup: number[] | undefined;
+    isMultiSelecting: boolean;
+    selectionMode: SelectionMode;
+    selectionTranslations: Map<string, string>;
+    tokens: any[];
+    removeTranslation: (key: string, text: string, targetLang: string) => void;
+    targetLang: string;
+    translateIndices: (indices: Set<number>, force?: boolean) => void;
+}): boolean => {
+    const {
+        existingGroup,
+        isMultiSelecting,
+        selectionMode,
+        selectionTranslations,
+        globalIndex,
+        tokens,
+        removeTranslation,
+        targetLang,
+        translateIndices
+    } = params;
+
+    if (!existingGroup || isMultiSelecting) return false;
+
+    const groupKey = `${existingGroup[0]}-${existingGroup[existingGroup.length - 1]}`;
+
+    // 1. SPLIT LOGIC (Word Mode)
+    // If in Word Mode and clicking a group (Sentence or Phrase),
+    // We "Split" it: Remove the clicked word, re-translate the remainders.
+    if (selectionMode === SelectionMode.Word && selectionTranslations.has(groupKey)) {
+        const text = tokens.slice(existingGroup[0], existingGroup[existingGroup.length - 1] + 1).join('');
+        removeTranslation(groupKey, text, targetLang);
+
+        const remainingIndices = new Set<number>();
+        existingGroup.forEach(i => {
+            if (i !== globalIndex) remainingIndices.add(i);
+        });
+
+        if (remainingIndices.size > 0) {
+            translateIndices(remainingIndices);
+        }
+        return true;
+    }
+    // 2. Standard Toggle (Sentence Mode or otherwise)
+    // If it's a persisted translation, Remove/Toggle Off
+    else if (selectionTranslations.has(groupKey)) {
+        const text = tokens.slice(existingGroup[0], existingGroup[existingGroup.length - 1] + 1).join('');
+        removeTranslation(groupKey, text, targetLang);
+        return true;
+    }
+
+    // Fallthrough: If just a selection (green highlight), let handleTokenClickAction toggle it.
+    return false;
+};
+
+const handleMergeInteraction = (params: {
+    globalIndex: number;
+    existingGroup: number[] | undefined;
+    isMultiSelecting: boolean;
+    selectionMode: SelectionMode;
+    validGroups: number[][];
+    translateIndices: (indices: Set<number>) => void;
+}): boolean => {
+    const {
+        existingGroup,
+        isMultiSelecting,
+        selectionMode,
+        validGroups,
+        globalIndex,
+        translateIndices
+    } = params;
+
+    // Only merge if: NOT in a group, NOT multiselecting, and IN Word selection mode
+    if (existingGroup || isMultiSelecting || selectionMode !== SelectionMode.Word) return false;
+
+    // Check for adjacent groups to merge with
+    // Adjacency radius = 2 (allows for 1 intervening space/punct)
+    const adjacentGroups = validGroups.filter(g => {
+        const groupStart = g[0];
+        const groupEnd = g[g.length - 1];
+        const distLeft = globalIndex - groupEnd;
+        const distRight = groupStart - globalIndex;
+        // Allow distance 1 (direct neighbor) or 2 (space in between)
+        return (distLeft > 0 && distLeft <= 2) || (distRight > 0 && distRight <= 2);
+    });
+
+    if (adjacentGroups.length > 0) {
+        const mergedIndices = new Set<number>();
+        mergedIndices.add(globalIndex); // Add clicked word
+        adjacentGroups.forEach(g => g.forEach(i => mergedIndices.add(i))); // Add neighbors
+
+        // Check for any gaps between bridged components and fill them
+        const sorted = Array.from(mergedIndices).sort((a, b) => a - b);
+        const min = sorted[0];
+        const max = sorted[sorted.length - 1];
+
+        for (let i = min; i <= max; i++) {
+            // We naively fill the range (assuming single sentence intent)
+            mergedIndices.add(i);
+        }
+
+        translateIndices(mergedIndices);
+        return true;
+    }
+
+    return false;
+};
+
+
 export const useReaderInteractions = ({
     currentPage,
     PAGE_SIZE,
@@ -40,109 +175,44 @@ export const useReaderInteractions = ({
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
         const isMultiSelecting = e.shiftKey || e.ctrlKey || e.metaKey;
 
-        // 1. Check if clicking inside an existing group (Toggle/Select logic)
-        // We look at 'groups' which includes both persisted and active selections
         const validGroups = groups.filter(g => g.length > 0);
         const existingGroup = validGroups.find(g => g.includes(globalIndex));
 
-        if (existingGroup && !isMultiSelecting) {
-            // Identifier for this group (if persisted)
-            const groupKey = `${existingGroup[0]}-${existingGroup[existingGroup.length - 1]}`;
+        // 1. Try Group Interaction (Toggle/Split)
+        const handledGroup = handleGroupInteraction({
+            globalIndex,
+            existingGroup,
+            isMultiSelecting,
+            selectionMode,
+            selectionTranslations,
+            tokens,
+            removeTranslation,
+            targetLang,
+            translateIndices
+        });
 
-            // 1a. SAFETY GUARD (Word Mode):
-            // If we are in Word Mode, and the user clicks a Multi-Word Translation (Sentence),
-            // DO NOT Remove/Toggle it off. This prevents accidental destruction of sentence views.
-            // We just let it fall through to 'handleTokenClickAction' (select word) or do nothing.
-            // 1a. SPLIT LOGIC (Word Mode):
-            // If in Word Mode and clicking a group (Sentence or Phrase),
-            // We "Split" it: Remove the clicked word, re-translate the remainders.
-            if (selectionMode === SelectionMode.Word && selectionTranslations.has(groupKey)) {
-                // 1. Remove the original translation
-                const text = tokens.slice(existingGroup[0], existingGroup[existingGroup.length - 1] + 1).join('');
-                removeTranslation(groupKey, text, targetLang);
+        if (handledGroup) return;
 
-                // 2. Calculate remaining indices
-                const remainingIndices = new Set<number>();
-                existingGroup.forEach(i => {
-                    if (i !== globalIndex) remainingIndices.add(i);
-                });
+        // 2. Try Merge Interaction (Word Mode Merge)
+        const handledMerge = handleMergeInteraction({
+            globalIndex,
+            existingGroup,
+            isMultiSelecting,
+            selectionMode,
+            validGroups,
+            translateIndices
+        });
 
-                // 3. Trigger translation for remainders (if any)
-                if (remainingIndices.size > 0) {
-                    translateIndices(remainingIndices);
-                }
-                return;
-            }
-            // 1b. Standard Toggle (Sentence Mode or otherwise)
-            else if (selectionTranslations.has(groupKey)) {
-                // If it's a persisted translation, Remove/Toggle Off
-                // Reconstruct text for cache seeding
-                const text = tokens.slice(existingGroup[0], existingGroup[existingGroup.length - 1] + 1).join('');
-                removeTranslation(groupKey, text, targetLang);
-                return;
-            }
+        if (handledMerge) return;
 
-            // If it's just a selection (green highlight), fall through to default properties (toggle/deselect)
-            // handleTokenClickAction will handle toggling it off.
-        }
-
-        // 2. Click-to-Extend/Merge Logic (Only if NOT multi-selecting, NOT clicking inside existing, AND in WORD mode)
-        // In Sentence mode, we want distinct selections, not auto-merging of sentences.
-        if (!existingGroup && !isMultiSelecting && selectionMode === SelectionMode.Word) {
-            // Check for adjacent groups to merge with
-            // Adjacency radius = 2 (allows for 1 intervening space/punct)
-            const adjacentGroups = validGroups.filter(g => {
-                const groupStart = g[0];
-                const groupEnd = g[g.length - 1];
-                // Check dist to left or right
-                const distLeft = globalIndex - groupEnd;
-                const distRight = groupStart - globalIndex;
-
-                // Allow distance 1 (direct neighbor) or 2 (space in between)
-                return (distLeft > 0 && distLeft <= 2) || (distRight > 0 && distRight <= 2);
-            });
-
-            if (adjacentGroups.length > 0) {
-                // MERGE STRATEGY
-                const mergedIndices = new Set<number>();
-                mergedIndices.add(globalIndex); // Add clicked word
-
-                adjacentGroups.forEach(g => g.forEach(i => mergedIndices.add(i))); // Add neighbors
-
-                // Check for any gaps between bridged components and fill them
-                // (e.g. if we merge [0] and [2], ensure [1] is added if it's gap material)
-                const sorted = Array.from(mergedIndices).sort((a, b) => a - b);
-                const min = sorted[0];
-                const max = sorted[sorted.length - 1];
-
-                for (let i = min; i <= max; i++) {
-                    // We naively fill the range. 
-                    // Since we validated adjacency, we assume the user satisfies the "single sentence" intent.
-                    mergedIndices.add(i);
-                }
-
-                // Trigger Translation for the new merged group
-                // Trigger Translation for the new merged group
-                translateIndices(mergedIndices);
-                return;
-            }
-        }
-
+        // 3. Default Action
         handleTokenClickAction(index);
+
     }, [currentPage, PAGE_SIZE, groups, selectionTranslations, handleTokenClickAction, removeTranslation, tokens, targetLang, translateIndices, sourceLang, selectionMode]);
 
     const onMoreInfoClick = useCallback((index: number, forceSingle: boolean = false) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
-        const group = groups.find(g => g.includes(globalIndex));
-        let textToTranslate = "";
-
-        if (group && !forceSingle) {
-            const start = group[0];
-            const end = group[group.length - 1];
-            textToTranslate = tokens.slice(start, end + 1).join('');
-        } else {
-            textToTranslate = tokens[globalIndex];
-        }
+        const { text: textToTranslate } = resolveTarget(globalIndex, groups, tokens, forceSingle);
 
         if (textToTranslate) {
             let startIndex = globalIndex;
@@ -160,16 +230,7 @@ export const useReaderInteractions = ({
 
     const onPlayClick = useCallback((index: number, forceSingle: boolean = false) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
-        const group = groups.find(g => g.includes(globalIndex));
-        let textToPlay = "";
-
-        if (group && !forceSingle) {
-            const start = group[0];
-            const end = group[group.length - 1];
-            textToPlay = tokens.slice(start, end + 1).join('');
-        } else {
-            textToPlay = tokens[globalIndex];
-        }
+        const { text: textToPlay } = resolveTarget(globalIndex, groups, tokens, forceSingle);
 
         if (textToPlay) {
             playSingle(textToPlay);
@@ -178,17 +239,13 @@ export const useReaderInteractions = ({
 
     const onRegenerateClick = useCallback((index: number, forceSingle: boolean = false) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
-        const group = groups.find(g => g.includes(globalIndex));
+        const { isGroup, group } = resolveTarget(globalIndex, groups, tokens, forceSingle);
 
-        if (group && !forceSingle) {
+        if (isGroup && group) {
             const indices = new Set(group);
             translateIndices(indices, true); // Force = true
         } else {
-            // Single word regeneration
-            // FIX: If we just hovered, we don't want to SELECT it (SelectionTranslations).
-            // We just want to re-fetch the cache and update the hover.
-
-            // Check if it's already selected as a single word?
+            // Single word regeneration logic
             const isAlreadySelected = selectionTranslations.has(`${globalIndex}-${globalIndex}`);
 
             if (isAlreadySelected) {
@@ -199,7 +256,7 @@ export const useReaderInteractions = ({
                 regenerateHover(index);
             }
         }
-    }, [currentPage, PAGE_SIZE, groups, translateIndices, regenerateHover, selectionTranslations]);
+    }, [currentPage, PAGE_SIZE, groups, translateIndices, regenerateHover, selectionTranslations, tokens]); // Added tokens dependency for consistency though resolveTarget uses it
 
     return {
         onTokenClick,
