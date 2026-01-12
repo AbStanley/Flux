@@ -4,11 +4,12 @@ export class WebSpeechAudioService implements IAudioService {
     private synthesis: SpeechSynthesis;
     private utterance: SpeechSynthesisUtterance | null = null;
 
-    constructor() {
-        this.synthesis = window.speechSynthesis;
+    constructor(synthesis: SpeechSynthesis = window.speechSynthesis) {
+        this.synthesis = synthesis;
     }
 
     getVoices(): SpeechSynthesisVoice[] {
+        if (!this.synthesis) return [];
         return this.synthesis.getVoices();
     }
 
@@ -20,7 +21,9 @@ export class WebSpeechAudioService implements IAudioService {
         onEnd: () => void
     ): void {
         if (!this.synthesis) {
-            throw new Error("SpeechSynthesis not supported");
+            console.error("SpeechSynthesis not supported");
+            onEnd();
+            return;
         }
 
         this.stop();
@@ -51,11 +54,9 @@ export class WebSpeechAudioService implements IAudioService {
         };
 
         this.utterance.onerror = (e) => {
-
             if (e.error === 'interrupted' || e.error === 'canceled') {
                 return;
             }
-
             // Attempt to recover or notify
             onEnd();
         };
@@ -63,7 +64,7 @@ export class WebSpeechAudioService implements IAudioService {
         try {
             this.synthesis.speak(this.utterance);
         } catch (e) {
-
+            console.error("Error calling speak:", e);
             onEnd();
         }
     }
@@ -87,6 +88,8 @@ export class WebSpeechAudioService implements IAudioService {
 
         this.synthesis.cancel();
         this.utterance = null;
-        (window as any)._speechUtterance = null;
+        if ((window as any)._speechUtterance) {
+            (window as any)._speechUtterance = null;
+        }
     }
 }
