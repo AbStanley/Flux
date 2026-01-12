@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { IAIService } from '../../core/interfaces/IAIService';
 import { MockAIService } from '../../infrastructure/ai/MockAIService';
 import { OllamaService } from '../../infrastructure/ai/OllamaService';
@@ -11,7 +11,7 @@ interface ServiceContextType {
 
 const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
-export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export function ServiceProvider({ children }: { children: ReactNode }) {
     // In both PROD (Web) and DEV, we prefer relative paths ('') to allow Proxying (Vite/Nginx).
     // The OllamaService itself will fallback to localhost ONLY if it detects it's running as an Extension.
     const defaultUrl = '';
@@ -32,11 +32,11 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     return (
-        <ServiceContext.Provider value={{ aiService, setServiceType, currentServiceType }}>
+        <ServiceContext value={{ aiService, setServiceType, currentServiceType }}>
             {children}
-        </ServiceContext.Provider>
+        </ServiceContext>
     );
-};
+}
 
 export const useServices = () => {
     const context = useContext(ServiceContext);
