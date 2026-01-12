@@ -53,4 +53,8 @@ export class MockAIService implements IAIService {
     async getAvailableModels(): Promise<string[]> {
         return ["mock-model"];
     }
+
+    getModel(): string {
+        return "mock-model";
+    }
 }

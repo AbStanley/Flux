@@ -62,4 +62,9 @@ export interface IAIService {
      * Get available models (specific to the service).
      */
     getAvailableModels(): Promise<string[]>;
+
+    /**
+     * Get the current model name.
+     */
+    getModel(): string;
 }
