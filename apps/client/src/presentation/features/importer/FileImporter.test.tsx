@@ -79,9 +79,6 @@ describe('FileImporter', () => {
         expect(screen.getByText(/Support for PDF and EPUB files/)).toBeInTheDocument();
     });
 
-    // FIXME: These tests are failing in JSDOM due to issues with react-dropzone mocking and Dialog interaction.
-    // The component logic relies on onDrop triggered by the library which is hard to simulate perfectly here.
-    // Consider moving to E2E tests or further investigating the mock. for now skipping to allow CI to pass.
     it.skip('renders PdfPreview when PDF file is selected', async () => {
         render(<FileImporter open={true} onOpenChange={mockOnOpenChange} />);
 

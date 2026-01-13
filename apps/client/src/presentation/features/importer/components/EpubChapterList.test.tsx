@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { EpubChapterList } from './EpubChapterList';
-import type { Chapter } from '../../utils/epubUtils';
+import type { Chapter } from '../utils/epubUtils';
 
 const mockChapters: Chapter[] = [
     { id: '1', label: 'Chapter 1', href: 'ch1.html' },
