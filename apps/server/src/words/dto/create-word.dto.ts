@@ -8,6 +8,7 @@ export class CreateWordDto {
     sourceTitle?: string;
     imageUrl?: string;
     pronunciation?: string;
+    type?: string;
 
     examples?: {
         sentence: string;

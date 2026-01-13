@@ -48,6 +48,7 @@ export class WordsService {
         sourceTitle: createWordDto.sourceTitle,
         imageUrl: createWordDto.imageUrl,
         pronunciation: createWordDto.pronunciation,
+        type: createWordDto.type, // Map the type from DTO
         userId: user.id,
         examples: createWordDto.examples ? {
           create: createWordDto.examples

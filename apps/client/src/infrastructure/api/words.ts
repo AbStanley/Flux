@@ -12,6 +12,7 @@ export interface Word {
     pronunciation?: string;
     createdAt: string;
     examples?: Example[];
+    type?: 'word' | 'phrase';
 }
 
 export interface Example {
@@ -30,6 +31,7 @@ export interface CreateWordRequest {
     imageUrl?: string;
     pronunciation?: string;
     examples?: { sentence: string; translation?: string }[];
+    type?: 'word' | 'phrase';
 }
 
 const ENDPOINT = '/api/words';

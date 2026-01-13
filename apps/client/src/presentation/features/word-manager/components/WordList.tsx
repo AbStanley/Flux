@@ -42,8 +42,20 @@ export const WordList: React.FC<WordListProps> = ({ words, onEdit, onDelete }) =
                         ) : (
                             words.map((word) => (
                                 <TableRow key={word.id}>
-                                    <TableCell className="font-medium">{word.text}</TableCell>
-                                    <TableCell>{word.definition || '-'}</TableCell>
+                                    <TableCell className="font-medium">
+                                        <div className="flex flex-col gap-1">
+                                            <span>{word.text}</span>
+                                            {word.type && (
+                                                <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded w-fit ${word.type === 'phrase'
+                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                                                    }`}>
+                                                    {word.type}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="max-w-xs truncate">{word.definition || '-'}</TableCell>
                                     <TableCell>
                                         {word.targetLanguage && word.sourceLanguage
                                             ? `${word.sourceLanguage} → ${word.targetLanguage}`
@@ -87,7 +99,17 @@ export const WordList: React.FC<WordListProps> = ({ words, onEdit, onDelete }) =
                         <div key={word.id} className="bg-card text-card-foreground rounded-lg border shadow-sm p-4 space-y-3">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="font-semibold text-lg">{word.text}</h3>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-semibold text-lg">{word.text}</h3>
+                                        {word.type && (
+                                            <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${word.type === 'phrase'
+                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                                                }`}>
+                                                {word.type}
+                                            </span>
+                                        )}
+                                    </div>
                                     {word.pronunciation && (
                                         <span className="text-xs text-muted-foreground">{word.pronunciation}</span>
                                     )}

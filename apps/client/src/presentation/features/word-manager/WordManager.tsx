@@ -43,8 +43,8 @@ export const WordManager: React.FC = () => {
         <div className="p-6 max-w-6xl mx-auto space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Word Manager</h2>
-                    <p className="text-muted-foreground">Manage your vocabulary and flashcards.</p>
+                    <h2 className="text-2xl font-bold tracking-tight">Vocabulary Manager</h2>
+                    <p className="text-muted-foreground">Manage your vocabulary, phrases, and flashcards.</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={() => exportToCSV(words)} disabled={words.length === 0}>

@@ -31,6 +31,7 @@ model Word {
   sourceTitle String?
   imageUrl String?
   pronunciation String?
+  type      String   @default("word")
   createdAt DateTime @default(now())
   
   userId    String

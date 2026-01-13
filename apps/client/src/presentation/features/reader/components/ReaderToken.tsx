@@ -40,6 +40,7 @@ interface ReaderTokenProps {
     // New:
     containerRef?: React.RefObject<HTMLDivElement | null>;
     groupEndId?: string;
+    groupText?: string;
 }
 
 const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
@@ -63,6 +64,7 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
     onRegenerate,
     containerRef,
     groupEndId,
+    groupText,
 }) => {
     // Hide visual header markers (##, ###) completely
     const isHeaderMarker = /^#+$/.test(token.trim());
@@ -108,14 +110,45 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
     const targetLang = useReaderStore(state => state.targetLang);
 
     const handleSave = (translationText: string) => {
-        if (!token.trim()) return;
+        // Decide what text to save:
+        // If we are saving the 'groupTranslation' (which is passed as argument here optionally? No, let's check call sites)
+        // The call sites: 
+        // 1. Group Popup: onSave={() => handleSave(groupTranslation)}
+        // 2. Hover Popup: onSave={() => handleSave(hoverTranslation)}
+
+        // If translationText matches groupTranslation, we should use groupText if available.
+        // Otherwise (hover or fallback), use token or whatever is appropriate.
+        // Actually simpler: if groupText is provided and we are saving the group translation, usage is clear.
+
+        // Logic: 
+        // If `groupText` exists AND `translationText === groupTranslation`, assume we are saving the sentence.
+        // However, `groupTranslation` might be same as `hoverTranslation` in some weird case? Unlikely.
+
+        // Better: Pass a flag or source to handleSave? 
+        // Or just check if `groupText` is present. If it is, and we are invoking from the "Visual Group Translation" popup, we want the full text.
+        // The popup for group translation is the one rendered inside: `{groupTranslation && ( ... <ReaderTokenPopup ... onSave={() => handleSave(groupTranslation)} /> ... )}`
+
+        // Let's update the call site in the JSX to be explicit, but first let's update this function.
+
+        const textToSave = (groupText && translationText === groupTranslation)
+            ? groupText
+            : token;
+
+        if (!textToSave.trim()) return;
+
+        // Determine type: explicitly 'phrase' if it was a group translation, 
+        // OR fallback heuristics (spaces) if generic.
+        const type = (groupText && translationText === groupTranslation)
+            ? 'phrase'
+            : (textToSave.includes(' ') && textToSave.length > 20 ? 'phrase' : 'word');
 
         addWord({
-            text: token,
+            text: textToSave,
             definition: translationText,
             context: "",
             sourceLanguage: sourceLang,
-            targetLanguage: targetLang
+            targetLanguage: targetLang,
+            type: type
         }).then(() => {
             setIsSaved(true);
             setTimeout(() => setIsSaved(false), 2000); // Reset after 2s

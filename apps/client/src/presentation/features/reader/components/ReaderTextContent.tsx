@@ -134,12 +134,18 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
 
                 // Correctly identify the end of the group for this specific token's group
                 let groupEndId: string | undefined;
+                let groupText: string | undefined;
+
                 if (groupTranslation) {
                     // Find the group this token belongs to
                     const group = groups.find(g => g.includes(globalIndex));
                     if (group) {
                         const lastIndex = group[group.length - 1];
                         groupEndId = `token-${lastIndex}`;
+                        groupText = group
+                            .map(gIdx => tokens[gIdx])
+                            .filter(t => t !== undefined)
+                            .join('');
                     }
                 }
 
@@ -149,6 +155,7 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
                         index={index}
                         globalIndex={globalIndex}
                         token={token}
+                        groupText={groupText} // Pass the full text
                         groupTranslation={groupTranslation}
                         position={position}
                         groupEndId={groupEndId} // Passed for width calculation
