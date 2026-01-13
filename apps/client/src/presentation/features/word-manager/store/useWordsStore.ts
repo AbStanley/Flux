@@ -29,12 +29,16 @@ export const useWordsStore = create<WordsState>((set, get) => ({
     },
 
     addWord: async (data) => {
+        // Auto-detect type
+        const type: 'word' | 'phrase' = data.text.trim().split(/\s+/).length > 1 ? 'phrase' : 'word';
+        const dataWithType = { ...data, type };
+
         // Duplicate Check
         const { words } = get();
         const existingWord = words.find(w =>
-            w.text === data.text &&
-            w.sourceLanguage === data.sourceLanguage &&
-            w.targetLanguage === data.targetLanguage
+            w.text === dataWithType.text &&
+            w.sourceLanguage === dataWithType.sourceLanguage &&
+            w.targetLanguage === dataWithType.targetLanguage
         );
 
         if (existingWord) {
@@ -44,7 +48,7 @@ export const useWordsStore = create<WordsState>((set, get) => ({
 
         set({ isLoading: true, error: null });
         try {
-            const newWord = await wordsApi.create(data);
+            const newWord = await wordsApi.create(dataWithType);
             set(state => ({ words: [newWord, ...state.words] }));
             return newWord;
         } catch (err) {
@@ -71,8 +75,15 @@ export const useWordsStore = create<WordsState>((set, get) => ({
 
     updateWord: async (id, data) => {
         set({ isLoading: true, error: null });
+
+        let dataToUpdate = { ...data };
+        if (data.text) {
+            const type = data.text.trim().split(/\s+/).length > 1 ? 'phrase' : 'word';
+            dataToUpdate = { ...dataToUpdate, type };
+        }
+
         try {
-            const updatedWord = await wordsApi.update(id, data);
+            const updatedWord = await wordsApi.update(id, dataToUpdate);
             set(state => ({ words: state.words.map(w => w.id === id ? updatedWord : w) }));
             return updatedWord;
         } catch (err) {
