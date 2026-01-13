@@ -4,7 +4,7 @@ services:
       context: ./apps/client
       dockerfile: Dockerfile
     ports:
-      - "8081:80"
+      - "8080:80"
     restart: always
     networks:
       - app-network
@@ -14,7 +14,7 @@ services:
       context: ./apps/server
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/readerhelper
       - OLLAMA_HOST=http://host.docker.internal:11434
@@ -40,9 +40,9 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - postgres_data_prod:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "5432:5432"
     networks:
       - app-network
 
@@ -51,4 +51,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data_prod:
+  postgres_data:

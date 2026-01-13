@@ -12,7 +12,8 @@
         "test": "npm run test --workspaces",
         "lint": "npm run lint --workspaces",
         "prisma-studio": "npx prisma studio --schema=apps/server/prisma/schema.prisma",
-        "docker:dev": "docker compose up --build"
+        "docker:dev": "docker compose -f docker-compose.dev.yml -p reader-helper-dev up --build",
+        "docker:prod": "docker compose -f docker-compose.yml -p reader-helper-prod up --build"
     },
     "devDependencies": {
         "concurrently": "^8.2.2"

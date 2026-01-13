@@ -11,9 +11,10 @@ export default defineConfig({
     checker({ typescript: true }),
   ],
   server: {
+    port: parseInt(process.env.VITE_PORT || '5173'),
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.VITE_API_TARGET || 'http://localhost:3000',
         changeOrigin: true,
       },
     },

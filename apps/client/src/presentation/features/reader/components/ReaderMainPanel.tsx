@@ -118,7 +118,7 @@ export const ReaderMainPanel: React.FC = () => {
             <Card className="flex-1 h-full border-none shadow-sm glass overflow-hidden flex flex-col">
                 <CardContent className={`p-0 relative flex-1 ${isGenerating ? 'overflow-hidden select-none' : 'overflow-y-auto'} ${styles.textAreaContainer} flex flex-col`}>
 
-                    <div className="sticky top-0 z-[60] bg-background/95 backdrop-blur-sm border-b shadow-sm">
+                    <div className="sticky top-0 z-[200] bg-background/95 backdrop-blur-sm border-b shadow-sm">
                         <PlayerControls />
                     </div>
 
@@ -152,7 +152,7 @@ export const ReaderMainPanel: React.FC = () => {
                     </div>
 
                     {isGenerating && (
-                        <div className="absolute inset-0 z-[70] flex flex-col items-center justify-center bg-background/10 backdrop-blur-[2px] transition-all duration-500">
+                        <div className="absolute inset-0 z-[220] flex flex-col items-center justify-center bg-background/10 backdrop-blur-[2px] transition-all duration-500">
                             <div className="flex items-center gap-3 p-4 bg-background/60 rounded-xl shadow-xl border border-primary/10 backdrop-blur-md animate-pulse">
                                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                                 <span className="text-sm font-semibold tracking-wide text-primary">Creating Story...</span>
