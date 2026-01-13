@@ -1,7 +1,6 @@
 import React from 'react';
 import { type Word } from '../../../../infrastructure/api/words';
 import {
-    Table,
     TableBody,
     TableCell,
     TableHead,
@@ -11,6 +10,7 @@ import {
 import { Button } from '../../../components/ui/button';
 import { Edit, Trash2, BookOpen, Globe, Quote } from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
+import { ScrollArea } from '../../../components/ui/scroll-area';
 
 interface WordListProps {
     words: Word[];
@@ -23,9 +23,9 @@ export const WordList: React.FC<WordListProps> = ({ words, onEdit, onDelete, emp
     return (
         <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden transition-all hover:shadow-md">
             {/* Desktop View */}
-            <div className="hidden md:block">
-                <Table>
-                    <TableHeader className="bg-muted/30">
+            <ScrollArea className="hidden md:block h-[600px]">
+                <table className="w-full caption-bottom text-sm">
+                    <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-md shadow-sm">
                         <TableRow>
                             <TableHead className="w-[200px] pl-6">Entry</TableHead>
                             <TableHead className="w-[300px]">Definition</TableHead>
@@ -115,8 +115,8 @@ export const WordList: React.FC<WordListProps> = ({ words, onEdit, onDelete, emp
                             ))
                         )}
                     </TableBody>
-                </Table>
-            </div>
+                </table>
+            </ScrollArea>
 
             {/* Mobile View */}
             <div className="block md:hidden divide-y">

@@ -60,25 +60,38 @@ export class WordsService {
     });
   }
 
-  findAll(query?: {
+  async findAll(query?: {
     sourceLanguage?: string;
     targetLanguage?: string;
     sort?: 'date_desc' | 'date_asc' | 'text_asc';
+    skip?: number;
+    take?: number;
+    type?: 'word' | 'phrase';
   }) {
-    const { sourceLanguage, targetLanguage, sort } = query || {};
+    const { sourceLanguage, targetLanguage, sort, skip, take, type } = query || {};
 
-    return this.prisma.word.findMany({
-      where: {
-        sourceLanguage,
-        targetLanguage,
-      },
-      orderBy: sort === 'date_asc' ? { createdAt: 'asc' } :
-        sort === 'text_asc' ? { text: 'asc' } :
-          { createdAt: 'desc' },
-      include: {
-        examples: true
-      }
-    });
+    const where = {
+      sourceLanguage,
+      targetLanguage,
+      type,
+    };
+
+    const [total, items] = await this.prisma.$transaction([
+      this.prisma.word.count({ where }),
+      this.prisma.word.findMany({
+        where,
+        orderBy: sort === 'date_asc' ? { createdAt: 'asc' } :
+          sort === 'text_asc' ? { text: 'asc' } :
+            { createdAt: 'desc' },
+        include: {
+          examples: true
+        },
+        skip,
+        take,
+      })
+    ]);
+
+    return { total, items };
   }
 
   findOne(id: string) {

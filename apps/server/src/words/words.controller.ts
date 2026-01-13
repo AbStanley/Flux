@@ -13,8 +13,20 @@ export class WordsController {
   }
 
   @Get()
-  findAll(@Query() query: { sourceLanguage?: string; targetLanguage?: string; sort?: 'date_desc' | 'date_asc' | 'text_asc' }) {
-    return this.wordsService.findAll(query);
+  findAll(@Query() query: {
+    sourceLanguage?: string;
+    targetLanguage?: string;
+    sort?: 'date_desc' | 'date_asc' | 'text_asc';
+    skip?: string;
+    take?: string;
+    type?: 'word' | 'phrase';
+  }) {
+    console.log('GET /api/words query:', query);
+    return this.wordsService.findAll({
+      ...query,
+      skip: query.skip ? +query.skip : undefined,
+      take: query.take ? +query.take : undefined,
+    });
   }
 
   @Get(':id')

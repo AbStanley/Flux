@@ -37,8 +37,16 @@ export interface CreateWordRequest {
 const ENDPOINT = '/api/words';
 
 export const wordsApi = {
-    getAll: async (params?: { sort?: string; sourceLanguage?: string }) => {
-        return defaultClient.get<Word[]>(ENDPOINT, params as Record<string, string>);
+    getAll: async (params?: { sort?: string; sourceLanguage?: string; skip?: number; take?: number; type?: 'word' | 'phrase' }) => {
+        const queryParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    queryParams[key] = String(value);
+                }
+            });
+        }
+        return defaultClient.get<{ items: Word[]; total: number }>(ENDPOINT, queryParams);
     },
 
     create: async (data: CreateWordRequest) => {

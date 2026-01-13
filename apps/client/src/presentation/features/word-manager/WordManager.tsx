@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWords } from './hooks/useWords';
+import { useWordsStore } from './store/useWordsStore';
 import { WordList } from './components/WordList';
 import { EditWordDialog } from './components/EditWordDialog';
 import { Button } from '../../components/ui/button';
@@ -8,12 +8,13 @@ import { type CreateWordRequest, type Word } from '../../../infrastructure/api/w
 import { exportToCSV, exportToAnki } from './utils/exportUtils';
 
 export const WordManager: React.FC = () => {
-    const { words, isLoading, error, addWord, updateWord, deleteWord, fetchWords } = useWords();
+    const { wordsState, phrasesState, error, addWord, updateWord, deleteWord, fetchWords } = useWordsStore();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingWord, setEditingWord] = useState<Word | undefined>(undefined);
 
     useEffect(() => {
-        fetchWords();
+        fetchWords('word', 1);
+        fetchWords('phrase', 1);
     }, [fetchWords]);
 
     const handleCreate = async (data: CreateWordRequest) => {
@@ -29,6 +30,10 @@ export const WordManager: React.FC = () => {
         }
     };
 
+    const handleDelete = async (id: string, type: 'word' | 'phrase') => {
+        await deleteWord(id, type);
+    };
+
     const openCreateDialog = () => {
         setEditingWord(undefined);
         setIsDialogOpen(true);
@@ -38,10 +43,6 @@ export const WordManager: React.FC = () => {
         setEditingWord(word);
         setIsDialogOpen(true);
     };
-
-    // Filter words and phrases
-    const vocabularyList = words.filter(w => w.type === 'word' || (!w.type && w.text.trim().split(/\s+/).length === 1));
-    const phrasesList = words.filter(w => w.type === 'phrase' || (!w.type && w.text.trim().split(/\s+/).length > 1));
 
     return (
         <div className="p-6 max-w-6xl mx-auto space-y-8">
@@ -53,11 +54,11 @@ export const WordManager: React.FC = () => {
                     <p className="text-muted-foreground mt-1">Manage your personal collection of words and phrases.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => exportToCSV(words)} disabled={words.length === 0}>
+                    <Button variant="outline" onClick={() => exportToCSV([...wordsState.items, ...phrasesState.items])} disabled={wordsState.total + phrasesState.total === 0}>
                         <FileDown className="mr-2 h-4 w-4" />
                         CSV
                     </Button>
-                    <Button variant="outline" onClick={() => exportToAnki(words)} disabled={words.length === 0}>
+                    <Button variant="outline" onClick={() => exportToAnki([...wordsState.items, ...phrasesState.items])} disabled={wordsState.total + phrasesState.total === 0}>
                         <Download className="mr-2 h-4 w-4" />
                         Anki
                     </Button>
@@ -74,48 +75,81 @@ export const WordManager: React.FC = () => {
                 </div>
             )}
 
-            {isLoading && words.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-muted-foreground">Loading your collection...</p>
-                </div>
-            ) : (
-                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-2 border-b pb-2">
-                            <h3 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-200">
-                                Words
-                            </h3>
-                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                                {vocabularyList.length}
-                            </span>
-                        </div>
-                        <WordList
-                            words={vocabularyList}
-                            onEdit={openEditDialog}
-                            onDelete={deleteWord}
-                            emptyMessage="No words saved yet."
-                        />
-                    </section>
+            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                {/* Words Section */}
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2 border-b pb-2">
+                        <h3 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-200">
+                            Words
+                        </h3>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                            {wordsState.total}
+                        </span>
+                    </div>
 
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-2 border-b pb-2">
-                            <h3 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-200">
-                                Phrases
-                            </h3>
-                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-                                {phrasesList.length}
-                            </span>
+                    {wordsState.isLoading && wordsState.items.length === 0 ? (
+                        <div className="py-10 text-center text-muted-foreground">Loading words...</div>
+                    ) : (
+                        <div className="space-y-4">
+                            <WordList
+                                words={wordsState.items}
+                                onEdit={openEditDialog}
+                                onDelete={(id) => handleDelete(id, 'word')}
+                                emptyMessage="No words saved yet."
+                            />
+                            {wordsState.hasMore && (
+                                <div className="flex justify-center">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => fetchWords('word', wordsState.page + 1)}
+                                        disabled={wordsState.isLoading}
+                                    >
+                                        {wordsState.isLoading ? 'Loading...' : 'Show More'}
+                                    </Button>
+                                </div>
+                            )}
                         </div>
-                        <WordList
-                            words={phrasesList}
-                            onEdit={openEditDialog}
-                            onDelete={deleteWord}
-                            emptyMessage="No phrases saved yet."
-                        />
-                    </section>
-                </div>
-            )}
+                    )}
+                </section>
+
+                {/* Phrases Section */}
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2 border-b pb-2">
+                        <h3 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-200">
+                            Phrases
+                        </h3>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                            {phrasesState.total}
+                        </span>
+                    </div>
+
+                    {phrasesState.isLoading && phrasesState.items.length === 0 ? (
+                        <div className="py-10 text-center text-muted-foreground">Loading phrases...</div>
+                    ) : (
+                        <div className="space-y-4">
+                            <WordList
+                                words={phrasesState.items}
+                                onEdit={openEditDialog}
+                                onDelete={(id) => handleDelete(id, 'phrase')}
+                                emptyMessage="No phrases saved yet."
+                            />
+                            {phrasesState.hasMore && (
+                                <div className="flex justify-center">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => fetchWords('phrase', phrasesState.page + 1)}
+                                        disabled={phrasesState.isLoading}
+                                    >
+                                        {phrasesState.isLoading ? 'Loading...' : 'Show More'}
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </section>
+            </div>
 
             <EditWordDialog
                 isOpen={isDialogOpen}
