@@ -17,6 +17,16 @@ export default defineConfig({
         target: process.env.VITE_API_TARGET || 'http://localhost:3002',
         changeOrigin: true,
       },
+      '/anki': {
+        target: 'http://127.0.0.1:8765',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/anki/, ''),
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, _req, _res) => {
+            proxyReq.setHeader('Origin', 'http://127.0.0.1:8765');
+          });
+        },
+      },
     },
   },
   build: {

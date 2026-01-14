@@ -8,6 +8,10 @@ interface GameConfig {
     timerEnabled: boolean;
     sourceLang: string;
     targetLang: string;
+    // Anki Specific
+    ankiDeckName?: string;
+    ankiFieldSource?: string;
+    ankiFieldTarget?: string;
 }
 
 interface GameState {
@@ -25,6 +29,7 @@ interface GameState {
     isTimerPaused: boolean;
     health: number;
     maxHealth: number;
+    error: string | null;
 
     // Actions
     updateConfig: (updates: Partial<GameConfig>) => void;
@@ -54,6 +59,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     timeLeft: 100,
     health: 3,
     maxHealth: 3,
+    error: null,
     isTimerPaused: false,
 
     updateConfig: (updates) => set((state) => ({ config: { ...state.config, ...updates } })),
@@ -71,7 +77,11 @@ export const useGameStore = create<GameState>((set, get) => ({
                 language: {
                     source: config.sourceLang !== 'all' ? config.sourceLang : undefined,
                     target: config.targetLang !== 'all' ? config.targetLang : undefined
-                }
+                },
+                // Pass Anki config
+                collectionId: config.ankiDeckName,
+
+                ...({ ankiFieldSource: config.ankiFieldSource, ankiFieldTarget: config.ankiFieldTarget } as any)
             }
         };
 
@@ -87,16 +97,18 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
 
         try {
+            set({ error: null }); // Clear previous errors
             const items = await gameContentService.getItems(params);
             if (items.length === 0) {
-                console.warn("No items found for game");
-                set({ status: 'idle' });
+                const msg = "No items found for game. Please checks your filters.";
+                console.warn(msg);
+                set({ status: 'idle', error: msg });
                 return;
             }
             set({ items, status: 'playing' });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to start game:", error);
-            set({ status: 'idle' });
+            set({ status: 'idle', error: error.message || "Failed to start game" });
         }
     },
 

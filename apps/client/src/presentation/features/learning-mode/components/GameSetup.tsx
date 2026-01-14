@@ -1,84 +1,17 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Switch } from "@/presentation/components/ui/switch";
 import { Label } from "@/presentation/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/presentation/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/presentation/components/ui/card";
-import { Settings2, ArrowRightLeft, Play, Database, BrainCircuit, Library } from 'lucide-react';
-import { wordsApi } from '@/infrastructure/api/words';
+import { Settings2, Play, Database, BrainCircuit, Library } from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
+import { DbSetup } from './setup/DbSetup';
+import { AnkiSetup } from './setup/AnkiSetup';
 
 export const GameSetup: React.FC = () => {
-    const { config, updateConfig, startGame } = useGameStore();
-
-    // Map of Language -> Connected Languages
-    const [languageGraph, setLanguageGraph] = useState<Record<string, string[]>>({});
-    const [allUniqueLangs, setAllUniqueLangs] = useState<string[]>([]);
-    const [isLoadingLangs, setIsLoadingLangs] = useState(false);
-
-    // Fetch languages on mount if source is DB
-    useEffect(() => {
-        const fetchLanguages = async () => {
-            if (config.source === 'db' && allUniqueLangs.length === 0) {
-                setIsLoadingLangs(true);
-                try {
-                    const result = await wordsApi.getAll({ take: 500 });
-                    const graph: Record<string, Set<string>> = {};
-                    const all = new Set<string>();
-
-                    result.items.forEach(word => {
-                        const s = word.sourceLanguage;
-                        const t = word.targetLanguage;
-
-                        // We map connections bidirectionally for the game setup
-                        if (s && t) {
-                            if (!graph[s]) graph[s] = new Set();
-                            if (!graph[t]) graph[t] = new Set();
-
-                            graph[s].add(t);
-                            graph[t].add(s);
-
-                            all.add(s);
-                            all.add(t);
-                        }
-                    });
-
-                    const finalGraph: Record<string, string[]> = {};
-                    Object.keys(graph).forEach(key => {
-                        finalGraph[key] = Array.from(graph[key]).sort();
-                    });
-
-                    setLanguageGraph(finalGraph);
-                    setAllUniqueLangs(Array.from(all).sort());
-                } catch (e) {
-                    console.error("Failed to fetch languages", e);
-                } finally {
-                    setIsLoadingLangs(false);
-                }
-            }
-        };
-        fetchLanguages();
-    }, [config.source, allUniqueLangs.length]);
-
-    // Derived Available Lists
-    const availableSourceLangs = useMemo(() => {
-        if (config.targetLang === 'all') return allUniqueLangs;
-        return languageGraph[config.targetLang] || [];
-    }, [config.targetLang, allUniqueLangs, languageGraph]);
-
-    const availableTargetLangs = useMemo(() => {
-        if (config.sourceLang === 'all') return allUniqueLangs;
-        return languageGraph[config.sourceLang] || [];
-    }, [config.sourceLang, allUniqueLangs, languageGraph]);
-
-
-    const swapLanguages = () => {
-        updateConfig({
-            sourceLang: config.targetLang,
-            targetLang: config.sourceLang
-        });
-    };
+    const { config, updateConfig, startGame, error } = useGameStore();
 
     return (
         <div className="w-full max-w-4xl mx-auto p-4 md:p-8 animate-in fade-in duration-500">
@@ -101,90 +34,32 @@ export const GameSetup: React.FC = () => {
                     {/* Source Selection Tabs */}
                     <Tabs
                         value={config.source}
-                        onValueChange={(val: any) => updateConfig({ source: val })}
+                        onValueChange={(val: any) => updateConfig({
+                            source: val,
+                            // Reset languages when switching sources to prevent invalid states
+                            sourceLang: 'all',
+                            targetLang: 'all'
+                        })}
                         className="w-full"
                     >
                         <TabsList className="grid w-full grid-cols-3 mb-4">
                             <TabsTrigger value="db" className="flex gap-2"><Database className="w-4 h-4" /> Saved Words</TabsTrigger>
-                            <TabsTrigger value="anki" disabled className="flex gap-2"><Library className="w-4 h-4" /> Anki Decks <span className="text-xs ml-1 opacity-50">(Soon)</span></TabsTrigger>
+                            <TabsTrigger value="anki" className="flex gap-2"><Library className="w-4 h-4" /> Anki Decks</TabsTrigger>
                             <TabsTrigger value="ai" disabled className="flex gap-2"><BrainCircuit className="w-4 h-4" /> AI Gen <span className="text-xs ml-1 opacity-50">(Soon)</span></TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="db" className="space-y-6">
-                            {/* Language Selection Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
-                                <div className="space-y-2">
-                                    <Label>Source Language (Question)</Label>
-                                    <Select
-                                        value={config.sourceLang}
-                                        disabled={isLoadingLangs}
-                                        onValueChange={(val) => {
-                                            updateConfig({ sourceLang: val });
-                                            // Validate Target
-                                            if (val !== 'all') {
-                                                const validTargets = languageGraph[val] || [];
-                                                if (config.targetLang !== 'all' && !validTargets.includes(config.targetLang)) {
-                                                    updateConfig({ targetLang: 'all' });
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={isLoadingLangs ? "Loading..." : "Select language"} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Any Language</SelectItem>
-                                            {availableSourceLangs.map(lang => (
-                                                <SelectItem key={lang} value={lang} disabled={lang === config.targetLang} className="uppercase">
-                                                    {lang}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="flex justify-center md:pb-2">
-                                    <Button
-                                        size="icon"
-                                        variant="outline"
-                                        className="rounded-full shadow-sm"
-                                        onClick={swapLanguages}
-                                        title="Swap Languages"
-                                    >
-                                        <ArrowRightLeft className="w-4 h-4" />
-                                    </Button>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Target Language (Answer)</Label>
-                                    <Select
-                                        value={config.targetLang}
-                                        disabled={isLoadingLangs}
-                                        onValueChange={(val) => {
-                                            updateConfig({ targetLang: val });
-                                            // Validate Source
-                                            if (val !== 'all') {
-                                                const validSources = languageGraph[val] || [];
-                                                if (config.sourceLang !== 'all' && !validSources.includes(config.sourceLang)) {
-                                                    updateConfig({ sourceLang: 'all' });
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={isLoadingLangs ? "Loading..." : "Select language"} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Any Language</SelectItem>
-                                            {availableTargetLangs.map(lang => (
-                                                <SelectItem key={lang} value={lang} disabled={lang === config.sourceLang} className="uppercase">
-                                                    {lang}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                        {error && (
+                            <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                                <span className="font-medium">Error!</span> {error}
                             </div>
+                        )}
+
+                        <TabsContent value="db" className="space-y-6">
+                            <DbSetup />
+                        </TabsContent>
+
+                        <TabsContent value="anki" className="space-y-6">
+                            <AnkiSetup />
                         </TabsContent>
                     </Tabs>
 
@@ -235,7 +110,7 @@ export const GameSetup: React.FC = () => {
                         <Play className="w-6 h-6 mr-3 fill-current" /> START GAME
                     </Button>
                 </CardFooter>
-            </Card>
-        </div>
+            </Card >
+        </div >
     );
 };

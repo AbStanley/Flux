@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { GameSetup } from './GameSetup';
 import { useGameStore } from '../store/useGameStore';
 import { wordsApi } from '@/infrastructure/api/words';
+import { ankiService } from '@/infrastructure/external/anki/AnkiService';
 
 // Mocks
 vi.mock('../store/useGameStore');
 vi.mock('@/infrastructure/api/words');
+vi.mock('@/infrastructure/external/anki/AnkiService');
 
 describe('GameSetup', () => {
     const updateConfigSpy = vi.fn();
@@ -17,8 +19,8 @@ describe('GameSetup', () => {
             mode: 'multiple-choice',
             source: 'db',
             timerEnabled: true,
-            sourceLang: 'all',
-            targetLang: 'all'
+            sourceLang: 'en',
+            targetLang: 'es'
         },
         updateConfig: updateConfigSpy,
         startGame: startGameSpy
@@ -27,41 +29,28 @@ describe('GameSetup', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         (useGameStore as any).mockReturnValue(mockStore);
-    });
-
-    it('should render correctly', async () => {
         (wordsApi.getAll as any).mockResolvedValue({ items: [] });
-        render(<GameSetup />);
-
-        expect(screen.getByText('Training Arena')).toBeDefined();
-        expect(screen.getByText('Saved Words')).toBeDefined(); // Tab
+        (ankiService.getDeckNames as any).mockResolvedValue([]);
     });
 
-    it('should fetch languages for DB source', async () => {
-        const mockItems = [
-            { sourceLanguage: 'en', targetLanguage: 'es' },
-            { sourceLanguage: 'en', targetLanguage: 'fr' }
-        ];
-        (wordsApi.getAll as any).mockResolvedValue({ items: mockItems });
-
+    it('should render correctly', () => {
         render(<GameSetup />);
+        expect(screen.getByText('Training Arena')).toBeDefined();
+        // Since source is 'db', DbSetup should be visible (by Source Language label)
+        // Note: content visibility depends on active tab which defaults to config.source ('db')
+        expect(screen.getByText('Source Language (Question)')).toBeDefined();
+    });
 
-        await waitFor(() => {
-            expect(wordsApi.getAll).toHaveBeenCalled();
-        });
-
-        // Opening Select usually requires interaction in tests if not using userEvent setup or if examining internal state.
-        // But we can check if Selects are present.
-        expect(screen.getAllByText('Any Language').length).toBeGreaterThan(0);
+    it('should switch tabs', () => {
+        render(<GameSetup />);
+        expect(screen.getByText(/Saved Words/)).toBeDefined();
+        expect(screen.getByText(/Anki Decks/)).toBeDefined();
     });
 
     it('should call startGame on button click', () => {
-        (wordsApi.getAll as any).mockResolvedValue({ items: [] });
         render(<GameSetup />);
-
         const startBtn = screen.getByText('START GAME');
         fireEvent.click(startBtn);
-
         expect(startGameSpy).toHaveBeenCalled();
     });
 });

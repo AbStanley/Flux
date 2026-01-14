@@ -1,5 +1,6 @@
 import type { GameContentParams, GameItem, IContentStrategy } from './interfaces';
 import { DatabaseContentStrategy } from './strategies/DatabaseContentStrategy';
+import { AnkiContentStrategy } from './strategies/AnkiContentStrategy';
 
 export class GameContentService {
     private strategies: Record<string, IContentStrategy>;
@@ -7,6 +8,7 @@ export class GameContentService {
     constructor() {
         this.strategies = {
             'db': new DatabaseContentStrategy(),
+            'anki': new AnkiContentStrategy(),
         };
     }
 
@@ -19,7 +21,7 @@ export class GameContentService {
         if (!strategy) {
             console.warn(`Strategy for source '${params.source}' not found. Falling back to DB.`);
             // Fallback or throw? Let's throw to be explicit during dev.
-            if (params.source === 'anki' || params.source === 'ai') {
+            if (params.source === 'ai') {
                 // Temporary mock for development until implemented
                 console.log("Mocking response for " + params.source);
                 return [];
