@@ -54,6 +54,10 @@ describe('useBuildWordLogic', () => {
 
             expect(result.current.slots.length).toBe(1);
             expect(result.current.slots[0].length).toBe(3); // C-a-t
+            expect(result.current.currentItem).toEqual(expect.objectContaining({
+                id: '1',
+                answer: 'Cat'
+            }));
         });
 
         it('should generate letter pool with distractors', () => {

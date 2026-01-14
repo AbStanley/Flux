@@ -214,6 +214,14 @@ export const useWordBuilder = ({ targetWords, onComplete, isTimerPaused = false 
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handleBackspace, handleInput, slots.length]);
 
+    // Auto-initialize when targetWords changes
+    useEffect(() => {
+        if (targetWords && targetWords.length > 0) {
+            initializeSlots(targetWords);
+            initializePool(targetWords);
+        }
+    }, [targetWords, initializeSlots, initializePool]);
+
     return {
         slots,
         letterPool,
