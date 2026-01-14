@@ -1,8 +1,7 @@
 import { useWordsStore } from '../../word-manager/store/useWordsStore';
 
 export const useWords = () => {
-    const words = useWordsStore(state => state.words);
-    const isLoading = useWordsStore(state => state.isLoading);
+    const wordsState = useWordsStore(state => state.wordsState);
     const error = useWordsStore(state => state.error);
     const fetchWords = useWordsStore(state => state.fetchWords);
     const addWord = useWordsStore(state => state.addWord);
@@ -10,8 +9,8 @@ export const useWords = () => {
     const updateWord = useWordsStore(state => state.updateWord);
 
     return {
-        words,
-        isLoading,
+        words: wordsState.items,
+        isLoading: wordsState.isLoading,
         error,
         fetchWords,
         addWord,

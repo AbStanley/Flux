@@ -14,7 +14,7 @@ export const SavedWordsPanel: React.FC = () => {
 
     // Refresh words when panel opens
     useEffect(() => {
-        fetchWords();
+        fetchWords('word');
     }, [fetchWords]);
 
     const handleEdit = (word: Word) => {
@@ -48,7 +48,7 @@ export const SavedWordsPanel: React.FC = () => {
                                     No words saved yet.
                                 </p>
                             ) : (
-                                words.map(word => (
+                                words.map((word: Word) => (
                                     <div key={word.id} className="border p-3 rounded-lg bg-card/50 hover:bg-card transition-colors">
                                         <div className="flex justify-between items-start">
                                             <div>
@@ -62,7 +62,7 @@ export const SavedWordsPanel: React.FC = () => {
                                                 <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleEdit(word)}>
                                                     <Edit2 className="h-3.5 w-3.5" />
                                                 </Button>
-                                                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteWord(word.id)}>
+                                                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteWord(word.id, 'word')}>
                                                     <Trash2 className="h-3.5 w-3.5" />
                                                 </Button>
                                             </div>
@@ -74,7 +74,7 @@ export const SavedWordsPanel: React.FC = () => {
                                         )}
                                         {word.examples && word.examples.length > 0 && (
                                             <div className="mt-2 space-y-1">
-                                                {word.examples.slice(0, 1).map((ex) => (
+                                                {word.examples.slice(0, 1).map((ex: any) => (
                                                     <div key={ex.id} className="text-xs italic">
                                                         "{ex.sentence}"
                                                         {ex.translation && <span className="text-muted-foreground block not-italic">— {ex.translation}</span>}
