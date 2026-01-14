@@ -4,6 +4,7 @@ import { useGameStore } from './store/useGameStore';
 import { GameShell } from './GameShell';
 import { MultipleChoiceGame } from './games/MultipleChoiceGame';
 import { BuildWordGame } from './games/build-word/BuildWordGame';
+import { AudioDictationGame } from './games/dictation/AudioDictationGame';
 import { SentenceScrambleGame } from './games/scramble/SentenceScrambleGame';
 import { GameSetup } from './components/GameSetup';
 
@@ -14,6 +15,8 @@ export const LearningModePage: React.FC = () => {
         switch (config.mode) {
             case 'build-word':
                 return <BuildWordGame />;
+            case 'dictation':
+                return <AudioDictationGame />;
             case 'scramble':
                 return <SentenceScrambleGame />;
             default:

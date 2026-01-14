@@ -19,10 +19,9 @@ export class DatabaseContentStrategy implements IContentStrategy {
             const reqTarget = config?.language?.target;
 
             // Determine content type based on game mode
-            let typeFilter: 'word' | 'phrase' | undefined;
-            if (config?.gameMode === 'build-word' || config?.gameMode === 'multiple-choice') {
-                typeFilter = 'word';
-            }
+            // STRICT RULE: Only 'scramble' mode allows phrases. All others must be words.
+            // Note: 'scramble' is handled above and returns early, so we are guaranteed to be in a word-only mode here.
+            const typeFilter: 'word' | 'phrase' | undefined = 'word';
 
             // 1. Forward Fetch: Search exactly as requested
             const fwdPromise = wordsApi.getAll({

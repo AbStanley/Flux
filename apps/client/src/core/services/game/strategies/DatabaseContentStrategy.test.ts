@@ -10,7 +10,23 @@ describe('DatabaseContentStrategy', () => {
     beforeEach(() => {
         strategy = new DatabaseContentStrategy();
         vi.clearAllMocks();
-        (wordsApi.getAll as any).mockResolvedValue({ items: [], total: 0 });
+
+        // Smart mock: Return items based on the requested 'type'
+        (wordsApi.getAll as any).mockImplementation(async (params: any) => {
+            if (params.type === 'phrase') {
+                return {
+                    items: [{ id: 'p1', text: 'A phrase', type: 'phrase', definition: 'Une phrase', sourceLanguage: 'en', targetLanguage: 'fr' }],
+                    total: 1
+                };
+            }
+            if (params.type === 'word') {
+                return {
+                    items: [{ id: 'w1', text: 'Word', type: 'word', definition: 'Mot', sourceLanguage: 'en', targetLanguage: 'fr' }],
+                    total: 1
+                };
+            }
+            return { items: [], total: 0 };
+        });
     });
 
     it('should validate availability as always true', async () => {
@@ -41,11 +57,42 @@ describe('DatabaseContentStrategy', () => {
         }));
     });
 
-    it('should not enforce type="word" for generic modes', async () => {
-        await strategy.fetchItems({ gameMode: 'dictation', limit: 10 });
+    it('should force type="word" for dictation mode', async () => {
+        const items = await strategy.fetchItems({ gameMode: 'dictation', limit: 10 });
 
         // Check the arguments of the first call
         const args = (wordsApi.getAll as any).mock.calls[0][0];
-        expect(args.type).toBeUndefined();
+        expect(args.type).toBe('word');
+
+        // Verify result from smart mock
+        expect(items.length).toBeGreaterThan(0);
+        expect(items[0].type).toBe('word');
+    });
+
+    it('should force type="word" for build-word mode', async () => {
+        const items = await strategy.fetchItems({ gameMode: 'build-word', limit: 10 });
+        expect(items[0].type).toBe('word');
+    });
+
+    it('should force type="word" for multiple-choice mode', async () => {
+        const items = await strategy.fetchItems({ gameMode: 'multiple-choice', limit: 10 });
+        expect(items[0].type).toBe('word');
+    });
+
+    it('should ensure scramble mode is the ONLY one fetching phrases', async () => {
+        // 1. Verify Scramble DOES fetch phrases
+        (wordsApi.getAll as any).mockClear();
+        const scrambleItems = await strategy.fetchItems({ gameMode: 'scramble', limit: 10 });
+
+        const phraseItem = scrambleItems.find(i => i.type === 'phrase');
+        expect(phraseItem).toBeDefined();
+        expect(phraseItem?.question).toBe('A phrase');
+
+        // 2. Verify Dictation DOES NOT fetch phrases
+        (wordsApi.getAll as any).mockClear();
+        const dictationItems = await strategy.fetchItems({ gameMode: 'dictation', limit: 10 });
+
+        const hasPhrase = dictationItems.some(i => i.type === 'phrase');
+        expect(hasPhrase).toBe(false);
     });
 });

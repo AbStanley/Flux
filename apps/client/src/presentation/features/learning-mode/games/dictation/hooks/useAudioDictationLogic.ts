@@ -3,19 +3,23 @@ import { useGameStore } from '../../../store/useGameStore';
 import { useGameAudio } from '../../hooks/useGameAudio';
 import { useWordBuilder } from '../../hooks/useWordBuilder';
 
-export const useBuildWordLogic = () => {
+export type AudioMode = 'target' | 'source';
+
+export const useAudioDictationLogic = () => {
     const { items, currentIndex, submitAnswer, nextItem, isTimerPaused: globalTimerPaused, timeLeft, config } = useGameStore();
     const timerEnabled = config.timerEnabled;
     const { playAudio, stopAudio } = useGameAudio();
     const currentItem = items[currentIndex];
 
-    // Local state for target parsing
+    // Local State
+    const [audioMode, setAudioMode] = useState<AudioMode>('target');
     const [targetWords, setTargetWords] = useState<string[]>([]);
 
     // Handler when word is completed successfully
     const onWordComplete = useCallback((isCorrect: boolean) => {
         if (!currentItem) return;
         submitAnswer(isCorrect);
+        // Always play target on completion
         playAudio(currentItem.answer, currentItem.lang?.target, undefined);
         setTimeout(() => nextItem(), 800);
     }, [currentItem, submitAnswer, playAudio, nextItem]);
@@ -39,11 +43,22 @@ export const useBuildWordLogic = () => {
         isTimerPaused: globalTimerPaused
     });
 
+    const playCurrentAudio = useCallback(() => {
+        if (!currentItem) return;
+        if (audioMode === 'target') {
+            // Dictation Mode: Target Language
+            playAudio(currentItem.answer, currentItem.lang?.target, undefined);
+        } else {
+            // Translation Mode: Source Language (Question)
+            playAudio(currentItem.question, currentItem.lang?.source, currentItem.audioUrl);
+        }
+    }, [currentItem, audioMode, playAudio]);
+
     // Initialization Logic
     useEffect(() => {
         if (!currentItem) return;
 
-        // 1. Parse Answer
+        // 1. Parse Answer (Same logic as BuildWord)
         const raw = currentItem.answer;
         const targets = raw.split(/[,;]+/)
             .map(s => {
@@ -59,13 +74,38 @@ export const useBuildWordLogic = () => {
         initializeSlots(targets);
         initializePool(targets);
 
-        // 3. Play Audio
-        playAudio(currentItem.question, currentItem.lang?.source, currentItem.audioUrl);
+        // 3. Play Audio immediately
+        // We need to wait for state update? No, hooks run sequentially in effect.
+        // NOTE: playCurrentAudio depends on audioMode state, which might be stale if we just set it?
+        // Actually we want to persist audioMode across rounds, so we don't reset it here.
+
+        // We call play explicitly here
+        if (audioMode === 'target') {
+            playAudio(currentItem.answer, currentItem.lang?.target, undefined);
+        } else {
+            playAudio(currentItem.question, currentItem.lang?.source, currentItem.audioUrl);
+        }
 
         return () => {
             stopAudio();
         };
-    }, [currentItem, playAudio, stopAudio, initializeSlots, initializePool]);
+    }, [currentItem, initializeSlots, initializePool, playAudio, stopAudio]); // Intentionally exclude playCurrentAudio/audioMode to avoid re-triggering loop
+
+    // Handle Mode Toggle
+    const toggleAudioMode = useCallback(() => {
+        setAudioMode(prev => {
+            const newMode = prev === 'target' ? 'source' : 'target';
+            // Play new audio immediately
+            if (!currentItem) return newMode;
+
+            if (newMode === 'target') {
+                playAudio(currentItem.answer, currentItem.lang?.target, undefined);
+            } else {
+                playAudio(currentItem.question, currentItem.lang?.source, currentItem.audioUrl);
+            }
+            return newMode;
+        });
+    }, [currentItem, playAudio]);
 
     // Handle Give Up
     const handleGiveUp = useCallback(() => {
@@ -89,12 +129,13 @@ export const useBuildWordLogic = () => {
         focusedWordIndex,
         isRevealed,
         isComplete,
+        audioMode,
         setFocusedWordIndex,
         handleInput,
         handleSlotClick,
         handleGiveUp,
         nextItem,
-        playAudio
+        playCurrentAudio,
+        toggleAudioMode
     };
 };
-
