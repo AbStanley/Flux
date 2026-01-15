@@ -2,6 +2,7 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { IAIService } from '../../core/interfaces/IAIService';
 import { MockAIService } from '../../infrastructure/ai/MockAIService';
 import { OllamaService } from '../../infrastructure/ai/OllamaService';
+import { useReaderStore } from '../features/reader/store/useReaderStore';
 
 interface OllamaConfig {
     url?: string;
@@ -22,8 +23,14 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
     const defaultUrl = '';
     const initialUrl = import.meta.env.VITE_OLLAMA_URL ?? defaultUrl;
 
-    const [aiService, setAiService] = useState<IAIService>(new OllamaService(initialUrl));
+    // Get persisted model from store to survive page refreshes
+    const persistedModel = useReaderStore((s) => s.aiModel);
+
+    const [aiService, setAiService] = useState<IAIService>(() => new OllamaService(initialUrl, persistedModel));
     const [currentServiceType, setCurrentServiceType] = useState<'mock' | 'ollama'>('ollama');
+
+    // Get the setter from the store to persist model changes
+    const setAiModel = useReaderStore((s) => s.setAiModel);
 
     const setServiceType = (type: 'mock' | 'ollama', config?: OllamaConfig) => {
         setCurrentServiceType(type);
@@ -31,6 +38,11 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
             // Use config.url if provided.
             const url = config?.url ?? import.meta.env.VITE_OLLAMA_URL ?? defaultUrl;
             setAiService(new OllamaService(url, config?.model));
+
+            // Persist model selection to store for page refresh survival
+            if (config?.model) {
+                setAiModel(config.model);
+            }
         } else {
             setAiService(new MockAIService());
         }
