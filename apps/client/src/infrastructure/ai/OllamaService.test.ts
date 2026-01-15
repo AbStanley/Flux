@@ -53,7 +53,8 @@ describe('OllamaService', () => {
             const mockJson = {
                 definitions: [{ type: 'noun', definition: 'A greeting' }],
                 examples: ['Hello world'],
-                synonyms: ['Hi']
+                synonyms: ['Hi'],
+                grammar: { partOfSpeech: 'noun' }
             };
             const rawResponse = `Sure! Here is the JSON:\n\`\`\`json\n${JSON.stringify(mockJson)}\n\`\`\``;
 

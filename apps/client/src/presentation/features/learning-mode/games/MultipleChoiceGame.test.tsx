@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { MultipleChoiceGame } from './MultipleChoiceGame';
 import { useGameStore } from '../store/useGameStore';
 import { useGameAudio } from './hooks/useGameAudio';
@@ -40,7 +40,6 @@ describe('MultipleChoiceGame', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        vi.useFakeTimers();
         (useGameStore as any).mockReturnValue(createMockStore());
         (useGameAudio as any).mockReturnValue({
             playAudio: mockPlayAudio,
@@ -50,14 +49,13 @@ describe('MultipleChoiceGame', () => {
 
     afterEach(() => {
         cleanup();
-        vi.useRealTimers();
     });
 
-    it('should render question and options', () => {
+    it('should render question and options', async () => {
         render(<MultipleChoiceGame />);
         expect(screen.getByText('Hello')).toBeDefined();
         // Options are generated from items, includes correct answer 'Hola'
-        expect(screen.getByText('Hola')).toBeDefined();
+        expect(await screen.findByText('Hola')).toBeDefined();
     });
 
     it('should show error message if less than 4 items', () => {
@@ -71,10 +69,10 @@ describe('MultipleChoiceGame', () => {
     it('should play audio on mount (after delay)', async () => {
         render(<MultipleChoiceGame />);
 
-        // Run all timers (including the 500ms delay for audio)
-        await vi.runAllTimersAsync();
-
-        expect(mockPlayAudio).toHaveBeenCalledWith('Hello', 'en', undefined);
+        // Audio plays after 500ms. We can wait for it.
+        await waitFor(() => {
+            expect(mockPlayAudio).toHaveBeenCalledWith('Hello', 'en', undefined);
+        });
     });
 
     it('should stop audio on unmount (Exit Safety Bug Fix)', () => {
@@ -86,7 +84,7 @@ describe('MultipleChoiceGame', () => {
     it('should handle correct option selection', async () => {
         render(<MultipleChoiceGame />);
 
-        const correctBtn = screen.getByText('Hola');
+        const correctBtn = await screen.findByText('Hola');
         fireEvent.click(correctBtn);
 
         expect(mockSubmitAnswer).toHaveBeenCalledWith(true);
@@ -97,7 +95,7 @@ describe('MultipleChoiceGame', () => {
         render(<MultipleChoiceGame />);
 
         // Find a wrong answer (not 'Hola')
-        const wrongBtn = screen.getByText('Adios');
+        const wrongBtn = await screen.findByText('Adios');
         fireEvent.click(wrongBtn);
 
         expect(mockSubmitAnswer).toHaveBeenCalledWith(false);
@@ -107,19 +105,19 @@ describe('MultipleChoiceGame', () => {
     it('should call nextItem after selection delay', async () => {
         render(<MultipleChoiceGame />);
 
-        const correctBtn = screen.getByText('Hola');
+        const correctBtn = await screen.findByText('Hola');
         await fireEvent.click(correctBtn);
 
         // Wait for the playAudio promise to resolve and timer to fire
-        await vi.runAllTimersAsync();
-
-        expect(mockNextItem).toHaveBeenCalled();
+        await waitFor(() => {
+            expect(mockNextItem).toHaveBeenCalled();
+        }, { timeout: 2000 });
     });
 
-    it('should disable options after selection (prevent double-click)', () => {
+    it('should disable options after selection (prevent double-click)', async () => {
         render(<MultipleChoiceGame />);
 
-        const correctBtn = screen.getByText('Hola');
+        const correctBtn = await screen.findByText('Hola');
         fireEvent.click(correctBtn);
 
         // Try clicking again

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useSentenceScrambleLogic } from './useSentenceScrambleLogic';
 import { useGameStore } from '../../../store/useGameStore';
 import { useGameAudio } from '../../hooks/useGameAudio';
@@ -48,17 +48,23 @@ describe('useSentenceScrambleLogic', () => {
         });
     });
 
-    it('should initialize slots and pool correctly', () => {
+    it('should initialize slots and pool correctly', async () => {
         const { result } = renderHook(() => useSentenceScrambleLogic());
 
-        expect(result.current.slots.length).toBe(2); // El, gato
+        await waitFor(() => {
+            expect(result.current.slots.length).toBe(2); // El, gato
+        });
         expect(result.current.wordPool.length).toBe(2);
         expect(result.current.wordPool.some(w => w.word === 'El')).toBe(true);
         expect(result.current.wordPool.some(w => w.word === 'gato')).toBe(true);
     });
 
-    it('should place correct word and play click sound', () => {
+    it('should place correct word and play click sound', async () => {
         const { result } = renderHook(() => useSentenceScrambleLogic());
+
+        await waitFor(() => {
+            expect(result.current.wordPool.length).toBe(2);
+        });
 
         const elBrick = result.current.wordPool.find(w => w.word === 'El');
 
@@ -71,8 +77,12 @@ describe('useSentenceScrambleLogic', () => {
         expect(soundService.playClick).toHaveBeenCalled();
     });
 
-    it('should place wrong word and play wrong sound', () => {
+    it('should place wrong word and play wrong sound', async () => {
         const { result } = renderHook(() => useSentenceScrambleLogic());
+
+        await waitFor(() => {
+            expect(result.current.wordPool.length).toBe(2);
+        });
 
         const gatoBrick = result.current.wordPool.find(w => w.word === 'gato');
 
@@ -86,8 +96,12 @@ describe('useSentenceScrambleLogic', () => {
         expect(soundService.playWrong).toHaveBeenCalled();
     });
 
-    it('should play wrong sound when sentence is filled INCORRECTLY (Bug Fix Verification)', () => {
+    it('should play wrong sound when sentence is filled INCORRECTLY (Bug Fix Verification)', async () => {
         const { result } = renderHook(() => useSentenceScrambleLogic());
+
+        await waitFor(() => {
+            expect(result.current.wordPool.length).toBe(2);
+        });
 
         // Target: El gato
         // Fill: gato El (Both wrong positions)
@@ -122,8 +136,12 @@ describe('useSentenceScrambleLogic', () => {
         expect(soundService.playWrong).toHaveBeenCalledTimes(3);
     });
 
-    it('should complete level when filled correctly', () => {
+    it('should complete level when filled correctly', async () => {
         const { result } = renderHook(() => useSentenceScrambleLogic());
+
+        await waitFor(() => {
+            expect(result.current.wordPool.length).toBe(2);
+        });
 
         const elBrick = result.current.wordPool.find(w => w.word === 'El');
         const gatoBrick = result.current.wordPool.find(w => w.word === 'gato');
@@ -136,8 +154,12 @@ describe('useSentenceScrambleLogic', () => {
         expect(soundService.playCorrect).toHaveBeenCalled();
     });
 
-    it('should reveal answer and fail round when timer runs out', () => {
+    it('should reveal answer and fail round when timer runs out', async () => {
         const { result, rerender } = renderHook(() => useSentenceScrambleLogic());
+
+        await waitFor(() => {
+            expect(result.current.slots.length).toBe(2);
+        });
 
         // Initial state: not revealed, correct
         expect(result.current.isRevealed).toBe(false);
@@ -151,7 +173,9 @@ describe('useSentenceScrambleLogic', () => {
 
         rerender();
 
-        expect(result.current.isRevealed).toBe(true);
+        await waitFor(() => {
+            expect(result.current.isRevealed).toBe(true);
+        });
         expect(mockSubmitAnswer).toHaveBeenCalledWith(false);
         expect(soundService.playWrong).toHaveBeenCalled();
     });
