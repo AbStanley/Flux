@@ -96,6 +96,15 @@ export class AnkiService {
     async getCardsInfo(cards: number[]): Promise<AnkiCardInfo[]> {
         return this.invoke<AnkiCardInfo[]>('cardsInfo', { cards });
     }
+
+    /**
+     * Submit answers for cards to update their schedule.
+     * ease: 1=Again, 3=Good (We'll simplify to these two common ones for now, or maybe 4=Easy)
+     */
+    async answerCards(answers: { cardId: number; ease: number }[]): Promise<boolean[]> {
+        // checks answers
+        return this.invoke<boolean[]>('answerCards', { answers });
+    }
 }
 
 export interface AnkiCardInfo {

@@ -10,7 +10,7 @@ interface GameShellProps {
 }
 
 export function GameShell({ children }: GameShellProps) {
-    const { score, streak, health, maxHealth, currentIndex, items, reset, restartGame, status, timeLeft, tick, config } = useGameStore();
+    const { score, streak, health, maxHealth, currentIndex, items, reset, restartGame, status, timeLeft, tick, config, syncProgress } = useGameStore();
     const timerEnabled = config.timerEnabled;
 
     useEffect(() => {
@@ -35,9 +35,35 @@ export function GameShell({ children }: GameShellProps) {
                         <Flame /> {streak} Max Streak
                     </div>
                 </div>
-                <div className="flex gap-4">
-                    <Button size="lg" variant="outline" onClick={reset}>Back to Menu</Button>
-                    <Button size="lg" onClick={restartGame}>Play Again</Button>
+                <div className="flex flex-col gap-4 items-center">
+                    <div className="flex gap-4">
+                        <Button size="lg" variant="outline" onClick={reset}>Back to Menu</Button>
+                        <Button size="lg" onClick={restartGame}>Play Again</Button>
+                    </div>
+                    {config.source === 'anki' && (
+                        <Button
+                            variant="secondary"
+                            onClick={async () => {
+                                const btn = document.getElementById('anki-sync-btn');
+                                if (btn) {
+                                    btn.textContent = "Syncing...";
+                                    btn.setAttribute('disabled', 'true');
+                                }
+                                try {
+                                    await syncProgress();
+                                    if (btn) btn.textContent = "Synced!";
+                                } catch {
+                                    if (btn) {
+                                        btn.textContent = "Failed to Sync";
+                                        btn.removeAttribute('disabled');
+                                    }
+                                }
+                            }}
+                            id="anki-sync-btn"
+                        >
+                            Sync to Anki
+                        </Button>
+                    )}
                 </div>
             </div>
         );

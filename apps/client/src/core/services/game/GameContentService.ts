@@ -36,6 +36,13 @@ export class GameContentService {
 
         return strategy.fetchItems(params.config);
     }
+
+    async syncProgress(source: string, items: GameItem[], results: Record<string, boolean>): Promise<void> {
+        const strategy = this.strategies[source];
+        if (strategy && strategy.syncProgress) {
+            await strategy.syncProgress(items, results);
+        }
+    }
 }
 
 export const gameContentService = new GameContentService();

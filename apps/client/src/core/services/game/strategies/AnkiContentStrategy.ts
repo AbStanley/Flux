@@ -27,35 +27,14 @@ export class AnkiContentStrategy implements IContentStrategy {
         // 3. Fetch details
         const cardsInfo = await ankiService.getCardsInfo(selectedIds);
 
-        // 4. Map to GameItems
-        // TODO: We need field mapping configuration from the user.
-        // For MVP/First Pass, we might guess or expect keys in 'config' if we added them?
-        // The current GameContentParams interface (from step 41) doesn't have explicit field mapping keys yet.
-        // But the user plan mentioned "Field Mapping".
-        // I will assume the config object might unknowingly carry extra props or I'll add hardcoded logic/dynamic guessing for now 
-        // until we update the interface officially. 
-        // Wait, I can cast config to any to access extra props if needed, or better, update the plan to update the interface.
-        // The user plan said: update useGameStore to store ankiFieldQuestion. 
-        // For this file, I'll access them from config assuming they are passed.
-
-        // Let's assume passed config has: { ankiFieldSource?: string, ankiFieldTarget?: string }
-        // If not, we try to grab first two fields.
-
         return cardsInfo.map(info => {
             // Basic heuristic if no mapping provided
             const fieldNames = Object.keys(info.fields);
-            // Sort by order if possible, but the API returns Record.
-            // But we have info.fields[key].order
+            // Sort by order if possible
             const sortedFields = fieldNames.sort((a, b) => info.fields[a].order - info.fields[b].order);
 
-            // Type-safe access to optional Anki field configuration
-            type AnkiConfig = NonNullable<GameContentParams['config']> & {
-                ankiFieldSource?: string;
-                ankiFieldTarget?: string;
-            };
-            const ankiConfig = config as AnkiConfig;
-            const sourceField = ankiConfig.ankiFieldSource || sortedFields[0];
-            const targetField = ankiConfig.ankiFieldTarget || sortedFields[1] || sortedFields[0];
+            const sourceField = config?.ankiFieldSource || sortedFields[0];
+            const targetField = config?.ankiFieldTarget || sortedFields[1] || sortedFields[0];
 
             const question = this.stripHtml(info.fields[sourceField]?.value || "???");
             const answer = this.stripHtml(info.fields[targetField]?.value || "???");
@@ -91,5 +70,18 @@ export class AnkiContentStrategy implements IContentStrategy {
     private stripHtml(html: string): string {
         // Basic strip
         return html.replace(/<[^>]*>?/gm, '');
+    }
+
+    async syncProgress(items: GameItem[], results: Record<string, boolean>): Promise<void> {
+        const answers = items
+            .filter(item => item.source === 'anki' && results[item.id] !== undefined)
+            .map(item => ({
+                cardId: parseInt(item.id, 10),
+                ease: results[item.id] ? 3 : 1
+            }));
+
+        if (answers.length > 0) {
+            await ankiService.answerCards(answers);
+        }
     }
 }

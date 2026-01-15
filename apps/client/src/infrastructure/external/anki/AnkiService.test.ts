@@ -87,4 +87,27 @@ describe('AnkiService', () => {
 
         await expect(service.getDeckNames()).rejects.toThrow('AnkiConnect Error: Deck not found');
     });
+
+    it('should answer cards', async () => {
+        fetchMock.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ result: [true], error: null }),
+        });
+
+        const answers = [{ cardId: 123, ease: 3 }];
+        const result = await service.answerCards(answers);
+        expect(result).toEqual([true]);
+        expect(fetchMock).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.objectContaining({
+                body: expect.stringContaining('"action":"answerCards"'),
+            })
+        );
+        expect(fetchMock).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.objectContaining({
+                body: expect.stringContaining('"params":{"answers":[{"cardId":123,"ease":3}]}'),
+            })
+        );
+    });
 });

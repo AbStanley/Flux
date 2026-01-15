@@ -37,10 +37,15 @@ export interface GameContentParams {
         /** Only fetch items capable of this game mode? */
         gameMode?: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble';
         timerEnabled?: boolean;
+
+        // Anki Specific
+        ankiFieldSource?: string;
+        ankiFieldTarget?: string;
     };
 }
 
 export interface IContentStrategy {
     fetchItems(params: GameContentParams['config']): Promise<GameItem[]>;
     validateAvailability(): Promise<boolean>;
+    syncProgress?(items: GameItem[], results: Record<string, boolean>): Promise<void>;
 }

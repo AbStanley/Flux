@@ -30,6 +30,7 @@ interface GameState {
     health: number;
     maxHealth: number;
     error: string | null;
+    history: Record<string, boolean>;
 
     // Actions
     updateConfig: (updates: Partial<GameConfig>) => void;
@@ -41,6 +42,7 @@ interface GameState {
     reset: () => void; // Reset Session only
     tick: () => void;
     setTime: (time: number) => void;
+    syncProgress: () => Promise<void>;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -61,6 +63,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     maxHealth: 3,
     error: null,
     isTimerPaused: false,
+    history: {},
 
     updateConfig: (updates) => set((state) => ({ config: { ...state.config, ...updates } })),
 
@@ -96,7 +99,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             streak: 0,
             health: 3,
             timeLeft: 100, // 10.0s
-            isTimerPaused: false
+            isTimerPaused: false,
+            history: {}
         });
 
         try {
@@ -122,8 +126,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     submitAnswer: (isCorrect) => {
-        const { score, streak, health } = get();
+        const { score, streak, health, items, currentIndex, history } = get();
         set({ isTimerPaused: true });
+
+        // Record history
+        const currentItem = items[currentIndex];
+        if (currentItem) {
+            set({ history: { ...history, [currentItem.id]: isCorrect } });
+        }
 
         if (isCorrect) {
             set({
@@ -164,6 +174,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         streak: 0,
         timeLeft: 100,
         health: 3,
+        history: {},
         // Config preserved
         isTimerPaused: false
     }),
@@ -179,5 +190,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         } else {
             submitAnswer(false);
         }
+    },
+
+    syncProgress: async () => {
+        const { config, items, history } = get();
+        await gameContentService.syncProgress(config.source, items, history);
     }
 }));
