@@ -1,15 +1,16 @@
-import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 
 interface ConjugationsDisplayProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     conjugations: any; // Using any to handle the potential diverse shapes from AI
 }
 
-export const ConjugationsDisplay: React.FC<ConjugationsDisplayProps> = ({ conjugations }) => {
+export function ConjugationsDisplay({ conjugations }: ConjugationsDisplayProps) {
     if (!conjugations || Object.keys(conjugations).length === 0) return null;
 
     // Normalize conjugations
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let normalizedConjugations: Record<string, any> = conjugations;
     const firstValue = Object.values(conjugations)[0];
 
@@ -51,9 +52,10 @@ export const ConjugationsDisplay: React.FC<ConjugationsDisplayProps> = ({ conjug
             </Tabs>
         </div>
     );
-};
+}
 
-const ConjugationTableBody: React.FC<{ forms: any }> = ({ forms }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ConjugationTableBody({ forms }: { forms: any }) {
     let normalizedForms: Array<{ pronoun: string; conjugation: string }> = [];
 
     if (Array.isArray(forms)) {

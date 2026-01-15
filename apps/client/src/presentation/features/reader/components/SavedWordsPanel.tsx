@@ -1,16 +1,16 @@
-import React, { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useReaderStore } from '../store/useReaderStore';
 import { useWords } from '../../word-manager/hooks/useWords';
 import { ScrollArea } from '../../../components/ui/scroll-area';
 import { Button } from '../../../components/ui/button';
 import { Edit2, Trash2 } from 'lucide-react';
-import { type Word } from '../../../../infrastructure/api/words';
+import { type Word, type CreateWordRequest } from '../../../../infrastructure/api/words';
 import { EditWordDialog } from '../../word-manager/components/EditWordDialog';
 
-export const SavedWordsPanel: React.FC = () => {
+export function SavedWordsPanel() {
     const setActivePanel = useReaderStore(state => state.setActivePanel);
     const { words, fetchWords, deleteWord, updateWord } = useWords();
-    const [editingWord, setEditingWord] = React.useState<Word | undefined>(undefined);
+    const [editingWord, setEditingWord] = useState<Word | undefined>(undefined);
 
     // Refresh words when panel opens
     useEffect(() => {
@@ -21,7 +21,7 @@ export const SavedWordsPanel: React.FC = () => {
         setEditingWord(word);
     };
 
-    const handleUpdate = async (data: any) => {
+    const handleUpdate = async (data: CreateWordRequest) => {
         if (editingWord) {
             await updateWord(editingWord.id, data);
             setEditingWord(undefined);
@@ -74,8 +74,8 @@ export const SavedWordsPanel: React.FC = () => {
                                         )}
                                         {word.examples && word.examples.length > 0 && (
                                             <div className="mt-2 space-y-1">
-                                                {word.examples.slice(0, 1).map((ex: any) => (
-                                                    <div key={ex.id} className="text-xs italic">
+                                                {word.examples.slice(0, 1).map((ex) => (
+                                                    <div key={ex.id || Math.random()} className="text-xs italic">
                                                         "{ex.sentence}"
                                                         {ex.translation && <span className="text-muted-foreground block not-italic">— {ex.translation}</span>}
                                                     </div>

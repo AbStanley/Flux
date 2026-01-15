@@ -1,10 +1,8 @@
-import React from 'react';
-
 interface AlternativesListProps {
     alternatives: string[];
 }
 
-export const AlternativesList: React.FC<AlternativesListProps> = ({ alternatives }) => {
+export function AlternativesList({ alternatives }: AlternativesListProps) {
     if (!alternatives || alternatives.length === 0) return null;
 
     return (

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Layers } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { GameShell } from './GameShell';
@@ -8,7 +7,7 @@ import { AudioDictationGame } from './games/dictation/AudioDictationGame';
 import { SentenceScrambleGame } from './games/scramble/SentenceScrambleGame';
 import { GameSetup } from './components/GameSetup';
 
-export const LearningModePage: React.FC = () => {
+export function LearningModePage() {
     const { status, config } = useGameStore();
 
     const renderGame = () => {

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Page } from 'react-pdf';
 import { Checkbox } from '@/presentation/components/ui/checkbox';
 import { Card } from '@/presentation/components/ui/card';
@@ -9,7 +8,7 @@ interface PdfPageGridProps {
     onToggle: (pageNumber: number) => void;
 }
 
-export const PdfPageGrid: React.FC<PdfPageGridProps> = ({ numPages, selectedPages, onToggle }) => {
+export function PdfPageGrid({ numPages, selectedPages, onToggle }: PdfPageGridProps) {
     return (
         <>
             {Array.from(new Array(numPages), (_, index) => {

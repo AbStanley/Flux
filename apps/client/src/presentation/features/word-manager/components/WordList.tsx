@@ -1,4 +1,3 @@
-import React from 'react';
 import { type Word } from '../../../../infrastructure/api/words';
 import {
     TableBody,
@@ -19,7 +18,7 @@ interface WordListProps {
     emptyMessage?: string;
 }
 
-export const WordList: React.FC<WordListProps> = ({ words, onEdit, onDelete, emptyMessage = "No items found." }) => {
+export function WordList({ words, onEdit, onDelete, emptyMessage = "No items found." }: WordListProps) {
     return (
         <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden transition-all hover:shadow-md">
             {/* Desktop View */}

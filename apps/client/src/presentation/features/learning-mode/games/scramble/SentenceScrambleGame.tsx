@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Volume2 } from 'lucide-react';
 import { useSentenceScrambleLogic } from './hooks/useSentenceScrambleLogic';
@@ -9,7 +8,7 @@ import { WordPool } from './components/WordPool';
  * Sentence Scramble Game
  * Reconstruct the target sentence by clicking words in the correct order.
  */
-export const SentenceScrambleGame: React.FC = () => {
+export function SentenceScrambleGame() {
     const {
         currentItem,
         slots,

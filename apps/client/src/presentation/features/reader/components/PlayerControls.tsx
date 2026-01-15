@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from "../../../components/ui/button";
 import { ChevronsUp, ChevronsDown } from "lucide-react";
@@ -14,7 +14,7 @@ interface PlayerControlsProps {
     vertical?: boolean;
 }
 
-export const PlayerControls: React.FC<PlayerControlsProps> = ({ vertical = false }) => {
+export function PlayerControls({ vertical = false }: PlayerControlsProps) {
     const {
         isPlaying,
         isPaused,

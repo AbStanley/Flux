@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { ArrowRightLeft } from 'lucide-react';
 import { wordsApi } from '@/infrastructure/api/words';
 import { useGameStore } from '../../store/useGameStore';
 import { LanguageSelector } from './LanguageSelector';
 
-export const DbSetup: React.FC = () => {
+export function DbSetup() {
     const { config, updateConfig } = useGameStore();
 
     // Map of Language -> Connected Languages

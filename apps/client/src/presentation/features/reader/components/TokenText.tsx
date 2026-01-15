@@ -1,11 +1,10 @@
-import React from 'react';
 import { cn } from '../../../../lib/utils';
 
 interface TokenTextProps {
     token: string;
 }
 
-export const TokenText: React.FC<TokenTextProps> = ({ token }) => {
+export function TokenText({ token }: TokenTextProps) {
     // Simplified parser for **bold** and *italic*
     const renderParts = (text: string, bold: boolean) => {
         const italicRegex = /\*([^*]+)\*/g;
@@ -34,13 +33,13 @@ export const TokenText: React.FC<TokenTextProps> = ({ token }) => {
         return (
             <>
                 {token.split(boldRegex).map((part, i) => (
-                    <React.Fragment key={i}>
+                    <div key={i} style={{ display: 'contents' }}>
                         {renderParts(part, i % 2 === 1)}
-                    </React.Fragment>
+                    </div>
                 ))}
             </>
         );
     } else {
-        return <React.Fragment>{renderParts(token, false)}</React.Fragment>;
+        return <>{renderParts(token, false)}</>;
     }
-};
+}

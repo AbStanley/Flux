@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from "../../../../components/ui/button";
 
 import { Play, Pause, Square } from "lucide-react";
@@ -11,13 +10,13 @@ interface PlaybackControlsProps {
     variant?: 'default' | 'mini';
 }
 
-export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
+export function PlaybackControls({
     isPlaying,
     isPaused,
     onPlayPause,
     onStop,
     variant = 'default'
-}) => {
+}: PlaybackControlsProps) {
     const isMini = variant === 'mini';
 
     return (

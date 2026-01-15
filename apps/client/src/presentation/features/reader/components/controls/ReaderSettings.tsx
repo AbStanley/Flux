@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from "../../../../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select";
 import { Eye, EyeOff, Eraser } from "lucide-react";
@@ -12,11 +11,11 @@ interface ReaderSettingsProps {
     vertical?: boolean;
 }
 
-export const ReaderSettings: React.FC<ReaderSettingsProps> = ({
+export function ReaderSettings({
     selectionMode,
     onSelectionModeChange,
     vertical = false
-}) => {
+}: ReaderSettingsProps) {
     return (
         <div className={`flex items-center gap-2 ${vertical ? 'flex-col items-end' : ''}`}>
             {!vertical && <div className="text-xs font-medium text-muted-foreground mb-1.5 ml-1">Selection Mode</div>}
@@ -34,7 +33,7 @@ export const ReaderSettings: React.FC<ReaderSettingsProps> = ({
             </Select>
         </div>
     );
-};
+}
 
 interface TranslationSettingsProps {
     showTranslations: boolean;
@@ -42,11 +41,11 @@ interface TranslationSettingsProps {
     onClearTranslations: () => void;
 }
 
-export const TranslationSettings: React.FC<TranslationSettingsProps> = ({
+export function TranslationSettings({
     showTranslations,
     onToggleTranslations,
     onClearTranslations
-}) => {
+}: TranslationSettingsProps) {
     return (
         <div className="flex items-center gap-2">
             <Button

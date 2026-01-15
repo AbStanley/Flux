@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from "../../../../components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -16,7 +15,7 @@ interface RichDetailsContentProps {
     onRegenerate: () => void;
 }
 
-export const RichDetailsContent: React.FC<RichDetailsContentProps> = ({ data, isLoading, error, onRegenerate }) => {
+export function RichDetailsContent({ data, isLoading, error, onRegenerate }: RichDetailsContentProps) {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-40 space-y-4">

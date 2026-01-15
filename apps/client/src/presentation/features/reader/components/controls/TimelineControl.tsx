@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Slider } from "../../../../components/ui/slider";
 
 
@@ -9,12 +9,12 @@ interface TimelineControlProps {
     vertical?: boolean;
 }
 
-export const TimelineControl: React.FC<TimelineControlProps> = ({
+export function TimelineControl({
     currentWordIndex,
     totalTokens,
     onSeek,
     vertical = false
-}) => {
+}: TimelineControlProps) {
     // Local state for smooth slider movement
     const [sliderValue, setSliderValue] = useState([0]);
     const isDragging = useRef(false);

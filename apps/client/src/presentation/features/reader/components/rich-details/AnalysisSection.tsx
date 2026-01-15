@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface AnalysisSectionProps {
@@ -6,7 +5,7 @@ interface AnalysisSectionProps {
     grammarRules?: string[];
 }
 
-export const AnalysisSection: React.FC<AnalysisSectionProps> = ({ syntaxAnalysis, grammarRules }) => {
+export function AnalysisSection({ syntaxAnalysis, grammarRules }: AnalysisSectionProps) {
     return (
         <div className="space-y-6">
             {/* Sentence Analysis */}

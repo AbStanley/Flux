@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Document, pdfjs } from 'react-pdf';
 import { Button } from '@/presentation/components/ui/button';
 import { ScrollArea } from '@/presentation/components/ui/scroll-area';
@@ -17,7 +17,7 @@ interface PdfPreviewProps {
     onCancel: () => void;
 }
 
-export const PdfPreview: React.FC<PdfPreviewProps> = ({ file, onExtract, onCancel }) => {
+export function PdfPreview({ file, onExtract, onCancel }: PdfPreviewProps) {
     const { numPages, isExtracting, onDocumentLoadSuccess, extract } = usePdf(file);
     const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
 

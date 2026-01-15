@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Label } from "@/presentation/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
@@ -7,7 +7,7 @@ import { ankiService } from '@/infrastructure/external/anki/AnkiService';
 import { useGameStore } from '../../store/useGameStore';
 import { LanguageSelector } from './LanguageSelector';
 
-export const AnkiSetup: React.FC = () => {
+export function AnkiSetup() {
     const { config, updateConfig } = useGameStore();
 
     // Anki State

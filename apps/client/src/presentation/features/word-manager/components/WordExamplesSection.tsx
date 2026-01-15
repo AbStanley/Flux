@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
@@ -16,7 +15,7 @@ interface WordExamplesSectionProps {
     showLimitWarning: boolean;
 }
 
-export const WordExamplesSection: React.FC<WordExamplesSectionProps> = ({
+export function WordExamplesSection({
     examples,
     onAdd,
     onChange,
@@ -25,7 +24,7 @@ export const WordExamplesSection: React.FC<WordExamplesSectionProps> = ({
     isGenerating,
     canGenerate,
     showLimitWarning
-}) => {
+}: WordExamplesSectionProps) {
     return (
         <div className="space-y-2">
             <div className="flex justify-between items-center">

@@ -11,7 +11,7 @@ type ViewState = 'HIDDEN' | 'FAB' | 'POPUP';
  * 
  * Refactored to use Content Bootstrapping pattern and Custom Hooks.
  */
-export const FluxContentApp: React.FC = () => {
+export function FluxContentApp() {
     const [view, setView] = useState<ViewState>('HIDDEN');
     const [selection, setSelection] = useState<{ text: string, x: number, y: number } | null>(null);
     const [mode, setMode] = useState<Mode>('TRANSLATE');

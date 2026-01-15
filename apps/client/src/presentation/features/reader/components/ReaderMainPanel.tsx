@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { Card, CardContent } from "../../../components/ui/card";
 import { Loader2 } from 'lucide-react';
 import styles from '../ReaderView.module.css';
@@ -18,7 +18,7 @@ import { ReaderTextContent } from './ReaderTextContent';
 import { PlayerControls } from './PlayerControls';
 import { RichInfoPanel } from './RichInfoPanel';
 
-export const ReaderMainPanel: React.FC = () => {
+export function ReaderMainPanel() {
     const {
         tokens,
         paginatedTokens,
@@ -54,7 +54,7 @@ export const ReaderMainPanel: React.FC = () => {
 
     const groups = useReaderGroups(selectedIndices, getSelectionGroups, selectionTranslations);
 
-    const activeTabData = React.useMemo(() => {
+    const activeTabData = useMemo(() => {
         return richDetailsTabs.find(t => t.id === activeTabId)?.data || null;
     }, [richDetailsTabs, activeTabId]);
 
@@ -62,7 +62,7 @@ export const ReaderMainPanel: React.FC = () => {
     const availableVoices = useAudioStore(s => s.availableVoices);
     const setVoiceByLanguageName = useAudioStore(s => s.setVoiceByLanguageName);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (sourceLang) {
             setVoiceByLanguageName(sourceLang);
         }
@@ -70,7 +70,7 @@ export const ReaderMainPanel: React.FC = () => {
 
     const requiredAudioPage = useAudioPageSync(PAGE_SIZE);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (requiredAudioPage !== null && requiredAudioPage !== currentPage) {
             setCurrentPage(requiredAudioPage);
         }

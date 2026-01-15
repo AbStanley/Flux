@@ -15,7 +15,7 @@ describe('LanguageSelector', () => {
                 label="Select Language"
             />
         );
-        expect(screen.getByText('Select Language')).toBeDefined();
+        expect(screen.getByText('Select Language', { selector: 'label' })).toBeDefined();
     });
 
     it('should display the selected value', () => {
@@ -60,7 +60,7 @@ describe('LanguageSelector', () => {
         const trigger = screen.getByRole('combobox');
         await user.click(trigger);
 
-        expect(await screen.findByText("🌍 Any / Detect")).toBeDefined();
+        expect(await screen.findByText("Any / Detect")).toBeDefined();
     });
 
     it('should restrict options when "options" prop is provided', async () => {

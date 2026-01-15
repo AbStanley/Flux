@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Search, Volume2, RefreshCcw, Save, Check, Loader2 } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
@@ -12,14 +11,14 @@ interface ReaderTokenPopupProps {
     isSaved?: boolean;
 }
 
-export const ReaderTokenPopup: React.FC<ReaderTokenPopupProps> = ({
+export function ReaderTokenPopup({
     translation,
     onPlay,
     onMoreInfo,
     onRegenerate,
     onSave,
     isSaved
-}) => {
+}: ReaderTokenPopupProps) {
     const buttonClass = cn(
         "ml-1 p-1 rounded-full cursor-pointer shadow-sm border border-white/10",
         "bg-white/20 hover:bg-white/30 text-white",

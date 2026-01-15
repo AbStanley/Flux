@@ -1,8 +1,7 @@
-import React from 'react';
 import { RichInfoPanel } from './RichInfoPanel';
 import { useTranslation } from '../hooks/useTranslation';
 
-export const ReaderSidebar: React.FC = () => {
+export function ReaderSidebar() {
     const {
         richDetailsTabs,
         activeTabId,

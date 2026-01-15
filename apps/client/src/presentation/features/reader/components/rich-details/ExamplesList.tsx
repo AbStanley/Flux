@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { RichTranslationResult } from '../../../../../core/interfaces/IAIService';
 
@@ -6,7 +5,7 @@ interface ExamplesListProps {
     examples: RichTranslationResult['examples'];
 }
 
-export const ExamplesList: React.FC<ExamplesListProps> = ({ examples }) => {
+export function ExamplesList({ examples }: ExamplesListProps) {
     if (!examples || examples.length === 0) return null;
 
     return (

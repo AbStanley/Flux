@@ -1,10 +1,9 @@
-import React from 'react';
 import { useReaderStore } from './store/useReaderStore';
 import { ReaderMainPanel } from './components/ReaderMainPanel';
 import { ReaderSidebar } from './components/ReaderSidebar';
 import { SavedWordsPanel } from './components/SavedWordsPanel';
 
-export const ReaderView: React.FC = () => {
+export function ReaderView() {
     const activePanel = useReaderStore(state => state.activePanel);
 
     return (

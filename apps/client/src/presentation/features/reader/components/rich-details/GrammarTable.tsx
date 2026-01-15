@@ -1,4 +1,3 @@
-import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../../components/ui/table";
 import type { RichTranslationResult } from '../../../../../core/interfaces/IAIService';
 
@@ -6,7 +5,7 @@ interface GrammarTableProps {
     grammar: RichTranslationResult['grammar'];
 }
 
-export const GrammarTable: React.FC<GrammarTableProps> = ({ grammar }) => {
+export function GrammarTable({ grammar }: GrammarTableProps) {
     if (!grammar) return null;
 
     return (

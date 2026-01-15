@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import styles from '../ReaderView.module.css';
 import { ReaderToken } from './ReaderToken';
 import { HoverPosition } from '../../../../core/types';
@@ -29,7 +29,7 @@ interface ReaderTextContentProps {
     showTranslations: boolean;
 }
 
-const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
+const ReaderTextContentComponent = ({
     tokens,
     paginatedTokens,
     groups,
@@ -45,7 +45,7 @@ const ReaderTextContentComponent: React.FC<ReaderTextContentProps> = ({
     onPlayClick,
     onRegenerateClick,
     showTranslations
-}) => {
+}: ReaderTextContentProps) => {
     // State Consumption
     const hoveredIndex = useTranslationStore(s => s.hoveredIndex);
     const hoverSource = useTranslationStore(s => s.hoverSource);

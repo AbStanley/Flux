@@ -1,4 +1,3 @@
-import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select";
 import { Slider } from "../../../../components/ui/slider";
 
@@ -13,14 +12,14 @@ interface VoiceSettingsProps {
     vertical?: boolean;
 }
 
-export const VoiceSettings: React.FC<VoiceSettingsProps> = ({
+export function VoiceSettings({
     selectedVoiceName,
     availableVoices,
     playbackRate,
     onVoiceChange,
     onRateChange,
     vertical = false
-}) => {
+}: VoiceSettingsProps) {
     return (
         <div className={`flex items-center gap-4 flex-1 w-full ${vertical ? 'flex-col items-stretch' : 'md:w-auto overflow-hidden'}`}>
             <div className={`flex items-center gap-2 flex-1 ${vertical ? 'w-full' : 'min-w-[200px]'}`}>

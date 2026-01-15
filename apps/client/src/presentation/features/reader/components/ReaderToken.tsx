@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo, useRef, useState } from 'react';
 import tokenStyles from './ReaderToken.module.css';
 import popupStyles from './ReaderPopup.module.css';
 import { cn } from '../../../../lib/utils';
@@ -43,7 +43,7 @@ interface ReaderTokenProps {
     groupText?: string;
 }
 
-const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
+const ReaderTokenComponent = ({
     token,
     index,
     globalIndex,
@@ -65,7 +65,7 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
     containerRef,
     groupEndId,
     groupText,
-}) => {
+}: ReaderTokenProps) => {
     // Hide visual header markers (##, ###) completely
     const isHeaderMarker = /^#+$/.test(token.trim());
     if (isHeaderMarker) {
@@ -88,8 +88,8 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
         }
     };
 
-    const tokenRef = React.useRef<HTMLSpanElement>(null);
-    const popupContainerRef = React.useRef<HTMLSpanElement>(null);
+    const tokenRef = useRef<HTMLSpanElement>(null);
+    const popupContainerRef = useRef<HTMLSpanElement>(null);
 
     const { isRightAligned, dynamicMarginTop, dynamicMaxWidth } = useTokenLayout({
         tokenRef,
@@ -104,7 +104,7 @@ const ReaderTokenComponent: React.FC<ReaderTokenProps> = ({
 
     const addWord = useWordsStore(state => state.addWord);
     // Local state for visual feedback
-    const [isSaved, setIsSaved] = React.useState(false);
+    const [isSaved, setIsSaved] = useState(false);
 
     const sourceLang = useReaderStore(state => state.sourceLang);
     const targetLang = useReaderStore(state => state.targetLang);

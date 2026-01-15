@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Progress } from "@/presentation/components/ui/progress";
 import { X, Heart, Trophy, Flame, Timer } from 'lucide-react';
@@ -9,7 +9,7 @@ interface GameShellProps {
     children: React.ReactNode;
 }
 
-export const GameShell: React.FC<GameShellProps> = ({ children }) => {
+export function GameShell({ children }: GameShellProps) {
     const { score, streak, health, maxHealth, currentIndex, items, reset, restartGame, status, timeLeft, tick, config } = useGameStore();
     const timerEnabled = config.timerEnabled;
 

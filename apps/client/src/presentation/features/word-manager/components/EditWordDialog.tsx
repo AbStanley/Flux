@@ -1,4 +1,3 @@
-import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -16,12 +15,12 @@ interface EditWordDialogProps {
     initialData?: Word;
 }
 
-export const EditWordDialog: React.FC<EditWordDialogProps> = ({
+export function EditWordDialog({
     isOpen,
     onClose,
     onSubmit,
     initialData
-}) => {
+}: EditWordDialogProps) {
     const {
         formData,
         isLoading,

@@ -9,7 +9,7 @@ describe('AnkiService', () => {
     let service: AnkiService;
 
     beforeEach(() => {
-        service = new AnkiService();
+        service = new AnkiService('http://127.0.0.1:8765');
         fetchMock.mockReset();
     });
 

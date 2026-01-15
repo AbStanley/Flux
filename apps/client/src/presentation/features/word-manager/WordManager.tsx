@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useWordsStore } from './store/useWordsStore';
 import { WordList } from './components/WordList';
 import { EditWordDialog } from './components/EditWordDialog';
@@ -7,7 +7,7 @@ import { Plus, Download, FileDown } from 'lucide-react';
 import { type CreateWordRequest, type Word, wordsApi } from '../../../infrastructure/api/words';
 import { exportToCSV, exportToAnki } from './utils/exportUtils';
 
-export const WordManager: React.FC = () => {
+export function WordManager() {
     const { wordsState, phrasesState, error, addWord, updateWord, deleteWord, fetchWords } = useWordsStore();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingWord, setEditingWord] = useState<Word | undefined>(undefined);

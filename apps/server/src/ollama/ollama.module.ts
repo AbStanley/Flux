@@ -4,6 +4,6 @@ import { OllamaController } from './ollama.controller';
 
 @Module({
   providers: [OllamaService],
-  controllers: [OllamaController]
+  controllers: [OllamaController],
 })
 export class OllamaModule {}

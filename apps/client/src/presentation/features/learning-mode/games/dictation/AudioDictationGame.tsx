@@ -1,11 +1,10 @@
-import React from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Volume2, RefreshCw } from 'lucide-react';
 import { useAudioDictationLogic } from './hooks/useAudioDictationLogic';
 import { WordSlots } from '../build-word/components/WordSlots';
 import { LetterPool } from '../build-word/components/LetterPool';
 
-export const AudioDictationGame: React.FC = () => {
+export function AudioDictationGame() {
     const {
         currentItem,
         slots,

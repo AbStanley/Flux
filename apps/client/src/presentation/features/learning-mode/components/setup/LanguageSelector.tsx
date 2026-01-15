@@ -1,4 +1,3 @@
-import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
 import { Label } from "@/presentation/components/ui/label";
 
@@ -83,14 +82,14 @@ export const getFlagUrl = (countryCode: string) => {
     return `https://flagcdn.com/w20/${countryCode.toLowerCase()}.png`;
 };
 
-export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+export function LanguageSelector({
     label,
     value,
     onChange,
     disabled,
     exclude,
     options
-}) => {
+}: LanguageSelectorProps) {
     // If specific options provided (e.g. from DB graph), map them.
     // Otherwise fallback to common list.
     const displayOptions = options

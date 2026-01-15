@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/presentation/components/ui/button';
 import { Upload } from 'lucide-react';
@@ -12,7 +12,7 @@ interface FileImporterProps {
     onOpenChange: (open: boolean) => void;
 }
 
-export const FileImporter: React.FC<FileImporterProps> = ({ open, onOpenChange }) => {
+export function FileImporter({ open, onOpenChange }: FileImporterProps) {
     const [file, setFile] = useState<File | null>(null);
     const { setText } = useReaderStore();
 

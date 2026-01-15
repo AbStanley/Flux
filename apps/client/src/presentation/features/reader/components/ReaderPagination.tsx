@@ -1,16 +1,14 @@
-import React from 'react';
-
 interface ReaderPaginationProps {
     currentPage: number;
     totalPages: number;
     onPageChange: (page: number) => void;
 }
 
-export const ReaderPagination: React.FC<ReaderPaginationProps> = ({
+export function ReaderPagination({
     currentPage,
     totalPages,
     onPageChange
-}) => {
+}: ReaderPaginationProps) {
     if (totalPages <= 1) return null;
 
     return (

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Checkbox } from '@/presentation/components/ui/checkbox';
 import { FileText } from 'lucide-react';
 import type { Chapter } from '../utils/epubUtils';
@@ -10,12 +9,12 @@ interface EpubChapterListProps {
     depth?: number;
 }
 
-export const EpubChapterList: React.FC<EpubChapterListProps> = ({
+export function EpubChapterList({
     chapters,
     selectedHrefs,
     onToggle,
     depth = 0
-}) => {
+}: EpubChapterListProps) {
     return (
         <>
             {chapters.map((chapter, index) => (

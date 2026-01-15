@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/presentation/components/ui/button';
 import { ScrollArea } from '@/presentation/components/ui/scroll-area';
 import { Loader2 } from 'lucide-react';
@@ -11,7 +11,7 @@ interface EpubPreviewProps {
     onCancel: () => void;
 }
 
-export const EpubPreview: React.FC<EpubPreviewProps> = ({ file, onExtract, onCancel }) => {
+export function EpubPreview({ file, onExtract, onCancel }: EpubPreviewProps) {
     const { chapters, loading, isExtracting, extract } = useEpub(file);
     const [selectedHrefs, setSelectedHrefs] = useState<Set<string>>(new Set());
 

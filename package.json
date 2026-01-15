@@ -1,22 +1,30 @@
 {
-    "name": "reader-helper-monorepo",
-    "version": "0.0.0",
-    "private": true,
-    "workspaces": [
-        "apps/*"
-    ],
-    "scripts": {
-        "client:dev": "npm run dev --workspace=@reader-helper/client",
-        "server:dev": "npm run start:dev --workspace=@reader-helper/server",
-        "start:local:dev": "start \"Client\" npm run client:dev & start \"Server\" npm run server:dev",
-        "prisma-studio": "npx prisma studio --schema=apps/server/prisma/schema.prisma",
-        "build": "npm run build --workspaces",
-        "test": "npm run test --workspaces",
-        "lint": "npm run lint --workspaces",
-        "docker:dev": "docker compose -f docker-compose.dev.yml -p reader-helper-dev up --build",
-        "docker:prod": "docker compose -f docker-compose.yml -p reader-helper-prod up --build"
-    },
-    "devDependencies": {
-        "concurrently": "^8.2.2"
-    }
+  "name": "reader-helper-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "client:dev": "npm run dev --workspace=@reader-helper/client",
+    "server:dev": "npm run start:dev --workspace=@reader-helper/server",
+    "start:local:dev": "start \"Client\" npm run client:dev & start \"Server\" npm run server:dev",
+    "prisma-studio": "npx prisma studio --schema=apps/server/prisma/schema.prisma",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "docker:dev": "docker compose -f docker-compose.dev.yml -p reader-helper-dev up --build",
+    "docker:prod": "docker compose -f docker-compose.yml -p reader-helper-prod up --build",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7"
+  },
+  "lint-staged": {
+    "apps/client/**/*.{ts,tsx}": [
+      "npm exec --workspace=@reader-helper/client -- eslint --fix"
+    ]
+  }
 }

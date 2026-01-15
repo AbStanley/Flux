@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Card, CardContent } from "@/presentation/components/ui/card";
 import { useGameStore } from '../store/useGameStore';
@@ -7,7 +7,7 @@ import { Volume2 } from 'lucide-react';
 import { soundService } from '../../../../core/services/SoundService';
 import { useGameAudio } from './hooks/useGameAudio';
 
-export const MultipleChoiceGame: React.FC = () => {
+export function MultipleChoiceGame() {
     const { items, currentIndex, submitAnswer, nextItem, timeLeft, config } = useGameStore();
     const timerEnabled = config.timerEnabled;
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -18,14 +18,20 @@ export const MultipleChoiceGame: React.FC = () => {
     const currentItem = items[currentIndex];
 
     // Generate Options
-    const options = useMemo(() => {
-        if (!currentItem || items.length < 4) return [];
+    const [options, setOptions] = useState<string[]>([]);
+
+    // Generate Options
+    useEffect(() => {
+        if (!currentItem || items.length < 4) {
+            setOptions([]);
+            return;
+        }
 
         const correctAnswer = currentItem.answer;
         const pool = items.filter(i => i.id !== currentItem.id);
         const distractors = pool.sort(() => 0.5 - Math.random()).slice(0, 3).map(i => i.answer);
 
-        return [...distractors, correctAnswer].sort(() => 0.5 - Math.random());
+        setOptions([...distractors, correctAnswer].sort(() => 0.5 - Math.random()));
     }, [currentItem, items]);
 
     // Cleanup on unmount
@@ -53,6 +59,7 @@ export const MultipleChoiceGame: React.FC = () => {
     // Handle Timeout
     useEffect(() => {
         if (timerEnabled && timeLeft === 0 && !isProcessing) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsProcessing(true);
             soundService.playWrong();
 
@@ -64,6 +71,7 @@ export const MultipleChoiceGame: React.FC = () => {
 
     // Reset local state when item changes
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedOption(null);
         setIsProcessing(false);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);

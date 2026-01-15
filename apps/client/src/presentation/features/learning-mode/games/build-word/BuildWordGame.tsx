@@ -1,11 +1,10 @@
-import React from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Volume2 } from 'lucide-react';
 import { useBuildWordLogic } from './hooks/useBuildWordLogic';
 import { WordSlots } from './components/WordSlots';
 import { LetterPool } from './components/LetterPool';
 
-export const BuildWordGame: React.FC = () => {
+export function BuildWordGame() {
     const {
         currentItem,
         slots,

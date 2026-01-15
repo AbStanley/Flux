@@ -16,7 +16,7 @@ interface RichInfoPanelProps {
     onRegenerate: (id: string) => void;
     onClearAll: () => void;
 }
-export const RichInfoPanel: React.FC<RichInfoPanelProps> = ({ isOpen, tabs, activeTabId, onClose, onTabChange, onCloseTab, onRegenerate, onClearAll }) => {
+export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange, onCloseTab, onRegenerate, onClearAll }: RichInfoPanelProps) {
     if (!isOpen) return null;
 
     return (

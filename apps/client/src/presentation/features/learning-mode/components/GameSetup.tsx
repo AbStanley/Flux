@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Switch } from "@/presentation/components/ui/switch";
 import { Label } from "@/presentation/components/ui/label";
@@ -10,7 +9,7 @@ import { useGameStore } from '../store/useGameStore';
 import { DbSetup } from './setup/DbSetup';
 import { AnkiSetup } from './setup/AnkiSetup';
 
-export const GameSetup: React.FC = () => {
+export function GameSetup() {
     const { config, updateConfig, startGame, error } = useGameStore();
 
     return (

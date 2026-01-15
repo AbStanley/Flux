@@ -5,14 +5,14 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class WordsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(createWordDto: CreateWordDto) {
     // For now, use a default user since we don't have auth yet
     let user = await this.prisma.user.findFirst();
     if (!user) {
       user = await this.prisma.user.create({
-        data: { email: 'default@local.com' }
+        data: { email: 'default@local.com' },
       });
     }
 
@@ -27,11 +27,11 @@ export class WordsService {
         text: sanitizedText,
         sourceLanguage: createWordDto.sourceLanguage,
         targetLanguage: createWordDto.targetLanguage,
-        userId: user.id
+        userId: user.id,
       },
       include: {
-        examples: true
-      }
+        examples: true,
+      },
     });
 
     if (existingWord) {
@@ -50,13 +50,15 @@ export class WordsService {
         pronunciation: createWordDto.pronunciation,
         type: createWordDto.type, // Map the type from DTO
         userId: user.id,
-        examples: createWordDto.examples ? {
-          create: createWordDto.examples
-        } : undefined
+        examples: createWordDto.examples
+          ? {
+              create: createWordDto.examples,
+            }
+          : undefined,
       },
       include: {
-        examples: true
-      }
+        examples: true,
+      },
     });
   }
 
@@ -68,7 +70,8 @@ export class WordsService {
     take?: number;
     type?: 'word' | 'phrase';
   }) {
-    const { sourceLanguage, targetLanguage, sort, skip, take, type } = query || {};
+    const { sourceLanguage, targetLanguage, sort, skip, take, type } =
+      query || {};
 
     const where = {
       sourceLanguage,
@@ -80,15 +83,18 @@ export class WordsService {
       this.prisma.word.count({ where }),
       this.prisma.word.findMany({
         where,
-        orderBy: sort === 'date_asc' ? { createdAt: 'asc' } :
-          sort === 'text_asc' ? { text: 'asc' } :
-            { createdAt: 'desc' },
+        orderBy:
+          sort === 'date_asc'
+            ? { createdAt: 'asc' }
+            : sort === 'text_asc'
+              ? { text: 'asc' }
+              : { createdAt: 'desc' },
         include: {
-          examples: true
+          examples: true,
         },
         skip,
         take,
-      })
+      }),
     ]);
 
     return { total, items };
@@ -98,8 +104,8 @@ export class WordsService {
     return this.prisma.word.findUnique({
       where: { id },
       include: {
-        examples: true
-      }
+        examples: true,
+      },
     });
   }
 
@@ -116,16 +122,21 @@ export class WordsService {
         where: { id },
         data: {
           ...wordData,
-          examples: examples && examples.length > 0 ? {
-            create: examples.map((ex: { sentence: string; translation?: string }) => ({
-              sentence: ex.sentence,
-              translation: ex.translation
-            }))
-          } : undefined
+          examples:
+            examples && examples.length > 0
+              ? {
+                  create: examples.map(
+                    (ex: { sentence: string; translation?: string }) => ({
+                      sentence: ex.sentence,
+                      translation: ex.translation,
+                    }),
+                  ),
+                }
+              : undefined,
         },
         include: {
-          examples: true
-        }
+          examples: true,
+        },
       });
     });
   }
