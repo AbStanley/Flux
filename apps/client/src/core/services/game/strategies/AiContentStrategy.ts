@@ -11,6 +11,11 @@ export class AiContentStrategy implements IContentStrategy {
             throw new Error("Topic is required for AI strategy.");
         }
 
+        // Set base URL if provided in config (for Docker/remote Ollama)
+        if (config.aiHost) {
+            ollamaService.setBaseUrl(config.aiHost);
+        }
+
         const topic = config.aiTopic;
         const level = config.aiLevel || 'intermediate';
         const sourceLang = config.language?.source || 'English';

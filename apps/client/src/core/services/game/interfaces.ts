@@ -45,6 +45,7 @@ export interface GameContentParams {
         // AI Specific
         aiTopic?: string;
         aiModel?: string;
+        aiHost?: string;
         aiLevel?: 'beginner' | 'intermediate' | 'advanced';
     };
 }

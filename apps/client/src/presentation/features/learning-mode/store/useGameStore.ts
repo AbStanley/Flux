@@ -14,6 +14,7 @@ export interface GameConfig {
     ankiDeckName?: string;
     ankiFieldSource?: string;
     ankiFieldTarget?: string;
+    ankiHost?: string;
     // AI Specific
     aiTopic?: string;
     aiModel?: string;
@@ -99,6 +100,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
                 // Pass AI config
                 aiTopic: config.aiTopic,
                 aiModel: config.aiModel,
+                aiHost: config.aiHost,
                 aiLevel: config.aiLevel
             }
         };

@@ -15,34 +15,52 @@ export function AnkiSetup() {
     const [ankiFields, setAnkiFields] = useState<string[]>([]);
     const [isLoadingAnki, setIsLoadingAnki] = useState(false);
     const [ankiError, setAnkiError] = useState<string | null>(null);
+    const [retryCount, setRetryCount] = useState(0);
+
+    // Apply stored host URL on mount
+    useEffect(() => {
+        if (config.ankiHost) {
+            ankiService.setBaseUrl(config.ankiHost);
+        }
+    }, [config.ankiHost]);
 
     // Fetch Decks
     useEffect(() => {
         const fetchDecks = async () => {
-            if (ankiDecks.length === 0) {
-                setIsLoadingAnki(true);
-                setAnkiError(null);
-                try {
-                    const deckNames = await ankiService.getDeckNames();
-                    setAnkiDecks(deckNames);
-                } catch {
-                    setAnkiError("Could not connect to Anki. Please ensure Anki is running with AnkiConnect installed.");
-                } finally {
-                    setIsLoadingAnki(false);
-                }
+            // Apply stored host URL before fetching (handles hydration timing)
+            if (config.ankiHost) {
+                ankiService.setBaseUrl(config.ankiHost);
+            }
+
+            setIsLoadingAnki(true);
+            setAnkiError(null);
+            try {
+                const deckNames = await ankiService.getDeckNames();
+                setAnkiDecks(deckNames);
+            } catch {
+                setAnkiError("Could not connect to Anki. Please ensure Anki is running with AnkiConnect installed.");
+            } finally {
+                setIsLoadingAnki(false);
             }
         };
         fetchDecks();
-    }, [ankiDecks.length]);
+    }, [retryCount, config.ankiHost]); // Re-fetch when retryCount or ankiHost changes
 
     // Fetch Fields when Deck Changes
     useEffect(() => {
         const fetchFields = async () => {
             if (config.ankiDeckName) {
+                // Apply host URL before fetch
+                if (config.ankiHost) {
+                    ankiService.setBaseUrl(config.ankiHost);
+                }
+
                 try {
-                    const ids = await ankiService.findCards(`deck:"${config.ankiDeckName}"`);
-                    if (ids.length > 0) {
-                        const info = await ankiService.getCardsInfo([ids[0]]); // Get first card
+                    // Use findNotes + notesInfo instead of findCards + cardsInfo
+                    // to avoid scheduler bug in Anki's Rust backend
+                    const noteIds = await ankiService.findNotes(`deck:"${config.ankiDeckName}"`);
+                    if (noteIds.length > 0) {
+                        const info = await ankiService.getNotesInfo([noteIds[0]]); // Get first note
                         if (info.length > 0) {
                             const fields = Object.keys(info[0].fields);
                             setAnkiFields(fields);
@@ -77,13 +95,40 @@ export function AnkiSetup() {
 
     if (ankiError) {
         return (
-            <div className="space-y-4 text-destructive animate-in fade-in slide-in-from-top-2">
-                <div className="p-4 border border-destructive/20 bg-destructive/10 rounded-lg flex items-start gap-4">
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                {/* URL Input - Always visible so users can change it */}
+                <div className="space-y-2">
+                    <Label>Anki Connect URL</Label>
+                    <input
+                        type="text"
+                        value={config.ankiHost || '/anki'}
+                        onChange={(e) => {
+                            updateConfig({ ankiHost: e.target.value });
+                            ankiService.setBaseUrl(e.target.value);
+                        }}
+                        placeholder="http://localhost:8765"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 font-mono text-xs"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        <strong>Docker users:</strong> Use <code>http://localhost:8765</code> to connect to Anki on your PC.
+                    </p>
+                </div>
+
+                <div className="p-4 border border-destructive/20 bg-destructive/10 rounded-lg flex items-start gap-4 text-destructive">
                     <div className="flex-1 space-y-1">
                         <p className="font-semibold text-lg flex items-center gap-2">Connection Failed</p>
                         <p className="text-sm opacity-90">{ankiError}</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => window.location.reload()} >Retry</Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                            setAnkiError(null);
+                            setRetryCount(c => c + 1);
+                        }}
+                    >
+                        Retry
+                    </Button>
                 </div>
                 <div className="p-4 rounded-lg bg-muted text-foreground text-sm space-y-2">
                     <p className="font-semibold">Troubleshooting:</p>
@@ -91,7 +136,11 @@ export function AnkiSetup() {
                         <li>Ensure <strong>Anki</strong> is open and running.</li>
                         <li>Ensure <strong>AnkiConnect</strong> add-on is installed (Code: 2055492159).</li>
                         <li>
-                            Go to Anki &rarr; Tools &rarr; Add-ons &rarr; AnkiConnect &rarr; Config and ensure <code>webBindAddress</code> is <code>"0.0.0.0"</code> or <code>"127.0.0.1"</code>.
+                            Go to Anki &rarr; Tools &rarr; Add-ons &rarr; AnkiConnect &rarr; Config:
+                            <ul className="list-disc list-inside ml-4 mt-1">
+                                <li>Set <code>webCorsOriginList</code> to <code>["*"]</code></li>
+                                <li>Set <code>webBindAddress</code> to <code>"0.0.0.0"</code></li>
+                            </ul>
                         </li>
                     </ul>
                 </div>
@@ -101,6 +150,24 @@ export function AnkiSetup() {
 
     return (
         <div className="grid gap-6 animate-in fade-in slide-in-from-top-2">
+            {/* Anki Host URL for Docker/Remote */}
+            <div className="space-y-2">
+                <Label>Anki Connect URL</Label>
+                <input
+                    type="text"
+                    value={config.ankiHost || '/anki'}
+                    onChange={(e) => {
+                        updateConfig({ ankiHost: e.target.value });
+                        ankiService.setBaseUrl(e.target.value);
+                    }}
+                    placeholder="/anki or http://192.168.1.x:8765"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 font-mono text-xs"
+                />
+                <p className="text-xs text-muted-foreground">
+                    For Docker: Use host IP (e.g., <code>http://192.168.1.x:8765</code>). Local: <code>/anki</code>
+                </p>
+            </div>
+
             <div className="space-y-2">
                 <Label>Select Deck</Label>
                 <Select

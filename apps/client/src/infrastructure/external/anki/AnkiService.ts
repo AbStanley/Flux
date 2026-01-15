@@ -13,11 +13,15 @@ export interface AnkiConnectResponse<T> {
 }
 
 export class AnkiService {
-    private readonly baseUrl: string = '/anki';
+    private baseUrl: string = '/anki';
     private readonly version = 6;
 
     constructor(customUrl?: string) {
         if (customUrl) this.baseUrl = customUrl;
+    }
+
+    setBaseUrl(url: string) {
+        if (url) this.baseUrl = url;
     }
 
     /**
@@ -26,8 +30,10 @@ export class AnkiService {
     private async invoke<T>(action: string, params: Record<string, unknown> = {}): Promise<T> {
         const response = await fetch(this.baseUrl, {
             method: 'POST',
+            // Use text/plain to avoid CORS preflight (OPTIONS request)
+            // AnkiConnect accepts JSON regardless of Content-Type header
             headers: {
-                'Content-Type': 'application/json' // AnkiConnect might be picky, usually generic fetch works
+                'Content-Type': 'text/plain'
             },
             body: JSON.stringify({
                 action,
@@ -98,6 +104,20 @@ export class AnkiService {
     }
 
     /**
+     * Find notes by query (e.g., "deck:MyDeck")
+     */
+    async findNotes(query: string): Promise<number[]> {
+        return this.invoke<number[]>('findNotes', { query });
+    }
+
+    /**
+     * Get specific info for a list of notes (avoids scheduler bug in cardsInfo)
+     */
+    async getNotesInfo(notes: number[]): Promise<AnkiNoteInfo[]> {
+        return this.invoke<AnkiNoteInfo[]>('notesInfo', { notes });
+    }
+
+    /**
      * Submit answers for cards to update their schedule.
      * ease: 1=Again, 3=Good (We'll simplify to these two common ones for now, or maybe 4=Easy)
      */
@@ -118,6 +138,13 @@ export interface AnkiCardInfo {
     deckName: string;
     css: string;
     // ... other fields as needed
+}
+
+export interface AnkiNoteInfo {
+    noteId: number;
+    modelName: string;
+    fields: Record<string, { value: string; order: number }>;
+    tags: string[];
 }
 
 export const ankiService = new AnkiService();
