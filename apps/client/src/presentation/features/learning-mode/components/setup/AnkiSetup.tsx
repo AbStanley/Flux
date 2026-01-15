@@ -82,7 +82,7 @@ export function AnkiSetup() {
             }
         };
         fetchFields();
-    }, [config.ankiDeckName, config.ankiFieldSource, config.ankiFieldTarget, updateConfig]);
+    }, [config.ankiDeckName, config.ankiFieldSource, config.ankiFieldTarget, config.ankiHost, updateConfig]);
 
     const swapAnkiConfig = () => {
         updateConfig({
