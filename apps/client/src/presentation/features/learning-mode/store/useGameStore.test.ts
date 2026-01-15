@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { useGameStore } from './useGameStore';
 import { gameContentService } from '../../../../core/services/game/GameContentService';
 import type { GameItem } from '../../../../core/services/game/interfaces';
