@@ -15,6 +15,11 @@ export const AiSetup = () => {
     const [isManualInput, setIsManualInput] = useState(false);
 
     const fetchModels = useCallback(async () => {
+        // Apply stored host URL before fetching (handles hydration timing)
+        if (config.aiHost) {
+            ollamaService.setBaseUrl(config.aiHost);
+        }
+
         setLoading(true);
         setError(null);
         try {
@@ -40,11 +45,12 @@ export const AiSetup = () => {
         } finally {
             setLoading(false);
         }
-    }, [config.aiModel, updateConfig]);
+    }, [config.aiModel, config.aiHost, updateConfig]);
 
+    // Re-fetch models when component mounts or when aiHost changes
     useEffect(() => {
         fetchModels();
-    }, [fetchModels]);
+    }, [fetchModels, config.aiHost]);
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
