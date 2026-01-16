@@ -13,11 +13,43 @@ export type ReaderFont =
 
 export type FontSize = 'small' | 'medium' | 'large' | 'xl';
 
+export interface CustomTheme {
+    id: string; // 'custom-<uuid>'
+    name: string;
+    colors: {
+        background: string;
+        foreground: string;
+        card: string;
+        'card-foreground': string;
+        popover: string;
+        'popover-foreground': string;
+        primary: string;
+        'primary-foreground': string;
+        secondary: string;
+        'secondary-foreground': string;
+        muted: string;
+        'muted-foreground': string;
+        accent: string;
+        'accent-foreground': string;
+        destructive: string;
+        'destructive-foreground': string;
+        border: string;
+        input: string;
+        'input-background': string;
+        'reader-textarea-bg': string;
+        ring: string;
+    };
+}
+
 interface SettingsState {
     font: ReaderFont;
     fontSize: FontSize;
+    customThemes: CustomTheme[];
     setFont: (font: ReaderFont) => void;
     setFontSize: (size: FontSize) => void;
+    addCustomTheme: (theme: CustomTheme) => void;
+    removeCustomTheme: (id: string) => void;
+    updateCustomTheme: (theme: CustomTheme) => void;
 }
 
 export const FONT_FAMILY_MAP: Record<ReaderFont, string> = {
@@ -43,8 +75,14 @@ export const useSettingsStore = create<SettingsState>()(
         (set) => ({
             font: 'system',
             fontSize: 'medium',
+            customThemes: [],
             setFont: (font) => set({ font }),
             setFontSize: (fontSize) => set({ fontSize }),
+            addCustomTheme: (theme) => set((state) => ({ customThemes: [...state.customThemes, theme] })),
+            removeCustomTheme: (id) => set((state) => ({ customThemes: state.customThemes.filter((t) => t.id !== id) })),
+            updateCustomTheme: (theme) => set((state) => ({
+                customThemes: state.customThemes.map((t) => (t.id === theme.id ? theme : t)),
+            })),
         }),
         { name: 'flux-reader-settings' }
     )

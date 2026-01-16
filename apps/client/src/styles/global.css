@@ -147,6 +147,8 @@
 
     --border: 220 12% 25%;
     --input: 220 12% 22%;
+    --input-background: 220 12% 22%;
+    /* Lighter than card (16%) */
     --ring: 200 80% 65%;
 
     --chart-1: 200 80% 65%;
@@ -183,6 +185,8 @@
     --secondary: 40 60% 96%;
     /* Much lighter for visible dropdowns */
     --secondary-foreground: 30 25% 18%;
+
+    --input-background: 220 60% 60%;
 
     --muted: 42 35% 85%;
     --muted-foreground: 30 20% 42%;

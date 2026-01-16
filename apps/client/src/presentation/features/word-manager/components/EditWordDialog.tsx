@@ -36,7 +36,7 @@ export function EditWordDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col" aria-describedby={undefined}>
                 <DialogHeader>
                     <DialogTitle>{initialData ? 'Edit Word' : 'Add New Word'}</DialogTitle>
                 </DialogHeader>

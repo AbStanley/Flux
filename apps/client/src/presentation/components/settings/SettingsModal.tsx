@@ -1,4 +1,5 @@
-import { Settings } from 'lucide-react';
+import { useState } from 'react';
+import { Settings, Plus, Pencil, Trash2 } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -15,7 +16,9 @@ import {
     FONT_SIZE_MAP,
     type ReaderFont,
     type FontSize,
+    type CustomTheme
 } from '@/presentation/features/settings/store/useSettingsStore';
+import { ThemeBuilder } from './ThemeBuilder';
 
 const THEMES: { value: Theme; label: string; preview: string }[] = [
     { value: 'light', label: 'Light', preview: 'bg-blue-50 text-slate-700' },
@@ -45,41 +48,92 @@ const SIZES: { value: FontSize; label: string }[] = [
 
 export function SettingsModal() {
     const { theme, setTheme } = useTheme();
-    const { font, fontSize, setFont, setFontSize } = useSettingsStore();
+    const { font, fontSize, setFont, setFontSize, customThemes, removeCustomTheme } = useSettingsStore();
+
+    const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+    const [editingThemeId, setEditingThemeId] = useState<string | null>(null);
+
+    const handleEditTheme = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingThemeId(id);
+        setIsBuilderOpen(true);
+    };
+
+    const handleDeleteTheme = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (confirm('Are you sure you want to delete this theme?')) {
+            removeCustomTheme(id);
+            if (theme === id) setTheme('light');
+        }
+    };
+
+    const handleCreateTheme = () => {
+        setEditingThemeId(null);
+        setIsBuilderOpen(true);
+    };
 
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full w-10 h-10 bg-background/50 hover:bg-background/80 backdrop-blur-sm border border-border/50"
-                >
-                    <Settings className="h-5 w-5" />
-                    <span className="sr-only">Settings</span>
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Reader Settings</DialogTitle>
-                </DialogHeader>
+        <>
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full w-10 h-10 bg-background/50 hover:bg-background/80 backdrop-blur-sm border border-border/50"
+                    >
+                        <Settings className="h-5 w-5" />
+                        <span className="sr-only">Settings</span>
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
+                    <DialogHeader>
+                        <DialogTitle>Reader Settings</DialogTitle>
+                    </DialogHeader>
 
-                <div className="space-y-6">
-                    {/* Theme Selection */}
-                    <ThemeSection theme={theme} setTheme={setTheme} />
+                    <div className="space-y-6">
+                        {/* Theme Selection */}
+                        <ThemeSection
+                            theme={theme}
+                            setTheme={setTheme}
+                            customThemes={customThemes}
+                            onEdit={handleEditTheme}
+                            onDelete={handleDeleteTheme}
+                            onCreate={handleCreateTheme}
+                        />
 
-                    {/* Font Selection */}
-                    <FontSection font={font} setFont={setFont} />
+                        {/* Font Selection */}
+                        <FontSection font={font} setFont={setFont} />
 
-                    {/* Font Size Selection */}
-                    <SizeSection fontSize={fontSize} setFontSize={setFontSize} />
-                </div>
-            </DialogContent>
-        </Dialog>
+                        {/* Font Size Selection */}
+                        <SizeSection fontSize={fontSize} setFontSize={setFontSize} />
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <ThemeBuilder
+                isOpen={isBuilderOpen}
+                onClose={() => setIsBuilderOpen(false)}
+                editThemeId={editingThemeId}
+            />
+        </>
     );
 }
 
-function ThemeSection({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
+function ThemeSection({
+    theme,
+    setTheme,
+    customThemes,
+    onEdit,
+    onDelete,
+    onCreate
+}: {
+    theme: Theme;
+    setTheme: (t: Theme) => void;
+    customThemes: CustomTheme[];
+    onEdit: (id: string, e: React.MouseEvent) => void;
+    onDelete: (id: string, e: React.MouseEvent) => void;
+    onCreate: () => void;
+}) {
     return (
         <div>
             <h3 className="text-sm font-medium mb-3">Theme</h3>
@@ -94,9 +148,56 @@ function ThemeSection({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) 
                             }`}
                     >
                         <div className={`w-8 h-8 rounded-full ${t.preview} border`} />
-                        <span className="text-xs">{t.label}</span>
+                        <span className="text-xs truncate max-w-full">{t.label}</span>
                     </button>
                 ))}
+
+                {customThemes.map((t) => (
+                    <button
+                        key={t.id}
+                        onClick={() => setTheme(t.id)}
+                        className={`relative group flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${theme === t.id
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border hover:border-primary/50'
+                            }`}
+                    >
+                        <div
+                            className="w-8 h-8 rounded-full border"
+                            style={{ background: `hsl(${t.colors.background})`, borderColor: `hsl(${t.colors.border})` }}
+                        />
+                        <span className="text-xs truncate max-w-full w-full text-center" title={t.name}>{t.name}</span>
+
+                        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded shadow-sm">
+                            <span
+                                role="button"
+                                onClick={(e) => onEdit(t.id, e)}
+                                className="p-1 hover:text-primary cursor-pointer"
+                                title="Edit"
+                            >
+                                <Pencil className="w-3 h-3" />
+                            </span>
+                            <span
+                                role="button"
+                                onClick={(e) => onDelete(t.id, e)}
+                                className="p-1 hover:text-destructive cursor-pointer"
+                                title="Delete"
+                            >
+                                <Trash2 className="w-3 h-3" />
+                            </span>
+                        </div>
+                    </button>
+                ))}
+
+                <button
+                    onClick={onCreate}
+                    className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary"
+                    title="Create custom theme"
+                >
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center border border-dashed">
+                        <Plus className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs">New</span>
+                </button>
             </div>
         </div>
     );
