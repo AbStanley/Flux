@@ -23,9 +23,9 @@ import { ThemeBuilder } from './ThemeBuilder';
 const THEMES: { value: Theme; label: string; preview: string }[] = [
     { value: 'light', label: 'Light', preview: 'bg-blue-50 text-slate-700' },
     { value: 'dark', label: 'Dark', preview: 'bg-slate-800 text-white' },
-    { value: 'midnight', label: 'Midnight', preview: 'bg-slate-900 text-sky-400' },
+    { value: 'nordic', label: 'Nordic', preview: 'bg-slate-900 text-sky-400' },
     { value: 'cream', label: 'Cream', preview: 'bg-amber-100 text-amber-900' },
-    { value: 'sunset', label: 'Sunset', preview: 'bg-amber-50 text-sky-900' },
+    { value: 'sunset', label: 'Sunset', preview: 'bg-orange-200 text-orange-950' },
 ];
 
 const FONTS: { value: ReaderFont; label: string }[] = [
