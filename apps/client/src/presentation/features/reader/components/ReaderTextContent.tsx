@@ -7,6 +7,7 @@ import { useTranslationStore } from '../store/useTranslationStore';
 import { useAudioStore } from '../store/useAudioStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { useHighlighting } from '../hooks/useHighlighting';
+import { useSettingsStore, FONT_FAMILY_MAP, FONT_SIZE_MAP } from '../../settings/store/useSettingsStore';
 
 import { SelectionMode } from '../../../../core/types';
 
@@ -54,6 +55,10 @@ const ReaderTextContentComponent = ({
 
     // Actions
     const { handleHover, clearHover } = useTranslation();
+
+    // Reader Settings
+    const font = useSettingsStore(s => s.font);
+    const fontSize = useSettingsStore(s => s.fontSize);
 
     // Highlighting Logic (Local to this component now)
     const highlightIndices = useHighlighting(tokens, groups);
@@ -105,6 +110,10 @@ const ReaderTextContentComponent = ({
         <div
             ref={textAreaRef}
             className={styles.textArea}
+            style={{
+                fontFamily: FONT_FAMILY_MAP[font],
+                fontSize: FONT_SIZE_MAP[fontSize],
+            }}
         >
             {paginatedTokens.map((token, index) => {
                 const globalIndex = (currentPage - 1) * PAGE_SIZE + index;

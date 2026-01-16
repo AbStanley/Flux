@@ -69,7 +69,7 @@ export function WordManager() {
         <div className="p-6 max-w-6xl mx-auto space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent dark:from-slate-100 dark:to-slate-400">
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground">
                         Vocabulary Manager
                     </h2>
                     <p className="text-muted-foreground mt-1">Manage your personal collection of words and phrases.</p>
@@ -100,10 +100,11 @@ export function WordManager() {
                 {/* Words Section */}
                 <section className="space-y-4">
                     <div className="flex items-center gap-2 border-b pb-2">
-                        <h3 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-200">
+                        <h3 className="text-xl font-semibold tracking-tight text-foreground">
                             Words
                         </h3>
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
                             {wordsState.total}
                         </span>
                     </div>
@@ -137,10 +138,10 @@ export function WordManager() {
                 {/* Phrases Section */}
                 <section className="space-y-4">
                     <div className="flex items-center gap-2 border-b pb-2">
-                        <h3 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-200">
+                        <h3 className="text-xl font-semibold tracking-tight text-foreground">
                             Phrases
                         </h3>
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
                             {phrasesState.total}
                         </span>
                     </div>

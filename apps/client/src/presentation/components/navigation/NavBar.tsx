@@ -2,7 +2,7 @@ import { BookOpen, Dices, Library } from 'lucide-react';
 import { useViewStore } from '../../features/navigation/store/useViewStore';
 import { AppView } from '../../features/navigation/types';
 import { Button } from '../ui/button';
-import { ModeToggle } from '../ui/mode-toggle';
+import { SettingsModal } from '../settings/SettingsModal';
 
 export function NavBar() {
     const { currentView, setView } = useViewStore();
@@ -43,7 +43,7 @@ export function NavBar() {
                 </div>
             </div>
 
-            <ModeToggle />
+            <SettingsModal />
         </nav>
     );
 }

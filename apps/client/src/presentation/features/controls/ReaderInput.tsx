@@ -21,7 +21,7 @@ export function ReaderInput({
         <div className={cn("relative")}>
             <Textarea
                 placeholder="Paste text here, or generate..."
-                className={cn("min-h-[100px] font-mono text-base shadow-sm resize-none focus-visible:ring-primary bg-secondary/30 border-border/50",
+                className={cn("min-h-[100px] font-mono text-base shadow-sm resize-none focus-visible:ring-primary bg-[var(--reader-textarea-bg)] border-border/50",
                     isGenerating && "overflow-hidden select-none"
                 )}
                 value={text}
