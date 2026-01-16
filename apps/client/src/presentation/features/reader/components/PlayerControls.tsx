@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { Button } from "../../../components/ui/button";
 import { ChevronsUp, ChevronsDown } from "lucide-react";
+import { SettingsModal } from "../../../components/settings/SettingsModal";
 import { useAudioStore } from '../store/useAudioStore';
 import { useReaderStore } from '../store/useReaderStore';
 import { useTranslation } from '../hooks/useTranslation';
@@ -12,6 +13,21 @@ import { ReaderSettings, TranslationSettings } from './controls/ReaderSettings';
 
 interface PlayerControlsProps {
     vertical?: boolean;
+}
+
+// Collapse/Expand button component for consistent positioning
+function CollapseExpandButton({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: () => void }) {
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0 absolute top-3 right-2 z-10"
+            onClick={onToggle}
+            title={isCollapsed ? "Expand Player" : "Collapse Player"}
+        >
+            {isCollapsed ? <ChevronsDown className="h-4 w-4" /> : <ChevronsUp className="h-4 w-4" />}
+        </Button>
+    );
 }
 
 export function PlayerControls({ vertical = false }: PlayerControlsProps) {
@@ -74,19 +90,11 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
 
     if (isCollapsed) {
         return (
-            <div className={`p-2 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-2 items-center ${vertical
-                ? 'flex-col border rounded-xl shadow-sm w-16'
-                : 'border-b w-full justify-between'
+            <div className={`relative p-2 pr-12 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-2 items-center ${vertical
+                ? 'flex-col border rounded-xl shadow-sm w-16 pr-2 pt-12'
+                : 'border-b w-full justify-start'
                 }`}>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setIsCollapsed(false)}
-                    title="Expand Player"
-                >
-                    <ChevronsDown className="h-4 w-4" />
-                </Button>
+                <CollapseExpandButton isCollapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
 
                 <PlaybackControls
                     isPlaying={isPlaying}
@@ -103,15 +111,34 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                     onSeek={seek}
                     vertical={vertical}
                 />
+
+                <div className="h-6 w-px bg-border/50 mx-1" />
+
+                {/* Translation Controls - always visible */}
+                <TranslationSettings
+                    showTranslations={showTranslations}
+                    onToggleTranslations={toggleShowTranslations}
+                    onClearTranslations={() => {
+                        clearSelectionTranslations();
+                        clearSelection();
+                    }}
+                />
+
+                <div className="h-6 w-px bg-border/50 mx-1" />
+
+                {/* Settings Button */}
+                <SettingsModal />
             </div>
         );
     }
 
     return (
-        <div className={`w-full p-2 md:p-4 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-4 ${vertical
+        <div className={`relative w-full p-2 md:p-4 pr-12 md:pr-14 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-4 ${vertical
             ? 'flex-col border rounded-xl shadow-sm'
             : 'flex-col border-b'
             }`}>
+            <CollapseExpandButton isCollapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
+
             <div className={`flex gap-4 items-center justify-between w-full ${vertical ? 'flex-col items-stretch' : 'flex-col md:flex-row'}`}>
                 <div className={`flex items-center gap-2 ${vertical ? 'justify-between' : ''}`}>
 
@@ -147,17 +174,6 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                         onRateChange={setRate}
                         vertical={vertical}
                     />
-
-                    {/* Collapse Button - Relative Row */}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
-                        onClick={() => setIsCollapsed(true)}
-                        title="Collapse Player"
-                    >
-                        <ChevronsUp className="h-4 w-4" />
-                    </Button>
                 </div>
             </div>
 
