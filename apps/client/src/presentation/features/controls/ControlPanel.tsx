@@ -62,11 +62,11 @@ export function ControlPanel() {
             <CardHeader className={cn("space-y-2 p-4")}>
                 <div className={cn("flex flex-col sm:flex-row gap-2 pb-2 border-b border-border/40 items-center sm:items-end justify-center")}>
                     <LanguageSelect
-                        label="Source Language"
+                        label="Foreign Language 🌍"
                         value={sourceLang}
                         onChange={setSourceLang}
                         options={SOURCE_LANGUAGES}
-                        placeholder="Select Source"
+                        placeholder="Select Foreign"
                         className="w-full sm:w-[200px]"
                         disabled={isGenerating}
                     />
@@ -83,11 +83,11 @@ export function ControlPanel() {
                     </Button>
 
                     <LanguageSelect
-                        label="Target Language"
+                        label="Native Language 🏠"
                         value={targetLang}
                         onChange={setTargetLang}
                         options={TARGET_LANGUAGES}
-                        placeholder="Select Target"
+                        placeholder="Select Native"
                         className="w-full sm:w-[200px]"
                         disabled={isGenerating}
                     />

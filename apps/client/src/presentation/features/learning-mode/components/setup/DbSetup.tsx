@@ -91,7 +91,7 @@ export function DbSetup() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end animate-in fade-in slide-in-from-top-2">
             <LanguageSelector
-                label="Source Language (Question)"
+                label="Foreign Language 🌍"
                 value={config.sourceLang}
                 onChange={(val) => {
                     updateConfig({ sourceLang: val });
@@ -121,7 +121,7 @@ export function DbSetup() {
             </div>
 
             <LanguageSelector
-                label="Target Language (Answer)"
+                label="Native Language 🏠"
                 value={config.targetLang}
                 onChange={(val) => {
                     updateConfig({ targetLang: val });

@@ -219,7 +219,7 @@ export function AnkiSetup() {
                         </div>
 
                         <LanguageSelector
-                            label="Front Language"
+                            label="Foreign Language 🌍"
                             value={config.sourceLang}
                             onChange={(val) => updateConfig({ sourceLang: val })}
                         />
@@ -244,7 +244,7 @@ export function AnkiSetup() {
                         </div>
 
                         <LanguageSelector
-                            label="Back Language"
+                            label="Native Language 🏠"
                             value={config.targetLang}
                             onChange={(val) => updateConfig({ targetLang: val })}
                         />
