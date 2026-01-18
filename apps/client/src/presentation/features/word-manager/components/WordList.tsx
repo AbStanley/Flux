@@ -7,7 +7,8 @@ import {
     TableRow,
 } from '../../../components/ui/table';
 import { Button } from '../../../components/ui/button';
-import { Edit, Trash2, BookOpen, Globe, Quote } from 'lucide-react';
+import { Edit, Trash2, BookOpen, Globe, Quote, Volume2 } from 'lucide-react';
+import { getLanguageCode } from '../utils/languageUtils';
 import { Badge } from '../../../components/ui/badge';
 import { ScrollArea } from '../../../components/ui/scroll-area';
 
@@ -19,6 +20,19 @@ interface WordListProps {
 }
 
 export function WordList({ words, onEdit, onDelete, emptyMessage = "No items found." }: WordListProps) {
+    const handlePlayAudio = (e: React.MouseEvent, text: string, language?: string) => {
+        e.stopPropagation();
+
+        // Cancel any current speech
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = getLanguageCode(language);
+        utterance.rate = 0.9; // Slightly slower for better clarity
+
+        window.speechSynthesis.speak(utterance);
+    };
+
     return (
         <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden transition-all hover:shadow-md">
             {/* Desktop View */}
@@ -26,6 +40,7 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                 <table className="w-full caption-bottom text-sm">
                     <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-md shadow-sm">
                         <TableRow>
+                            <TableHead className="w-[50px] text-center">Audio</TableHead>
                             <TableHead className="w-[200px] pl-6">Entry</TableHead>
                             <TableHead className="w-[300px]">Definition</TableHead>
                             <TableHead className="w-[150px]">Translation</TableHead>
@@ -36,13 +51,24 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                     <TableBody>
                         {words.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-32 text-center text-muted-foreground italic">
+                                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic">
                                     {emptyMessage}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             words.map((word) => (
                                 <TableRow key={word.id} className="group hover:bg-muted/30 transition-colors">
+                                    <TableCell className="align-top py-4 text-center">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-full text-slate-500 hover:text-primary hover:bg-primary/10"
+                                            onClick={(e) => handlePlayAudio(e, word.text, word.sourceLanguage || word.targetLanguage)}
+                                            title="Listen"
+                                        >
+                                            <Volume2 className="w-4 h-4" />
+                                        </Button>
+                                    </TableCell>
                                     <TableCell className="font-semibold text-base py-4 pl-6 align-top">
                                         <div className="flex flex-col gap-1">
                                             <span className="group-hover:text-primary transition-colors">{word.text}</span>
@@ -141,6 +167,14 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                                     )}
                                 </div>
                                 <div className="flex gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-slate-500"
+                                        onClick={(e) => handlePlayAudio(e, word.text, word.sourceLanguage || word.targetLanguage)}
+                                    >
+                                        <Volume2 className="h-4 w-4" />
+                                    </Button>
                                     <Button
                                         variant="ghost"
                                         size="icon"
