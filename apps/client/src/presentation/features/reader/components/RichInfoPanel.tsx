@@ -3,8 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { Button } from "../../../components/ui/button";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, Edit } from "lucide-react";
 import type { RichDetailsTab } from '../store/useTranslationStore';
+import { useState } from 'react';
+import { EditWordDialog } from '../../word-manager/components/EditWordDialog';
+import { useWordsStore } from '../../word-manager/store/useWordsStore';
+import { type CreateWordRequest } from '../../../../infrastructure/api/words';
 
 interface RichInfoPanelProps {
     isOpen: boolean;
@@ -16,8 +20,40 @@ interface RichInfoPanelProps {
     onRegenerate: (id: string) => void;
     onClearAll: () => void;
 }
+
 export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange, onCloseTab, onRegenerate, onClearAll }: RichInfoPanelProps) {
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const { wordsState, phrasesState, addWord, updateWord } = useWordsStore();
+
     if (!isOpen) return null;
+
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    const existingWord = activeTab ? [...wordsState.items, ...phrasesState.items].find(w => w.text.toLowerCase() === activeTab.text.toLowerCase()) : undefined;
+
+    const handleSave = async (data: CreateWordRequest) => {
+        if (existingWord) {
+            await updateWord(existingWord.id, data);
+        } else {
+            await addWord(data);
+        }
+        setIsEditDialogOpen(false);
+    };
+
+    const getDefaultValues = (): Partial<CreateWordRequest> | undefined => {
+        if (!activeTab?.data) return undefined;
+        const { data } = activeTab;
+        return {
+            text: activeTab.text,
+            definition: data.translation,
+            context: activeTab.context,
+            sourceLanguage: activeTab.sourceLang,
+            targetLanguage: activeTab.targetLang,
+            examples: data.examples?.map(ex => ({
+                sentence: ex.sentence,
+                translation: ex.translation
+            })) || []
+        };
+    };
 
     return (
         <Card className="fixed bottom-0 right-0 z-50 h-[60vh] w-full border-t shadow-2xl flex flex-col rounded-t-xl glass bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-bottom duration-300 min-[1200px]:static min-[1200px]:h-full min-[1200px]:w-full min-[1200px]:border min-[1200px]:shadow-sm min-[1200px]:rounded-xl min-[1200px]:z-0 min-[1200px]:bg-transparent min-[1200px]:backdrop-blur-none min-[1200px]:mt-4">
@@ -67,6 +103,15 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
                             <Button
                                 variant="ghost"
                                 size="icon"
+                                onClick={() => setIsEditDialogOpen(true)}
+                                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                                title={existingWord ? "Edit Saved Word" : "Save to Words"}
+                            >
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={onClearAll}
                                 className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive transition-colors"
                                 title="Close All Tabs"
@@ -102,6 +147,14 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
                     )}
                 </ScrollArea>
             </CardContent>
+
+            <EditWordDialog
+                isOpen={isEditDialogOpen}
+                onClose={() => setIsEditDialogOpen(false)}
+                onSubmit={handleSave}
+                initialData={existingWord}
+                defaultValues={existingWord ? undefined : getDefaultValues()}
+            />
         </Card>
     );
 };

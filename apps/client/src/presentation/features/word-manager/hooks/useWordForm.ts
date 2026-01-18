@@ -14,12 +14,13 @@ const DEFAULT_FORM_STATE: CreateWordRequest = {
 
 interface UseWordFormProps {
     initialData?: Word;
+    defaultValues?: Partial<CreateWordRequest>;
     onSubmit: (data: CreateWordRequest) => Promise<void>;
     onClose: () => void;
     isOpen: boolean;
 }
 
-export const useWordForm = ({ initialData, onSubmit, onClose, isOpen }: UseWordFormProps) => {
+export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isOpen }: UseWordFormProps) => {
     const [formData, setFormData] = useState<CreateWordRequest>(DEFAULT_FORM_STATE);
     const [isLoading, setIsLoading] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -43,11 +44,13 @@ export const useWordForm = ({ initialData, onSubmit, onClose, isOpen }: UseWordF
                         translation: ex.translation || ''
                     })) || []
                 });
+            } else if (defaultValues) {
+                setFormData({ ...DEFAULT_FORM_STATE, ...defaultValues });
             } else {
                 setFormData(DEFAULT_FORM_STATE);
             }
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, defaultValues]);
 
     const handleChange = (field: keyof CreateWordRequest, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));

@@ -109,8 +109,8 @@ IF IT IS A *SINGLE WORD*:
    - If it's NOT a verb, OMIT "conjugations".
    - OMIT "grammar" object usually used for single words (Part of Speech, etc) unless relevant to the *whole* sentence structure.
 
-3. Provide 2-3 usage examples with translations.
-4. Provide 1-2 common alternatives.
+3. Provide 3 usage examples of the foreign language WITH translations in the native language.
+4. Provide 1-2 common alternatives in the foreign language WITH translations in the native language.
 
 Output Format: JSON ONLY.
 Structure:

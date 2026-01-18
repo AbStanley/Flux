@@ -4,7 +4,7 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
 import { type CreateWordRequest, type Word } from '../../../../infrastructure/api/words';
-import { ScrollArea } from '../../../components/ui/scroll-area';
+
 import { useWordForm } from '../hooks/useWordForm';
 import { WordExamplesSection } from './WordExamplesSection';
 
@@ -13,13 +13,15 @@ interface EditWordDialogProps {
     onClose: () => void;
     onSubmit: (data: CreateWordRequest) => Promise<void>;
     initialData?: Word;
+    defaultValues?: Partial<CreateWordRequest>;
 }
 
 export function EditWordDialog({
     isOpen,
     onClose,
     onSubmit,
-    initialData
+    initialData,
+    defaultValues
 }: EditWordDialogProps) {
     const {
         formData,
@@ -32,7 +34,7 @@ export function EditWordDialog({
         handleRemoveExample,
         handleGenerateExamples,
         handleSubmit
-    } = useWordForm({ initialData, onSubmit, onClose, isOpen });
+    } = useWordForm({ initialData, defaultValues, onSubmit, onClose, isOpen });
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -41,7 +43,7 @@ export function EditWordDialog({
                     <DialogTitle>{initialData ? 'Edit Word' : 'Add New Word'}</DialogTitle>
                 </DialogHeader>
 
-                <ScrollArea className="flex-1 pr-4">
+                <div className="flex-1 overflow-y-auto pr-4">
                     <form onSubmit={handleSubmit} className="space-y-4 p-1">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -122,7 +124,7 @@ export function EditWordDialog({
                             </Button>
                         </div>
                     </form>
-                </ScrollArea>
+                </div>
             </DialogContent>
         </Dialog>
     );
