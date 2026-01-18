@@ -4,6 +4,7 @@ export interface Word {
     id: string;
     text: string;
     definition?: string;
+    explanation?: string;
     context?: string;
     sourceLanguage?: string;
     targetLanguage?: string;
@@ -24,6 +25,7 @@ export interface Example {
 export interface CreateWordRequest {
     text: string;
     definition?: string;
+    explanation?: string;
     context?: string;
     sourceLanguage?: string;
     targetLanguage?: string;

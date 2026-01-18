@@ -45,6 +45,7 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
         return {
             text: activeTab.text,
             definition: data.translation,
+            explanation: data.grammar?.explanation,
             context: activeTab.context,
             sourceLanguage: activeTab.sourceLang,
             targetLanguage: activeTab.targetLang,

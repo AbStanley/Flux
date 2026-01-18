@@ -138,7 +138,9 @@ Structure:
   "grammarRules": ["Rule 1...", "Rule 2..."],
 
   "examples": [
-  "alternatives": ["Alternative 1", "Alternative 2"]
+    { "sentence": "Foreign language sentence", "translation": "Native language translation" }
+  ],
+  "alternatives": ["Alternative 1 (Translation)", "Alternative 2 (Translation)"]
 }
 `;
 };

@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class WordsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createWordDto: CreateWordDto) {
     // For now, use a default user since we don't have auth yet
@@ -42,6 +42,7 @@ export class WordsService {
       data: {
         text: sanitizedText,
         definition: createWordDto.definition,
+        explanation: createWordDto.explanation,
         context: createWordDto.context,
         sourceLanguage: createWordDto.sourceLanguage,
         targetLanguage: createWordDto.targetLanguage,
@@ -52,8 +53,8 @@ export class WordsService {
         userId: user.id,
         examples: createWordDto.examples
           ? {
-              create: createWordDto.examples,
-            }
+            create: createWordDto.examples,
+          }
           : undefined,
       },
       include: {
@@ -125,13 +126,13 @@ export class WordsService {
           examples:
             examples && examples.length > 0
               ? {
-                  create: examples.map(
-                    (ex: { sentence: string; translation?: string }) => ({
-                      sentence: ex.sentence,
-                      translation: ex.translation,
-                    }),
-                  ),
-                }
+                create: examples.map(
+                  (ex: { sentence: string; translation?: string }) => ({
+                    sentence: ex.sentence,
+                    translation: ex.translation,
+                  }),
+                ),
+              }
               : undefined,
         },
         include: {

@@ -5,6 +5,7 @@ import { ollamaApi } from '../../../../infrastructure/api/ollama';
 const DEFAULT_FORM_STATE: CreateWordRequest = {
     text: '',
     definition: '',
+    explanation: '',
     context: '',
     imageUrl: '',
     pronunciation: '',
@@ -33,6 +34,7 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
                 setFormData({
                     text: initialData.text,
                     definition: initialData.definition || '',
+                    explanation: initialData.explanation || '',
                     context: initialData.context || '',
                     imageUrl: initialData.imageUrl || '',
                     pronunciation: initialData.pronunciation || '',

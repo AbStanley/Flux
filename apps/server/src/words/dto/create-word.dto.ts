@@ -1,6 +1,7 @@
 export class CreateWordDto {
   text: string;
   definition?: string;
+  explanation?: string;
   context?: string;
 
   sourceLanguage?: string;

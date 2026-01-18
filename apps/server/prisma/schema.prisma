@@ -25,6 +25,7 @@ model Word {
   id        String   @id @default(uuid())
   text      String
   definition String?
+  explanation String?
   context   String?
   sourceLanguage String?
   targetLanguage String?

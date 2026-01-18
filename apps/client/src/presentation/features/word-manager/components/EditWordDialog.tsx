@@ -104,6 +104,16 @@ export function EditWordDialog({
                             />
                         </div>
 
+                        <div className="space-y-2">
+                            <Label htmlFor="explanation">Explanation</Label>
+                            <Textarea
+                                id="explanation"
+                                value={formData.explanation}
+                                onChange={e => handleChange('explanation', e.target.value)}
+                                rows={2}
+                            />
+                        </div>
+
                         <WordExamplesSection
                             examples={formData.examples}
                             onAdd={handleAddExample}
