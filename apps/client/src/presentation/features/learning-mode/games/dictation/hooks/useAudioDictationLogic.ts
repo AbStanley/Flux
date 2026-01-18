@@ -73,14 +73,17 @@ export const useAudioDictationLogic = () => {
         initializeSlots(targetWords);
         initializePool(targetWords);
 
-        // Play Audio immediately
-        if (audioMode === 'target') {
-            playAudio(currentItem.answer, currentItem.lang?.target, undefined);
-        } else {
-            playAudio(currentItem.question, currentItem.lang?.source, currentItem.audioUrl);
-        }
+        // Play Audio immediately (Debounced)
+        const timer = setTimeout(() => {
+            if (audioMode === 'target') {
+                playAudio(currentItem.answer, currentItem.lang?.target, undefined);
+            } else {
+                playAudio(currentItem.question, currentItem.lang?.source, currentItem.audioUrl);
+            }
+        }, 100);
 
         return () => {
+            clearTimeout(timer);
             stopAudio();
         };
     }, [targetWords, initializeSlots, initializePool, playAudio, stopAudio, audioMode, currentItem]); // Added missing deps

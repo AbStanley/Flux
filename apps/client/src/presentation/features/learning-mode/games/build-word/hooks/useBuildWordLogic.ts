@@ -64,9 +64,13 @@ export const useBuildWordLogic = () => {
     useEffect(() => {
         if (!currentItem) return;
 
-        playAudio(currentItem.question, currentItem.lang?.source, currentItem.audioUrl);
+        // Debounce audio to prevent double-play on rapid re-renders
+        const timer = setTimeout(() => {
+            playAudio(currentItem.question, currentItem.lang?.source, currentItem.audioUrl);
+        }, 100);
 
         return () => {
+            clearTimeout(timer);
             stopAudio();
         };
     }, [currentItem, playAudio, stopAudio]);
