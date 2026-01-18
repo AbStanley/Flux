@@ -4,6 +4,14 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
 import { type CreateWordRequest, type Word } from '../../../../infrastructure/api/words';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../../../components/ui/select";
+import { TARGET_LANGUAGES } from "../../../../core/constants/languages";
 
 import { useWordForm } from '../hooks/useWordForm';
 import { WordExamplesSection } from './WordExamplesSection';
@@ -63,6 +71,45 @@ export function EditWordDialog({
                                     value={formData.definition}
                                     onChange={e => handleChange('definition', e.target.value)}
                                 />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="sourceLanguage">Foreign Language</Label>
+                                <Select
+                                    value={formData.sourceLanguage}
+                                    onValueChange={(value) => handleChange('sourceLanguage', value)}
+                                >
+                                    <SelectTrigger id="sourceLanguage">
+                                        <SelectValue placeholder="Select language" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {TARGET_LANGUAGES.map((lang) => (
+                                            <SelectItem key={lang.value} value={lang.value}>
+                                                {lang.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="targetLanguage">Native Language</Label>
+                                <Select
+                                    value={formData.targetLanguage}
+                                    onValueChange={(value) => handleChange('targetLanguage', value)}
+                                >
+                                    <SelectTrigger id="targetLanguage">
+                                        <SelectValue placeholder="Select language" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {TARGET_LANGUAGES.map((lang) => (
+                                            <SelectItem key={lang.value} value={lang.value}>
+                                                {lang.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
@@ -142,8 +189,8 @@ export function EditWordDialog({
                             </div>
                         </div>
                     </form>
-                </div>
-            </DialogContent>
-        </Dialog>
+                </div >
+            </DialogContent >
+        </Dialog >
     );
 };
