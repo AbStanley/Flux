@@ -133,10 +133,17 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
         }
     };
 
+    const isValid = formData.text.trim() !== '' && (
+        !formData.examples ||
+        formData.examples.length === 0 ||
+        formData.examples.every(ex => ex.sentence?.trim() !== '' && ex.translation?.trim() !== '')
+    );
+
     return {
         formData,
         isLoading,
         isGenerating,
+        isValid,
         showLimitWarning,
         handleChange,
         handleAddExample,

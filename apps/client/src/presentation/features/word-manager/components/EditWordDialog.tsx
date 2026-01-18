@@ -27,6 +27,7 @@ export function EditWordDialog({
         formData,
         isLoading,
         isGenerating,
+        isValid,
         showLimitWarning,
         handleChange,
         handleAddExample,
@@ -125,13 +126,20 @@ export function EditWordDialog({
                             showLimitWarning={showLimitWarning}
                         />
 
-                        <div className="flex justify-end gap-2 pt-4">
-                            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading ? 'Saving...' : 'Save Word'}
-                            </Button>
+                        <div className="flex flex-col items-end gap-2 pt-4">
+                            {!isValid && (
+                                <p className="text-xs text-destructive">
+                                    Please ensure all examples have both a sentence and a translation.
+                                </p>
+                            )}
+                            <div className="flex justify-end gap-2">
+                                <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={isLoading || !isValid}>
+                                    {isLoading ? 'Saving...' : 'Save Word'}
+                                </Button>
+                            </div>
                         </div>
                     </form>
                 </div>
