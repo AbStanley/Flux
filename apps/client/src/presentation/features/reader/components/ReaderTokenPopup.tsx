@@ -20,8 +20,8 @@ export function ReaderTokenPopup({
     isSaved
 }: ReaderTokenPopupProps) {
     const buttonClass = cn(
-        "ml-1 p-1 rounded-full cursor-pointer shadow-sm border border-white/10",
-        "bg-white/20 hover:bg-white/30 text-white",
+        "ml-1 p-1 rounded-full cursor-pointer shadow-sm border border-border/10",
+        "dark:bg-white/20 dark:hover:bg-white/30 dark:text-white dark:border-white/10", // Keep the glass look for dark mode if desired, or just use semantic
         "transition-all duration-300 ease-in-out",
         "opacity-100 scale-100"
     );
