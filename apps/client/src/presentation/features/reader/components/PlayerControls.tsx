@@ -21,7 +21,7 @@ function CollapseExpandButton({ isCollapsed, onToggle }: { isCollapsed: boolean;
         <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0 absolute top-3 right-2 z-10"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
             onClick={onToggle}
             title={isCollapsed ? "Expand Player" : "Collapse Player"}
         >
@@ -90,67 +90,95 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
 
     if (isCollapsed) {
         return (
-            <div className={`relative p-2 pr-12 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-2 items-center ${vertical
-                ? 'flex-col border rounded-xl shadow-sm w-16 pr-2 pt-12'
-                : 'border-b w-full justify-start'
+            <div className={`relative p-2 border-border/40 bg-background/95 backdrop-blur z-40 flex flex-col gap-1 ${vertical
+                ? 'border rounded-xl shadow-sm w-16 pt-2'
+                : 'border-b w-full'
                 }`}>
-                <CollapseExpandButton isCollapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
 
-                <PlaybackControls
-                    isPlaying={isPlaying}
-                    isPaused={isPaused}
-                    onPlayPause={handlePlayPause}
-                    onStop={stop}
-                    variant="mini"
-                />
+                <div className="flex items-center justify-between w-full gap-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <PlaybackControls
+                            isPlaying={isPlaying}
+                            isPaused={isPaused}
+                            onPlayPause={handlePlayPause}
+                            onStop={stop}
+                        />
 
-                {/* Mini slider for collapsed view */}
-                <TimelineControl
-                    currentWordIndex={currentWordIndex}
-                    totalTokens={tokens.length}
-                    onSeek={seek}
-                    vertical={vertical}
-                />
+                        {/* Desktop: Show nothing more. Mobile: Show Selection Mode */}
+                        <div className="md:hidden">
+                            <ReaderSettings
+                                selectionMode={selectionMode}
+                                onSelectionModeChange={setSelectionMode}
+                                vertical={vertical}
+                            />
 
-                <div className="h-6 w-px bg-border/50 mx-1" />
+                            <div className="flex-1 min-w-0 flex justify-center">
+                                <div className="hidden md:block w-full max-w-[200px]">
+                                    <TimelineControl
+                                        currentWordIndex={currentWordIndex}
+                                        totalTokens={tokens.length}
+                                        onSeek={seek}
+                                        vertical={vertical}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="w-full ml-20 hidden md:block ">
+                        <TimelineControl
+                            currentWordIndex={currentWordIndex}
+                            totalTokens={tokens.length}
+                            onSeek={seek}
+                            vertical={vertical}
+                        />
+                    </div>
+                    <div className="hidden md:flex items-center gap-4 shrink-0">
 
-                {/* Translation Controls - always visible */}
-                <TranslationSettings
-                    showTranslations={showTranslations}
-                    onToggleTranslations={toggleShowTranslations}
-                    onClearTranslations={() => {
-                        clearSelectionTranslations();
-                        clearSelection();
-                    }}
-                />
+                        {/* Translation Controls */}
+                        <TranslationSettings
+                            showTranslations={showTranslations}
+                            onToggleTranslations={toggleShowTranslations}
+                            onClearTranslations={() => {
+                                clearSelectionTranslations();
+                                clearSelection();
+                            }}
+                        />
 
-                <div className="h-6 w-px bg-border/50 mx-1" />
 
-                {/* Settings Button */}
-                <SettingsModal />
-            </div>
+                    </div>
+                    <CollapseExpandButton isCollapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
+
+                </div>
+
+                <div className="w-full md:hidden">
+                    <TimelineControl
+                        currentWordIndex={currentWordIndex}
+                        totalTokens={tokens.length}
+                        onSeek={seek}
+                        vertical={vertical}
+                    />
+                </div>
+            </div >
         );
     }
 
     return (
-        <div className={`relative w-full p-2 md:p-4 pr-12 md:pr-14 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-4 ${vertical
+        <div className={`relative w-full p-2 md:p-4 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-4 ${vertical
             ? 'flex-col border rounded-xl shadow-sm'
             : 'flex-col border-b'
             }`}>
-            <CollapseExpandButton isCollapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
 
             <div className={`flex gap-4 items-center justify-between w-full ${vertical ? 'flex-col items-stretch' : 'flex-col md:flex-row'}`}>
+                {/* Left Group: Playback & Selection */}
                 <div className={`flex items-center gap-2 ${vertical ? 'justify-between' : ''}`}>
-
                     <PlaybackControls
                         isPlaying={isPlaying}
                         isPaused={isPaused}
                         onPlayPause={handlePlayPause}
                         onStop={stop}
-
                     />
 
-                    {!vertical && <div className="h-6 w-px bg-border/50 mx-2" />}
+                    {!vertical && <div className="h-6 w-px bg-border/50 mx-2 hidden md:block" />}
 
                     {vertical && <div className="flex-1" />}
 
@@ -161,8 +189,8 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                     />
                 </div>
 
-                <div className={`flex items-center gap-4 flex-1 w-full ${vertical ? 'flex-col items-stretch' : 'md:w-auto overflow-hidden'}`}>
-
+                {/* Right Group: Voice Settings & Collapse Button */}
+                <div className={`flex items-center gap-4 flex-1 w-full justify-end ${vertical ? 'flex-col items-stretch' : 'md:w-auto overflow-hidden'}`}>
                     <VoiceSettings
                         selectedVoiceName={selectedVoice?.name}
                         availableVoices={availableVoices}
@@ -174,12 +202,15 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                         onRateChange={setRate}
                         vertical={vertical}
                     />
+
+                    <div className="shrink-0">
+                        <CollapseExpandButton isCollapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
+                    </div>
                 </div>
             </div>
 
+            {/* Bottom Row: Timeline & Translations */}
             <div className="flex gap-2 w-full justify-between items-center">
-
-                {/* Timeline Slider */}
                 <TimelineControl
                     currentWordIndex={currentWordIndex}
                     totalTokens={tokens.length}
@@ -188,7 +219,6 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
 
                 <div className="h-6 w-px bg-border/50 mx-2" />
 
-                {/* Translation Controls */}
                 <TranslationSettings
                     showTranslations={showTranslations}
                     onToggleTranslations={toggleShowTranslations}
@@ -197,7 +227,10 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                         clearSelection();
                     }}
                 />
+                {/* Settings Button */}
+                <SettingsModal />
 
+                <div className="h-6 w-px bg-border/50 mx-1" />
             </div>
         </div >
     );
