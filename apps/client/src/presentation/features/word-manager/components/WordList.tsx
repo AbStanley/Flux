@@ -7,9 +7,8 @@ import {
     TableRow,
 } from '../../../components/ui/table';
 import { Button } from '../../../components/ui/button';
-import { Edit, Trash2, BookOpen, Globe, Quote, Volume2 } from 'lucide-react';
+import { Edit, Trash2, BookOpen, Globe, Quote, Volume2, ArrowRight } from 'lucide-react';
 import { getLanguageCode } from '../utils/languageUtils';
-import { Badge } from '../../../components/ui/badge';
 import { ScrollArea } from '../../../components/ui/scroll-area';
 
 interface WordListProps {
@@ -144,78 +143,102 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
             </ScrollArea>
 
             {/* Mobile View */}
-            <div className="block md:hidden divide-y">
+
+            <div className="block md:hidden space-y-3 p-3">
                 {words.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                        {emptyMessage}
+                    <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                            <BookOpen className="w-8 h-8 text-muted-foreground/50" />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="font-medium text-lg text-foreground">No items yet</h3>
+                            <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+                        </div>
                     </div>
                 ) : (
                     words.map((word) => (
-                        <div key={word.id} className="p-4 space-y-3 bg-card hover:bg-muted/10 transition-colors">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-semibold text-lg">{word.text}</h3>
-                                        {(word.sourceLanguage || word.targetLanguage) && (
-                                            <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal">
-                                                {word.sourceLanguage} → {word.targetLanguage}
-                                            </Badge>
+                        <div
+                            key={word.id}
+                            className="bg-card rounded-xl border shadow-sm p-4 space-y-3 active:scale-[0.99] transition-transform duration-200"
+                        >
+                            <div className="flex justify-between items-start gap-3">
+                                <div className="space-y-1 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h3 className="font-bold text-xl tracking-tight text-primary">
+                                            {word.text}
+                                        </h3>
+                                        {word.pronunciation && (
+                                            <span className="text-xs text-muted-foreground font-mono bg-muted/50 px-1.5 py-0.5 rounded">
+                                                /{word.pronunciation}/
+                                            </span>
                                         )}
                                     </div>
-                                    {word.pronunciation && (
-                                        <span className="text-sm text-muted-foreground font-mono">/{word.pronunciation}/</span>
+
+                                    {(word.sourceLanguage || word.targetLanguage) && (
+                                        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                            <Globe className="w-3 h-3" />
+                                            <span>{getLanguageCode(word.sourceLanguage).toUpperCase()}</span>
+                                            <ArrowRight className="w-3 h-3 opacity-50" />
+                                            <span>{getLanguageCode(word.targetLanguage).toUpperCase()}</span>
+                                        </div>
                                     )}
                                 </div>
-                                <div className="flex gap-1">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-slate-500"
-                                        onClick={(e) => handlePlayAudio(e, word.text, word.sourceLanguage || word.targetLanguage)}
-                                    >
-                                        <Volume2 className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => onEdit(word)}
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-destructive/70 hover:text-destructive"
-                                        onClick={() => onDelete(word.id)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
+
+                                <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-10 w-10 rounded-full shrink-0 shadow-sm"
+                                    onClick={(e) => handlePlayAudio(e, word.text, word.sourceLanguage || word.targetLanguage)}
+                                >
+                                    <Volume2 className="h-5 w-5 text-primary" />
+                                </Button>
                             </div>
 
                             {word.definition && (
-                                <p className="text-sm text-slate-600 dark:text-slate-300">
+                                <div className="text-sm text-foreground/90 leading-relaxed border-l-2 border-primary/20 pl-3 py-0.5">
                                     {word.definition}
-                                </p>
+                                </div>
                             )}
 
                             {(word.sourceTitle || word.context) && (
-                                <div className="space-y-1 pt-1">
+                                <div className="bg-muted/30 rounded-lg p-3 space-y-2 text-xs">
+                                    {word.context && (
+                                        <div className="flex gap-2">
+                                            <Quote className="w-3 h-3 text-primary/50 shrink-0 mt-0.5" />
+                                            <p className="italic text-muted-foreground leading-relaxed">
+                                                "{word.context.trim()}"
+                                            </p>
+                                        </div>
+                                    )}
                                     {word.sourceTitle && (
-                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <div className="flex items-center gap-1.5 text-muted-foreground/70 font-medium">
                                             <BookOpen className="w-3 h-3" />
                                             <span className="truncate">{word.sourceTitle}</span>
                                         </div>
                                     )}
-                                    {word.context && (
-                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80 italic">
-                                            <Quote className="w-3 h-3" />
-                                            <span className="line-clamp-1">"{word.context.trim()}"</span>
-                                        </div>
-                                    )}
                                 </div>
                             )}
+
+                            <div className="pt-2 flex justify-end gap-2 border-t border-border/50">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 px-3 text-muted-foreground hover:text-foreground"
+                                    onClick={() => onEdit(word)}
+                                >
+                                    <Edit className="mr-1.5 h-3.5 w-3.5" />
+                                    Edit
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 px-3 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => onDelete(word.id)}
+                                >
+                                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                                    Delete
+                                </Button>
+                            </div>
                         </div>
                     ))
                 )}

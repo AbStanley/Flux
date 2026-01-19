@@ -34,10 +34,7 @@ export function WordManager() {
         await deleteWord(id, type);
     };
 
-    const openCreateDialog = () => {
-        setEditingWord(undefined);
-        setIsDialogOpen(true);
-    };
+
 
     const openEditDialog = (word: Word) => {
         setEditingWord(word);
@@ -65,28 +62,32 @@ export function WordManager() {
         }
     };
 
+    const [activeTab, setActiveTab] = useState<'word' | 'phrase'>('word');
+
     return (
-        <div className="p-6 max-w-6xl mx-auto space-y-8">
-            <div className="flex justify-between items-center">
+        <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6 md:space-y-8 pb-20 md:pb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
                         Vocabulary Manager
                     </h2>
-                    <p className="text-muted-foreground mt-1">Manage your personal collection of words and phrases.</p>
+                    <p className="text-sm md:text-base text-muted-foreground mt-1">Manage your collection.</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => handleExport('csv')} disabled={wordsState.total + phrasesState.total === 0}>
-                        <FileDown className="mr-2 h-4 w-4" />
-                        CSV
-                    </Button>
-                    <Button variant="outline" onClick={() => handleExport('anki')} disabled={wordsState.total + phrasesState.total === 0}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Anki
-                    </Button>
-                    <Button onClick={openCreateDialog} className="shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Entry
-                    </Button>
+                <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                    <div className="flex gap-2 ml-auto">
+                        <Button variant="outline" size="sm" onClick={() => handleExport('csv')} disabled={wordsState.total + phrasesState.total === 0}>
+                            <FileDown className="mr-2 h-4 w-4" />
+                            <span className="hidden sm:inline">CSV</span>
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleExport('anki')} disabled={wordsState.total + phrasesState.total === 0}>
+                            <Download className="mr-2 h-4 w-4" />
+                            <span className="hidden sm:inline">Anki</span>
+                        </Button>
+                        <Button size="sm" onClick={() => { setEditingWord(undefined); setIsDialogOpen(true); }} className="shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Entry
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -96,81 +97,97 @@ export function WordManager() {
                 </div>
             )}
 
-            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                {/* Words Section */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2 border-b pb-2">
-                        <h3 className="text-xl font-semibold tracking-tight text-foreground">
-                            Words
-                        </h3>
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                {/* Custom Tabs */}
+                <div className="flex p-1 bg-muted/30 rounded-lg w-full md:w-fit gap-1 border">
+                    <button
+                        onClick={() => setActiveTab('word')}
+                        className={`flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === 'word'
+                            ? 'bg-background text-foreground shadow-sm scale-[1.02]'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                            }`}
+                    >
+                        Words
+                        <span className="ml-2 text-xs opacity-60 bg-muted-foreground/10 px-1.5 py-0.5 rounded-full">
                             {wordsState.total}
                         </span>
-                    </div>
-
-                    {wordsState.isLoading && wordsState.items.length === 0 ? (
-                        <div className="py-10 text-center text-muted-foreground">Loading words...</div>
-                    ) : (
-                        <div className="space-y-4">
-                            <WordList
-                                words={wordsState.items}
-                                onEdit={openEditDialog}
-                                onDelete={(id) => handleDelete(id, 'word')}
-                                emptyMessage="No words saved yet."
-                            />
-                            {wordsState.hasMore && (
-                                <div className="flex justify-center">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => fetchWords('word', wordsState.page + 1)}
-                                        disabled={wordsState.isLoading}
-                                    >
-                                        {wordsState.isLoading ? 'Loading...' : 'Show More'}
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </section>
-
-                {/* Phrases Section */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2 border-b pb-2">
-                        <h3 className="text-xl font-semibold tracking-tight text-foreground">
-                            Phrases
-                        </h3>
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('phrase')}
+                        className={`flex-1 md:flex-none px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === 'phrase'
+                            ? 'bg-background text-foreground shadow-sm scale-[1.02]'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                            }`}
+                    >
+                        Phrases
+                        <span className="ml-2 text-xs opacity-60 bg-muted-foreground/10 px-1.5 py-0.5 rounded-full">
                             {phrasesState.total}
                         </span>
-                    </div>
+                    </button>
+                </div>
 
-                    {phrasesState.isLoading && phrasesState.items.length === 0 ? (
-                        <div className="py-10 text-center text-muted-foreground">Loading phrases...</div>
+                <div className="min-h-[400px]">
+                    {activeTab === 'word' ? (
+                        wordsState.isLoading && wordsState.items.length === 0 ? (
+                            <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-2">
+                                <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                                Loading words...
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <WordList
+                                    words={wordsState.items}
+                                    onEdit={openEditDialog}
+                                    onDelete={(id) => handleDelete(id, 'word')}
+                                    emptyMessage="No words saved yet."
+                                />
+                                {wordsState.hasMore && (
+                                    <div className="flex justify-center py-4">
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => fetchWords('word', wordsState.page + 1)}
+                                            disabled={wordsState.isLoading}
+                                            className="w-full md:w-auto"
+                                        >
+                                            {wordsState.isLoading ? 'Loading...' : 'Load More Words'}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        )
                     ) : (
-                        <div className="space-y-4">
-                            <WordList
-                                words={phrasesState.items}
-                                onEdit={openEditDialog}
-                                onDelete={(id) => handleDelete(id, 'phrase')}
-                                emptyMessage="No phrases saved yet."
-                            />
-                            {phrasesState.hasMore && (
-                                <div className="flex justify-center">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => fetchWords('phrase', phrasesState.page + 1)}
-                                        disabled={phrasesState.isLoading}
-                                    >
-                                        {phrasesState.isLoading ? 'Loading...' : 'Show More'}
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
+                        phrasesState.isLoading && phrasesState.items.length === 0 ? (
+                            <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-2">
+                                <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                                Loading phrases...
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <WordList
+                                    words={phrasesState.items}
+                                    onEdit={openEditDialog}
+                                    onDelete={(id) => handleDelete(id, 'phrase')}
+                                    emptyMessage="No phrases saved yet."
+                                />
+                                {phrasesState.hasMore && (
+                                    <div className="flex justify-center py-4">
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => fetchWords('phrase', phrasesState.page + 1)}
+                                            disabled={phrasesState.isLoading}
+                                            className="w-full md:w-auto"
+                                        >
+                                            {phrasesState.isLoading ? 'Loading...' : 'Load More Phrases'}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        )
                     )}
-                </section>
+                </div>
             </div>
 
             <EditWordDialog
@@ -178,6 +195,8 @@ export function WordManager() {
                 onClose={() => setIsDialogOpen(false)}
                 onSubmit={editingWord ? handleUpdate : handleCreate}
                 initialData={editingWord}
+                // Pass the active tab as default type for new entries
+                defaultType={activeTab}
             />
         </div>
     );

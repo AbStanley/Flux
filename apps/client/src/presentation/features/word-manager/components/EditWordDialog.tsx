@@ -22,6 +22,7 @@ interface EditWordDialogProps {
     onSubmit: (data: CreateWordRequest) => Promise<void>;
     initialData?: Word;
     defaultValues?: Partial<CreateWordRequest>;
+    defaultType?: 'word' | 'phrase';
 }
 
 export function EditWordDialog({
@@ -29,7 +30,8 @@ export function EditWordDialog({
     onClose,
     onSubmit,
     initialData,
-    defaultValues
+    defaultValues,
+    defaultType = 'word'
 }: EditWordDialogProps) {
     const {
         formData,
@@ -43,18 +45,18 @@ export function EditWordDialog({
         handleRemoveExample,
         handleGenerateExamples,
         handleSubmit
-    } = useWordForm({ initialData, defaultValues, onSubmit, onClose, isOpen });
+    } = useWordForm({ initialData, defaultValues, onSubmit, onClose, isOpen, defaultType });
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col" aria-describedby={undefined}>
-                <DialogHeader>
+            <DialogContent className="w-[95vw] md:w-full max-w-2xl max-h-[90vh] flex flex-col p-0 md:p-6" aria-describedby={undefined}>
+                <DialogHeader className="px-6 py-4 md:px-0 md:py-0 border-b md:border-none">
                     <DialogTitle>{initialData ? 'Edit Word' : 'Add New Word'}</DialogTitle>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto pr-4">
-                    <form onSubmit={handleSubmit} className="space-y-4 p-1">
-                        <div className="grid grid-cols-2 gap-4">
+                <div className="flex-1 overflow-y-auto px-6 py-4 md:px-0 md:py-2">
+                    <form id="word-form" onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="text">Word / Phrase</Label>
                                 <Input
@@ -62,6 +64,7 @@ export function EditWordDialog({
                                     value={formData.text}
                                     onChange={e => handleChange('text', e.target.value)}
                                     required
+                                    className="h-10"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -70,18 +73,19 @@ export function EditWordDialog({
                                     id="definition"
                                     value={formData.definition}
                                     onChange={e => handleChange('definition', e.target.value)}
+                                    className="h-10"
                                 />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="sourceLanguage">Foreign Language</Label>
                                 <Select
                                     value={formData.sourceLanguage}
                                     onValueChange={(value) => handleChange('sourceLanguage', value)}
                                 >
-                                    <SelectTrigger id="sourceLanguage">
+                                    <SelectTrigger id="sourceLanguage" className="h-10">
                                         <SelectValue placeholder="Select language" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -99,7 +103,7 @@ export function EditWordDialog({
                                     value={formData.targetLanguage}
                                     onValueChange={(value) => handleChange('targetLanguage', value)}
                                 >
-                                    <SelectTrigger id="targetLanguage">
+                                    <SelectTrigger id="targetLanguage" className="h-10">
                                         <SelectValue placeholder="Select language" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -113,13 +117,14 @@ export function EditWordDialog({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="pronunciation">Pronunciation</Label>
                                 <Input
                                     id="pronunciation"
                                     value={formData.pronunciation}
                                     onChange={e => handleChange('pronunciation', e.target.value)}
+                                    className="h-10"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -128,6 +133,7 @@ export function EditWordDialog({
                                     id="sourceTitle"
                                     value={formData.sourceTitle}
                                     onChange={e => handleChange('sourceTitle', e.target.value)}
+                                    className="h-10"
                                 />
                             </div>
                         </div>
@@ -139,6 +145,7 @@ export function EditWordDialog({
                                 value={formData.imageUrl}
                                 onChange={e => handleChange('imageUrl', e.target.value)}
                                 placeholder="https://..."
+                                className="h-10"
                             />
                         </div>
 
@@ -172,24 +179,24 @@ export function EditWordDialog({
                             canGenerate={!!(formData.text && formData.sourceLanguage && formData.targetLanguage)}
                             showLimitWarning={showLimitWarning}
                         />
-
-                        <div className="flex flex-col items-end gap-2 pt-4">
-                            {!isValid && (
-                                <p className="text-xs text-destructive">
-                                    Please ensure all examples have both a sentence and a translation.
-                                </p>
-                            )}
-                            <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={isLoading || !isValid}>
-                                    {isLoading ? 'Saving...' : 'Save Word'}
-                                </Button>
-                            </div>
-                        </div>
                     </form>
                 </div >
+
+                <div className="p-4 md:px-0 md:py-0 border-t md:border-none bg-background md:bg-transparent mt-auto shadow-sm md:shadow-none space-y-2">
+                    {!isValid && (
+                        <p className="text-xs text-destructive text-right px-2">
+                            Please ensure all examples have both a sentence and a translation.
+                        </p>
+                    )}
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} className="h-10">
+                            Cancel
+                        </Button>
+                        <Button type="submit" form="word-form" disabled={isLoading || !isValid} className="h-10">
+                            {isLoading ? 'Saving...' : 'Save Word'}
+                        </Button>
+                    </div>
+                </div>
             </DialogContent >
         </Dialog >
     );

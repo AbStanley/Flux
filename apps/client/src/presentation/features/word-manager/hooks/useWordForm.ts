@@ -10,7 +10,8 @@ const DEFAULT_FORM_STATE: CreateWordRequest = {
     imageUrl: '',
     pronunciation: '',
     sourceTitle: '',
-    examples: []
+    examples: [],
+    type: 'word'
 };
 
 interface UseWordFormProps {
@@ -19,10 +20,11 @@ interface UseWordFormProps {
     onSubmit: (data: CreateWordRequest) => Promise<void>;
     onClose: () => void;
     isOpen: boolean;
+    defaultType?: 'word' | 'phrase';
 }
 
-export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isOpen }: UseWordFormProps) => {
-    const [formData, setFormData] = useState<CreateWordRequest>(DEFAULT_FORM_STATE);
+export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isOpen, defaultType = 'word' }: UseWordFormProps) => {
+    const [formData, setFormData] = useState<CreateWordRequest>({ ...DEFAULT_FORM_STATE, type: defaultType });
     const [isLoading, setIsLoading] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [showLimitWarning, setShowLimitWarning] = useState(false);
@@ -41,18 +43,19 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
                     sourceTitle: initialData.sourceTitle || '',
                     sourceLanguage: initialData.sourceLanguage || '',
                     targetLanguage: initialData.targetLanguage || '',
+                    type: initialData.type || 'word',
                     examples: initialData.examples?.map(ex => ({
                         sentence: ex.sentence,
                         translation: ex.translation || ''
                     })) || []
                 });
             } else if (defaultValues) {
-                setFormData({ ...DEFAULT_FORM_STATE, ...defaultValues });
+                setFormData({ ...DEFAULT_FORM_STATE, type: defaultType, ...defaultValues });
             } else {
-                setFormData(DEFAULT_FORM_STATE);
+                setFormData({ ...DEFAULT_FORM_STATE, type: defaultType });
             }
         }
-    }, [isOpen, initialData, defaultValues]);
+    }, [isOpen, initialData, defaultValues, defaultType]);
 
     const handleChange = (field: keyof CreateWordRequest, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
