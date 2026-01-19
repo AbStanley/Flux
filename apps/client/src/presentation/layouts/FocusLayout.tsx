@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
 interface FocusLayoutProps {
@@ -52,9 +53,11 @@ export const FocusLayout: React.FC<FocusLayoutProps> = ({
                                 <Button
                                     variant="ghost"
                                     onClick={onBackToConfig}
-                                    className="self-start mb-2 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                    className="self-start mb-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 gap-2 pl-2 pr-4"
                                 >
-                                    ← Back to Configuration
+                                    <ArrowLeft className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Back to Configuration</span>
+                                    <span className="sm:hidden">Back</span>
                                 </Button>
                             </motion.div>
                         )}
