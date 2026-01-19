@@ -42,10 +42,19 @@ export function GameSetup() {
                         })}
                         className="w-full"
                     >
-                        <TabsList className="grid w-full grid-cols-3 mb-4">
-                            <TabsTrigger value="db" className="flex gap-2"><Database className="w-4 h-4" /> Saved Words</TabsTrigger>
-                            <TabsTrigger value="anki" className="flex gap-2"><Library className="w-4 h-4" /> Anki Decks</TabsTrigger>
-                            <TabsTrigger value="ai" className="flex gap-2"><BrainCircuit className="w-4 h-4" /> AI Generation</TabsTrigger>
+                        <TabsList className="grid w-full grid-cols-3 h-auto p-1 mb-6 bg-muted/50 gap-1 rounded-xl">
+                            <TabsTrigger value="db" className="flex flex-col md:flex-row gap-1.5 md:gap-2 h-auto py-2 md:py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-lg">
+                                <Database className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="text-xs md:text-sm font-medium">Saved Words</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="anki" className="flex flex-col md:flex-row gap-1.5 md:gap-2 h-auto py-2 md:py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-lg">
+                                <Library className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="text-xs md:text-sm font-medium">Anki Decks</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="ai" className="flex flex-col md:flex-row gap-1.5 md:gap-2 h-auto py-2 md:py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-lg">
+                                <BrainCircuit className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="text-xs md:text-sm font-medium">AI Gen</span>
+                            </TabsTrigger>
                         </TabsList>
 
                         {error && (

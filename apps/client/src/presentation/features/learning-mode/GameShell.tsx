@@ -91,47 +91,54 @@ export function GameShell({ children }: GameShellProps) {
             )}
 
             {/* Header HUD */}
-            <header className={cn("border-b bg-card/50 backdrop-blur-sm p-4 sticky top-0 z-10 transition-all duration-300", timerEnabled ? "mt-1.5" : "")}>
-                <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2 w-1/4">
-                        <Button variant="ghost" size="icon" onClick={reset} className="hover:bg-destructive/10 hover:text-destructive">
-                            <X className="w-5 h-5" />
+            <header className={cn("border-b bg-card/50 backdrop-blur-sm p-2 sticky top-0 z-10 transition-all duration-300", timerEnabled ? "mt-1.5" : "")}>
+                <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={reset} className="hover:bg-destructive/10 hover:text-destructive h-8 w-8">
+                            <X className="w-4 h-4" />
                         </Button>
-                        <LevelDisplay />
-                        <Progress value={progress} className="h-2 flex-1" />
+
+                        {/* Score & Level Group */}
+                        <div className="flex flex-col items-start gap-0.5">
+                            <div className="flex items-center gap-1.5 font-bold tabular-nums text-xs ml-1">
+                                <Trophy className="w-3 h-3 text-yellow-500" />
+                                <span>{score}</span>
+                            </div>
+                            <div className="scale-90 origin-left">
+                                <LevelDisplay />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-1.5 font-bold tabular-nums text-xl">
-                            <Trophy className="w-5 h-5 text-yellow-500" />
-                            {score}
-                        </div>
-
+                    {/* Center: Progress & Timer */}
+                    <div className="flex-1 flex flex-col items-center justify-center max-w-[200px] gap-1">
+                        <Progress value={progress} className="h-2 w-full" />
                         {/* Timer Numeric Display */}
                         {timerEnabled && (
-                            <div className={cn("hidden md:flex items-center gap-1.5 font-bold tabular-nums text-xl transition-colors",
+                            <div className={cn("flex items-center gap-1.5 font-bold tabular-nums text-sm transition-colors",
                                 timeLeft <= 30 ? "text-red-500 animate-pulse" : "text-muted-foreground"
                             )}>
-                                <Timer className="w-5 h-5" />
+                                <Timer className="w-3 h-3" />
                                 {Math.ceil(timeLeft / 10)}s
                             </div>
                         )}
+                    </div>
 
+                    <div className="flex items-center justify-end gap-1">
                         {streak > 1 && (
-                            <div className="flex items-center gap-1.5 font-bold tabular-nums text-xl text-orange-500 animate-pulse">
-                                <Flame className="w-5 h-5" />
+                            <div className="hidden sm:flex items-center gap-1 font-bold tabular-nums text-sm text-orange-500 animate-pulse mr-2">
+                                <Flame className="w-4 h-4" />
                                 {streak}
                             </div>
                         )}
-                    </div>
-
-                    <div className="flex items-center justify-end gap-1 w-1/4">
-                        {Array.from({ length: maxHealth }).map((_, i) => (
-                            <Heart
-                                key={i}
-                                className={`w-6 h-6 transition-all duration-300 ${i < health ? 'fill-red-500 text-red-500' : 'text-muted-foreground/30 scale-75'}`}
-                            />
-                        ))}
+                        <div className="flex gap-0.5">
+                            {Array.from({ length: maxHealth }).map((_, i) => (
+                                <Heart
+                                    key={i}
+                                    className={`w-5 h-5 transition-all duration-300 ${i < health ? 'fill-red-500 text-red-500' : 'text-muted-foreground/30 scale-75'}`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </header>

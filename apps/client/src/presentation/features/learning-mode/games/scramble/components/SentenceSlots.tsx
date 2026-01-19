@@ -19,13 +19,13 @@ export const SentenceSlots: React.FC<SentenceSlotsProps> = ({
     onSlotClick
 }) => {
     return (
-        <div className="flex flex-wrap gap-3 justify-center items-center p-6 bg-card/30 rounded-2xl border border-white/5 min-h-[100px]">
+        <div className="flex flex-wrap gap-1.5 md:gap-3 justify-center items-center p-3 md:p-6 bg-card/30 rounded-xl md:rounded-2xl border border-white/5 min-h-[80px] md:min-h-[100px]">
             {slots.map((slot) => (
                 <div
                     key={slot.index}
                     onClick={() => onSlotClick(slot.index)}
                     className={cn(
-                        "min-w-[80px] h-14 px-4 flex items-center justify-center text-lg font-bold rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer select-none",
+                        "min-w-[60px] md:min-w-[80px] h-10 md:h-14 px-2 md:px-4 flex items-center justify-center text-sm md:text-lg font-bold rounded-lg md:rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer select-none",
 
                         // Empty slot
                         !slot.isFilled && "border-muted-foreground/30 bg-muted/20 text-muted-foreground",
