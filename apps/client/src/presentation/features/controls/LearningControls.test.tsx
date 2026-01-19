@@ -6,6 +6,7 @@ describe('LearningControls', () => {
     const mockSetIsLearningMode = vi.fn();
     const mockSetProficiencyLevel = vi.fn();
     const mockSetTopic = vi.fn();
+    const mockSetContentType = vi.fn();
 
     const defaultProps = {
         isLearningMode: false,
@@ -13,7 +14,9 @@ describe('LearningControls', () => {
         proficiencyLevel: 'B1',
         setProficiencyLevel: mockSetProficiencyLevel,
         topic: '',
-        setTopic: mockSetTopic
+        setTopic: mockSetTopic,
+        contentType: 'Story' as const,
+        setContentType: mockSetContentType
     };
 
     it('renders switch to enable learning mode', () => {
@@ -34,11 +37,12 @@ describe('LearningControls', () => {
         render(<LearningControls {...defaultProps} isLearningMode={true} />);
         expect(screen.getByText('Proficiency Level')).toBeInTheDocument();
         expect(screen.getByText('Topic (Optional)')).toBeInTheDocument();
+        expect(screen.getByText('Content Type')).toBeInTheDocument();
     });
 
     it('calls handler when topic changes', () => {
         render(<LearningControls {...defaultProps} isLearningMode={true} />);
-        const topicInput = screen.getByPlaceholderText('e.g. Travel, Cooking, Sci-Fi');
+        const topicInput = screen.getByPlaceholderText('e.g. Travel, Cooking');
         fireEvent.change(topicInput, { target: { value: 'Physics' } });
         expect(mockSetTopic).toHaveBeenCalled();
     });

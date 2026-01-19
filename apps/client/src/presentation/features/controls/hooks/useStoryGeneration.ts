@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import type { IAIService } from '../../../../core/interfaces/IAIService';
 
-import { getStoryPrompt } from '../../../../infrastructure/ai/prompts/GenerationPrompts';
+import { getStoryPrompt, type ContentType } from '../../../../infrastructure/ai/prompts/GenerationPrompts';
 
 
 interface UseStoryGenerationProps {
@@ -12,6 +12,7 @@ interface UseStoryGenerationProps {
     isLearningMode: boolean;
     topic: string;
     proficiencyLevel: string;
+    contentType: ContentType;
 }
 
 export const useStoryGeneration = ({
@@ -21,7 +22,8 @@ export const useStoryGeneration = ({
     sourceLang,
     isLearningMode,
     topic,
-    proficiencyLevel
+    proficiencyLevel,
+    contentType
 }: UseStoryGenerationProps) => {
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -33,7 +35,7 @@ export const useStoryGeneration = ({
         abortControllerRef.current = new AbortController();
 
         try {
-            const prompt = getStoryPrompt(sourceLang, isLearningMode, topic, proficiencyLevel);
+            const prompt = getStoryPrompt(sourceLang, isLearningMode, topic, proficiencyLevel, contentType);
 
             await aiService.generateText(prompt, {
                 signal: abortControllerRef.current.signal,

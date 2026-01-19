@@ -12,6 +12,7 @@ import { FileImporter } from '../importer/FileImporter';
 import { AIControls } from './AIControls';
 import { ReaderInput } from './ReaderInput';
 import { cn } from "@/lib/utils";
+import type { ContentType } from '../../../infrastructure/ai/prompts/GenerationPrompts';
 
 export function ControlPanel() {
     const { aiService } = useServices();
@@ -33,6 +34,7 @@ export function ControlPanel() {
     const [isLearningMode, setIsLearningMode] = useState(true);
     const [proficiencyLevel, setProficiencyLevel] = useState("B1");
     const [topic, setTopic] = useState("");
+    const [contentType, setContentType] = useState<ContentType>('Story');
 
     const { generateStory, stopGeneration } = useStoryGeneration({
         aiService,
@@ -41,7 +43,8 @@ export function ControlPanel() {
         sourceLang,
         isLearningMode,
         topic,
-        proficiencyLevel
+        proficiencyLevel,
+        contentType
     });
 
     const handleSwapLanguages = () => {
@@ -101,6 +104,8 @@ export function ControlPanel() {
                         setProficiencyLevel={setProficiencyLevel}
                         topic={topic}
                         setTopic={setTopic}
+                        contentType={contentType}
+                        setContentType={setContentType}
                     />
                 </div>
 
