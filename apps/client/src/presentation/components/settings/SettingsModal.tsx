@@ -136,19 +136,19 @@ function ThemeSection({
 }) {
     return (
         <div>
-            <h3 className="text-sm font-medium mb-3">Theme</h3>
-            <div className="grid grid-cols-4 gap-2">
+            <h3 className="text-xs md:text-sm font-medium mb-1.5 md:mb-3">Theme</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 md:gap-2">
                 {THEMES.map((t) => (
                     <button
                         key={t.value}
                         onClick={() => setTheme(t.value)}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${theme === t.value
+                        className={`flex flex-col items-center gap-1 md:gap-2 p-2 md:p-3 rounded-lg border-2 transition-all ${theme === t.value
                             ? 'border-primary bg-primary/10'
                             : 'border-border hover:border-primary/50'
                             }`}
                     >
-                        <div className={`w-8 h-8 rounded-full ${t.preview} border`} />
-                        <span className="text-xs truncate max-w-full">{t.label}</span>
+                        <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full ${t.preview} border`} />
+                        <span className="text-[10px] md:text-xs truncate max-w-full">{t.label}</span>
                     </button>
                 ))}
 
@@ -156,16 +156,16 @@ function ThemeSection({
                     <button
                         key={t.id}
                         onClick={() => setTheme(t.id)}
-                        className={`relative group flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${theme === t.id
+                        className={`relative group flex flex-col items-center gap-1 md:gap-2 p-2 md:p-3 rounded-lg border-2 transition-all ${theme === t.id
                             ? 'border-primary bg-primary/10'
                             : 'border-border hover:border-primary/50'
                             }`}
                     >
                         <div
-                            className="w-8 h-8 rounded-full border"
+                            className="w-6 h-6 md:w-8 md:h-8 rounded-full border"
                             style={{ background: `hsl(${t.colors.background})`, borderColor: `hsl(${t.colors.border})` }}
                         />
-                        <span className="text-xs truncate max-w-full w-full text-center" title={t.name}>{t.name}</span>
+                        <span className="text-[10px] md:text-xs truncate max-w-full w-full text-center" title={t.name}>{t.name}</span>
 
                         <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 rounded shadow-sm">
                             <span
@@ -190,13 +190,13 @@ function ThemeSection({
 
                 <button
                     onClick={onCreate}
-                    className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary"
+                    className="flex flex-col items-center justify-center gap-1 md:gap-2 p-2 md:p-3 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary"
                     title="Create custom theme"
                 >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center border border-dashed">
+                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center border border-dashed">
                         <Plus className="w-4 h-4" />
                     </div>
-                    <span className="text-xs">New</span>
+                    <span className="text-[10px] md:text-xs">New</span>
                 </button>
             </div>
         </div>
@@ -206,19 +206,19 @@ function ThemeSection({
 function FontSection({ font, setFont }: { font: ReaderFont; setFont: (f: ReaderFont) => void }) {
     return (
         <div>
-            <h3 className="text-sm font-medium mb-3">Font</h3>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+            <h3 className="text-xs md:text-sm font-medium mb-1.5 md:mb-3">Font</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 md:gap-2 max-h-48 overflow-y-auto">
                 {FONTS.map((f) => (
                     <button
                         key={f.value}
                         onClick={() => setFont(f.value)}
                         style={{ fontFamily: FONT_FAMILY_MAP[f.value] }}
-                        className={`p-3 rounded-lg border-2 text-left transition-all ${font === f.value
+                        className={`p-2 md:p-3 rounded-lg border-2 text-left transition-all ${font === f.value
                             ? 'border-primary bg-primary/10'
                             : 'border-border hover:border-primary/50'
                             }`}
                     >
-                        <span className="text-sm">{f.label}</span>
+                        <span className="text-xs md:text-sm">{f.label}</span>
                     </button>
                 ))}
             </div>
@@ -229,14 +229,14 @@ function FontSection({ font, setFont }: { font: ReaderFont; setFont: (f: ReaderF
 function SizeSection({ fontSize, setFontSize }: { fontSize: FontSize; setFontSize: (s: FontSize) => void }) {
     return (
         <div>
-            <h3 className="text-sm font-medium mb-3">Font Size</h3>
-            <div className="flex gap-2">
+            <h3 className="text-xs md:text-sm font-medium mb-1.5 md:mb-3">Font Size</h3>
+            <div className="flex gap-1 md:gap-2">
                 {SIZES.map((s) => (
                     <button
                         key={s.value}
                         onClick={() => setFontSize(s.value)}
                         style={{ fontSize: FONT_SIZE_MAP[s.value] }}
-                        className={`flex-1 h-10 min-w-[2.5rem] text-xs rounded-md border transition-all ${fontSize === s.value
+                        className={`flex-1 h-8 md:h-10 min-w-[2.5rem] text-xs rounded-md border transition-all ${fontSize === s.value
                             ? 'border-primary bg-primary/10'
                             : 'border-border hover:border-primary/50'
                             }`}

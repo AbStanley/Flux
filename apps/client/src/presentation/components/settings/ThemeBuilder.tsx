@@ -4,7 +4,6 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
-import { ScrollArea } from '../ui/scroll-area';
 import { useSettingsStore, type CustomTheme } from '@/presentation/features/settings/store/useSettingsStore';
 import { hexToHsl, hslToHex } from '@/lib/color-utils';
 import { useTheme } from '@/presentation/providers/useTheme';
@@ -137,28 +136,28 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                     />
                 </div>
 
-                <ScrollArea className="flex-1 pr-4 -mr-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pb-4">
+                <div className="flex-1 overflow-y-auto min-h-0 pr-2 -mr-2 md:pr-4 md:-mr-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-4">
                         {Object.entries(colors).map(([key, hslValue]) => (
-                            <div key={key} className="flex flex-col gap-2 p-3 rounded-lg border bg-card/50">
-                                <Label className="text-xs truncate font-medium" title={key}>
+                            <div key={key} className="flex flex-col gap-1 md:gap-2 p-2 md:p-3 rounded-lg border bg-card/50">
+                                <Label className="text-[10px] md:text-xs truncate font-medium" title={key}>
                                     {COLOR_LABELS[key] || key}
                                 </Label>
-                                <div className="flex gap-2 items-center">
+                                <div className="flex gap-1 md:gap-2 items-center">
                                     <input
                                         type="color"
                                         value={hslToHex(hslValue)}
                                         onChange={(e) => handleColorChange(key as keyof typeof DEFAULT_COLORS, e.target.value)}
-                                        className="h-8 w-12 p-0 border-0 rounded cursor-pointer"
+                                        className="h-6 w-8 md:h-8 md:w-12 p-0 border-0 rounded cursor-pointer"
                                     />
-                                    <span className="text-xs text-muted-foreground font-mono truncate">
+                                    <span className="text-[10px] md:text-xs text-muted-foreground font-mono truncate">
                                         {hslToHex(hslValue)}
                                     </span>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </ScrollArea>
+                </div>
 
                 <DialogFooter className="gap-2 sm:justify-between">
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
