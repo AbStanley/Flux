@@ -105,7 +105,7 @@ export function DbSetup() {
                 }}
                 disabled={isLoadingLangs}
                 exclude={config.targetLang === 'all' ? undefined : config.targetLang}
-                options={availableSourceLangs.length > 0 ? availableSourceLangs : undefined}
+                options={availableSourceLangs}
             />
 
             <div className="flex justify-center md:pb-2">
@@ -135,7 +135,7 @@ export function DbSetup() {
                 }}
                 disabled={isLoadingLangs}
                 exclude={config.sourceLang === 'all' ? undefined : config.sourceLang}
-                options={availableTargetLangs.length > 0 ? availableTargetLangs : undefined}
+                options={availableTargetLangs}
             />
         </div>
     );

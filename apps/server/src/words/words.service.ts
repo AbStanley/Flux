@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class WordsService {
@@ -74,9 +75,9 @@ export class WordsService {
     const { sourceLanguage, targetLanguage, sort, skip, take, type } =
       query || {};
 
-    const where = {
-      sourceLanguage: sourceLanguage ? { equals: sourceLanguage, mode: 'insensitive' } : undefined,
-      targetLanguage: targetLanguage ? { equals: targetLanguage, mode: 'insensitive' } : undefined,
+    const where: Prisma.WordWhereInput = {
+      sourceLanguage: sourceLanguage ? { equals: sourceLanguage, mode: 'insensitive' as Prisma.QueryMode } : undefined,
+      targetLanguage: targetLanguage ? { equals: targetLanguage, mode: 'insensitive' as Prisma.QueryMode } : undefined,
       type,
     };
 

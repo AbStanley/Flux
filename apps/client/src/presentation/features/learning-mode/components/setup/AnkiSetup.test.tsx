@@ -26,8 +26,9 @@ describe('AnkiSetup', () => {
         vi.clearAllMocks();
         (useGameStore as any).mockReturnValue(mockStore);
         (ankiService.getDeckNames as any).mockResolvedValue(['Deck 1', 'Deck 2']);
-        (ankiService.findCards as any).mockResolvedValue([123]);
-        (ankiService.getCardsInfo as any).mockResolvedValue([{
+        (ankiService.getDeckNames as any).mockResolvedValue(['Deck 1', 'Deck 2']);
+        (ankiService.findNotes as any).mockResolvedValue([123]);
+        (ankiService.getNotesInfo as any).mockResolvedValue([{
             fields: { Front: { value: 'q' }, Back: { value: 'a' } }
         }]);
     });
@@ -59,8 +60,8 @@ describe('AnkiSetup', () => {
 
         render(<AnkiSetup />);
         await waitFor(() => {
-            expect(ankiService.findCards).toHaveBeenCalledWith('deck:"Deck 1"');
-            expect(ankiService.getCardsInfo).toHaveBeenCalled();
+            expect(ankiService.findNotes).toHaveBeenCalledWith('deck:"Deck 1"');
+            expect(ankiService.getNotesInfo).toHaveBeenCalled();
         });
 
         expect(screen.getByText('Front Field (Question)')).toBeDefined();

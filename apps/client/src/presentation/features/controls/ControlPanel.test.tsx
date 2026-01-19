@@ -60,8 +60,8 @@ describe('ControlPanel', () => {
 
     it('renders all main controls', () => {
         render(<ControlPanel />);
-        expect(screen.getByText('Source Language')).toBeInTheDocument();
-        expect(screen.getByText('Target Language')).toBeInTheDocument();
+        expect(screen.getByText(/Foreign Language/i)).toBeInTheDocument();
+        expect(screen.getByText(/Native Language/i)).toBeInTheDocument();
         expect(screen.getByText('Generate Story')).toBeInTheDocument();
         expect(screen.getByText('Import File (PDF/EPUB)')).toBeInTheDocument();
     });

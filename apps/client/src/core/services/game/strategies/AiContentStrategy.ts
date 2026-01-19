@@ -1,10 +1,17 @@
 import type { IContentStrategy, GameItem, GameContentParams } from '../interfaces';
 import { ollamaService } from '@/infrastructure/ai/OllamaService';
 import { normalizeLanguageCode } from '../../../utils/language';
+import { COMMON_LANGUAGES } from '@/presentation/features/learning-mode/components/setup/LanguageSelector.constants';
 
 export class AiContentStrategy implements IContentStrategy {
     async validateAvailability(): Promise<boolean> {
         return ollamaService.checkHealth();
+    }
+
+    // Helper to get full name from code
+    private getLanguageName(code: string): string {
+        const found = COMMON_LANGUAGES.find(l => l.code === code.toLowerCase());
+        return found ? found.name : code;
     }
 
     async fetchItems(config: GameContentParams['config']): Promise<GameItem[]> {
@@ -19,8 +26,10 @@ export class AiContentStrategy implements IContentStrategy {
 
         const topic = config.aiTopic;
         const level = config.aiLevel || 'intermediate';
-        const sourceLang = config.language?.source || 'English';
-        let targetLang = config.language?.target || 'Spanish';
+
+        // Resolve full names for the prompt
+        const sourceLang = this.getLanguageName(config.language?.source || 'English');
+        let targetLang = this.getLanguageName(config.language?.target || 'Spanish');
 
         // Ensure source and target are not the same
         if (sourceLang.toLowerCase() === targetLang.toLowerCase()) {
@@ -32,22 +41,30 @@ export class AiContentStrategy implements IContentStrategy {
         const mode = config.gameMode || 'multiple-choice';
         const isStoryMode = mode === 'story';
 
+
+        const contextInstruction = mode === 'scramble'
+            ? 'Generate FULL SENTENCES.'
+            : 'Generate simple words or short phrases.';
+
         let prompt = `
-        Generate ${limit} vocabulary items or short phrases for a language learning game.
+        Generate ${limit} items for a language learning game.
         Topic: "${topic}"
         Difficulty Level: ${level}
-        Source Language: ${sourceLang}
-        Target Language: ${targetLang}
-        
-        Game Mode Context: ${mode} (If mode is 'scramble', generate sentences. If 'build-word', simple words).
+        Game Mode: ${mode} (${contextInstruction})
 
         Return strictly a JSON array of objects. Each object must have:
-        - "question": The word/phrase in ${sourceLang}.
+        - "question": The content in ${sourceLang}.
         - "answer": The translation in ${targetLang}.
-        - "context": A short example sentence using the word in ${targetLang} (or ${sourceLang} if more appropriate).
-        - "type": "word" or "phrase" (based on content).
+        - "context": A short example sentence using the word in ${targetLang}.
+        - "type": "word" or "phrase".
+
+        IMPORTANT criteria:
+        1. "question" and "answer" must be in the specified languages.
+        2. "question" and "answer" must NOT be identical (unless the word is the same in both languages, which should be rare).
+        3. Avoid proper nouns if they don't change between languages.
         `;
 
+        // Story mode override
         if (isStoryMode) {
             prompt = `
             Generate a short cohesive story about "${topic}" in ${targetLang} (Level: ${level}).
@@ -68,7 +85,7 @@ export class AiContentStrategy implements IContentStrategy {
             Do not include markdown. Just JSON.
             `;
         } else if (mode === 'scramble') {
-            prompt += `
+            prompt = `
              For "scramble" mode, generate ${limit} FULL SENTENCES about "${topic}".
              Level criteria:
              - Beginner: Simple Subject-Verb-Object sentences (5-8 words).
@@ -78,8 +95,8 @@ export class AiContentStrategy implements IContentStrategy {
              Current Level: ${level}
 
              Return strictly a JSON array of objects. Each object must have:
-             - "question": The full sentence in ${sourceLang} (for reference/hint).
-             - "answer": The full sentence in ${targetLang} (this will be scrambled).
+             - "question": The full sentence in ${targetLang} (for reference/hint).
+             - "answer": The full sentence in ${sourceLang} (this will be scrambled).
              - "context": A brief explanation of grammar or context if needed.
              - "type": "phrase"
 
@@ -90,7 +107,10 @@ export class AiContentStrategy implements IContentStrategy {
             
             Do not include markdown formatting or explanations. Just the JSON array.
              `;
-        } else {
+        }
+
+        // Add Example for default/dictation/build-word
+        if (!isStoryMode && mode !== 'scramble') {
             prompt += `
              Example JSON format:
             [
@@ -116,7 +136,7 @@ export class AiContentStrategy implements IContentStrategy {
             const cleanJson = responseText.slice(jsonStart, jsonEnd);
             const parsed = JSON.parse(cleanJson);
 
-            return parsed.map((item: { question: string; answer: string; context?: string; type?: 'word' | 'phrase' }, index: number) => ({
+            const filtered = parsed.map((item: { question: string; answer: string; context?: string; type?: 'word' | 'phrase' }, index: number) => ({
                 id: `ai-${Date.now()}-${index}`,
                 question: item.question,
                 answer: item.answer,
@@ -124,14 +144,24 @@ export class AiContentStrategy implements IContentStrategy {
                 source: 'ai',
                 type: item.type || 'word',
                 lang: {
-                    source: normalizeLanguageCode(sourceLang),
-                    target: normalizeLanguageCode(targetLang)
+                    source: normalizeLanguageCode(mode === 'scramble' ? targetLang : sourceLang),
+                    target: normalizeLanguageCode(mode === 'scramble' ? sourceLang : targetLang)
                 }
-            }));
+            })).filter((item: GameItem) => {
+                const isValid = item.question && item.answer && item.question.toLowerCase() !== item.answer.toLowerCase();
+                if (!isValid) console.warn("[AiStrategy] Filtered invalid/duplicate item:", item);
+                return isValid;
+            });
+
+            if (filtered.length === 0) {
+                throw new Error(`AI generated ${parsed.length} items but all were invalid or identical question/answers. Try a different topic or model.`);
+            }
+
+            return filtered;
 
         } catch (e) {
             console.error("AI Generation Error", e, responseText);
-            throw new Error("Failed to parse AI response. " + (e instanceof Error ? e.message : String(e)));
+            throw new Error((e instanceof Error ? e.message : String(e)));
         }
     }
 }

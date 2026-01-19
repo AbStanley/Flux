@@ -15,7 +15,7 @@ describe('DatabaseContentStrategy', () => {
         (wordsApi.getAll as any).mockImplementation(async (params: any) => {
             if (params.type === 'phrase') {
                 return {
-                    items: [{ id: 'p1', text: 'A phrase', type: 'phrase', definition: 'Une phrase', sourceLanguage: 'en', targetLanguage: 'fr' }],
+                    items: [{ id: 'p1', text: 'A phrase', type: 'phrase', definition: 'Une phrase longue', sourceLanguage: 'en', targetLanguage: 'fr' }],
                     total: 1
                 };
             }
@@ -95,4 +95,88 @@ describe('DatabaseContentStrategy', () => {
         const hasPhrase = dictationItems.some(i => i.type === 'phrase');
         expect(hasPhrase).toBe(false);
     });
+
+
+    it('should handle reverse fetch for scramble mode correctly', async () => {
+        // Mock wordsApi.getAll to return empty for forward, and match for reverse
+        (wordsApi.getAll as any).mockImplementation((params: any) => {
+            // Forward (Es->En) -> Empty
+            if (params.sourceLanguage === 'es' && params.targetLanguage === 'en') {
+                return Promise.resolve({ items: [], total: 0 });
+            }
+            // Reverse (En->Es) -> Mock Match
+            if (params.sourceLanguage === 'en' && params.targetLanguage === 'es') {
+                const mockWord = {
+                    id: 'w1',
+                    text: 'Cat',
+                    definition: 'Gato',
+                    sourceLanguage: 'en',
+                    targetLanguage: 'es',
+                    examples: [{
+                        id: 'ex1',
+                        sentence: 'The cat is black', // Source (En)
+                        translation: 'El gato es negro', // Target (Es)
+                    }],
+                    type: 'word'
+                };
+                return Promise.resolve({ items: [mockWord], total: 1 });
+            }
+            return Promise.resolve({ items: [], total: 0 });
+        });
+
+        const items = await strategy.fetchItems({
+            gameMode: 'scramble',
+            language: { source: 'es', target: 'en' }
+        });
+
+
+        expect(items.length).toBeGreaterThan(0);
+        const item = items[0];
+
+
+        // Reverse Fetch Logic:
+        // Word is En->Es. User wants Es->En.
+        // We are using the "Example" of the word.
+        // Example: Sentence="The cat..."(En), Translation="El gato..."(Es).
+        // Goal: Learn Es (Source). Prompt: En (Target).
+        // Answer (Scramble) should be "El gato..." (Es).
+        // Question (Prompt) should be "The cat..." (En).
+        // Lang Metadata: Source=Es, Target=En.
+
+        expect(item.question).toBe('The cat is black'); // Wait, check implementation logic again?
+
+        // Let's check implementation behavior:
+        // mapExampleToGameItem(..., swap=true)
+        // if (swap) {
+        //    q = example.sentence; // "The cat is black" (En)
+        //    a = example.translation; // "El gato es negro" (Es)
+        //    ...
+        //    lang: { source: tLang (Es), target: sLang (En) }
+        // }
+        // Wait, if lang.source = Es, lang.target = En.
+        // The prompt (Question) should be in SOURCE language (Es) usually?
+        // Or is Question the "native" prompt and Answer is "target" to learn?
+
+        // In this app:
+        // "Question" is displayed to user.
+        // "Answer" is what they have to build/scramble.
+
+        // If I want to learn SPANISH.
+        // Prompt should be ENGLISH. (e.g. "The cat is black")
+        // I have to build "El gato es negro".
+
+        // So Question = English ("The cat is black").
+        // Answer = Spanish ("El gato es negro").
+
+        // Logic in implementation:
+        // q = example.sentence ("The cat is black" - En)
+        // a = example.translation ("El gato es negro" - Es)
+
+        // So Question IS English. Correct.
+        // Answer IS Spanish. Correct.
+
+        expect(item.question).toBe('The cat is black');
+        expect(item.answer).toBe('El gato es negro');
+    });
 });
+

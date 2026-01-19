@@ -66,6 +66,11 @@ export function LanguageSelector({
                             <span className="uppercase">Any / Detect</span>
                         </span>
                     </SelectItem>}
+                    {options && options.length === 0 && (
+                        <SelectItem value="none" disabled>
+                            <span className="text-muted-foreground italic">No languages found</span>
+                        </SelectItem>
+                    )}
                     {displayOptions.map(lang => (
                         <SelectItem
                             key={lang.code}

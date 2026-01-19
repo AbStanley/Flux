@@ -2,8 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { ollamaService } from '@/infrastructure/ai/OllamaService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
-import { RefreshCw, Pencil } from 'lucide-react';
+import { ArrowRightLeft, RefreshCw, Pencil } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/button';
+import { LanguageSelector } from './LanguageSelector';
 import { Input } from '@/presentation/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -61,6 +62,40 @@ export const AiSetup = () => {
                 </h3>
 
                 <div className="space-y-4">
+                    {/* Language Selection */}
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
+                        <LanguageSelector
+                            label="Foreign Language 🌍"
+                            value={config.sourceLang}
+                            onChange={(val) => updateConfig({ sourceLang: val })}
+                            disabled={loading}
+                        />
+
+                        <div className="flex justify-center md:pb-2">
+                            <Button
+                                size="icon"
+                                variant="outline"
+                                className="rounded-full shadow-sm hover:scale-110 transition-transform"
+                                onClick={() => updateConfig({
+                                    sourceLang: config.targetLang,
+                                    targetLang: config.sourceLang
+                                })}
+                                title="Swap Languages"
+                            >
+                                <ArrowRightLeft className="w-4 h-4" />
+                            </Button>
+                        </div>
+
+                        <LanguageSelector
+                            label="Native Language 🏠"
+                            value={config.targetLang}
+                            onChange={(val) => updateConfig({ targetLang: val })}
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div className="h-px bg-border my-2" />
+
                     {/* Model Selection */}
                     <div className="space-y-1.5">
                         <div className="space-y-1.5 mb-3">

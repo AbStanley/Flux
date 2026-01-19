@@ -27,8 +27,8 @@ describe('DbSetup', () => {
 
     it('should render language selectors', () => {
         render(<DbSetup />);
-        expect(screen.getByText('Source Language (Question)')).toBeDefined();
-        expect(screen.getByText('Target Language (Answer)')).toBeDefined();
+        expect(screen.getByText(/Foreign Language/i)).toBeDefined();
+        expect(screen.getByText(/Native Language/i)).toBeDefined();
     });
 
     it('should fetch languages on mount', async () => {

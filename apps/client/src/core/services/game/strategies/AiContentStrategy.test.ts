@@ -76,16 +76,40 @@ describe('AiContentStrategy', () => {
         const items = await strategy.fetchItems({
             aiTopic: 'Animals',
             gameMode: 'scramble',
-            aiLevel: 'beginner'
+            aiLevel: 'beginner',
+            language: { source: 'Spanish', target: 'English' }
         });
 
         expect(items).toHaveLength(1);
         expect(items[0].answer).toBe('El perro corre.');
+        // Verify language metadata is swapped (Source=English, Target=Spanish)
+        expect(items[0].lang?.source).toBe('en-US');
+        expect(items[0].lang?.target).toBe('es-ES');
 
         // Verify call args to ensure correct prompt/model passed
         expect(ollamaService.generateText).toHaveBeenCalledWith(
             expect.stringContaining('scramble'),
             undefined // No model specified in this call
+        );
+    });
+
+    it('should convert language codes to full names in prompt', async () => {
+        const mockResponse = JSON.stringify([{ question: "Hello", answer: "Hola" }]);
+        ollamaService.generateText = vi.fn().mockResolvedValue(mockResponse);
+
+        await strategy.fetchItems({
+            aiTopic: 'Test',
+            language: { source: 'en', target: 'es' } // Codes
+        });
+
+        // Prompt should contain full names
+        expect(ollamaService.generateText).toHaveBeenCalledWith(
+            expect.stringContaining('"question": The content in English'),
+            undefined
+        );
+        expect(ollamaService.generateText).toHaveBeenCalledWith(
+            expect.stringContaining('"answer": The translation in Spanish'),
+            undefined
         );
     });
 
@@ -104,8 +128,22 @@ describe('AiContentStrategy', () => {
         expect(items[0].question).toBe('Gato');
     });
 
+    it('should throw error if all items are filtered (duplicates)', async () => {
+        const mockResponse = JSON.stringify([
+            { question: "Same", answer: "Same", type: "word" },
+            { question: "Test", answer: "test", type: "word" }
+        ]);
+
+        ollamaService.generateText = vi.fn().mockResolvedValue(mockResponse);
+
+        await expect(strategy.fetchItems({
+            aiTopic: 'Fail',
+            language: { source: 'English', target: 'Spanish' }
+        })).rejects.toThrow(/AI generated 2 items but all were invalid/);
+    });
+
     it('should throw error on invalid JSON', async () => {
         vi.mocked(ollamaService.generateText).mockResolvedValue("Not JSON");
-        await expect(strategy.fetchItems({ aiTopic: 'Test' })).rejects.toThrow("Failed to parse");
+        await expect(strategy.fetchItems({ aiTopic: 'Test' })).rejects.toThrow("Invalid format from AI");
     });
 });

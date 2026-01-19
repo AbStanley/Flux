@@ -38,7 +38,7 @@ describe('GameSetup', () => {
         expect(screen.getByText('Training Arena')).toBeDefined();
         // Since source is 'db', DbSetup should be visible (by Source Language label)
         // Note: content visibility depends on active tab which defaults to config.source ('db')
-        expect(screen.getByText('Source Language (Question)')).toBeDefined();
+        expect(screen.getByText(/Foreign Language/i)).toBeDefined();
     });
 
     it('should switch tabs', () => {

@@ -10,14 +10,25 @@ vi.mock('../../infrastructure/ai/OllamaService', () => {
     OllamaServiceMock.prototype.setModel = vi.fn();
     OllamaServiceMock.prototype.explainText = vi.fn();
     OllamaServiceMock.prototype.translateText = vi.fn();
+    OllamaServiceMock.prototype.setBaseUrl = vi.fn();
     return { OllamaService: OllamaServiceMock };
 });
+
+const mockSetAiModel = vi.fn();
+vi.mock('../../presentation/features/reader/store/useReaderStore', () => ({
+    useReaderStore: () => ({
+        aiModel: null,
+        aiHost: '',
+        setAiModel: mockSetAiModel
+    })
+}));
 
 interface MockOllamaService {
     getAvailableModels: Mock<() => Promise<string[]>>;
     setModel: Mock<(model: string) => void>;
     explainText: Mock<(text: string, targetLanguage?: string, context?: string) => Promise<string>>;
     translateText: Mock<(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string) => Promise<string>>;
+    setBaseUrl: Mock<(url: string) => void>;
 }
 
 describe('useAIHandler', () => {
@@ -29,6 +40,7 @@ describe('useAIHandler', () => {
         mockService = OllamaService.prototype as unknown as MockOllamaService;
         mockService.getAvailableModels.mockResolvedValue(['llama3']);
         mockService.setModel.mockReturnValue(undefined);
+        mockService.setBaseUrl.mockReturnValue(undefined);
     });
 
     it('initializes with default state', () => {
