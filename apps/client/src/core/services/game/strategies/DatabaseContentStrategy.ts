@@ -1,5 +1,6 @@
 import type { GameContentParams, GameItem, IContentStrategy } from '../interfaces';
 import { wordsApi, type Word, type Example } from '../../../../infrastructure/api/words';
+import { normalizeLanguageCode } from '../../../utils/language';
 
 export class DatabaseContentStrategy implements IContentStrategy {
     async validateAvailability(): Promise<boolean> {
@@ -112,8 +113,14 @@ export class DatabaseContentStrategy implements IContentStrategy {
                 }
             });
 
+            // Filter out items with less than 3 words for scramble mode
+            const filteredItems = items.filter(item => {
+                const wordCount = item.answer.trim().split(/\s+/).length;
+                return wordCount >= 3;
+            });
+
             // Shuffle and limit
-            return items.sort(() => 0.5 - Math.random()).slice(0, limit);
+            return filteredItems.sort(() => 0.5 - Math.random()).slice(0, limit);
 
         } catch (error) {
             console.error('Failed to fetch scramble items from DB:', error);
@@ -136,8 +143,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
             source: 'db',
             type: 'phrase',
             lang: {
-                source: this.normalizeLanguageCode(sourceLang),
-                target: this.normalizeLanguageCode(targetLang)
+                source: normalizeLanguageCode(sourceLang),
+                target: normalizeLanguageCode(targetLang)
             },
             originalData: { example, parentWord }
         };
@@ -157,34 +164,11 @@ export class DatabaseContentStrategy implements IContentStrategy {
             source: 'db',
             type: word.type === 'phrase' ? 'phrase' : 'word',
             lang: {
-                source: this.normalizeLanguageCode(swap ? targetLang : sourceLang),
-                target: this.normalizeLanguageCode(swap ? sourceLang : targetLang)
+                source: normalizeLanguageCode(swap ? targetLang : sourceLang),
+                target: normalizeLanguageCode(swap ? sourceLang : targetLang)
             },
             originalData: word
         };
-    }
-
-    private normalizeLanguageCode(lang: string): string {
-        const map: Record<string, string> = {
-            'english': 'en-US',
-            'russian': 'ru-RU',
-            'spanish': 'es-ES',
-            'french': 'fr-FR',
-            'german': 'de-DE',
-            'italian': 'it-IT',
-            'portuguese': 'pt-BR',
-            'japanese': 'ja-JP',
-            'chinese': 'zh-CN',
-            'korean': 'ko-KR',
-            'en': 'en-US',
-            'ru': 'ru-RU',
-            'es': 'es-ES',
-            'fr': 'fr-FR',
-            'de': 'de-DE'
-        };
-
-        const lower = lang.toLowerCase();
-        return map[lower] || (lower.length === 2 ? lower : 'en-US');
     }
 }
 

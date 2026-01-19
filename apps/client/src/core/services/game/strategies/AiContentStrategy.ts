@@ -1,5 +1,6 @@
 import type { IContentStrategy, GameItem, GameContentParams } from '../interfaces';
 import { ollamaService } from '@/infrastructure/ai/OllamaService';
+import { normalizeLanguageCode } from '../../../utils/language';
 
 export class AiContentStrategy implements IContentStrategy {
     async validateAvailability(): Promise<boolean> {
@@ -19,7 +20,14 @@ export class AiContentStrategy implements IContentStrategy {
         const topic = config.aiTopic;
         const level = config.aiLevel || 'intermediate';
         const sourceLang = config.language?.source || 'English';
-        const targetLang = config.language?.target || 'Spanish';
+        let targetLang = config.language?.target || 'Spanish';
+
+        // Ensure source and target are not the same
+        if (sourceLang.toLowerCase() === targetLang.toLowerCase()) {
+            console.warn(`Source and Target languages are the same (${sourceLang}). Defaulting Target to English (or Spanish if source is English).`);
+            targetLang = sourceLang.toLowerCase() === 'english' ? 'Spanish' : 'English';
+        }
+
         const limit = config.limit || 10;
         const mode = config.gameMode || 'multiple-choice';
         const isStoryMode = mode === 'story';
@@ -116,8 +124,8 @@ export class AiContentStrategy implements IContentStrategy {
                 source: 'ai',
                 type: item.type || 'word',
                 lang: {
-                    source: sourceLang,
-                    target: targetLang
+                    source: normalizeLanguageCode(sourceLang),
+                    target: normalizeLanguageCode(targetLang)
                 }
             }));
 

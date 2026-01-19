@@ -26,7 +26,20 @@ export const useGameAudio = () => {
                 window.speechSynthesis.cancel();
 
                 const u = new SpeechSynthesisUtterance(text);
-                if (lang) u.lang = lang;
+                if (lang) {
+                    u.lang = lang;
+                    // Try to find a specific voice for this language
+                    const voices = window.speechSynthesis.getVoices();
+                    const lowerLang = lang.toLowerCase();
+                    const voice = voices.find(v => {
+                        const vLang = v.lang.toLowerCase().replace('_', '-');
+                        return vLang === lowerLang || vLang.startsWith(lowerLang + '-');
+                    });
+
+                    if (voice) {
+                        u.voice = voice;
+                    }
+                }
 
                 const timeoutId = setTimeout(() => {
                     resolve();

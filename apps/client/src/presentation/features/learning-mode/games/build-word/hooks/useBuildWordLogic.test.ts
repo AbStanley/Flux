@@ -46,6 +46,11 @@ describe('useBuildWordLogic', () => {
             playAudio: mockPlayAudio,
             stopAudio: mockStopAudio
         });
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     describe('Initialization', () => {
@@ -69,6 +74,9 @@ describe('useBuildWordLogic', () => {
 
         it('should play audio on initialization', () => {
             renderHook(() => useBuildWordLogic());
+            act(() => {
+                vi.advanceTimersByTime(200);
+            });
             expect(mockPlayAudio).toHaveBeenCalledWith('Gato', 'es', undefined);
         });
 

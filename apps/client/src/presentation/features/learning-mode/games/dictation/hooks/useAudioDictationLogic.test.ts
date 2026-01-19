@@ -26,6 +26,7 @@ describe('useAudioDictationLogic', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.useFakeTimers();
 
         // Mock Store
         (useGameStore as any).mockReturnValue({
@@ -45,11 +46,19 @@ describe('useAudioDictationLogic', () => {
         });
     });
 
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it('should initialize and play target audio by default', () => {
         const { result } = renderHook(() => useAudioDictationLogic());
 
         // Default mode is target (dictation)
         expect(result.current.audioMode).toBe('target');
+
+        act(() => {
+            vi.advanceTimersByTime(200);
+        });
 
         // Should play target audio (answer + target lang)
         expect(mockPlayAudio).toHaveBeenCalledWith(mockItem.answer, mockItem.lang.target, undefined);

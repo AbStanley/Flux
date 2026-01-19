@@ -75,8 +75,8 @@ export class WordsService {
       query || {};
 
     const where = {
-      sourceLanguage,
-      targetLanguage,
+      sourceLanguage: sourceLanguage ? { equals: sourceLanguage, mode: 'insensitive' } : undefined,
+      targetLanguage: targetLanguage ? { equals: targetLanguage, mode: 'insensitive' } : undefined,
       type,
     };
 
