@@ -129,6 +129,25 @@ const ReaderTokenComponent = ({
         }).catch(err => console.error(err));
     };
 
+    // Local state for popup hover interaction
+    const [isPopupHovered, setIsPopupHovered] = useState(false);
+
+    // Helper to calculate collapsed text
+    const getCollapsedText = (source: string | undefined, translation: string | undefined, isHovered: boolean): string | undefined => {
+        if (isHovered || !source || !translation) return undefined;
+        // Truncation logic: If translation is longer than source, collapse it.
+        // Limit visual width to roughly source text length.
+        const sourceLen = source.trim().length;
+        const transLen = translation.trim().length;
+
+        if (transLen > sourceLen) {
+            if (sourceLen <= 4) return;
+            return translation.slice(0, sourceLen - 1);
+        }
+        return undefined;
+    };
+
+
     // 3. Conditional Returns (After hooks)
     if (isHeaderMarker) return null;
     if (hasNewline) return <br />;
@@ -150,7 +169,7 @@ const ReaderTokenComponent = ({
             ) : ''} 
                 ${(isHoveredWord && !isSelected) ? tokenStyles.hoveredWord : ''}
                 ${(isHoveredWord && isSelected) ? tokenStyles.hoveredSelected : ''} 
-                ${isHoveredWord ? tokenStyles.zIndexTop : ''}
+                ${(isHoveredWord || isPopupHovered) ? tokenStyles.zIndexTop : ''}
                 ${isTitle ? 'text-xl font-bold text-foreground inline-block my-2' : ''}
             `}
             onClick={(e) => {
@@ -191,6 +210,8 @@ const ReaderTokenComponent = ({
                         e.stopPropagation();
                         onHover(index, 'popup');
                     }}
+                    onMouseEnter={() => setIsPopupHovered(true)}
+                    onMouseLeave={() => setIsPopupHovered(false)}
                 >
                     {/* DEBUG RENDER */}
                     <ReaderTokenPopup
@@ -200,6 +221,7 @@ const ReaderTokenComponent = ({
                         onRegenerate={() => onRegenerate(index, false)}
                         onSave={() => handleSave(groupTranslation)}
                         isSaved={isSaved}
+                        collapsedText={getCollapsedText(groupText || token, groupTranslation, isPopupHovered)}
                     />
                 </span>
             )}
@@ -220,6 +242,8 @@ const ReaderTokenComponent = ({
                         e.stopPropagation();
                         onHover(index, 'token');
                     }}
+                    onMouseEnter={() => setIsPopupHovered(true)}
+                    onMouseLeave={() => setIsPopupHovered(false)}
                 >
                     <ReaderTokenPopup
                         translation={hoverTranslation}
@@ -228,6 +252,7 @@ const ReaderTokenComponent = ({
                         onRegenerate={() => onRegenerate(index, true)}
                         onSave={() => handleSave(hoverTranslation)}
                         isSaved={isSaved}
+                        collapsedText={getCollapsedText(token, hoverTranslation, isPopupHovered)}
                     />
                 </span>
             )}

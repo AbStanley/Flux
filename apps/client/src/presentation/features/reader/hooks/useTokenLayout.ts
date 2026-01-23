@@ -53,7 +53,7 @@ export const useTokenLayout = ({
 
             const spaceToRight = rightEdge - rect.left;
 
-            const threshold = groupTranslation ? 80 : 350;
+            const threshold = groupTranslation ? 120 : 350;
 
             const isRight = spaceToRight < threshold;
             setIsRightAligned(isRight);

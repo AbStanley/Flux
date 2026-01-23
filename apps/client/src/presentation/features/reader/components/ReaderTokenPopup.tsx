@@ -1,5 +1,5 @@
 import ReactMarkdown from 'react-markdown';
-import { Search, Volume2, RefreshCcw, Save, Check, Loader2 } from 'lucide-react';
+import { Search, Volume2, RefreshCcw, Save, Check, Loader2, ChevronRight } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 
 interface ReaderTokenPopupProps {
@@ -9,6 +9,7 @@ interface ReaderTokenPopupProps {
     onRegenerate: () => void;
     onSave: () => void;
     isSaved?: boolean;
+    collapsedText?: string;
 }
 
 export function ReaderTokenPopup({
@@ -17,7 +18,8 @@ export function ReaderTokenPopup({
     onMoreInfo,
     onRegenerate,
     onSave,
-    isSaved
+    isSaved,
+    collapsedText
 }: ReaderTokenPopupProps) {
     const buttonClass = cn(
         "ml-1 p-1 rounded-full cursor-pointer shadow-sm border border-border/10",
@@ -33,6 +35,20 @@ export function ReaderTokenPopup({
 
     const isLoading = translation === "...";
 
+    if (collapsedText) {
+        return (
+            <span className="flex items-center justify-center p-1 text-xs whitespace-nowrap"
+                onMouseDown={(e) => e.stopPropagation()}
+                onMouseUp={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {collapsedText}
+                <ChevronRight size={12} className="ml-0.5 inline-block opacity-70" strokeWidth={4} />
+            </span>
+        );
+    }
+
     return (
         <span
             className="flex items-center group flex-wrap"
@@ -43,7 +59,7 @@ export function ReaderTokenPopup({
         >
             <span className="flex-1 min-w-0 flex items-center">
                 {isLoading ? (
-                    <span className="flex items-center gap-2 text-xs text-muted-foreground italic px-2">
+                    <span className="flex items-center gap-2 text-sm font-medium px-2">
                         <Loader2 className="animate-spin" size={12} />
                         <span>Translating...</span>
                     </span>
