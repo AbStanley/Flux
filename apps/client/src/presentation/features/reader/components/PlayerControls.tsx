@@ -1,33 +1,16 @@
 import { useEffect, useState } from 'react';
-
-import { Button } from "../../../components/ui/button";
-import { ChevronsUp, ChevronsDown } from "lucide-react";
-import { SettingsModal } from "../../../components/settings/SettingsModal";
+import { SettingsModal } from "@/presentation/components/settings/SettingsModal";
 import { useAudioStore } from '../store/useAudioStore';
 import { useReaderStore } from '../store/useReaderStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { PlaybackControls } from './controls/PlaybackControls';
 import { TimelineControl } from './controls/TimelineControl';
 import { VoiceSettings } from './controls/VoiceSettings';
-import { ReaderSettings, TranslationSettings } from './controls/ReaderSettings';
+import { ReaderSettings, TranslationSettings, GrammarModeToggle } from './controls/ReaderSettings';
+import { CollapseExpandButton } from './controls/CollapseExpandButton';
 
 interface PlayerControlsProps {
     vertical?: boolean;
-}
-
-// Collapse/Expand button component for consistent positioning
-function CollapseExpandButton({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: () => void }) {
-    return (
-        <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
-            onClick={onToggle}
-            title={isCollapsed ? "Expand Player" : "Collapse Player"}
-        >
-            {isCollapsed ? <ChevronsDown className="h-4 w-4" /> : <ChevronsUp className="h-4 w-4" />}
-        </Button>
-    );
 }
 
 export function PlayerControls({ vertical = false }: PlayerControlsProps) {
@@ -54,6 +37,8 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
     const { text, tokens: readerTokens, clearSelection } = useReaderStore();
     const selectionMode = useReaderStore(state => state.selectionMode);
     const setSelectionMode = useReaderStore(state => state.setSelectionMode);
+    const readingMode = useReaderStore(state => state.readingMode);
+    const setReadingMode = useReaderStore(state => state.setReadingMode);
 
     // Translation Controls
     const {
@@ -84,6 +69,10 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
         } else {
             play(text);
         }
+    };
+
+    const handleGrammarToggle = () => {
+        setReadingMode(readingMode === 'GRAMMAR' ? 'STANDARD' : 'GRAMMAR');
     };
 
     if (!text.trim()) return null;
@@ -133,6 +122,10 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                         />
                     </div>
                     <div className="hidden md:flex items-center gap-4 shrink-0">
+                        <GrammarModeToggle
+                            isGrammarMode={readingMode === 'GRAMMAR'}
+                            onToggle={handleGrammarToggle}
+                        />
 
                         {/* Translation Controls */}
                         <TranslationSettings
@@ -191,6 +184,8 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
 
                 {/* Right Group: Voice Settings & Collapse Button */}
                 <div className={`flex items-center gap-4 flex-1 w-full justify-end ${vertical ? 'flex-col items-stretch' : 'md:w-auto overflow-hidden'}`}>
+
+
                     <VoiceSettings
                         selectedVoiceName={selectedVoice?.name}
                         availableVoices={availableVoices}
@@ -227,6 +222,14 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                         clearSelection();
                     }}
                 />
+
+                {!vertical && (
+                    <GrammarModeToggle
+                        isGrammarMode={readingMode === 'GRAMMAR'}
+                        onToggle={handleGrammarToggle}
+                    />
+                )}
+
                 {/* Settings Button */}
                 <SettingsModal />
 

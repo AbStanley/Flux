@@ -4,7 +4,7 @@ import { OllamaService } from './ollama.service';
 
 @Controller('api')
 export class OllamaController {
-  constructor(private readonly ollamaService: OllamaService) {}
+  constructor(private readonly ollamaService: OllamaService) { }
 
   @Post('chat')
   async chat(
@@ -76,5 +76,30 @@ export class OllamaController {
     },
   ) {
     return await this.ollamaService.generateExamples(body);
+  }
+
+  @Post('analyze-grammar')
+  async analyzeGrammar(
+    @Body()
+    body: {
+      text: string;
+      sourceLanguage: string;
+      targetLanguage: string;
+      model?: string;
+    },
+  ) {
+    try {
+      return await this.ollamaService.analyzeGrammar(body);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      // If it's a known connection error, 503 Service Unavailable
+      if (message.includes('Could not connect')) {
+        // Rethrow as HttpException if possible, but for now simple throw propagates logging.
+        // Ideally import HttpException from @nestjs/common
+        // Let's just return a formatted error object for now if 500 persists.
+        throw error;
+      }
+      throw error;
+    }
   }
 }

@@ -20,8 +20,10 @@ export default defineConfig({
     port: parseInt(process.env.VITE_PORT || '5173'),
     proxy: {
       '/api': {
-        target: process.env.VITE_API_TARGET || 'http://localhost:3002',
+        target: process.env.VITE_API_TARGET || 'http://127.0.0.1:3002',
         changeOrigin: true,
+        timeout: 300000, // 5 minutes
+        proxyTimeout: 300000,
       },
       '/anki': {
         target: 'http://127.0.0.1:8765',

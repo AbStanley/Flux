@@ -1,7 +1,8 @@
-import { Button } from "../../../../components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select";
-import { Eye, EyeOff, Eraser } from "lucide-react";
+import { Button } from '@/presentation/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/presentation/components/ui/select';
+import { Eye, EyeOff, Eraser, BookA } from "lucide-react";
 import { SelectionMode } from '../../../../../core/types';
+import { Toggle } from '@/presentation/components/ui/toggle';
 
 
 
@@ -72,3 +73,24 @@ export function TranslationSettings({
         </div>
     );
 };
+
+interface GrammarModeToggleProps {
+    isGrammarMode: boolean;
+    onToggle: () => void;
+}
+
+export function GrammarModeToggle({ isGrammarMode, onToggle }: GrammarModeToggleProps) {
+    return (
+        <Toggle
+            pressed={isGrammarMode}
+            onPressedChange={onToggle}
+            variant="outline"
+            aria-label="Toggle Grammar Mode"
+            title="Grammar Mode: Analyze sentences one by one"
+            className={`h-8 gap-2 px-2 md:px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground ${isGrammarMode ? 'border-primary' : 'border-dashed'}`}
+        >
+            <BookA className="h-4 w-4" />
+            <span className="text-xs font-medium hidden md:inline">Grammar Mode</span>
+        </Toggle>
+    );
+}

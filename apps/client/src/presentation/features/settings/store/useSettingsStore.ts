@@ -45,8 +45,10 @@ interface SettingsState {
     font: ReaderFont;
     fontSize: FontSize;
     customThemes: CustomTheme[];
+    llmModel: string;
     setFont: (font: ReaderFont) => void;
     setFontSize: (size: FontSize) => void;
+    setLlmModel: (model: string) => void;
     addCustomTheme: (theme: CustomTheme) => void;
     removeCustomTheme: (id: string) => void;
     updateCustomTheme: (theme: CustomTheme) => void;
@@ -76,8 +78,10 @@ export const useSettingsStore = create<SettingsState>()(
             font: 'system',
             fontSize: 'medium',
             customThemes: [],
+            llmModel: '',  // Default to empty to let backend pick available model
             setFont: (font) => set({ font }),
             setFontSize: (fontSize) => set({ fontSize }),
+            setLlmModel: (llmModel) => set({ llmModel }),
             addCustomTheme: (theme) => set((state) => ({ customThemes: [...state.customThemes, theme] })),
             removeCustomTheme: (id) => set((state) => ({ customThemes: state.customThemes.filter((t) => t.id !== id) })),
             updateCustomTheme: (theme) => set((state) => ({
