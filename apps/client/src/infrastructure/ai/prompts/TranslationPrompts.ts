@@ -107,7 +107,10 @@ IF IT IS A *SINGLE WORD*:
        - For Romance languages (Spanish, French, etc), MUST include BOTH "Preterite" AND "Imperfect".
        - Include "Future".
        - CRITICAL: You MUST include the specific tense of the "Segment to Analyze" if it is not one of the above.
-     - IMPORTANT: Use ${sourceLanguage || 'source language'} pronouns and verb forms.
+      - IMPORTANT: Use ALL standard personal pronouns for the language (e.g., I, You, He/She/It, We, You(pl), They).
+      - Ensure all persons (1st, 2nd, 3rd) and numbers (singular, plural) are represented.
+      - If multiple pronouns share the same verb form (e.g. "He/She" or "They/You"), you may group them or list them distinctively, but ensure NO standard pronoun is missing.
+      - Do NOT repeat the exact same conjugation row multiple times unnecessarily, but DO ensure the user sees the conjugation for every person.
      - STRICT PROHIBITION: Do NOT translate the conjugated verb forms into ${targetLanguage}. They MUST remain in ${sourceLanguage || 'the source language'}.
    - If it's NOT a verb, OMIT "conjugations".
    - OMIT "grammar" object usually used for single words (Part of Speech, etc) unless relevant to the *whole* sentence structure.

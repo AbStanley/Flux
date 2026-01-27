@@ -86,5 +86,24 @@ export const normalizeRichTranslation = (data: Record<string, unknown>): RichTra
         }
     }
 
+    // Normalize and Deduplicate Conjugations
+    if (data.conjugations) {
+        const conjugations = data.conjugations as Record<string, unknown>;
+        for (const tense in conjugations) {
+            if (Array.isArray(conjugations[tense])) {
+                const forms = conjugations[tense] as Array<{ pronoun: string; conjugation: string }>;
+
+                // Deduplicate based on pronoun + conjugation to avoid repeating "ona zavet" twice
+                const seen = new Set<string>();
+                conjugations[tense] = forms.filter(item => {
+                    const key = `${item.pronoun?.toLowerCase()}-${item.conjugation?.toLowerCase()}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+            }
+        }
+    }
+
     return data as unknown as RichTranslationResult;
 };

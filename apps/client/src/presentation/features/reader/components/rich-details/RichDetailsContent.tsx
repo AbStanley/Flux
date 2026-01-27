@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import { Button } from "../../../../components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Volume2 } from "lucide-react";
+import { useAudioStore } from '../../store/useAudioStore';
 import type { RichTranslationResult } from '../../../../../core/interfaces/IAIService';
 import { ConjugationsDisplay } from '../ConjugationsDisplay';
 import { AnalysisSection } from './AnalysisSection';
@@ -43,8 +44,19 @@ export function RichDetailsContent({ data, isLoading, error, onRegenerate }: Ric
         <div className="space-y-6">
             {/* Main Translation */}
             <div>
-                <div className="text-lg font-semibold text-primary mb-1 prose dark:prose-invert prose-p:my-0 prose-headings:my-0 prose-headings:text-lg prose-headings:font-semibold prose-headings:text-primary max-w-none">
-                    <ReactMarkdown>{data.segment}</ReactMarkdown>
+                <div className="flex items-center gap-2 mb-1">
+                    <div className="text-lg font-semibold text-primary prose dark:prose-invert prose-p:my-0 prose-headings:my-0 prose-headings:text-lg prose-headings:font-semibold prose-headings:text-primary max-w-none">
+                        <ReactMarkdown>{data.segment}</ReactMarkdown>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-full"
+                        onClick={() => useAudioStore.getState().playSingle(data.segment)}
+                        title="Play Audio"
+                    >
+                        <Volume2 className="h-4 w-4" />
+                    </Button>
                 </div>
                 <div className="text-2xl font-bold prose dark:prose-invert prose-p:my-0 prose-headings:my-1 max-w-none">
                     <ReactMarkdown>{data.translation}</ReactMarkdown>
