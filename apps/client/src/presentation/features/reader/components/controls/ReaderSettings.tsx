@@ -79,7 +79,7 @@ interface GrammarModeToggleProps {
     onToggle: () => void;
 }
 
-export function GrammarModeToggle({ isGrammarMode, onToggle }: GrammarModeToggleProps) {
+export function GrammarModeToggle({ isGrammarMode, onToggle, forceCollapsed = false }: GrammarModeToggleProps & { forceCollapsed?: boolean }) {
     return (
         <Toggle
             pressed={isGrammarMode}
@@ -88,9 +88,10 @@ export function GrammarModeToggle({ isGrammarMode, onToggle }: GrammarModeToggle
             aria-label="Toggle Grammar Mode"
             title="Grammar Mode: Analyze sentences one by one"
             className={`h-8 gap-2 px-2 md:px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground ${isGrammarMode ? 'border-primary' : 'border-dashed'}`}
+            size={forceCollapsed ? "sm" : "default"}
         >
             <BookA className="h-4 w-4" />
-            <span className="text-xs font-medium hidden md:inline">Grammar Mode</span>
+            <span className={`text-xs font-medium hidden ${forceCollapsed ? '' : 'md:inline'}`}>Grammar Mode</span>
         </Toggle>
     );
 }

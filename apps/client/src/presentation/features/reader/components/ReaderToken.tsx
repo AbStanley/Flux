@@ -140,7 +140,7 @@ const ReaderTokenComponent = ({
         const sourceLen = source.trim().length;
         const transLen = translation.trim().length;
 
-        if (transLen > sourceLen) {
+        if (transLen > sourceLen + 2) {
             if (sourceLen <= 4) return;
             return translation.slice(0, sourceLen - 1);
         }

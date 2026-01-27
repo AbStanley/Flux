@@ -3,6 +3,7 @@ import { SettingsModal } from "@/presentation/components/settings/SettingsModal"
 import { useAudioStore } from '../store/useAudioStore';
 import { useReaderStore } from '../store/useReaderStore';
 import { useTranslation } from '../hooks/useTranslation';
+import { useTranslationStore } from '../store/useTranslationStore';
 import { PlaybackControls } from './controls/PlaybackControls';
 import { TimelineControl } from './controls/TimelineControl';
 import { VoiceSettings } from './controls/VoiceSettings';
@@ -46,6 +47,10 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
         toggleShowTranslations,
         clearSelectionTranslations
     } = useTranslation();
+
+    // UI State for layout
+    const isRichInfoOpen = useTranslationStore(state => state.isRichInfoOpen);
+    const shouldCollapseGrammar = isRichInfoOpen && readingMode !== 'GRAMMAR';
 
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -125,6 +130,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                         <GrammarModeToggle
                             isGrammarMode={readingMode === 'GRAMMAR'}
                             onToggle={handleGrammarToggle}
+                            forceCollapsed={shouldCollapseGrammar}
                         />
 
                         {/* Translation Controls */}
@@ -227,6 +233,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                     <GrammarModeToggle
                         isGrammarMode={readingMode === 'GRAMMAR'}
                         onToggle={handleGrammarToggle}
+                        forceCollapsed={shouldCollapseGrammar}
                     />
                 )}
 
