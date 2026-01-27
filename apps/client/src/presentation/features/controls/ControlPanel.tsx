@@ -7,12 +7,14 @@ import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../../../core/constants/lang
 import { LearningControls } from "./LearningControls";
 import { ArrowRightLeft, Loader2 } from "lucide-react";
 import { useReaderStore } from '../reader/store/useReaderStore';
+import { useSettingsStore } from '../settings/store/useSettingsStore';
+
 import { useStoryGeneration } from './hooks/useStoryGeneration';
 import { FileImporter } from '../importer/FileImporter';
 import { AIControls } from './AIControls';
 import { ReaderInput } from './ReaderInput';
 import { cn } from "@/lib/utils";
-import type { ContentType } from '../../../infrastructure/ai/prompts/GenerationPrompts';
+
 
 export function ControlPanel() {
     const { aiService } = useServices();
@@ -28,13 +30,18 @@ export function ControlPanel() {
     const isGenerating = useReaderStore(state => state.isGenerating);
     const setIsGenerating = useReaderStore(state => state.setIsGenerating);
 
+    // Persistent Settings
+    const proficiencyLevel = useSettingsStore(state => state.proficiencyLevel);
+    const setProficiencyLevel = useSettingsStore(state => state.setProficiencyLevel);
+    const contentType = useSettingsStore(state => state.contentType);
+    const setContentType = useSettingsStore(state => state.setContentType);
+
     const [isImporterOpen, setIsImporterOpen] = useState(false);
 
     // Learning Mode State
     const [isLearningMode, setIsLearningMode] = useState(true);
-    const [proficiencyLevel, setProficiencyLevel] = useState("B1");
     const [topic, setTopic] = useState("");
-    const [contentType, setContentType] = useState<ContentType>('Story');
+
 
     const { generateStory, stopGeneration } = useStoryGeneration({
         aiService,

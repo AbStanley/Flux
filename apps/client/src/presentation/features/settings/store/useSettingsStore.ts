@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { ContentType } from '../../../../infrastructure/ai/prompts/GenerationPrompts';
 
 export type ReaderFont =
     | 'system'
@@ -46,9 +47,15 @@ interface SettingsState {
     fontSize: FontSize;
     customThemes: CustomTheme[];
     llmModel: string;
+    contentType: ContentType;
+    proficiencyLevel: string;
+
     setFont: (font: ReaderFont) => void;
     setFontSize: (size: FontSize) => void;
     setLlmModel: (model: string) => void;
+    setContentType: (type: ContentType) => void;
+    setProficiencyLevel: (level: string) => void;
+
     addCustomTheme: (theme: CustomTheme) => void;
     removeCustomTheme: (id: string) => void;
     updateCustomTheme: (theme: CustomTheme) => void;
@@ -79,9 +86,15 @@ export const useSettingsStore = create<SettingsState>()(
             fontSize: 'medium',
             customThemes: [],
             llmModel: '',  // Default to empty to let backend pick available model
+            contentType: 'Story',
+            proficiencyLevel: 'B1',
+
             setFont: (font) => set({ font }),
             setFontSize: (fontSize) => set({ fontSize }),
             setLlmModel: (llmModel) => set({ llmModel }),
+            setContentType: (contentType) => set({ contentType }),
+            setProficiencyLevel: (proficiencyLevel) => set({ proficiencyLevel }),
+
             addCustomTheme: (theme) => set((state) => ({ customThemes: [...state.customThemes, theme] })),
             removeCustomTheme: (id) => set((state) => ({ customThemes: state.customThemes.filter((t) => t.id !== id) })),
             updateCustomTheme: (theme) => set((state) => ({

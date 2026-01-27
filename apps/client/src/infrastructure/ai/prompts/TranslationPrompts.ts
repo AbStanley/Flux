@@ -81,6 +81,8 @@ Task: Analyze the text segment "${text}" ${fromLang}and translate it to ${target
 Input Data:
 - Full Sentence (Context): "${context || 'None'}"
 - Segment to Analyze: "${text}"
+- Source Language: "${sourceLanguage || 'Unknown'}"
+- Target Language: "${targetLanguage}"
 
 Instructions:
 1. Determine if "Segment to Analyze" is a SINGLE WORD or a SENTENCE.
@@ -100,23 +102,28 @@ IF IT IS A *SINGLE WORD*:
    - Set "type" to "word".
    - Identify the Part of Speech.
    - If it's a VERB (or acts as one in context):
-     - MUST include "conjugations":
+     - MUST include "conjugations" in ${sourceLanguage || 'the source language'}:
        - Include "Present".
        - For Romance languages (Spanish, French, etc), MUST include BOTH "Preterite" AND "Imperfect".
        - Include "Future".
-       - CRITICAL: You MUST include the specific tense of the "Segment to Analyze" if it is not one of the above (e.g. if the word is "Conditional", include "Conditional").
-     - IMPORTANT: Use SOURCE language pronouns.
+       - CRITICAL: You MUST include the specific tense of the "Segment to Analyze" if it is not one of the above.
+     - IMPORTANT: Use ${sourceLanguage || 'source language'} pronouns and verb forms.
+     - STRICT PROHIBITION: Do NOT translate the conjugated verb forms into ${targetLanguage}. They MUST remain in ${sourceLanguage || 'the source language'}.
    - If it's NOT a verb, OMIT "conjugations".
    - OMIT "grammar" object usually used for single words (Part of Speech, etc) unless relevant to the *whole* sentence structure.
 
-3. Provide 3 usage examples of the foreign language WITH translations in the native language.
-4. Provide 1-2 common alternatives in the foreign language WITH translations in the native language.
+3. Provide 3 usage examples in ${sourceLanguage || 'the source language'} WITH translations in ${targetLanguage}.
+   - CRITICAL: "sentence" MUST be in ${sourceLanguage || 'the source language'}.
+   - CRITICAL: "translation" MUST be in ${targetLanguage}.
+   - Ensure the examples are distinct from the input text.
+
+4. Provide 1-2 common alternatives in ${sourceLanguage || 'the source language'} WITH translations in ${targetLanguage}.
 
 Output Format: JSON ONLY.
 Structure:
 {
   "type": "word" or "sentence",
-  "translation": "translated text",
+  "translation": "translated text (${targetLanguage})",
   "segment": "original text",
   
   // IF WORD:
@@ -138,7 +145,7 @@ Structure:
   "grammarRules": ["Rule 1...", "Rule 2..."],
 
   "examples": [
-    { "sentence": "Foreign language sentence", "translation": "Native language translation" }
+    { "sentence": "Foreign language sentence (${sourceLanguage || 'source'})", "translation": "Native language translation (${targetLanguage})" }
   ],
   "alternatives": ["Alternative 1 (Translation)", "Alternative 2 (Translation)"]
 }
