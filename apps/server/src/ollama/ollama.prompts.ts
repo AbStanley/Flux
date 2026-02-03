@@ -1,13 +1,14 @@
 // --- From client/.. /GenerationPrompts.ts ---
 export type ContentType = 'Story' | 'Monologue' | 'Conversation';
 
-export const getStoryPrompt = (
-  sourceLang: string,
-  isLearningMode: boolean,
-  topic: string,
-  proficiencyLevel: string,
-  contentType: ContentType = 'Story'
-): string => {
+export const getStoryPrompt = (params: {
+  sourceLang: string;
+  isLearningMode: boolean;
+  proficiencyLevel: string;
+  topic?: string;
+  contentType?: ContentType;
+}): string => {
+  const { sourceLang, isLearningMode, proficiencyLevel, topic, contentType = 'Story' } = params;
   let contentDescription = "";
   switch (contentType) {
     case 'Monologue':

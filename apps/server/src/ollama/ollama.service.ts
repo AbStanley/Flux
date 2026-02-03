@@ -222,7 +222,7 @@ Example format:
   }
 
   async generateContent(params: {
-    topic: string;
+    topic?: string;
     sourceLanguage: string;
     isLearningMode: boolean;
     proficiencyLevel: string;
@@ -233,7 +233,13 @@ Example format:
     const { topic, sourceLanguage, isLearningMode, proficiencyLevel, contentType } = params;
     model = await this.ensureModel(model);
 
-    const prompt = getStoryPrompt(sourceLanguage, isLearningMode, topic, proficiencyLevel, contentType);
+    const prompt = getStoryPrompt({
+      sourceLang: sourceLanguage,
+      isLearningMode,
+      topic,
+      proficiencyLevel,
+      contentType
+    });
 
     this.logger.log(`Generating content (${contentType}) with model: ${model}`);
     const response = await this.generate(model, prompt, false);
@@ -389,9 +395,8 @@ Example format:
   }
 
   private cleanResponse(text: string): string {
-    // Remove any thought bubbles <think>...</think> if present (common in some thinking models)
-    // Remove generic filler "Here is the translation:" etc if logic wasn't perfect
-    // But mainly just trim for now as prompts are strict
+    // It removes any thought bubbles <think>...</think> if present (common in some thinking models)
+    // and generic filler "Here is the translation:" etc if logic wasn't perfect
     return text.trim();
   }
 }

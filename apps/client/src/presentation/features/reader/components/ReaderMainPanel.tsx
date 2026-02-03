@@ -67,7 +67,7 @@ export function ReaderMainPanel() {
 
     // Auto-detect and set model if missing or legacy 'llama2'
     useEffect(() => {
-        if (!llmModel || llmModel === 'llama2') {
+        if (!llmModel || llmModel === 'translategemma:4b') {
             fetch('/api/tags')
                 .then(res => res.json())
                 .then(data => {

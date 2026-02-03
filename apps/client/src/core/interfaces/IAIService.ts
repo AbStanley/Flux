@@ -73,7 +73,7 @@ export interface IAIService {
      * Generates content with strict parameters.
      */
     generateContent(params: {
-        topic: string;
+        topic?: string;
         sourceLanguage: string;
         isLearningMode: boolean;
         proficiencyLevel: ProficiencyLevel;

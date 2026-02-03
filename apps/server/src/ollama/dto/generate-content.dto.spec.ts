@@ -15,6 +15,19 @@ describe('GenerateContentDto', () => {
         expect(errors.length).toBe(0);
     });
 
+    it('should pass with optional topic', async () => {
+        const dto = new GenerateContentDto();
+        // topic is optional
+        dto.sourceLanguage = 'es';
+        dto.isLearningMode = true;
+        dto.proficiencyLevel = ProficiencyLevel.B1;
+        dto.contentType = ContentType.Story;
+        dto.model = 'gemma:4b';
+
+        const errors = await validate(dto);
+        expect(errors.length).toBe(0);
+    });
+
     it('should fail with invalid model', async () => {
         const dto = new GenerateContentDto();
         dto.topic = 'test';

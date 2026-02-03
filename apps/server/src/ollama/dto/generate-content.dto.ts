@@ -18,8 +18,8 @@ export enum ProficiencyLevel {
 
 export class GenerateContentDto {
     @IsString()
-    @IsNotEmpty()
-    topic: string;
+    @IsOptional()
+    topic?: string;
 
     @IsString()
     @IsNotEmpty()
