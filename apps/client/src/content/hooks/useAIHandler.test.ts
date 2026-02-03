@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAIHandler } from './useAIHandler';
-import { OllamaService } from '../../infrastructure/ai/OllamaService';
+import { ServerAIService } from '../../infrastructure/ai/ServerAIService';
 
-// Mock OllamaService class
-vi.mock('../../infrastructure/ai/OllamaService', () => {
-    const OllamaServiceMock = vi.fn();
-    OllamaServiceMock.prototype.getAvailableModels = vi.fn();
-    OllamaServiceMock.prototype.setModel = vi.fn();
-    OllamaServiceMock.prototype.explainText = vi.fn();
-    OllamaServiceMock.prototype.translateText = vi.fn();
-    OllamaServiceMock.prototype.setBaseUrl = vi.fn();
-    return { OllamaService: OllamaServiceMock };
+// Mock ServerAIService class
+vi.mock('../../infrastructure/ai/ServerAIService', () => {
+    const ServerAIServiceMock = vi.fn();
+    ServerAIServiceMock.prototype.getAvailableModels = vi.fn();
+    ServerAIServiceMock.prototype.setModel = vi.fn();
+    ServerAIServiceMock.prototype.explainText = vi.fn();
+    ServerAIServiceMock.prototype.translateText = vi.fn();
+    ServerAIServiceMock.prototype.checkHealth = vi.fn();
+    return { ServerAIService: ServerAIServiceMock };
 });
 
 const mockSetAiModel = vi.fn();
@@ -23,24 +23,23 @@ vi.mock('../../presentation/features/reader/store/useReaderStore', () => ({
     })
 }));
 
-interface MockOllamaService {
+interface MockServerAIService {
     getAvailableModels: Mock<() => Promise<string[]>>;
     setModel: Mock<(model: string) => void>;
     explainText: Mock<(text: string, targetLanguage?: string, context?: string) => Promise<string>>;
     translateText: Mock<(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string) => Promise<string>>;
-    setBaseUrl: Mock<(url: string) => void>;
+    checkHealth: Mock<() => Promise<boolean>>;
 }
 
 describe('useAIHandler', () => {
-    let mockService: MockOllamaService;
+    let mockService: MockServerAIService;
 
     beforeEach(() => {
         vi.clearAllMocks();
         // Get the mock instance
-        mockService = OllamaService.prototype as unknown as MockOllamaService;
+        mockService = ServerAIService.prototype as unknown as MockServerAIService;
         mockService.getAvailableModels.mockResolvedValue(['llama3']);
         mockService.setModel.mockReturnValue(undefined);
-        mockService.setBaseUrl.mockReturnValue(undefined);
     });
 
     it('initializes with default state', () => {
@@ -59,8 +58,6 @@ describe('useAIHandler', () => {
             result.current.handleAction('Source Text', 'TRANSLATE', 'Spanish');
         });
 
-        // Should set loading true immediately (synchronously checked?) 
-        // Note: state updates inside async function might not reflect immediately in test unless we wait
         expect(result.current.loading).toBe(true);
 
         await waitFor(() => {

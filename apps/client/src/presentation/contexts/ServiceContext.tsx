@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { IAIService } from '../../core/interfaces/IAIService';
 import { MockAIService } from '../../infrastructure/ai/MockAIService';
-import { OllamaService } from '../../infrastructure/ai/OllamaService';
+import { ServerAIService } from '../../infrastructure/ai/ServerAIService';
 import { useReaderStore } from '../features/reader/store/useReaderStore';
 
 interface OllamaConfig {
@@ -18,15 +18,14 @@ interface ServiceContextType {
 const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 export function ServiceProvider({ children }: { children: ReactNode }) {
-    // In both PROD (Web) and DEV, we prefer relative paths ('') to allow Proxying (Vite/Nginx).
-    // The OllamaService itself will fallback to localhost ONLY if it detects it's running as an Extension.
-    const defaultUrl = '';
-    const initialUrl = import.meta.env.VITE_OLLAMA_URL ?? defaultUrl;
+    // Default to Backend API
+    const defaultUrl = 'http://localhost:3002/api';
+    const initialUrl = import.meta.env.VITE_AI_API_URL ?? defaultUrl;
 
     // Get persisted model from store to survive page refreshes
     const persistedModel = useReaderStore((s) => s.aiModel);
 
-    const [aiService, setAiService] = useState<IAIService>(() => new OllamaService(initialUrl, persistedModel));
+    const [aiService, setAiService] = useState<IAIService>(() => new ServerAIService(initialUrl, persistedModel));
     const [currentServiceType, setCurrentServiceType] = useState<'mock' | 'ollama'>('ollama');
 
     // Get the setter from the store to persist model changes
@@ -36,8 +35,8 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
         setCurrentServiceType(type);
         if (type === 'ollama') {
             // Use config.url if provided.
-            const url = config?.url ?? import.meta.env.VITE_OLLAMA_URL ?? defaultUrl;
-            setAiService(new OllamaService(url, config?.model));
+            const url = config?.url ?? import.meta.env.VITE_AI_API_URL ?? defaultUrl;
+            setAiService(new ServerAIService(url, config?.model));
 
             // Persist model selection to store for page refresh survival
             if (config?.model) {

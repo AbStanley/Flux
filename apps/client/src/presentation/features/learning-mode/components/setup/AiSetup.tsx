@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { ollamaService } from '@/infrastructure/ai/OllamaService';
+import { serverAIService } from '@/infrastructure/ai/ServerAIService'; // Updated import
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
 import { ArrowRightLeft, RefreshCw, Pencil } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/button';
@@ -16,15 +16,15 @@ export const AiSetup = () => {
     const [isManualInput, setIsManualInput] = useState(false);
 
     const fetchModels = useCallback(async () => {
-        // Apply stored host URL before fetching (handles hydration timing)
-        if (config.aiHost) {
-            ollamaService.setBaseUrl(config.aiHost);
-        }
+        // Host URL is now managed by Backend or ServerAIService default
+        // if (config.aiHost) {
+        //     ollamaService.setBaseUrl(config.aiHost);
+        // }
 
         setLoading(true);
         setError(null);
         try {
-            const available = await ollamaService.getAvailableModels();
+            const available = await serverAIService.getAvailableModels();
             // deduplicate
             const unique = Array.from(new Set(available));
             setModels(unique);
@@ -46,7 +46,7 @@ export const AiSetup = () => {
         } finally {
             setLoading(false);
         }
-    }, [config.aiModel, config.aiHost, updateConfig]);
+    }, [config.aiModel, /* config.aiHost, */ updateConfig]);
 
     // Re-fetch models when component mounts or when aiHost changes
     useEffect(() => {
@@ -98,19 +98,20 @@ export const AiSetup = () => {
 
                     {/* Model Selection */}
                     <div className="space-y-1.5">
+                        {/* 
                         <div className="space-y-1.5 mb-3">
                             <label className="text-sm font-medium text-muted-foreground">AI Host URL</label>
                             <Input
                                 value={config.aiHost || 'http://localhost:11434'}
                                 onChange={(e) => {
                                     updateConfig({ aiHost: e.target.value });
-                                    // Make sure immediate service update happens if needed, or rely on it being set before calls
-                                    ollamaService.setBaseUrl(e.target.value);
+                                    // serverAIService context is fixed usually
                                 }}
                                 placeholder="http://localhost:11434"
                                 className="bg-[var(--input-background)] font-mono text-xs"
                             />
-                        </div>
+                        </div> 
+                        */}
 
                         <div className="flex items-center justify-between">
                             <label className="text-sm font-medium text-muted-foreground">Model</label>

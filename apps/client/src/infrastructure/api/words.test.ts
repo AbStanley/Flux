@@ -40,41 +40,54 @@ describe('wordsApi', () => {
         });
     });
 
-    describe('create', () => {
-        it('should call post with correct endpoint and data', async () => {
-            const data = { text: 'hello' };
-            const mockResponse = { id: '1', text: 'hello' };
-            (defaultClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+});
 
-            const result = await wordsApi.create(data);
+describe('getLanguages', () => {
+    it('should call get with correct endpoint', async () => {
+        const mockResponse = [{ sourceLanguage: 'en', targetLanguage: 'fr' }];
+        (defaultClient.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-            expect(defaultClient.post).toHaveBeenCalledWith('/api/words', data);
-            expect(result).toEqual(mockResponse);
-        });
+        const result = await wordsApi.getLanguages();
+
+        expect(defaultClient.get).toHaveBeenCalledWith('/api/words/languages');
+        expect(result).toEqual(mockResponse);
     });
+});
 
-    describe('delete', () => {
-        it('should call delete with correct endpoint', async () => {
-            const id = '123';
-            (defaultClient.delete as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+describe('create', () => {
+    it('should call post with correct endpoint and data', async () => {
+        const data = { text: 'hello' };
+        const mockResponse = { id: '1', text: 'hello' };
+        (defaultClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-            await wordsApi.delete(id);
+        const result = await wordsApi.create(data);
 
-            expect(defaultClient.delete).toHaveBeenCalledWith('/api/words/123');
-        });
+        expect(defaultClient.post).toHaveBeenCalledWith('/api/words', data);
+        expect(result).toEqual(mockResponse);
     });
+});
 
-    describe('update', () => {
-        it('should call patch with correct endpoint and data', async () => {
-            const id = '123';
-            const data = { definition: 'greeting' };
-            const mockResponse = { id: '123', text: 'hello', definition: 'greeting' };
-            (defaultClient.patch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+describe('delete', () => {
+    it('should call delete with correct endpoint', async () => {
+        const id = '123';
+        (defaultClient.delete as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 
-            const result = await wordsApi.update(id, data);
+        await wordsApi.delete(id);
 
-            expect(defaultClient.patch).toHaveBeenCalledWith('/api/words/123', data);
-            expect(result).toEqual(mockResponse);
-        });
+        expect(defaultClient.delete).toHaveBeenCalledWith('/api/words/123');
+    });
+});
+
+describe('update', () => {
+    it('should call patch with correct endpoint and data', async () => {
+        const id = '123';
+        const data = { definition: 'greeting' };
+        const mockResponse = { id: '123', text: 'hello', definition: 'greeting' };
+        (defaultClient.patch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+        const result = await wordsApi.update(id, data);
+
+        expect(defaultClient.patch).toHaveBeenCalledWith('/api/words/123', data);
+        expect(result).toEqual(mockResponse);
     });
 });

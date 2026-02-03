@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { OllamaService } from '../../infrastructure/ai/OllamaService';
+import { ServerAIService } from '../../infrastructure/ai/ServerAIService';
 import { useReaderStore } from '../../presentation/features/reader/store/useReaderStore';
 
 // Initialize Service (Default, will be updated)
-const aiService = new OllamaService(import.meta.env.VITE_OLLAMA_URL);
+const aiService = new ServerAIService('http://localhost:3002/api');
 
 export type Mode = 'EXPLAIN' | 'TRANSLATE';
 
@@ -11,7 +11,7 @@ export const useAIHandler = () => {
     const [result, setResult] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { aiModel, aiHost, setAiModel } = useReaderStore();
+    const { aiModel, setAiModel } = useReaderStore();
 
     const handleAction = async (text: string, mode: Mode, lang: string) => {
         setLoading(true);
@@ -20,9 +20,9 @@ export const useAIHandler = () => {
 
         try {
             // Update Service Config from Store
-            if (aiHost) {
-                aiService.setBaseUrl(aiHost);
-            }
+            // if (aiHost) {
+            //    aiService.setBaseUrl(aiHost); // aiHost was for Ollama direct. ServerAIService uses fixed API URL usually.
+            // }
             // If model is set in store, use it.
             if (aiModel) {
                 aiService.setModel(aiModel);

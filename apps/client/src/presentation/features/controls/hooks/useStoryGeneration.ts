@@ -1,8 +1,10 @@
 import { useRef } from 'react';
 import type { IAIService } from '../../../../core/interfaces/IAIService';
 
-import { getStoryPrompt, type ContentType } from '../../../../infrastructure/ai/prompts/GenerationPrompts';
-
+// We just define this type locally or import from interface if available, 
+// strictly speaking it should be shared or just any.
+// But since the service method handles it, we can just pass it through.
+type ContentType = any;
 
 interface UseStoryGenerationProps {
     aiService: IAIService;
@@ -35,15 +37,19 @@ export const useStoryGeneration = ({
         abortControllerRef.current = new AbortController();
 
         try {
-            const prompt = getStoryPrompt(sourceLang, isLearningMode, topic, proficiencyLevel, contentType);
-
-            await aiService.generateText(prompt, {
-                signal: abortControllerRef.current.signal,
-                onProgress: (_chunk: string, fullText: string) => {
-
-                    setText(fullText);
-                }
+            // Updated to use the new server-side generation
+            const generatedText = await aiService.generateContent({
+                topic,
+                sourceLanguage: sourceLang,
+                isLearningMode,
+                proficiencyLevel,
+                contentType
             });
+
+            // Set full text at once since streaming might not be fully supported yet 
+            // or handled differently in the new service
+            setText(generatedText);
+
         } catch (error: unknown) {
             const errorName = error instanceof Error ? error.name : '';
             const errorMessage = error instanceof Error ? error.message : '';

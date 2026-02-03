@@ -102,4 +102,74 @@ export class OllamaController {
       throw error;
     }
   }
+  @Post('translate')
+  async translate(
+    @Body()
+    body: {
+      text: string;
+      targetLanguage: string;
+      context?: string;
+      sourceLanguage?: string;
+      model?: string;
+    },
+  ) {
+    return await this.ollamaService.translateText(body);
+  }
+
+  @Post('explain')
+  async explain(
+    @Body()
+    body: {
+      text: string;
+      targetLanguage: string;
+      context?: string;
+      model?: string;
+    },
+  ) {
+    return await this.ollamaService.explainText(body);
+  }
+
+  @Post('rich-translation')
+  async richTranslation(
+    @Body()
+    body: {
+      text: string;
+      targetLanguage: string;
+      context?: string;
+      sourceLanguage?: string;
+      model?: string;
+    },
+  ) {
+    return await this.ollamaService.getRichTranslation(body);
+  }
+
+  @Post('generate-content')
+  async generateContent(
+    @Body()
+    body: {
+      topic: string;
+      sourceLanguage: string;
+      isLearningMode: boolean;
+      proficiencyLevel: string;
+      contentType: any; // Type from promos
+      model?: string;
+    },
+  ) {
+    return await this.ollamaService.generateContent(body);
+  }
+  @Post('generate-game-content')
+  async generateGameContent(
+    @Body()
+    body: {
+      topic: string;
+      level: string;
+      mode: string;
+      sourceLanguage: string;
+      targetLanguage: string;
+      limit?: number;
+      model?: string;
+    },
+  ) {
+    return await this.ollamaService.generateGameContent(body);
+  }
 }

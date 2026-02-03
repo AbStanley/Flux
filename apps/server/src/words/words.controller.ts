@@ -16,7 +16,7 @@ import { UpdateWordDto } from './dto/update-word.dto';
 
 @Controller('api/words')
 export class WordsController {
-  constructor(private readonly wordsService: WordsService) {}
+  constructor(private readonly wordsService: WordsService) { }
 
   @Post()
   create(@Body() createWordDto: CreateWordDto) {
@@ -30,17 +30,22 @@ export class WordsController {
       sourceLanguage?: string;
       targetLanguage?: string;
       sort?: 'date_desc' | 'date_asc' | 'text_asc';
-      skip?: string;
-      take?: string;
+      page?: string;
+      limit?: string;
       type?: 'word' | 'phrase';
     },
   ) {
-    console.log('GET /api/words query:', query);
+    const page = query.page ? Math.max(1, +query.page) : 1;
+    // Cap limit at 50 for safety
+    const limit = query.limit ? Math.min(50, Math.max(1, +query.limit)) : 10;
+    const skip = (page - 1) * limit;
+
+    console.log('GET /api/words query:', { ...query, page, skip, limit });
     try {
       return await this.wordsService.findAll({
         ...query,
-        skip: query.skip ? +query.skip : undefined,
-        take: query.take ? +query.take : undefined,
+        skip,
+        limit,
       });
     } catch (error: any) {
       console.error('Error in findAll:', error);
@@ -49,11 +54,15 @@ export class WordsController {
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: error.message || 'Unknown server error',
-          stack: error.stack,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  @Get('languages')
+  getLanguages() {
+    return this.wordsService.getLanguages();
   }
 
   @Get(':id')

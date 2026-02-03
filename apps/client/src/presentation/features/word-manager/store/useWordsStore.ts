@@ -43,13 +43,10 @@ export const useWordsStore = create<WordsState>((set, get) => ({
         }));
 
         try {
-            const take = 10;
-            const skip = (page - 1) * take;
 
             const response = await wordsApi.getAll({
                 type,
-                skip,
-                take,
+                page,
                 sort: 'date_desc'
             });
 
@@ -73,12 +70,13 @@ export const useWordsStore = create<WordsState>((set, get) => ({
 
             set(state => {
                 const currentItems = page === 1 ? [] : state[stateKey].items;
+                const newTotalItems = currentItems.length + items.length;
                 return {
                     [stateKey]: {
                         items: [...currentItems, ...items],
                         total,
                         page,
-                        hasMore: items.length === take,
+                        hasMore: newTotalItems < total,
                         isLoading: false
                     }
                 };

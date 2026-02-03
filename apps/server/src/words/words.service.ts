@@ -69,10 +69,10 @@ export class WordsService {
     targetLanguage?: string;
     sort?: 'date_desc' | 'date_asc' | 'text_asc';
     skip?: number;
-    take?: number;
+    limit?: number;
     type?: 'word' | 'phrase';
   }) {
-    const { sourceLanguage, targetLanguage, sort, skip, take, type } =
+    const { sourceLanguage, targetLanguage, sort, skip, limit, type } =
       query || {};
 
     const where: Prisma.WordWhereInput = {
@@ -95,7 +95,7 @@ export class WordsService {
           examples: true,
         },
         skip,
-        take,
+        take: limit,
       }),
     ]);
 
@@ -147,5 +147,21 @@ export class WordsService {
     return this.prisma.word.delete({
       where: { id },
     });
+  }
+
+  async getLanguages() {
+    const words = await this.prisma.word.findMany({
+      distinct: ['sourceLanguage', 'targetLanguage'],
+      select: {
+        sourceLanguage: true,
+        targetLanguage: true,
+      },
+      where: {
+        sourceLanguage: { not: null },
+        targetLanguage: { not: null },
+      },
+    });
+
+    return words;
   }
 }

@@ -19,13 +19,13 @@ export function DbSetup() {
             if (allUniqueLangs.length === 0) {
                 setIsLoadingLangs(true);
                 try {
-                    const result = await wordsApi.getAll({ take: 500 });
+                    const result = await wordsApi.getLanguages();
                     const graph: Record<string, Set<string>> = {};
                     const all = new Set<string>();
 
-                    result.items.forEach(word => {
-                        const s = word.sourceLanguage;
-                        const t = word.targetLanguage;
+                    result.forEach(langPair => {
+                        const s = langPair.sourceLanguage;
+                        const t = langPair.targetLanguage;
 
                         if (s && t) {
                             if (!graph[s]) graph[s] = new Set();

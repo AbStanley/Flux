@@ -26,7 +26,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
 
             // 1. Forward Fetch: Search exactly as requested
             const fwdPromise = wordsApi.getAll({
-                take: limit,
+                limit,
                 sourceLanguage: reqSource,
                 targetLanguage: reqTarget,
                 type: typeFilter
@@ -37,7 +37,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
 
             if ((reqSource || reqTarget) && reqSource !== reqTarget) {
                 revPromise = wordsApi.getAll({
-                    take: limit,
+                    limit,
                     sourceLanguage: reqTarget,
                     targetLanguage: reqSource,
                     type: typeFilter
@@ -81,7 +81,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
 
             // Fetch phrases directly
             const phrasesPromise = wordsApi.getAll({
-                take: limit,
+                limit,
                 type: 'phrase',
                 sourceLanguage: reqSource,
                 targetLanguage: reqTarget
@@ -91,7 +91,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
             let revPhrasesPromise: Promise<{ items: Word[]; total: number }> | undefined;
             if ((reqSource || reqTarget) && reqSource !== reqTarget) {
                 revPhrasesPromise = wordsApi.getAll({
-                    take: limit,
+                    limit,
                     type: 'phrase',
                     sourceLanguage: reqTarget,
                     targetLanguage: reqSource
@@ -100,7 +100,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
 
             // Fetch words (to get their examples)
             const wordsPromise = wordsApi.getAll({
-                take: limit * 2, // Get more to have enough examples
+                limit: limit * 2, // Get more to have enough examples
                 type: 'word',
                 sourceLanguage: reqSource,
                 targetLanguage: reqTarget
@@ -110,7 +110,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
             let revWordsPromise: Promise<{ items: Word[]; total: number }> | undefined;
             if ((reqSource || reqTarget) && reqSource !== reqTarget) {
                 revWordsPromise = wordsApi.getAll({
-                    take: limit * 2,
+                    limit: limit * 2,
                     type: 'word',
                     sourceLanguage: reqTarget,
                     targetLanguage: reqSource

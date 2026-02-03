@@ -9,8 +9,8 @@ vi.mock('../../store/useGameStore', () => ({
     useGameStore: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/ai/OllamaService', () => ({
-    ollamaService: {
+vi.mock('@/infrastructure/ai/ServerAIService', () => ({
+    serverAIService: {
         getAvailableModels: vi.fn().mockResolvedValue(['llama2']),
         setBaseUrl: vi.fn(),
     }

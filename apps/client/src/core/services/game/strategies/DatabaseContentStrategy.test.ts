@@ -63,6 +63,8 @@ describe('DatabaseContentStrategy', () => {
         // Check the arguments of the first call
         const args = (wordsApi.getAll as any).mock.calls[0][0];
         expect(args.type).toBe('word');
+        // Check limit is passed
+        expect(args.limit).toBe(10);
 
         // Verify result from smart mock
         expect(items.length).toBeGreaterThan(0);

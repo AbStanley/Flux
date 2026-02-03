@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AiContentStrategy } from './AiContentStrategy';
-import { ollamaService } from '@/infrastructure/ai/OllamaService';
+import { serverAIService } from '@/infrastructure/ai/ServerAIService';
 
-// Mock ollamaService
-vi.mock('@/infrastructure/ai/OllamaService', () => ({
-    ollamaService: {
+// Mock serverAIService
+vi.mock('@/infrastructure/ai/ServerAIService', () => ({
+    serverAIService: {
         checkHealth: vi.fn(),
-        generateText: vi.fn(),
+        generateGameContent: vi.fn(),
+        setModel: vi.fn(),
     }
 }));
 
@@ -19,9 +20,9 @@ describe('AiContentStrategy', () => {
     });
 
     it('should validate availability checking health', async () => {
-        vi.mocked(ollamaService.checkHealth).mockResolvedValue(true);
+        vi.mocked(serverAIService.checkHealth).mockResolvedValue(true);
         expect(await strategy.validateAvailability()).toBe(true);
-        expect(ollamaService.checkHealth).toHaveBeenCalled();
+        expect(serverAIService.checkHealth).toHaveBeenCalled();
     });
 
     it('should throw error if no topic provided', async () => {
@@ -34,7 +35,7 @@ describe('AiContentStrategy', () => {
             { "question": "Casa", "answer": "House", "context": "Mi casa es grande", "type": "word" }
         ]
         `;
-        vi.mocked(ollamaService.generateText).mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
 
         const items = await strategy.fetchItems({
             aiTopic: 'Real Estate',
@@ -53,7 +54,7 @@ describe('AiContentStrategy', () => {
             { "context": "Once upon a time", "question": "time", "answer": "tiempo", "type": "phrase" }
         ]
         `;
-        vi.mocked(ollamaService.generateText).mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
 
         const items = await strategy.fetchItems({
             aiTopic: 'Magic',
@@ -71,7 +72,7 @@ describe('AiContentStrategy', () => {
             { "question": "The dog runs.", "answer": "El perro corre.", "context": "Simple sentence", "type": "phrase" }
         ]
         `;
-        vi.mocked(ollamaService.generateText).mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
 
         const items = await strategy.fetchItems({
             aiTopic: 'Animals',
@@ -87,29 +88,23 @@ describe('AiContentStrategy', () => {
         expect(items[0].lang?.target).toBe('es-ES');
 
         // Verify call args to ensure correct prompt/model passed
-        expect(ollamaService.generateText).toHaveBeenCalledWith(
-            expect.stringContaining('scramble'),
-            undefined // No model specified in this call
+        expect(serverAIService.generateGameContent).toHaveBeenCalledWith(
+            expect.objectContaining({ mode: 'scramble', topic: 'Animals' })
         );
     });
 
     it('should convert language codes to full names in prompt', async () => {
         const mockResponse = JSON.stringify([{ question: "Hello", answer: "Hola" }]);
-        ollamaService.generateText = vi.fn().mockResolvedValue(mockResponse);
+        serverAIService.generateGameContent = vi.fn().mockResolvedValue(mockResponse);
 
         await strategy.fetchItems({
             aiTopic: 'Test',
             language: { source: 'en', target: 'es' } // Codes
         });
 
-        // Prompt should contain full names
-        expect(ollamaService.generateText).toHaveBeenCalledWith(
-            expect.stringContaining('"question": The content in English'),
-            undefined
-        );
-        expect(ollamaService.generateText).toHaveBeenCalledWith(
-            expect.stringContaining('"answer": The translation in Spanish'),
-            undefined
+        // Backend handles prompt, we just check args passed to service
+        expect(serverAIService.generateGameContent).toHaveBeenCalledWith(
+            expect.objectContaining({ sourceLanguage: 'English', targetLanguage: 'Spanish' })
         );
     });
 
@@ -121,7 +116,7 @@ describe('AiContentStrategy', () => {
         ]
         Hope that helps!
         `;
-        vi.mocked(ollamaService.generateText).mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
 
         const items = await strategy.fetchItems({ aiTopic: 'Pets' });
         expect(items).toHaveLength(1);
@@ -134,7 +129,7 @@ describe('AiContentStrategy', () => {
             { question: "Test", answer: "test", type: "word" }
         ]);
 
-        ollamaService.generateText = vi.fn().mockResolvedValue(mockResponse);
+        serverAIService.generateGameContent = vi.fn().mockResolvedValue(mockResponse);
 
         await expect(strategy.fetchItems({
             aiTopic: 'Fail',
@@ -143,7 +138,7 @@ describe('AiContentStrategy', () => {
     });
 
     it('should throw error on invalid JSON', async () => {
-        vi.mocked(ollamaService.generateText).mockResolvedValue("Not JSON");
+        vi.mocked(serverAIService.generateGameContent).mockResolvedValue("Not JSON");
         await expect(strategy.fetchItems({ aiTopic: 'Test' })).rejects.toThrow("Invalid format from AI");
     });
 });
