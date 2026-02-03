@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ContentType } from '../../../../infrastructure/ai/prompts/GenerationPrompts';
+import type { ContentType, ProficiencyLevel } from '../../../../core/types/AIConfig';
 
 export type ReaderFont =
     | 'system'
+
     | 'merriweather'
     | 'literata'
     | 'lora'
@@ -48,13 +49,13 @@ interface SettingsState {
     customThemes: CustomTheme[];
     llmModel: string;
     contentType: ContentType;
-    proficiencyLevel: string;
+    proficiencyLevel: ProficiencyLevel;
 
     setFont: (font: ReaderFont) => void;
     setFontSize: (size: FontSize) => void;
     setLlmModel: (model: string) => void;
     setContentType: (type: ContentType) => void;
-    setProficiencyLevel: (level: string) => void;
+    setProficiencyLevel: (level: ProficiencyLevel) => void;
 
     addCustomTheme: (theme: CustomTheme) => void;
     removeCustomTheme: (id: string) => void;

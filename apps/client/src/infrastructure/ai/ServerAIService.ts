@@ -1,11 +1,14 @@
 
 import type { IAIService, RichTranslationResult } from '../../core/interfaces/IAIService';
+import type { ContentType, ProficiencyLevel } from '../../core/types/AIConfig';
 
 export class ServerAIService implements IAIService {
     private baseUrl: string;
+
+
     private model: string;
 
-    constructor(baseUrl: string = 'http://localhost:3002/api', model: string = 'llama2') {
+    constructor(baseUrl: string = 'http://localhost:3002/api', model: string = 'gemma:4b') {
         this.baseUrl = baseUrl;
         this.model = model;
     }
@@ -137,8 +140,8 @@ export class ServerAIService implements IAIService {
         topic: string;
         sourceLanguage: string;
         isLearningMode: boolean;
-        proficiencyLevel: string;
-        contentType: any
+        proficiencyLevel: ProficiencyLevel;
+        contentType: ContentType;
     }): Promise<string> {
         const response = await fetch(`${this.baseUrl}/generate-content`, {
             method: 'POST',

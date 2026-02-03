@@ -1,10 +1,6 @@
 import { useRef } from 'react';
 import type { IAIService } from '../../../../core/interfaces/IAIService';
-
-// We just define this type locally or import from interface if available, 
-// strictly speaking it should be shared or just any.
-// But since the service method handles it, we can just pass it through.
-type ContentType = any;
+import type { ContentType, ProficiencyLevel } from '../../../../core/types/AIConfig';
 
 interface UseStoryGenerationProps {
     aiService: IAIService;
@@ -13,7 +9,7 @@ interface UseStoryGenerationProps {
     sourceLang: string;
     isLearningMode: boolean;
     topic: string;
-    proficiencyLevel: string;
+    proficiencyLevel: ProficiencyLevel;
     contentType: ContentType;
 }
 

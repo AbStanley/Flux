@@ -1,3 +1,4 @@
+import type { ContentType, ProficiencyLevel } from '../types/AIConfig';
 import type { GrammaticalGender, GrammaticalTense, PartOfSpeech, TranslationType } from '../types/Linguistics';
 
 export interface RichTranslationResult {
@@ -67,4 +68,15 @@ export interface IAIService {
      * Get the current model name.
      */
     getModel(): string;
+
+    /**
+     * Generates content with strict parameters.
+     */
+    generateContent(params: {
+        topic: string;
+        sourceLanguage: string;
+        isLearningMode: boolean;
+        proficiencyLevel: ProficiencyLevel;
+        contentType: ContentType
+    }): Promise<string>;
 }

@@ -1,6 +1,7 @@
 import { Body, Controller, Post, Get, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { OllamaService } from './ollama.service';
+import { GenerateContentDto } from './dto/generate-content.dto';
 
 @Controller('api')
 export class OllamaController {
@@ -146,14 +147,7 @@ export class OllamaController {
   @Post('generate-content')
   async generateContent(
     @Body()
-    body: {
-      topic: string;
-      sourceLanguage: string;
-      isLearningMode: boolean;
-      proficiencyLevel: string;
-      contentType: any; // Type from promos
-      model?: string;
-    },
+    body: GenerateContentDto,
   ) {
     return await this.ollamaService.generateContent(body);
   }

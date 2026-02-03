@@ -4,13 +4,13 @@ import { Input } from "../../components/ui/input";
 import { LanguageSelect } from "../../components/LanguageSelect";
 import { PROFICIENCY_LEVELS } from "../../../core/constants/levels";
 import { cn } from "@/lib/utils";
-import type { ContentType } from "../../../infrastructure/ai/prompts/GenerationPrompts";
+import type { ContentType, ProficiencyLevel } from "../../../core/types/AIConfig";
 
 interface LearningControlsProps {
     isLearningMode: boolean;
     setIsLearningMode: (value: boolean) => void;
-    proficiencyLevel: string;
-    setProficiencyLevel: (value: string) => void;
+    proficiencyLevel: ProficiencyLevel;
+    setProficiencyLevel: (value: ProficiencyLevel) => void;
     topic: string;
     setTopic: (value: string) => void;
     contentType: ContentType;
@@ -57,7 +57,7 @@ export function LearningControls({
                     <LanguageSelect
                         label="Proficiency Level"
                         value={proficiencyLevel}
-                        onChange={setProficiencyLevel}
+                        onChange={(val) => setProficiencyLevel(val as ProficiencyLevel)}
                         options={PROFICIENCY_LEVELS}
                         placeholder="Select Level"
                     />
