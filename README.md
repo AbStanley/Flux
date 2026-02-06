@@ -1,4 +1,4 @@
-# Reader Helper (Flux)
+# Flux: A Privacy-First, Inteligent Learning Assistant
 
 
 ![Status](https://img.shields.io/badge/Status-Operational-success?style=for-the-badge)
@@ -25,7 +25,7 @@
 ![NPM](https://img.shields.io/badge/NPM-CB3837?style=for-the-badge&logo=npm&logoColor=white)
 
 
-**Flux** is a premium, privacy-focused reading assistant application designed to bridge the gap between language learning and fluent reading. It leverages **Self-Hosted AI** to provide instant key-value translations, context-aware insights, and a natural audio reading experience, all running locally on your machine.
+**Flux** is a premium, privacy-focused reading / learning assistant application designed to bridge the gap between language learning and fluent reading. It leverages **Self-Hosted AI** to provide instant key-value translations, context-aware insights, and a natural audio reading experience, all running locally on your machine.
 
 > [!NOTE]
 > This project is a **Monorepo** containing both the React Frontend and the NestJS Backend.

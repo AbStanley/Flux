@@ -5,7 +5,7 @@
     "content_security_policy": {
         "extension_pages": "script-src 'self'; object-src 'self'"
     },
-    "description": "A helper for reading and learning languages.",
+    "description": "Flux: A Privacy-First, Inteligent Learning Assistant",
     "icons": {
         "16": "flux-reader-helper.png",
         "48": "flux-reader-helper.png",
