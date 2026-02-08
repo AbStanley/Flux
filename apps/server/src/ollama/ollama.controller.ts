@@ -5,7 +5,7 @@ import { GenerateContentDto } from './dto/generate-content.dto';
 
 @Controller('api')
 export class OllamaController {
-  constructor(private readonly ollamaService: OllamaService) { }
+  constructor(private readonly ollamaService: OllamaService) {}
 
   @Post('chat')
   async chat(
@@ -90,7 +90,8 @@ export class OllamaController {
     },
   ) {
     try {
-      return await this.ollamaService.analyzeGrammar(body);
+      const result: unknown = await this.ollamaService.analyzeGrammar(body);
+      return result;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       // If it's a known connection error, 503 Service Unavailable
@@ -141,7 +142,8 @@ export class OllamaController {
       model?: string;
     },
   ) {
-    return await this.ollamaService.getRichTranslation(body);
+    const result: unknown = await this.ollamaService.getRichTranslation(body);
+    return result;
   }
 
   @Post('generate-content')

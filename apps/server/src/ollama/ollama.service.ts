@@ -7,7 +7,7 @@ import {
   getExplainPrompt,
   getStoryPrompt,
   getGameContentPrompt,
-  ContentType
+  ContentType,
 } from './ollama.prompts';
 
 @Injectable()
@@ -123,16 +123,24 @@ Example format:
       if (!jsonMatch) {
         // Fallback just in case regex fails but response is valid json
         try {
-          const examples = JSON.parse(text);
-          return Array.isArray(examples) ? examples.slice(0, count) : [];
+          const examples = JSON.parse(text) as unknown[];
+          return Array.isArray(examples)
+            ? (examples.slice(0, count) as {
+                sentence: string;
+                translation: string;
+              }[])
+            : [];
         } catch {
           this.logger.warn('Could not parse JSON from LLM response:', text);
           return [];
         }
       }
 
-      const examples = JSON.parse(jsonMatch[0]);
-      return examples.slice(0, count);
+      const examples = JSON.parse(jsonMatch[0]) as unknown[];
+      return (Array.isArray(examples) ? examples.slice(0, count) : []) as {
+        sentence: string;
+        translation: string;
+      }[];
     } catch (error) {
       this.logger.error('Error generating examples', error);
       throw error;
@@ -150,17 +158,23 @@ Example format:
     const { text, targetLanguage, context, sourceLanguage } = params;
     model = await this.ensureModel(model);
 
-    const prompt = getTranslatePrompt(text, targetLanguage, context, sourceLanguage);
+    const prompt = getTranslatePrompt(
+      text,
+      targetLanguage,
+      context,
+      sourceLanguage,
+    );
 
     this.logger.log(`Translating text with model: ${model}`);
     const response = await this.generate(model, prompt, false);
 
     if (typeof response === 'string') {
       return this.cleanResponse(response);
-    } else {
+    } else if (response && 'response' in response) {
       // Should not happen as stream is false
-      return this.cleanResponse((response as any).response);
+      return this.cleanResponse(response.response);
     }
+    return '';
   }
 
   async explainText(params: {
@@ -180,9 +194,10 @@ Example format:
 
     if (typeof response === 'string') {
       return this.cleanResponse(response);
-    } else {
-      return this.cleanResponse((response as any).response);
+    } else if (response && 'response' in response) {
+      return this.cleanResponse(response.response);
     }
+    return '';
   }
 
   async getRichTranslation(params: {
@@ -196,7 +211,12 @@ Example format:
     const { text, targetLanguage, context, sourceLanguage } = params;
     model = await this.ensureModel(model);
 
-    const prompt = getRichTranslationPrompt(text, targetLanguage, context, sourceLanguage);
+    const prompt = getRichTranslationPrompt(
+      text,
+      targetLanguage,
+      context,
+      sourceLanguage,
+    );
 
     this.logger.log(`Getting rich translation with model: ${model}`);
 
@@ -205,19 +225,22 @@ Example format:
         model,
         prompt,
         stream: false,
-        // rich translation prompt asks for JSON, but strict format might be safer without 'json' mode if the prompt is strong, 
-        // but let's try 'json' mode if the model supports it well. 
-        // However, previous implementation didn't strictly force it via API but via prompt. 
+        // rich translation prompt asks for JSON, but strict format might be safer without 'json' mode if the prompt is strong,
+        // but let's try 'json' mode if the model supports it well.
+        // However, previous implementation didn't strictly force it via API but via prompt.
         // Let's stick to prompt + cleanup for max compatibility unless we want to enforce schema.
         // But Ollama 'format: json' is good.
         format: 'json',
-        options: { num_predict: 4096 }
+        options: { num_predict: 4096 },
       });
 
       return this.cleanAndParseJson(response.response);
-    } catch (e) {
-      this.logger.error('Error in rich translation', e);
-      throw new HttpException('Failed to generate rich translation', HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch (_e) {
+      this.logger.error('Error in rich translation', _e);
+      throw new HttpException(
+        'Failed to generate rich translation',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -230,7 +253,13 @@ Example format:
     model?: string;
   }): Promise<string> {
     let { model } = params;
-    const { topic, sourceLanguage, isLearningMode, proficiencyLevel, contentType } = params;
+    const {
+      topic,
+      sourceLanguage,
+      isLearningMode,
+      proficiencyLevel,
+      contentType,
+    } = params;
     model = await this.ensureModel(model);
 
     const prompt = getStoryPrompt({
@@ -238,7 +267,7 @@ Example format:
       isLearningMode,
       topic,
       proficiencyLevel,
-      contentType
+      contentType,
     });
 
     this.logger.log(`Generating content (${contentType}) with model: ${model}`);
@@ -246,9 +275,10 @@ Example format:
 
     if (typeof response === 'string') {
       return this.cleanResponse(response);
-    } else {
-      return this.cleanResponse((response as any).response);
+    } else if (response && 'response' in response) {
+      return this.cleanResponse(response.response);
     }
+    return '';
   }
 
   async generateGameContent(params: {
@@ -261,23 +291,29 @@ Example format:
     model?: string;
   }): Promise<string> {
     let { model } = params;
-    const { topic, level, mode, sourceLanguage, targetLanguage, limit } = params;
+    const { topic, level, mode, sourceLanguage, targetLanguage, limit } =
+      params;
     model = await this.ensureModel(model);
 
-    const prompt = getGameContentPrompt(topic, level, mode, sourceLanguage, targetLanguage, limit);
+    const prompt = getGameContentPrompt(
+      topic,
+      level,
+      mode,
+      sourceLanguage,
+      targetLanguage,
+      limit,
+    );
 
     this.logger.log(`Generating game content (${mode}) with model: ${model}`);
     const response = await this.generate(model, prompt, false);
 
     if (typeof response === 'string') {
       return this.cleanResponse(response);
-    } else {
-      return this.cleanResponse((response as any).response);
+    } else if (response && 'response' in response) {
+      return this.cleanResponse(response.response);
     }
+    return '';
   }
-
-
-
 
   private cleanAndParseJson(text: string): any {
     // Try to find the largest outer JSON object
@@ -289,18 +325,23 @@ Example format:
           // Attempt to autocomplete truncated JSON (naive)
           // This often helps if just the last brace is missing
           return JSON.parse(text + '}');
-        } catch (e) { }
+        } catch {
+          // Ignore error
+        }
 
         try {
           return JSON.parse(text + ']}');
-        } catch (e) { }
+        } catch {
+          // Ignore error
+        }
       }
 
       // Try parsing whole text
       try {
         return JSON.parse(text);
-      } catch (e) {
-        const snippet = text.length > 200 ? text.substring(0, 200) + '...' : text;
+      } catch {
+        const snippet =
+          text.length > 200 ? text.substring(0, 200) + '...' : text;
         throw new Error(`No JSON block found in response: "${snippet}"`);
       }
     }
@@ -313,11 +354,11 @@ Example format:
       try {
         const sanitized = jsonStr.replace(/\n/g, ' ');
         return JSON.parse(sanitized);
-      } catch (e2) {
+      } catch {
         // One last try: if it looks truncated, try appending brace
         try {
           return JSON.parse(jsonStr + '}');
-        } catch (e3) {
+        } catch {
           throw error;
         }
       }
@@ -335,7 +376,11 @@ Example format:
 
     model = await this.ensureModel(model);
 
-    const prompt = GRAMMAR_ANALYSIS_PROMPT(text, sourceLanguage, targetLanguage);
+    const prompt = GRAMMAR_ANALYSIS_PROMPT(
+      text,
+      sourceLanguage,
+      targetLanguage,
+    );
 
     try {
       this.logger.log(`Analyzing grammar for: ${text} `);
@@ -350,11 +395,13 @@ Example format:
         },
       });
 
-      const result = this.cleanAndParseJson(response.response);
+      const result = this.cleanAndParseJson(response.response) as {
+        grammar?: { word: string }[];
+      };
 
       // Post-processing: Strict Punctuation Filter
       if (result && Array.isArray(result.grammar)) {
-        result.grammar = result.grammar.filter((item: any) => {
+        result.grammar = result.grammar.filter((item) => {
           const word = item.word;
           // Keep item only if it contains at least one letter or number (Unicode aware)
           // This removes items like ".", "?", "-", "!", etc.
@@ -363,16 +410,25 @@ Example format:
       }
 
       return result;
-
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Error analyzing grammar', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
 
-      if (errorMessage.includes('fetch failed') || errorMessage.includes('connect')) {
-        throw new HttpException('Could not connect to Ollama. Is it running?', HttpStatus.SERVICE_UNAVAILABLE);
+      if (
+        errorMessage.includes('fetch failed') ||
+        errorMessage.includes('connect')
+      ) {
+        throw new HttpException(
+          'Could not connect to Ollama. Is it running?',
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
       }
 
-      throw new HttpException(`Grammar analysis failed: ${errorMessage} `, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Grammar analysis failed: ${errorMessage} `,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -389,7 +445,7 @@ Example format:
       } else {
         throw new Error('No Ollama models available');
       }
-    } catch (error) {
+    } catch {
       throw new Error('Ollama is not available');
     }
   }

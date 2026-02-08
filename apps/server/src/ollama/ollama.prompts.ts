@@ -8,23 +8,31 @@ export const getStoryPrompt = (params: {
   topic?: string;
   contentType?: ContentType;
 }): string => {
-  const { sourceLang, isLearningMode, proficiencyLevel, topic, contentType = 'Story' } = params;
-  let contentDescription = "";
+  const {
+    sourceLang,
+    isLearningMode,
+    proficiencyLevel,
+    topic,
+    contentType = 'Story',
+  } = params;
+  let contentDescription = '';
   switch (contentType) {
     case 'Monologue':
-      contentDescription = "a monologue";
+      contentDescription = 'a monologue';
       break;
     case 'Conversation':
-      contentDescription = "a conversation between two people";
+      contentDescription = 'a conversation between two people';
       break;
     case 'Story':
     default:
-      contentDescription = "a short story";
+      contentDescription = 'a short story';
       break;
   }
 
   if (isLearningMode) {
-    const topicPhrase = topic ? ` about "${topic}"` : " about a random interesting topic";
+    const topicPhrase = topic
+      ? ` about "${topic}"`
+      : ' about a random interesting topic';
     return `Write ${contentDescription} about ${topicPhrase} in ${sourceLang} suitable for a ${proficiencyLevel} proficiency level learner. The vocabulary and grammar should be appropriate for ${proficiencyLevel}. Include a title starting with '## '. Output ONLY the title and the text. Do not include any introductory or concluding remarks. Do NOT include translations.`;
   } else {
     return `Write ${contentDescription} in ${sourceLang} about a robot learning to paint. Include a title starting with '## '. Output ONLY the title and the text. Do not include any introductory or concluding remarks. Do NOT include translations.`;
@@ -36,9 +44,12 @@ export const getTranslatePrompt = (
   text: string,
   targetLanguage: string = 'en',
   context?: string,
-  sourceLanguage?: string
+  sourceLanguage?: string,
 ): string => {
-  const fromLang = (sourceLanguage && sourceLanguage !== 'Auto') ? `from ${sourceLanguage} ` : '';
+  const fromLang =
+    sourceLanguage && sourceLanguage !== 'Auto'
+      ? `from ${sourceLanguage} `
+      : '';
 
   const isBlock = text.length > 100 || text.includes('\n');
 
@@ -103,9 +114,12 @@ export const getRichTranslationPrompt = (
   text: string,
   targetLanguage: string = 'en',
   context?: string,
-  sourceLanguage?: string
+  sourceLanguage?: string,
 ): string => {
-  const fromLang = (sourceLanguage && sourceLanguage !== 'Auto') ? `from ${sourceLanguage} ` : '';
+  const fromLang =
+    sourceLanguage && sourceLanguage !== 'Auto'
+      ? `from ${sourceLanguage} `
+      : '';
 
   return `Role: Expert Linguist and Translator.
 Task: Analyze the text segment "${text}" ${fromLang}and translate it to ${targetLanguage}. Provide detailed grammatical information, usage examples, and alternatives.
@@ -190,7 +204,7 @@ Structure:
 export const getExplainPrompt = (
   text: string,
   targetLanguage: string = 'en',
-  context?: string
+  context?: string,
 ): string => {
   return `Role: Educational Encyclopedia and Teacher.
 Task: Explain the following text clearly and concisely IN ${targetLanguage}.
@@ -211,7 +225,11 @@ Output:
 };
 
 // --- Original Server Prompts ---
-export const GRAMMAR_ANALYSIS_PROMPT = (text: string, sourceLanguage: string, targetLanguage: string) => `Analyze the grammar of the following sentence: "${text}".
+export const GRAMMAR_ANALYSIS_PROMPT = (
+  text: string,
+  sourceLanguage: string,
+  targetLanguage: string,
+) => `Analyze the grammar of the following sentence: "${text}".
 Source Language: ${sourceLanguage}
 Target Language: ${targetLanguage}
 
@@ -242,12 +260,13 @@ export const getGameContentPrompt = (
   mode: string,
   sourceLang: string,
   targetLang: string,
-  limit: number = 10
+  limit: number = 10,
 ): string => {
   const isStoryMode = mode === 'story';
-  const contextInstruction = mode === 'scramble'
-    ? 'Generate FULL SENTENCES.'
-    : 'Generate simple words or short phrases.';
+  const contextInstruction =
+    mode === 'scramble'
+      ? 'Generate FULL SENTENCES.'
+      : 'Generate simple words or short phrases.';
 
   if (isStoryMode) {
     return `

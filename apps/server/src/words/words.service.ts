@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class WordsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(createWordDto: CreateWordDto) {
     // For now, use a default user since we don't have auth yet
@@ -54,8 +54,8 @@ export class WordsService {
         userId: user.id,
         examples: createWordDto.examples
           ? {
-            create: createWordDto.examples,
-          }
+              create: createWordDto.examples,
+            }
           : undefined,
       },
       include: {
@@ -76,8 +76,12 @@ export class WordsService {
       query || {};
 
     const where: Prisma.WordWhereInput = {
-      sourceLanguage: sourceLanguage ? { equals: sourceLanguage, mode: 'insensitive' as Prisma.QueryMode } : undefined,
-      targetLanguage: targetLanguage ? { equals: targetLanguage, mode: 'insensitive' as Prisma.QueryMode } : undefined,
+      sourceLanguage: sourceLanguage
+        ? { equals: sourceLanguage, mode: 'insensitive' as Prisma.QueryMode }
+        : undefined,
+      targetLanguage: targetLanguage
+        ? { equals: targetLanguage, mode: 'insensitive' as Prisma.QueryMode }
+        : undefined,
       type,
     };
 
@@ -112,7 +116,7 @@ export class WordsService {
   }
 
   async update(id: string, updateWordDto: UpdateWordDto) {
-    const { examples, ...wordData } = updateWordDto as any;
+    const { examples, ...wordData } = updateWordDto;
 
     // Use transaction to atomically update word and replace examples
     return this.prisma.$transaction(async (tx) => {
@@ -127,13 +131,13 @@ export class WordsService {
           examples:
             examples && examples.length > 0
               ? {
-                create: examples.map(
-                  (ex: { sentence: string; translation?: string }) => ({
-                    sentence: ex.sentence,
-                    translation: ex.translation,
-                  }),
-                ),
-              }
+                  create: examples.map(
+                    (ex: { sentence: string; translation?: string }) => ({
+                      sentence: ex.sentence,
+                      translation: ex.translation,
+                    }),
+                  ),
+                }
               : undefined,
         },
         include: {

@@ -57,15 +57,17 @@ describe('WordsService', () => {
 
       await service.create(createWordDto);
 
-      expect(prisma.word.create).toHaveBeenCalledWith(expect.objectContaining({
-        data: expect.objectContaining({
-          text: 'Hello World',
-          definition: createWordDto.definition,
-          context: createWordDto.context,
-          userId: mockUser.id,
+      expect(prisma.word['create']).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            text: 'Hello World',
+            definition: createWordDto.definition,
+            context: createWordDto.context,
+            userId: mockUser.id,
+          }),
+          include: { examples: true },
         }),
-        include: { examples: true },
-      }));
+      );
     });
 
     it('should sanitize text containing parentheses', async () => {
@@ -85,15 +87,17 @@ describe('WordsService', () => {
 
       await service.create(createWordDto);
 
-      expect(prisma.word.create).toHaveBeenCalledWith(expect.objectContaining({
-        data: expect.objectContaining({
-          text: 'Parentheses',
-          definition: createWordDto.definition,
-          context: createWordDto.context,
-          userId: mockUser.id,
+      expect(prisma.word['create']).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            text: 'Parentheses',
+            definition: createWordDto.definition,
+            context: createWordDto.context,
+            userId: mockUser.id,
+          }),
+          include: { examples: true },
         }),
-        include: { examples: true },
-      }));
+      );
     });
 
     it('should sanitize injection attempts', async () => {
@@ -116,15 +120,17 @@ describe('WordsService', () => {
       // Expect <, >, ", (, ) to be removed.
       // <script>alert("XSS")</script>
       // becomes scriptalertXSSscript
-      expect(prisma.word.create).toHaveBeenCalledWith(expect.objectContaining({
-        data: expect.objectContaining({
-          text: 'scriptalertXSSscript',
-          definition: createWordDto.definition,
-          context: createWordDto.context,
-          userId: mockUser.id,
+      expect(prisma.word['create']).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            text: 'scriptalertXSSscript',
+            definition: createWordDto.definition,
+            context: createWordDto.context,
+            userId: mockUser.id,
+          }),
+          include: { examples: true },
         }),
-        include: { examples: true },
-      }));
+      );
     });
 
     it('should sanitize SQL injection attempts', async () => {
@@ -146,15 +152,17 @@ describe('WordsService', () => {
 
       // Expect ; to be removed.
       // DROP TABLE users;-- -> DROP TABLE users--
-      expect(prisma.word.create).toHaveBeenCalledWith(expect.objectContaining({
-        data: expect.objectContaining({
-          text: 'DROP TABLE users--',
-          definition: createWordDto.definition,
-          context: createWordDto.context,
-          userId: mockUser.id,
+      expect(prisma.word['create']).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            text: 'DROP TABLE users--',
+            definition: createWordDto.definition,
+            context: createWordDto.context,
+            userId: mockUser.id,
+          }),
+          include: { examples: true },
         }),
-        include: { examples: true },
-      }));
+      );
     });
   });
 });

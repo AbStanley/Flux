@@ -16,7 +16,7 @@ import { UpdateWordDto } from './dto/update-word.dto';
 
 @Controller('api/words')
 export class WordsController {
-  constructor(private readonly wordsService: WordsService) { }
+  constructor(private readonly wordsService: WordsService) {}
 
   @Post()
   create(@Body() createWordDto: CreateWordDto) {
@@ -47,13 +47,15 @@ export class WordsController {
         skip,
         limit,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in findAll:', error);
+      const message =
+        error instanceof Error ? error.message : 'Unknown server error';
       // Return the error message to the client for debugging
       throw new HttpException(
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.message || 'Unknown server error',
+          error: message,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
