@@ -64,9 +64,9 @@ describe('WordsService', () => {
             definition: createWordDto.definition,
             context: createWordDto.context,
             userId: mockUser.id,
-          }),
+          }) as unknown,
           include: { examples: true },
-        }),
+        }) as unknown,
       );
     });
 
@@ -94,9 +94,9 @@ describe('WordsService', () => {
             definition: createWordDto.definition,
             context: createWordDto.context,
             userId: mockUser.id,
-          }),
+          }) as unknown,
           include: { examples: true },
-        }),
+        }) as unknown,
       );
     });
 
@@ -127,9 +127,9 @@ describe('WordsService', () => {
             definition: createWordDto.definition,
             context: createWordDto.context,
             userId: mockUser.id,
-          }),
+          }) as unknown,
           include: { examples: true },
-        }),
+        }) as unknown,
       );
     });
 
@@ -159,9 +159,9 @@ describe('WordsService', () => {
             definition: createWordDto.definition,
             context: createWordDto.context,
             userId: mockUser.id,
-          }),
+          }) as unknown,
           include: { examples: true },
-        }),
+        }) as unknown,
       );
     });
   });

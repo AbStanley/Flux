@@ -10,6 +10,25 @@ import {
   ContentType,
 } from './ollama.prompts';
 
+export interface GrammarAnalysisResponse {
+  grammar: {
+    word: string;
+    type: string;
+    explanation: string;
+  }[];
+}
+
+export interface RichTranslation {
+  word: string;
+  pronunciation: string;
+  definitions: {
+    type: string;
+    definition: string;
+    example: string;
+    translation: string;
+  }[];
+}
+
 @Injectable()
 export class OllamaService {
   private ollama: Ollama;
@@ -206,7 +225,7 @@ Example format:
     context?: string;
     sourceLanguage?: string;
     model?: string;
-  }): Promise<any> {
+  }): Promise<RichTranslation> {
     let { model } = params;
     const { text, targetLanguage, context, sourceLanguage } = params;
     model = await this.ensureModel(model);
@@ -315,7 +334,7 @@ Example format:
     return '';
   }
 
-  private cleanAndParseJson(text: string): any {
+  private cleanAndParseJson<T>(text: string): T {
     // Try to find the largest outer JSON object
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -324,13 +343,13 @@ Example format:
         try {
           // Attempt to autocomplete truncated JSON (naive)
           // This often helps if just the last brace is missing
-          return JSON.parse(text + '}');
+          return JSON.parse(text + '}') as T;
         } catch {
           // Ignore error
         }
 
         try {
-          return JSON.parse(text + ']}');
+          return JSON.parse(text + ']}') as T;
         } catch {
           // Ignore error
         }
@@ -338,7 +357,7 @@ Example format:
 
       // Try parsing whole text
       try {
-        return JSON.parse(text);
+        return JSON.parse(text) as T;
       } catch {
         const snippet =
           text.length > 200 ? text.substring(0, 200) + '...' : text;
@@ -348,16 +367,16 @@ Example format:
 
     const jsonStr = jsonMatch[0];
     try {
-      return JSON.parse(jsonStr);
+      return JSON.parse(jsonStr) as T;
     } catch (error) {
       // Fallback: Replace all newlines with spaces to handle "Bad control character"
       try {
         const sanitized = jsonStr.replace(/\n/g, ' ');
-        return JSON.parse(sanitized);
+        return JSON.parse(sanitized) as T;
       } catch {
         // One last try: if it looks truncated, try appending brace
         try {
-          return JSON.parse(jsonStr + '}');
+          return JSON.parse(jsonStr + '}') as T;
         } catch {
           throw error;
         }
@@ -370,7 +389,7 @@ Example format:
     sourceLanguage: string;
     targetLanguage: string;
     model?: string;
-  }): Promise<any> {
+  }): Promise<GrammarAnalysisResponse> {
     const { text, sourceLanguage, targetLanguage } = params;
     let { model } = params;
 
@@ -395,9 +414,9 @@ Example format:
         },
       });
 
-      const result = this.cleanAndParseJson(response.response) as {
-        grammar?: { word: string }[];
-      };
+      const result = this.cleanAndParseJson<GrammarAnalysisResponse>(
+        response.response,
+      );
 
       // Post-processing: Strict Punctuation Filter
       if (result && Array.isArray(result.grammar)) {

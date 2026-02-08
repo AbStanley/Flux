@@ -1,6 +1,10 @@
 import { Body, Controller, Post, Get, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { OllamaService } from './ollama.service';
+import {
+  OllamaService,
+  GrammarAnalysisResponse,
+  RichTranslation,
+} from './ollama.service';
 import { GenerateContentDto } from './dto/generate-content.dto';
 
 @Controller('api')
@@ -88,10 +92,9 @@ export class OllamaController {
       targetLanguage: string;
       model?: string;
     },
-  ) {
+  ): Promise<GrammarAnalysisResponse> {
     try {
-      const result: unknown = await this.ollamaService.analyzeGrammar(body);
-      return result;
+      return await this.ollamaService.analyzeGrammar(body);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       // If it's a known connection error, 503 Service Unavailable
@@ -141,9 +144,8 @@ export class OllamaController {
       sourceLanguage?: string;
       model?: string;
     },
-  ) {
-    const result: unknown = await this.ollamaService.getRichTranslation(body);
-    return result;
+  ): Promise<RichTranslation> {
+    return await this.ollamaService.getRichTranslation(body);
   }
 
   @Post('generate-content')
