@@ -8,6 +8,7 @@
   "scripts": {
     "client:dev": "npm run dev --workspace=@reader-helper/client",
     "server:dev": "npm run start:dev --workspace=@reader-helper/server",
+    "prisma-prepare": "npx prisma generate --workspace=@reader-helper/server",
     "prisma-studio": "npx prisma studio --schema=apps/server/prisma/schema.prisma",
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",

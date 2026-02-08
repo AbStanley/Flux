@@ -5,7 +5,7 @@
       "jest",
       "node"
     ],
-    "moduleResolution": "nodenext",
+    "moduleResolution": "NodeNext",
     "resolvePackageJsonExports": true,
     "esModuleInterop": true,
     "isolatedModules": true,
@@ -14,7 +14,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2022",
+    "target": "es2024",
     "sourceMap": true,
     "outDir": "./dist",
     "incremental": true,
