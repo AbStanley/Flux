@@ -1,5 +1,5 @@
 export class CreateWordDto {
-  text: string;
+  text: string = '';
   definition?: string;
   explanation?: string;
   context?: string;

@@ -30,16 +30,16 @@ export class GenerateContentDto {
 
   @IsString()
   @IsNotEmpty()
-  sourceLanguage: string;
+  sourceLanguage: string = 'English';
 
   @IsBoolean()
-  isLearningMode: boolean;
+  isLearningMode: boolean = true;
 
   @IsEnum(ProficiencyLevel)
-  proficiencyLevel: ProficiencyLevel;
+  proficiencyLevel: ProficiencyLevel = ProficiencyLevel.A1;
 
   @IsEnum(ContentType)
-  contentType: ContentType;
+  contentType: ContentType = ContentType.Story;
 
   @IsString()
   @IsOptional()
