@@ -338,3 +338,29 @@ export const getGameContentPrompt = (
       `;
   }
 };
+
+export const getExamplesPrompt = (params: {
+  word: string;
+  definition?: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  count: number;
+  existingExamples?: string[];
+}): string => {
+  const { word, definition, sourceLanguage, targetLanguage, count, existingExamples } = params;
+  const excludePart = existingExamples && existingExamples.length > 0
+    ? `\nDo NOT regenerate these existing examples:\n- ${existingExamples.join('\n- ')}\n`
+    : '';
+
+  return `Generate exactly ${count} NEW natural example sentences for "${word}"${definition ? ` (meaning: ${definition})` : ''}.${excludePart}
+- Sentence Language: ${sourceLanguage}
+- Translation Language: ${targetLanguage}
+
+Return a JSON array of ${count} objects. No extra text.
+Format:
+[
+  {"sentence": "Example 1 in ${sourceLanguage}", "translation": "Translation 1 in ${targetLanguage}"},
+  {"sentence": "Example 2 in ${sourceLanguage}", "translation": "Translation 2 in ${targetLanguage}"},
+  {"sentence": "Example 3 in ${sourceLanguage}", "translation": "Translation 3 in ${targetLanguage}"}
+]`;
+};

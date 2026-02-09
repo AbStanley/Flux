@@ -9,7 +9,7 @@ import { GenerateContentDto } from './dto/generate-content.dto';
 
 @Controller('api')
 export class OllamaController {
-  constructor(private readonly ollamaService: OllamaService) {}
+  constructor(private readonly ollamaService: OllamaService) { }
 
   @Post('chat')
   async chat(
@@ -78,6 +78,7 @@ export class OllamaController {
       targetLanguage: string;
       model?: string;
       count?: number;
+      existingExamples?: string[];
     },
   ) {
     return await this.ollamaService.generateExamples(body);

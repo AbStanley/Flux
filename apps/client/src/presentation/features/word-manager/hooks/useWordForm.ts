@@ -96,23 +96,66 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
             return;
         }
 
+        const currentExamples = formData.examples || [];
+        const filledExamplesCount = currentExamples.filter(ex => ex.sentence.trim()).length;
+
+        if (filledExamplesCount >= 3) {
+            setShowLimitWarning(true);
+            return;
+        }
+
         setIsGenerating(true);
         try {
+            // Extract existing sentences to exclude them from regeneration
+            const existingSentencesList = currentExamples
+                .map(ex => ex.sentence.trim())
+                .filter(Boolean);
+
+            // Always request 3 examples to ensure we have enough to fill all slots
             const generated = await ollamaApi.generateExamples({
                 word: formData.text,
                 definition: formData.definition,
                 sourceLanguage: formData.sourceLanguage,
                 targetLanguage: formData.targetLanguage,
-                count: 3
+                count: 3,
+                existingExamples: existingSentencesList
             });
 
-            // Replace existing examples with generated ones
+            console.log('AI Generated Examples:', generated);
+
+            const existingSentencesSet = new Set(existingSentencesList.map(s => s.toLowerCase()));
+
+            const generatedExamples = (generated || []).map((ex) => ({
+                sentence: ex.sentence || '',
+                translation: ex.translation || ''
+            }));
+
+            // Filter out duplicates if any were still generated
+            const uniqueGenerated = generatedExamples.filter(
+                ex => !existingSentencesSet.has(ex.sentence.toLowerCase().trim())
+            );
+
+            const newExamplesList = [...currentExamples];
+            let genIdx = 0;
+
+            // Pass 1: Fill empty slots
+            for (let i = 0; i < newExamplesList.length && genIdx < uniqueGenerated.length; i++) {
+                if (!newExamplesList[i].sentence.trim()) {
+                    newExamplesList[i] = uniqueGenerated[genIdx++];
+                }
+            }
+
+            // Pass 2: Append remaining if still below 3
+            while (newExamplesList.length < 3 && genIdx < uniqueGenerated.length) {
+                newExamplesList.push(uniqueGenerated[genIdx++]);
+            }
+
+            const finalExamples = newExamplesList.slice(0, 3);
+            console.log('Final merged examples:', finalExamples);
+
             setFormData(prev => ({
                 ...prev,
-                examples: generated.map(ex => ({
-                    sentence: ex.sentence,
-                    translation: ex.translation
-                }))
+                examples: finalExamples
             }));
             setShowLimitWarning(false);
         } catch (error) {

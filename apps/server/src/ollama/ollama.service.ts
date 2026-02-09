@@ -7,6 +7,7 @@ import {
   getExplainPrompt,
   getStoryPrompt,
   getGameContentPrompt,
+  getExamplesPrompt,
   ContentType,
 } from './ollama.prompts';
 
@@ -104,65 +105,84 @@ export class OllamaService {
     targetLanguage: string;
     model?: string;
     count?: number;
+    existingExamples?: string[];
   }): Promise<{ sentence: string; translation: string }[]> {
-    const {
-      word,
-      definition,
-      sourceLanguage,
-      targetLanguage,
-      count = 3,
-    } = params;
+    const { count = 3 } = params;
     let { model } = params;
 
     model = await this.ensureModel(model);
 
-    const prompt = `Generate ${count} example sentences using the word "${word}"${definition ? ` (meaning: ${definition})` : ''}.
-The sentences should be in ${sourceLanguage} with translations in ${targetLanguage}.
-Format your response as a JSON array with objects containing "sentence" and "translation" fields.
-Only output the JSON array, nothing else.
+    const prompt = getExamplesPrompt({
+      word: params.word,
+      definition: params.definition,
+      sourceLanguage: params.sourceLanguage,
+      targetLanguage: params.targetLanguage,
+      count,
+      existingExamples: params.existingExamples,
+    });
 
-Example format:
-[{"sentence": "Example in ${sourceLanguage}", "translation": "Translation in ${targetLanguage}"}]`;
-
+    let text = '';
     try {
       this.logger.log(
-        `Generating ${count} examples for word: ${word} using model: ${model}`,
+        `Generating ${count} examples for word: ${params.word} using model: ${model}`,
       );
-      const response = await this.ollama.generate({
+      const response = await this.ollama.chat({
         model,
-        prompt,
+        messages: [{ role: 'user', content: prompt }],
         stream: false,
         format: 'json',
+        options: {
+          num_ctx: 4096,
+          num_predict: 2048,
+          temperature: 0.8, // Slightly higher temperature for more variety
+        },
       });
 
-      // Parse JSON from response
-      const text = response.response.trim();
-      // Extract JSON array from response (handle potential markdown wrapping)
-      const jsonMatch = text.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        // Fallback just in case regex fails but response is valid json
-        try {
-          const examples = JSON.parse(text) as unknown[];
-          return Array.isArray(examples)
-            ? (examples.slice(0, count) as {
-                sentence: string;
-                translation: string;
-              }[])
-            : [];
-        } catch {
-          this.logger.warn('Could not parse JSON from LLM response:', text);
-          return [];
+      text = response.message.content.trim();
+      this.logger.debug(`Ollama response for examples: ${text}`);
+
+      let parsed: any;
+      try {
+        parsed = this.cleanAndParseJson<any>(text);
+      } catch (e: any) {
+        this.logger.warn(`Initial JSON parse failed, trying object extraction: ${e.message}`);
+        // Fallback: extract all {...} blocks
+        const matches = text.match(/\{[\s\S]*?\}/g);
+        if (matches) {
+          parsed = matches.map(m => {
+            try { return JSON.parse(m); } catch { return null; }
+          }).filter(Boolean);
+        } else {
+          throw e; // Rethrow if even fallback fails
         }
       }
 
-      const examples = JSON.parse(jsonMatch[0]) as unknown[];
-      return (Array.isArray(examples) ? examples.slice(0, count) : []) as {
-        sentence: string;
-        translation: string;
-      }[];
-    } catch (error) {
-      this.logger.error('Error generating examples', error);
-      throw error;
+      // Handle both array and { examples: [...] } or { results: [...] } formats
+      let examples = [];
+      if (Array.isArray(parsed)) {
+        examples = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        const arrayProp = Object.values(parsed).find((val) => Array.isArray(val));
+        if (arrayProp) {
+          examples = arrayProp as any[];
+        } else if (parsed.sentence || parsed.translation) {
+          examples = [parsed];
+        }
+      }
+
+      return examples
+        .filter((ex) => ex && (ex.sentence || ex.translation))
+        .map((ex) => ({
+          sentence: String(ex.sentence || ''),
+          translation: String(ex.translation || ''),
+        }))
+        .slice(0, count);
+    } catch (e: any) {
+      this.logger.warn(
+        `Failed to parse examples JSON. Response: ${text.substring(0, 500)}`,
+      );
+      this.logger.error('Error details:', e);
+      return [];
     }
   }
 
@@ -335,23 +355,22 @@ Example format:
   }
 
   private cleanAndParseJson<T>(text: string): T {
-    // Try to find the largest outer JSON object
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    // Try to find the largest outer JSON object or array
+    const jsonMatch = text.match(/[\{\[][\s\S]*[\}\]]/);
     if (!jsonMatch) {
       // If no brace block found, check if it looks like start of JSON
-      if (text.trim().startsWith('{')) {
+      const trimmed = text.trim();
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        const isArray = trimmed.startsWith('[');
         try {
-          // Attempt to autocomplete truncated JSON (naive)
-          // This often helps if just the last brace is missing
-          return JSON.parse(text + '}') as T;
+          // Attempt to autocomplete truncated JSON
+          return JSON.parse(trimmed + (isArray ? ']' : '}')) as T;
         } catch {
-          // Ignore error
-        }
-
-        try {
-          return JSON.parse(text + ']}') as T;
-        } catch {
-          // Ignore error
+          try {
+            return JSON.parse(trimmed + (isArray ? '}]' : ']}')) as T;
+          } catch {
+            // Ignore error
+          }
         }
       }
 
