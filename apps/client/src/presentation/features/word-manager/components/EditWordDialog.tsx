@@ -54,8 +54,8 @@ export function EditWordDialog({
                     <DialogTitle>{initialData ? 'Edit Word' : 'Add New Word'}</DialogTitle>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto px-6 py-4 md:px-0 md:py-2">
-                    <form id="word-form" onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex-1 overflow-y-auto px-6 py-4 md:px-6 md:py-2">
+                    <form id="word-form" onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="text">Word / Phrase</Label>
