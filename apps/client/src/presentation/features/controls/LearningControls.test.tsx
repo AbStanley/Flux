@@ -11,7 +11,7 @@ describe('LearningControls', () => {
     const defaultProps = {
         isLearningMode: false,
         setIsLearningMode: mockSetIsLearningMode,
-        proficiencyLevel: 'B1',
+        proficiencyLevel: 'B1' as any, // Cast to any or explicitly to ProficiencyLevel to satisfy TS
         setProficiencyLevel: mockSetProficiencyLevel,
         topic: '',
         setTopic: mockSetTopic,
