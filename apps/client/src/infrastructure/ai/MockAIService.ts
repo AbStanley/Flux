@@ -57,4 +57,16 @@ export class MockAIService implements IAIService {
     getModel(): string {
         return "mock-model";
     }
+
+    async generateContent(params: {
+        topic?: string;
+        sourceLanguage: string;
+        isLearningMode: boolean;
+        proficiencyLevel: import('../../core/types/AIConfig').ProficiencyLevel;
+        contentType: import('../../core/types/AIConfig').ContentType;
+    }): Promise<string> {
+        console.log(`[MockAI] Generating content for topic: ${params.topic}, level: ${params.proficiencyLevel}, type: ${params.contentType}`);
+        await new Promise(resolve => setTimeout(resolve, 1200)); // Simulate generation delay
+        return `[Mock Content] This is a mock ${params.contentType} about ${params.topic || 'a general topic'} at ${params.proficiencyLevel} level.`;
+    }
 }

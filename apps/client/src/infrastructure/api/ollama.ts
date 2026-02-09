@@ -7,6 +7,7 @@ export interface GenerateExamplesRequest {
     targetLanguage: string;
     model?: string;
     count?: number;
+    existingExamples?: string[];
 }
 
 export interface GeneratedExample {
