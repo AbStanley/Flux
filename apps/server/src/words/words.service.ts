@@ -77,10 +77,10 @@ export class WordsService {
 
     const where: Prisma.WordWhereInput = {
       sourceLanguage: sourceLanguage
-        ? { equals: sourceLanguage, mode: 'insensitive' as Prisma.QueryMode }
+        ? { equals: sourceLanguage, mode: 'insensitive' }
         : undefined,
       targetLanguage: targetLanguage
-        ? { equals: targetLanguage, mode: 'insensitive' as Prisma.QueryMode }
+        ? { equals: targetLanguage, mode: 'insensitive' }
         : undefined,
       type,
     };
