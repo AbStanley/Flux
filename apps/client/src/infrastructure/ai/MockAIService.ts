@@ -1,4 +1,5 @@
 import type { IAIService, RichTranslationResult } from '../../core/interfaces/IAIService';
+import type { PartOfSpeech } from '../../core/types/Linguistics';
 
 export class MockAIService implements IAIService {
     async generateText(prompt: string, options?: { onProgress?: (chunk: string, fullText: string) => void, signal?: AbortSignal }): Promise<string> {
@@ -44,7 +45,7 @@ export class MockAIService implements IAIService {
             translation: `[Mock Rich] ${text}`,
             segment: text,
             grammar: {
-                partOfSpeech: "noun" as any,
+                partOfSpeech: "noun" as PartOfSpeech,
                 explanation: "Mock explanation"
             },
             examples: [],

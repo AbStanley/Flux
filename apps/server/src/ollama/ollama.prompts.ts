@@ -67,7 +67,7 @@ Text to Translate:
 "${text}"`;
   }
 
-  let prompt = `Role: Context-Aware Dictionary.
+  const prompt = `Role: Context-Aware Dictionary.
 Task: Translate the specific segment "${text}" ${fromLang}into ${targetLanguage}, fitting the context of: "${context || 'None'}".
 
 Instructions:
@@ -327,10 +327,18 @@ export const getExamplesPrompt = (params: {
   count: number;
   existingExamples?: string[];
 }): string => {
-  const { word, definition, sourceLanguage, targetLanguage, count, existingExamples } = params;
-  const excludePart = existingExamples && existingExamples.length > 0
-    ? `\nDo NOT regenerate these existing examples:\n- ${existingExamples.join('\n- ')}\n`
-    : '';
+  const {
+    word,
+    definition,
+    sourceLanguage,
+    targetLanguage,
+    count,
+    existingExamples,
+  } = params;
+  const excludePart =
+    existingExamples && existingExamples.length > 0
+      ? `\nDo NOT regenerate these existing examples:\n- ${existingExamples.join('\n- ')}\n`
+      : '';
 
   return `Generate exactly ${count} NEW natural example sentences for "${word}"${definition ? ` (meaning: ${definition})` : ''}.${excludePart}
 - Sentence Language: ${sourceLanguage}

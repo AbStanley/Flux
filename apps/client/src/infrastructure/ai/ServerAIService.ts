@@ -138,7 +138,7 @@ export class ServerAIService implements IAIService {
       }),
     });
 
-    return typeof data === 'string' ? data : (data as any).response || JSON.stringify(data);
+    return typeof data === 'string' ? data : (data as { response: string }).response || JSON.stringify(data);
   }
 
   async explainText(
@@ -159,7 +159,7 @@ export class ServerAIService implements IAIService {
       }),
     });
 
-    return typeof data === 'string' ? data : (data as any).response || JSON.stringify(data);
+    return typeof data === 'string' ? data : (data as { response: string }).response || JSON.stringify(data);
   }
 
   async getRichTranslation(

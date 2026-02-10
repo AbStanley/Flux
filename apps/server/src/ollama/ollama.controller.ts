@@ -4,16 +4,18 @@ import {
   OllamaService,
   GrammarAnalysisResponse,
   RichTranslation,
+  OllamaMessage,
 } from './ollama.service';
 import { GenerateContentDto } from './dto/generate-content.dto';
 
 @Controller('api')
 export class OllamaController {
-  constructor(private readonly ollamaService: OllamaService) { }
+  constructor(private readonly ollamaService: OllamaService) {}
 
   @Post('chat')
   async chat(
-    @Body() body: { model: string; messages: any[]; stream?: boolean },
+    @Body()
+    body: { model: string; messages: OllamaMessage[]; stream?: boolean },
     @Res() res: Response,
   ) {
     if (body.stream) {
@@ -22,7 +24,7 @@ export class OllamaController {
         body.model,
         body.messages,
         true,
-      )) as AsyncIterable<any>;
+      )) as AsyncIterable<unknown>;
       for await (const part of stream) {
         res.write(JSON.stringify(part) + '\n');
       }
@@ -48,7 +50,7 @@ export class OllamaController {
         body.model,
         body.prompt,
         true,
-      )) as AsyncIterable<any>;
+      )) as AsyncIterable<unknown>;
       for await (const part of stream) {
         res.write(JSON.stringify(part) + '\n');
       }

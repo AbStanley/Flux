@@ -11,6 +11,12 @@ import {
   ContentType,
 } from './ollama.prompts';
 
+export interface OllamaMessage {
+  role: string;
+  content: string;
+  images?: string[];
+}
+
 export interface GrammarAnalysisResponse {
   grammar: {
     word: string;
@@ -40,10 +46,13 @@ export class OllamaService {
   constructor() {
     this.ollamaHost = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
     this.ollama = new Ollama({ host: this.ollamaHost });
-    this.logger.log(`Ollama Service initialized with host: ${this.ollamaHost}`);
   }
 
-  async chat(model: string, messages: any[], stream: boolean = false) {
+  async chat(
+    model: string,
+    messages: OllamaMessage[],
+    stream: boolean = false,
+  ) {
     try {
       this.logger.log(`Sending chat request to model: ${model}`);
       if (stream) {
@@ -128,7 +137,7 @@ export class OllamaService {
       this.logger.log(
         `Generating ${count} examples for word: ${params.word} using model: ${model}`,
       );
-      const response = await this.ollama.chat({
+      const response = (await this.ollama.chat({
         model,
         messages: [{ role: 'user', content: prompt }],
         stream: false,
@@ -138,52 +147,73 @@ export class OllamaService {
           num_predict: 2048,
           temperature: 0.8, // Slightly higher temperature for more variety
         },
-      });
+      })) as { message: { content: string } };
 
       text = response.message.content.trim();
       this.logger.debug(`Ollama response for examples: ${text}`);
 
-      let parsed: any;
+      let parsed: unknown;
       try {
-        parsed = this.cleanAndParseJson<any>(text);
-      } catch (e: any) {
-        this.logger.warn(`Initial JSON parse failed, trying object extraction: ${e.message}`);
+        parsed = this.cleanAndParseJson<unknown>(text);
+      } catch (e) {
+        const error = e as Error;
+        this.logger.warn(
+          `Initial JSON parse failed, trying object extraction: ${error.message}`,
+        );
         // Fallback: extract all {...} blocks
         const matches = text.match(/\{[\s\S]*?\}/g);
         if (matches) {
-          parsed = matches.map(m => {
-            try { return JSON.parse(m); } catch { return null; }
-          }).filter(Boolean);
+          parsed = matches
+            .map((m) => {
+              try {
+                return JSON.parse(m) as Record<string, unknown>;
+              } catch {
+                return null;
+              }
+            })
+            .filter((p): p is Record<string, unknown> => Boolean(p));
         } else {
           throw e; // Rethrow if even fallback fails
         }
       }
 
       // Handle both array and { examples: [...] } or { results: [...] } formats
-      let examples = [];
+      let examples: { sentence?: string; translation?: string }[] = [];
       if (Array.isArray(parsed)) {
-        examples = parsed;
+        examples = parsed as { sentence?: string; translation?: string }[];
       } else if (parsed && typeof parsed === 'object') {
-        const arrayProp = Object.values(parsed).find((val) => Array.isArray(val));
+        const parsedObj = parsed as Record<string, unknown>;
+        const arrayProp = Object.values(parsedObj).find((val) =>
+          Array.isArray(val),
+        ) as { sentence?: string; translation?: string }[] | undefined;
         if (arrayProp) {
-          examples = arrayProp as any[];
-        } else if (parsed.sentence || parsed.translation) {
-          examples = [parsed];
+          examples = arrayProp;
+        } else if (
+          typeof parsedObj.sentence === 'string' ||
+          typeof parsedObj.translation === 'string'
+        ) {
+          examples = [parsedObj as { sentence?: string; translation?: string }];
         }
       }
 
       return examples
-        .filter((ex) => ex && (ex.sentence || ex.translation))
+        .filter(
+          (ex): ex is { sentence: string; translation: string } =>
+            Boolean(ex) &&
+            (typeof ex.sentence === 'string' ||
+              typeof ex.translation === 'string'),
+        )
         .map((ex) => ({
           sentence: String(ex.sentence || ''),
           translation: String(ex.translation || ''),
         }))
         .slice(0, count);
-    } catch (e: any) {
+    } catch (e) {
+      const error = e as Error;
       this.logger.warn(
         `Failed to parse examples JSON. Response: ${text.substring(0, 500)}`,
       );
-      this.logger.error('Error details:', e);
+      this.logger.error('Error details:', error);
       return [];
     }
   }
@@ -358,7 +388,7 @@ export class OllamaService {
 
   private cleanAndParseJson<T>(text: string): T {
     // Try to find the largest outer JSON object or array
-    const jsonMatch = text.match(/[\{\[][\s\S]*[\}\]]/);
+    const jsonMatch = text.match(/[{[]([\s\S]*)[\]}]/);
     if (!jsonMatch) {
       // If no brace block found, check if it looks like start of JSON
       const trimmed = text.trim();
@@ -488,27 +518,39 @@ export class OllamaService {
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      this.logger.error(`Failed to ensure/list Ollama models. Host: ${this.ollamaHost}. Error: ${msg}`);
+      this.logger.error(
+        `Failed to ensure/list Ollama models. Host: ${this.ollamaHost}. Error: ${msg}`,
+      );
       throw new Error(`Ollama is not available: ${msg}`);
     }
   }
 
   private cleanResponse(text: string): string {
-    // It removes any thought bubbles <think>...</think> if present (common in some thinking models)
-    // and generic filler "Here is the translation:" etc if logic wasn't perfect
     let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
     // Remove quotes if the WHOLE response is quoted
-    if (cleaned.startsWith('"') && cleaned.endsWith('"') && cleaned.length > 2) {
+    if (
+      cleaned.startsWith('"') &&
+      cleaned.endsWith('"') &&
+      cleaned.length > 2
+    ) {
       cleaned = cleaned.slice(1, -1);
     }
-    if (cleaned.startsWith("'") && cleaned.endsWith("'") && cleaned.length > 2) {
+    if (
+      cleaned.startsWith("'") &&
+      cleaned.endsWith("'") &&
+      cleaned.length > 2
+    ) {
       cleaned = cleaned.slice(1, -1);
     }
 
     // Remove common prefixes
     const prefixes = [
-      'Translation:', 'The translation is:', 'Here is the translation:', 'Result:', 'Answer:'
+      'Translation:',
+      'The translation is:',
+      'Here is the translation:',
+      'Result:',
+      'Answer:',
     ];
     for (const prefix of prefixes) {
       if (cleaned.toLowerCase().startsWith(prefix.toLowerCase())) {

@@ -18,7 +18,7 @@ export class ApiClient {
         if (typeof chrome !== 'undefined' && chrome?.runtime?.id) {
             console.log(`[Flux Debug] ApiClient: Proxying ${method} ${url}`);
             return new Promise<T>((resolve, reject) => {
-                let parsedBody: any = undefined;
+                let parsedBody: unknown = undefined;
                 if (body && typeof body === 'string') {
                     try {
                         parsedBody = JSON.parse(body);

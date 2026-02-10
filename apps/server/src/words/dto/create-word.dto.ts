@@ -64,4 +64,3 @@ export class CreateWordDto {
   @Type(() => ExampleDto)
   examples?: ExampleDto[];
 }
-
