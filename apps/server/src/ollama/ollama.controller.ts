@@ -1,11 +1,11 @@
 import { Body, Controller, Post, Get, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { OllamaService } from './ollama.service';
+import { OllamaService } from './services/ollama.service';
 import {
   GrammarAnalysisResponse,
   RichTranslation,
   Message,
-} from './interfaces';
+} from './interfaces/ollama.interfaces';
 import { GenerateContentDto } from './dto/generate-content.dto';
 
 @Controller('api')

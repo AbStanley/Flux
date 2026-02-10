@@ -40,13 +40,13 @@ export function cleanAndParseJson<T>(text: string): T {
 
   try {
     return JSON.parse(cleaned) as T;
-  } catch (initialError) {
+  } catch {
     // Attempt to find the first valid JSON object or array
     const jsonMatch = cleaned.match(/({[\s\S]*}|\[[\s\S]*\])/);
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[0]) as T;
-      } catch (e) {
+      } catch {
         // Fallback: try to fix common JSON issues like trailing commas or missing braces
         const likelyJson = jsonMatch[0]
           .replace(/,\s*([\]}])/g, '$1') // remove trailing commas
@@ -63,15 +63,20 @@ export function cleanAndParseJson<T>(text: string): T {
     const blocks = cleaned.match(/\{[\s\S]*?\}/g);
     if (blocks && blocks.length > 0) {
       const parsedBlocks = blocks
-        .map(b => {
-          try { return JSON.parse(b); } catch { return null; }
+        .map((b) => {
+          try {
+            return JSON.parse(b) as unknown;
+          } catch {
+            return null;
+          }
         })
-        .filter(b => b !== null);
+        .filter((b) => b !== null);
 
       if (parsedBlocks.length > 0) return parsedBlocks as unknown as T;
     }
 
-    const snippet = cleaned.length > 100 ? cleaned.substring(0, 100) + '...' : cleaned;
+    const snippet =
+      cleaned.length > 100 ? cleaned.substring(0, 100) + '...' : cleaned;
     throw new Error(`Failed to parse JSON from response: "${snippet}"`);
   }
 }

@@ -6,7 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { ALLOWED_MODELS } from '../ollama.constants';
+import { ALLOWED_MODELS } from '../constants/ollama.constants';
 
 export enum ContentType {
   Story = 'Story',

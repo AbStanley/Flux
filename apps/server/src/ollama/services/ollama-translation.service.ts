@@ -4,15 +4,15 @@ import {
   getTranslatePrompt,
   getExplainPrompt,
   getRichTranslationPrompt,
-} from './ollama.prompts';
-import { cleanResponse, cleanAndParseJson } from './ollama-utils';
-import { RichTranslation } from './interfaces';
+} from '../prompts';
+import { cleanResponse, cleanAndParseJson } from '../utils/ollama-utils';
+import { RichTranslation } from '../interfaces/ollama.interfaces';
 
 @Injectable()
 export class OllamaTranslationService {
   private readonly logger = new Logger(OllamaTranslationService.name);
 
-  constructor(private readonly ollamaClient: OllamaClientService) { }
+  constructor(private readonly ollamaClient: OllamaClientService) {}
 
   async translateText(params: {
     text: string;

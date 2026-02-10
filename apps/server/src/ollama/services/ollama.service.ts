@@ -7,8 +7,8 @@ import {
   GrammarAnalysisResponse,
   RichTranslation,
   Message,
-} from './interfaces';
-import { ContentType } from './ollama.prompts';
+} from '../interfaces/ollama.interfaces';
+import { ContentType } from '../prompts';
 
 @Injectable()
 export class OllamaService {
@@ -19,7 +19,7 @@ export class OllamaService {
     private readonly translation: OllamaTranslationService,
     private readonly grammar: OllamaGrammarService,
     private readonly generation: OllamaGenerationService,
-  ) { }
+  ) {}
 
   async chat(model: string, messages: Message[], stream: boolean = false) {
     return this.client.chat(model, messages, stream);

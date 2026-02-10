@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { vi, describe, beforeEach, it, expect } from 'vitest';
+// Removed vitest import
 import { OllamaController } from './ollama.controller';
-import { OllamaService } from './ollama.service';
+import { OllamaService } from './services/ollama.service';
 
 describe('OllamaController', () => {
   let controller: OllamaController;

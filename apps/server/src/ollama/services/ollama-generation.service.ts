@@ -5,14 +5,19 @@ import {
   getGameContentPrompt,
   getExamplesPrompt,
   ContentType,
-} from './ollama.prompts';
-import { cleanResponse, cleanAndParseJson } from './ollama-utils';
+} from '../prompts';
+import { cleanResponse, cleanAndParseJson } from '../utils/ollama-utils';
+
+interface ExampleRecord {
+  sentence?: string;
+  translation?: string;
+}
 
 @Injectable()
 export class OllamaGenerationService {
   private readonly logger = new Logger(OllamaGenerationService.name);
 
-  constructor(private readonly ollamaClient: OllamaClientService) { }
+  constructor(private readonly ollamaClient: OllamaClientService) {}
 
   async generateExamples(params: {
     word: string;
@@ -41,12 +46,12 @@ export class OllamaGenerationService {
       false,
     );
 
-    const parsed = cleanAndParseJson<any[]>(response.message.content);
+    const parsed = cleanAndParseJson<ExampleRecord[]>(response.message.content);
     const examples = Array.isArray(parsed) ? parsed : [parsed];
 
     return examples
-      .filter(ex => ex && (ex.sentence || ex.translation))
-      .map(ex => ({
+      .filter((ex) => ex && (ex.sentence || ex.translation))
+      .map((ex) => ({
         sentence: String(ex.sentence || ''),
         translation: String(ex.translation || ''),
       }))

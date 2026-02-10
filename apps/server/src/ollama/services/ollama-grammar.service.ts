@@ -1,8 +1,8 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { OllamaClientService } from './ollama-client.service';
-import { GRAMMAR_ANALYSIS_PROMPT } from './ollama.prompts';
-import { cleanAndParseJson } from './ollama-utils';
-import { GrammarAnalysisResponse } from './interfaces';
+import { GRAMMAR_ANALYSIS_PROMPT } from '../prompts';
+import { cleanAndParseJson } from '../utils/ollama-utils';
+import { GrammarAnalysisResponse } from '../interfaces/ollama.interfaces';
 
 @Injectable()
 export class OllamaGrammarService {

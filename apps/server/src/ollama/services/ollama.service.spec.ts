@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Test, TestingModule } from '@nestjs/testing';
-import { vi, describe, beforeEach, it, expect } from 'vitest';
+// Removed vitest import
 import { OllamaService } from './ollama.service';
 import { OllamaClientService } from './ollama-client.service';
 import { OllamaTranslationService } from './ollama-translation.service';
@@ -18,45 +18,57 @@ describe('OllamaService', () => {
         {
           provide: OllamaClientService,
           useValue: {
-            chat: vi.fn(),
-            generate: vi.fn(),
-            listTags: vi.fn(),
-            ensureModel: vi.fn(),
+            chat: jest.fn(),
+            generate: jest.fn(),
+            listTags: jest.fn(),
+            ensureModel: jest.fn(),
           },
         },
         {
           provide: OllamaTranslationService,
           useValue: {
-            translateText: vi.fn(),
-            explainText: vi.fn(),
-            getRichTranslation: vi.fn(),
+            translateText: jest.fn(),
+            explainText: jest.fn(),
+            getRichTranslation: jest.fn(),
           },
         },
         {
           provide: OllamaGrammarService,
           useValue: {
-            analyzeGrammar: vi.fn(),
+            analyzeGrammar: jest.fn(),
           },
         },
         {
           provide: OllamaGenerationService,
           useValue: {
-            generateExamples: vi.fn(),
-            generateContent: vi.fn(),
-            generateGameContent: vi.fn(),
+            generateExamples: jest.fn(),
+            generateContent: jest.fn(),
+            generateGameContent: jest.fn(),
           },
         },
       ],
     }).compile();
 
     service = module.get<OllamaService>(OllamaService);
-    generationService = module.get<OllamaGenerationService>(OllamaGenerationService);
+    generationService = module.get<OllamaGenerationService>(
+      OllamaGenerationService,
+    );
 
     // Manually link dependencies to the service instance to bypass Vitest/Nest DI metadata issues
-    (service as any).client = module.get(OllamaClientService);
-    (service as any).translation = module.get(OllamaTranslationService);
-    (service as any).grammar = module.get(OllamaGrammarService);
-    (service as any).generation = generationService;
+    const serviceInternal = service as unknown as {
+      client: OllamaClientService;
+      translation: OllamaTranslationService;
+      grammar: OllamaGrammarService;
+      generation: OllamaGenerationService;
+    };
+    serviceInternal.client =
+      module.get<OllamaClientService>(OllamaClientService);
+    serviceInternal.translation = module.get<OllamaTranslationService>(
+      OllamaTranslationService,
+    );
+    serviceInternal.grammar =
+      module.get<OllamaGrammarService>(OllamaGrammarService);
+    serviceInternal.generation = generationService;
   });
 
   it('should be defined', () => {
@@ -72,7 +84,9 @@ describe('OllamaService', () => {
       };
       const mockResult = [{ sentence: 'Test', translation: 'Prueba' }];
 
-      const spy = vi.spyOn(generationService, 'generateExamples').mockResolvedValue(mockResult);
+      const spy = jest
+        .spyOn(generationService, 'generateExamples')
+        .mockResolvedValue(mockResult);
 
       const result = await service.generateExamples(params);
 

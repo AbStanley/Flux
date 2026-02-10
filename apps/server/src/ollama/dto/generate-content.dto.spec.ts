@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+// Removed vitest import
 import { validate } from 'class-validator';
 import {
   GenerateContentDto,
