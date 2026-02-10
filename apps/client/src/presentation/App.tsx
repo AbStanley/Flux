@@ -6,6 +6,7 @@ import { useReaderStore } from './features/reader/store/useReaderStore';
 
 import { FocusLayout } from './layouts/FocusLayout';
 import { useFocusMode } from './features/reader/hooks/useFocusMode';
+import { useGameStore } from './features/learning-mode/store/useGameStore';
 
 /**
  * App: The Main Application Root
@@ -22,6 +23,38 @@ function App() {
   const isReading = useReaderStore(state => state.isReading);
   const setText = useReaderStore(state => state.setText);
   const setIsReading = useReaderStore(state => state.setIsReading);
+
+  // Global Side-effect: Sync API Configuration from Store
+  // This ensures that even if the user reloads on a page other than Setup,
+  // the API clients are correctly configured.
+  const config = useGameStore(state => state.config);
+
+
+  useEffect(() => {
+    // Dynamically import base-url to get the environment-aware default
+    import('@/infrastructure/api/base-url').then(({ getApiBaseUrl }) => {
+      const defaultUrl = getApiBaseUrl();
+      let urlToSet = config.aiHost || defaultUrl;
+
+      // ONE-TIME MIGRATION / SAFETY CHECK
+      // If we are in the Web App (not extension), and the config is set to localhost,
+      const isExtension = typeof window !== 'undefined' && window.location.protocol === 'chrome-extension:';
+      const isLocalhostConfig = urlToSet.includes('localhost') || urlToSet.includes('127.0.0.1');
+
+      if (!isExtension && isLocalhostConfig) {
+        console.warn('[Flux Config Correction] Web App Mode cannot use Localhost config. Resetting to relative path.');
+        urlToSet = '';
+        useGameStore.getState().updateConfig({ aiHost: '' });
+      }
+
+      import('@/infrastructure/ai/ServerAIService').then(({ serverAIService }) => {
+        serverAIService.setBaseUrl(urlToSet);
+      });
+      import('@/infrastructure/api/api-client').then(({ setApiClientBaseUrl }) => {
+        setApiClientBaseUrl(urlToSet);
+      });
+    });
+  }, [config.aiHost]);
 
 
   useEffect(() => {

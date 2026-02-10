@@ -1,4 +1,5 @@
 import { ApiClient } from '../api/api-client';
+import { getApiBaseUrl, normalizeApiBaseUrl } from '../api/base-url';
 
 export interface SaveWordDTO {
     text: string;
@@ -10,9 +11,9 @@ export class WordsClient {
     private client: ApiClient;
 
     constructor() {
-        let baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_OLLAMA_URL;
+        let baseUrl = getApiBaseUrl();
         if (!baseUrl) {
-            baseUrl = 'http://localhost:3000';
+            baseUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
         }
         if (baseUrl.endsWith('/api/ollama')) {
             baseUrl = baseUrl.replace('/api/ollama', '');

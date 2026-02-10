@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Build the application with explicit empty API URL
-RUN VITE_OLLAMA_URL='' npm run build
+RUN VITE_API_URL='' VITE_OLLAMA_URL='' VITE_IS_WEB_APP='true' npm run build
 
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine

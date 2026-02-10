@@ -3,6 +3,7 @@ import type { IAIService } from '../../core/interfaces/IAIService';
 import { MockAIService } from '../../infrastructure/ai/MockAIService';
 import { ServerAIService } from '../../infrastructure/ai/ServerAIService';
 import { useReaderStore } from '../features/reader/store/useReaderStore';
+import { getApiBaseUrl, normalizeApiBaseUrl } from '../../infrastructure/api/base-url';
 
 interface OllamaConfig {
     url?: string;
@@ -19,14 +20,11 @@ const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 export function ServiceProvider({ children }: { children: ReactNode }) {
     // Default to Backend API
-    const defaultUrl = 'http://localhost:3000/api';
+    const defaultUrl = getApiBaseUrl();
     // Fallback to VITE_API_URL if specific AI URL is not set, but ensure /api suffix if needed
     const getBaseUrl = () => {
-        if (import.meta.env.VITE_AI_API_URL) return import.meta.env.VITE_AI_API_URL;
-        if (import.meta.env.VITE_API_URL) {
-            return import.meta.env.VITE_API_URL.endsWith('/api')
-                ? import.meta.env.VITE_API_URL
-                : `${import.meta.env.VITE_API_URL}/api`;
+        if (import.meta.env.VITE_AI_API_URL) {
+            return normalizeApiBaseUrl(import.meta.env.VITE_AI_API_URL);
         }
         return defaultUrl;
     };

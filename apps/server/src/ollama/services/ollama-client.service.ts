@@ -9,6 +9,7 @@ export class OllamaClientService {
 
   constructor() {
     this.ollamaHost = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+    this.logger.log(`Initializing Ollama Client with Host: ${this.ollamaHost}`);
     this.ollama = new Ollama({ host: this.ollamaHost });
   }
 
@@ -84,7 +85,13 @@ export class OllamaClientService {
   }
 
   async listTags() {
-    return this.execute(() => this.ollama.list(), 'list tags');
+    try {
+      this.logger.log(`Attempting to list tags from ${this.ollamaHost}`);
+      return await this.execute(() => this.ollama.list(), 'list tags');
+    } catch (e) {
+      this.logger.error(`Failed to list tags from ${this.ollamaHost}`, e);
+      throw e;
+    }
   }
 
   async ensureModel(model?: string): Promise<string> {

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { serverAIService } from '@/infrastructure/ai/ServerAIService'; // Updated import
+import { setApiClientBaseUrl } from '@/infrastructure/api/api-client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
 import { ArrowRightLeft, RefreshCw, Pencil } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/button';
@@ -15,11 +16,15 @@ export const AiSetup = () => {
     const [error, setError] = useState<string | null>(null);
     const [isManualInput, setIsManualInput] = useState(false);
 
+    // Detect if we are in a Chrome Extension environment
+    const isExtension = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
+
     const fetchModels = useCallback(async () => {
-        // Host URL is now managed by Backend or ServerAIService default
-        // if (config.aiHost) {
-        //     ollamaService.setBaseUrl(config.aiHost);
-        // }
+        // If config.aiHost is empty/undefined, we still want to set it (to empty string) 
+        // to reset any previous manual configuration.
+        const urlToSet = config.aiHost || '';
+        serverAIService.setBaseUrl(urlToSet);
+        setApiClientBaseUrl(urlToSet);
 
         setLoading(true);
         setError(null);
@@ -98,20 +103,29 @@ export const AiSetup = () => {
 
                     {/* Model Selection */}
                     <div className="space-y-1.5">
-                        {/* 
                         <div className="space-y-1.5 mb-3">
-                            <label className="text-sm font-medium text-muted-foreground">AI Host URL</label>
+                            <label className="text-sm font-medium text-muted-foreground">
+                                Server URL
+                                {!isExtension && <span className="ml-2 text-[10px] text-green-500 font-mono bg-green-500/10 px-1.5 py-0.5 rounded">WEB APP MODE</span>}
+                            </label>
                             <Input
-                                value={config.aiHost || 'http://localhost:11434'}
+                                value={!isExtension ? '' : (config.aiHost || 'http://localhost:3000')}
                                 onChange={(e) => {
-                                    updateConfig({ aiHost: e.target.value });
-                                    // serverAIService context is fixed usually
+                                    const val = e.target.value;
+                                    updateConfig({ aiHost: val });
+                                    serverAIService.setBaseUrl(val);
+                                    setApiClientBaseUrl(val);
                                 }}
-                                placeholder="http://localhost:11434"
-                                className="bg-[var(--input-background)] font-mono text-xs"
+                                placeholder={!isExtension ? "Auto (Relative Path)" : "http://localhost:3000"}
+                                disabled={!isExtension}
+                                className={cn("bg-[var(--input-background)] font-mono text-xs", !isExtension && "opacity-50 cursor-not-allowed")}
                             />
-                        </div> 
-                        */}
+                            <p className="text-[10px] text-muted-foreground">
+                                {!isExtension
+                                    ? "Managed automatically by the Web App."
+                                    : "If using Docker/Remote, use the machine's IP (e.g. http://192.168.1.5:3000)"}
+                            </p>
+                        </div>
 
                         <div className="flex items-center justify-between">
                             <label className="text-sm font-medium text-muted-foreground">Model</label>

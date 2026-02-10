@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from './base-url';
+
 export class ApiClient {
     private baseUrl: string;
 
@@ -5,8 +7,13 @@ export class ApiClient {
         this.baseUrl = baseUrl;
     }
 
+    public setBaseUrl(url: string) {
+        this.baseUrl = url;
+    }
+
     private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
         const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
+        console.log(`[Flux Network Probe] Requesting: ${url}`);
         const method = options.method || 'GET';
         const body = options.body;
         const headers = {
@@ -102,5 +109,9 @@ export class ApiClient {
 }
 
 // Singleton instance with default configuration
-const defaultBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const defaultBaseUrl = getApiBaseUrl();
 export const defaultClient = new ApiClient(defaultBaseUrl);
+
+export const setApiClientBaseUrl = (url: string) => {
+    defaultClient.setBaseUrl(url);
+};

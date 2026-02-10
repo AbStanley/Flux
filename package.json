@@ -17,6 +17,7 @@
     "start:local:dev": "start \"Client\" npm run client:dev & start \"Server\" npm run server:dev",
     "docker:dev": "docker compose -f docker-compose.dev.yml -p reader-helper-dev up --build",
     "docker:prod": "docker compose -f docker-compose.yml -p reader-helper-prod up --build",
+    "docker:prod:no-cache": "docker compose -f docker-compose.yml -p reader-helper-prod build --no-cache && docker compose -f docker-compose.yml -p reader-helper-prod up -d",
     "db:dev": "docker compose -f docker-compose.dev.yml -p reader-helper-dev up -d postgres"
   },
   "devDependencies": {
