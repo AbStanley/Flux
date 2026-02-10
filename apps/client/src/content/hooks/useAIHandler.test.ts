@@ -14,13 +14,20 @@ vi.mock('../../infrastructure/ai/ServerAIService', () => {
     return { ServerAIService: ServerAIServiceMock };
 });
 
+import { ServiceProvider } from '../../presentation/contexts/ServiceContext';
+
 const mockSetAiModel = vi.fn();
+const mockStoreState = {
+    aiModel: null,
+    aiHost: '',
+    setAiModel: mockSetAiModel
+};
+
 vi.mock('../../presentation/features/reader/store/useReaderStore', () => ({
-    useReaderStore: () => ({
-        aiModel: null,
-        aiHost: '',
-        setAiModel: mockSetAiModel
-    })
+    useReaderStore: (selector?: (state: any) => any) => {
+        if (selector) return selector(mockStoreState);
+        return mockStoreState;
+    }
 }));
 
 interface MockServerAIService {
@@ -43,7 +50,7 @@ describe('useAIHandler', () => {
     });
 
     it('initializes with default state', () => {
-        const { result } = renderHook(() => useAIHandler());
+        const { result } = renderHook(() => useAIHandler(), { wrapper: ServiceProvider });
         expect(result.current.result).toBe('');
         expect(result.current.loading).toBe(false);
         expect(result.current.error).toBe(null);
@@ -52,7 +59,7 @@ describe('useAIHandler', () => {
     it('handles translation flow successfully', async () => {
         mockService.translateText.mockResolvedValue('Translated Text');
 
-        const { result } = renderHook(() => useAIHandler());
+        const { result } = renderHook(() => useAIHandler(), { wrapper: ServiceProvider });
 
         act(() => {
             result.current.handleAction('Source Text', 'TRANSLATE', 'Spanish');
@@ -66,14 +73,14 @@ describe('useAIHandler', () => {
 
         expect(result.current.result).toBe('Translated Text');
         expect(result.current.error).toBe(null);
-        expect(mockService.translateText).toHaveBeenCalledWith('Source Text', 'Spanish');
+        expect(mockService.translateText).toHaveBeenCalledWith('Source Text', 'Spanish', 'Auto');
         expect(mockService.setModel).toHaveBeenCalledWith('llama3');
     });
 
     it('handles explanation flow successfully', async () => {
         mockService.explainText.mockResolvedValue('Explanation Text');
 
-        const { result } = renderHook(() => useAIHandler());
+        const { result } = renderHook(() => useAIHandler(), { wrapper: ServiceProvider });
 
         act(() => {
             result.current.handleAction('Source', 'EXPLAIN', 'English');
@@ -84,13 +91,13 @@ describe('useAIHandler', () => {
         });
 
         expect(result.current.result).toBe('Explanation Text');
-        expect(mockService.explainText).toHaveBeenCalledWith('Source', 'English');
+        expect(mockService.explainText).toHaveBeenCalledWith('Source', 'English', 'Auto');
     });
 
     it('handles error state', async () => {
         mockService.translateText.mockRejectedValue(new Error('Network Error'));
 
-        const { result } = renderHook(() => useAIHandler());
+        const { result } = renderHook(() => useAIHandler(), { wrapper: ServiceProvider });
 
         act(() => {
             result.current.handleAction('Text', 'TRANSLATE', 'English');
@@ -108,7 +115,7 @@ describe('useAIHandler', () => {
         mockService.getAvailableModels.mockResolvedValue(['other-model', 'mistral-7b']);
         mockService.translateText.mockResolvedValue('');
 
-        const { result } = renderHook(() => useAIHandler());
+        const { result } = renderHook(() => useAIHandler(), { wrapper: ServiceProvider });
         await act(async () => {
             await result.current.handleAction('Text', 'TRANSLATE', 'English');
         });

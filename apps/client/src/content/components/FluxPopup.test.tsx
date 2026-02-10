@@ -27,7 +27,7 @@ describe('FluxPopup', () => {
         // The outer div has the absolute positioning
         const outerDiv = container.firstChild as HTMLElement;
         expect(outerDiv).toHaveStyle({
-            position: 'absolute',
+            position: 'fixed',
             left: '100px',
             top: '100px',
         });
@@ -54,7 +54,7 @@ describe('FluxPopup', () => {
 
         // The popup is absolute positioned, so we find it by text or role content
         // Since we render FluxHeader inside, we can find "Flux Analysis"
-        const popupContent = screen.getByText('Flux Analysis').closest('div')?.parentElement;
+        const popupContent = screen.getByText('Flux').closest('div')?.parentElement;
 
         if (popupContent) {
             fireEvent.mouseDown(popupContent);
@@ -66,7 +66,7 @@ describe('FluxPopup', () => {
     it('renders children components correctly', () => {
         render(<FluxPopup {...defaultProps} />);
         // Header
-        expect(screen.getByText('Flux Analysis')).toBeInTheDocument();
+        expect(screen.getByText('Flux')).toBeInTheDocument();
         // Controls
         expect(screen.getByRole('button', { name: /Translate/i })).toBeInTheDocument();
         // Content

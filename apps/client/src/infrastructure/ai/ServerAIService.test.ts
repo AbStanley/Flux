@@ -9,6 +9,7 @@ describe('ServerAIService', () => {
     beforeEach(() => {
         service = new ServerAIService(mockBaseUrl, mockModel);
         vi.stubGlobal('fetch', vi.fn());
+        vi.stubGlobal('chrome', undefined);
     });
 
     it('should initialize with correct base URL and model', () => {
@@ -48,7 +49,7 @@ describe('ServerAIService', () => {
                 text: () => Promise.resolve('Error')
             });
 
-            await expect(service.translateText('Hello', 'es')).rejects.toThrow('AI Service Error');
+            await expect(service.translateText('Hello', 'es')).rejects.toThrow('AI Service Error (undefined): Error');
         });
     });
 

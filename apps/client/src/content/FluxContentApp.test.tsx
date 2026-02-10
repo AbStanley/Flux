@@ -5,15 +5,9 @@ import * as UseAIHandler from './hooks/useAIHandler';
 import * as UseTextSelection from './hooks/useTextSelection';
 
 // Mock child components to simplify testing
+// Mock child components to simplify testing
 vi.mock('./components/FluxPopup', () => ({
-    FluxPopup: ({ selection, result, mode, onAction, onClose, onModeChange }: {
-        selection: { text: string } | null;
-        result: string;
-        mode: string;
-        onAction: () => void;
-        onClose: () => void;
-        onModeChange: (mode: string) => void;
-    }) => (
+    FluxPopup: ({ selection, result, mode, onAction, onClose, onModeChange, onSave, autoSave, onAutoSaveChange }: any) => (
         <div data-testid="flux-popup">
             <span>Popup for: {selection?.text}</span>
             <span>Result: {result}</span>
@@ -21,6 +15,8 @@ vi.mock('./components/FluxPopup', () => ({
             <button onClick={onAction}>Manual Action</button>
             <button onClick={onClose}>Close</button>
             <button onClick={() => onModeChange('EXPLAIN')}>Set Explain</button>
+            <button onClick={onSave}>Save</button>
+            <button onClick={() => onAutoSaveChange(!autoSave)}>Toggle AutoSave</button>
         </div>
     )
 }));
@@ -79,7 +75,7 @@ describe('FluxContentApp', () => {
         expect(screen.getByText('Popup for: Hello World')).toBeTruthy();
 
         // It should also auto-trigger action
-        expect(handleActionMock).toHaveBeenCalledWith('Hello World', 'TRANSLATE', 'English');
+        expect(handleActionMock).toHaveBeenCalledWith('Hello World', 'TRANSLATE', 'English', 'Auto');
     });
 
     it('hides popup when cleared', () => {
@@ -115,7 +111,7 @@ describe('FluxContentApp', () => {
             btn.click();
         });
 
-        expect(handleActionMock).toHaveBeenCalledWith('Manual', 'TRANSLATE', 'English');
+        expect(handleActionMock).toHaveBeenCalledWith('Manual', 'TRANSLATE', 'English', 'Auto');
     });
 
     it('updates mode correctly', () => {

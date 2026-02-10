@@ -217,6 +217,7 @@ export function FluxControls({
                         outline: 'none',
                         cursor: 'pointer'
                     }}
+                    title="Target Language"
                 >
                     {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>

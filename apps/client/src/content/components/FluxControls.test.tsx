@@ -49,7 +49,7 @@ describe('FluxControls', () => {
         render(<FluxControls {...defaultProps} />);
         expect(screen.getByRole('button', { name: /Translate/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Explain/i })).toBeInTheDocument();
-        expect(screen.getByRole('combobox')).toHaveValue('French');
+        expect(screen.getByRole('combobox', { name: "Target Language" })).toHaveValue('French');
         expect(screen.getByRole('button', { name: /Go/i })).toBeInTheDocument();
     });
 
@@ -61,7 +61,7 @@ describe('FluxControls', () => {
 
     it('calls onLangChange when language is changed', () => {
         render(<FluxControls {...defaultProps} />);
-        fireEvent.change(screen.getByRole('combobox'), { target: { value: 'Spanish' } });
+        fireEvent.change(screen.getByRole('combobox', { name: "Target Language" }), { target: { value: 'Spanish' } });
         expect(defaultProps.onLangChange).toHaveBeenCalledWith('Spanish');
     });
 
