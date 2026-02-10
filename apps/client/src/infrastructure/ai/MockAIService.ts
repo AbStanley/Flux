@@ -1,4 +1,4 @@
-import type { IAIService } from '../../core/interfaces/IAIService';
+import type { IAIService, RichTranslationResult } from '../../core/interfaces/IAIService';
 
 export class MockAIService implements IAIService {
     async generateText(prompt: string, options?: { onProgress?: (chunk: string, fullText: string) => void, signal?: AbortSignal }): Promise<string> {
@@ -32,13 +32,19 @@ export class MockAIService implements IAIService {
         return `[Translated to ${targetLanguage}]: ${text}`;
     }
 
-    async getRichTranslation(text: string, _targetLanguage?: string, _context?: string): Promise<import('../../core/interfaces/IAIService').RichTranslationResult> {
+    async explainText(text: string, targetLanguage: string = 'en', context?: string): Promise<string> {
+        console.log(`[MockAI] Explaining "${text}" in ${targetLanguage} (Context: ${context || 'None'})`);
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+        return `[Explanation in ${targetLanguage}]: This is a mock explanation for "${text}".`;
+    }
+
+    async getRichTranslation(text: string, _targetLanguage?: string, _context?: string): Promise<RichTranslationResult> {
         console.log(`[MockAI] Getting rich translation for "${text}" to ${_targetLanguage} (Context: ${_context})`);
         return {
             translation: `[Mock Rich] ${text}`,
             segment: text,
             grammar: {
-                partOfSpeech: "noun",
+                partOfSpeech: "noun" as any,
                 explanation: "Mock explanation"
             },
             examples: [],
@@ -58,6 +64,11 @@ export class MockAIService implements IAIService {
         return "mock-model";
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    setModel(_model: string): void {
+        // No-op for mock service
+    }
+
     async generateContent(params: {
         topic?: string;
         sourceLanguage: string;
@@ -68,5 +79,18 @@ export class MockAIService implements IAIService {
         console.log(`[MockAI] Generating content for topic: ${params.topic}, level: ${params.proficiencyLevel}, type: ${params.contentType}`);
         await new Promise(resolve => setTimeout(resolve, 1200)); // Simulate generation delay
         return `[Mock Content] This is a mock ${params.contentType} about ${params.topic || 'a general topic'} at ${params.proficiencyLevel} level.`;
+    }
+
+    async generateGameContent(params: {
+        topic: string;
+        level: string;
+        mode: string;
+        sourceLanguage: string;
+        targetLanguage: string;
+        limit?: number;
+    }): Promise<string> {
+        console.log(`[MockAI] Generating game content for topic: ${params.topic}, mode: ${params.mode}`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return JSON.stringify([{ question: "Mock?", answer: "Mock!", context: "Just mocking.", type: "word" }]);
     }
 }

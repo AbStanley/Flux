@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { FluxContentApp } from './FluxContentApp';
 import styles from '../styles/global.css?inline'; // Import CSS as string
+import { ServiceProvider } from '../presentation/contexts/ServiceContext';
 
 console.log("[Reader Helper] Content script loaded");
 
@@ -30,5 +31,9 @@ if (!host) {
 
     // Mount React App
     const root = createRoot(shadow);
-    root.render(<FluxContentApp />);
+    root.render(
+        <ServiceProvider>
+            <FluxContentApp />
+        </ServiceProvider>
+    );
 }

@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { SelectionMode } from '../../../../core/types';
 import { useTranslationStore } from './useTranslationStore';
 import { getSentenceRange } from '../../../../core/utils/text-utils';
+import { chromeStorage } from '@/lib/chrome-storage';
 
 interface ReaderState {
     tokens: string[];
@@ -49,7 +50,7 @@ export const useReaderStore = create<ReaderState>()(
             targetLang: "English",
             isReading: false,
             isGenerating: false,
-            aiModel: 'llama2', // Default
+            aiModel: undefined,
             aiHost: import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434',
             PAGE_SIZE: 500,
             selectionMode: SelectionMode.Word,
@@ -166,6 +167,7 @@ export const useReaderStore = create<ReaderState>()(
         }),
         {
             name: 'reader-storage',
+            storage: createJSONStorage(() => chromeStorage),
             partialize: (state) => ({
                 text: state.text,
                 sourceLang: state.sourceLang,
@@ -178,5 +180,3 @@ export const useReaderStore = create<ReaderState>()(
         }
     )
 );
-
-

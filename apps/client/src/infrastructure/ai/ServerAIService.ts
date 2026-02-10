@@ -4,13 +4,25 @@ import type {
 } from "../../core/interfaces/IAIService";
 import type { ContentType, ProficiencyLevel } from "../../core/types/AIConfig";
 
+interface RequestOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string | object;
+  signal?: AbortSignal;
+}
+
+interface ChromeResponse {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+}
+
 export class ServerAIService implements IAIService {
   private baseUrl: string;
-
   private model: string;
 
   constructor(
-    baseUrl: string = "http://localhost:3002/api",
+    baseUrl: string = "http://localhost:3000/api",
     model: string = "translategemma:4b",
   ) {
     this.baseUrl = baseUrl;
@@ -25,6 +37,67 @@ export class ServerAIService implements IAIService {
     return this.model;
   }
 
+  /**
+   * Environment-aware request helper.
+   * If running in a Chrome Extension context, routes through background script proxy.
+   * Otherwise uses standard fetch.
+   */
+  private async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+    const url = path.startsWith('http') ? path : `${this.baseUrl}${path}`;
+    const method = options.method || 'GET';
+    const body = options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : undefined;
+    const headers = options.headers || {};
+
+    // Check for Extension context
+    if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
+      console.log('[Flux Debug] ServerAIService: Routing via proxy:', url);
+      return new Promise<T>((resolve, reject) => {
+        chrome.runtime.sendMessage({
+          type: 'PROXY_REQUEST',
+          data: {
+            url,
+            method,
+            headers,
+            body
+          }
+        }, (response: ChromeResponse) => {
+          console.log('[Flux Debug] ServerAIService: Proxy response received:', !!response);
+          if (chrome.runtime.lastError) {
+            console.error('[Flux Debug] ServerAIService: runtime error:', chrome.runtime.lastError.message);
+            reject(new Error(chrome.runtime.lastError.message));
+          } else if (!response || !response.success) {
+            console.error('[Flux Debug] ServerAIService: proxy failure:', response?.error);
+            reject(new Error(response?.error || 'Proxy request failed'));
+          } else {
+            console.log('[Flux Debug] ServerAIService: Success, data type:', typeof response.data);
+            resolve(response.data as T);
+          }
+        });
+      });
+    }
+
+    // Standard Fetch (for web app / backend context)
+    const fetchOptions: RequestInit = {
+      method,
+      headers,
+      signal: options.signal,
+      body: typeof options.body === 'string' ? options.body : JSON.stringify(options.body)
+    };
+
+    const response = await fetch(url, fetchOptions);
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`AI Service Error (${response.status}): ${text || response.statusText}`);
+    }
+
+    const contentType = response.headers?.get?.('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json() as T;
+    }
+    return await response.text() as unknown as T;
+  }
+
   async generateText(
     prompt: string,
     options?: {
@@ -33,23 +106,18 @@ export class ServerAIService implements IAIService {
       [key: string]: unknown;
     },
   ): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/generate`, {
+    const data = await this.request<{ response: string }>('/generate', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: this.model,
         prompt: prompt,
-        stream: true,
+        stream: false,
       }),
       signal: options?.signal,
     });
 
-    if (!response.ok) {
-      throw new Error(`AI Service Error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.response;
+    return typeof data === 'string' ? data : data.response;
   }
 
   async translateText(
@@ -58,7 +126,7 @@ export class ServerAIService implements IAIService {
     context?: string,
     sourceLanguage?: string,
   ): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/translate`, {
+    const data = await this.request<string | { response: string }>('/translate', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -70,28 +138,28 @@ export class ServerAIService implements IAIService {
       }),
     });
 
-    if (!response.ok) throw new Error("Translation failed");
-    return await response.text();
+    return typeof data === 'string' ? data : (data as any).response || JSON.stringify(data);
   }
 
   async explainText(
     text: string,
     targetLanguage: string = "en",
     context?: string,
+    sourceLanguage?: string,
   ): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/explain`, {
+    const data = await this.request<string | { response: string }>('/explain', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text,
         targetLanguage,
         context,
+        sourceLanguage,
         model: this.model,
       }),
     });
 
-    if (!response.ok) throw new Error("Explanation failed");
-    return await response.text();
+    return typeof data === 'string' ? data : (data as any).response || JSON.stringify(data);
   }
 
   async getRichTranslation(
@@ -100,7 +168,7 @@ export class ServerAIService implements IAIService {
     context?: string,
     sourceLanguage?: string,
   ): Promise<RichTranslationResult> {
-    const response = await fetch(`${this.baseUrl}/rich-translation`, {
+    return this.request<RichTranslationResult>('/rich-translation', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -111,33 +179,27 @@ export class ServerAIService implements IAIService {
         model: this.model,
       }),
     });
-
-    if (!response.ok) throw new Error("Rich translate failed");
-    return await response.json();
   }
 
   async getAvailableModels(): Promise<string[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/tags`);
-      if (!response.ok) return [];
-      const data = await response.json();
-      return data?.models?.map((m: { name: string }) => m.name) || [];
-    } catch {
+      const data = await this.request<{ models?: { name: string }[] }>('/tags');
+      return data?.models?.map((m) => m.name) || [];
+    } catch (err) {
+      console.error('[Flux Debug] getAvailableModels error:', err);
       return [];
     }
   }
 
   async checkHealth(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/tags`);
-      return response.ok;
+      await this.request('/tags');
+      return true;
     } catch {
       return false;
     }
   }
 
-  // Custom method for specialized content generation (e.g. Stories)
-  // This replaces the usage of 'generateText' with client-side prompts
   async generateContent(params: {
     topic?: string;
     sourceLanguage: string;
@@ -145,7 +207,7 @@ export class ServerAIService implements IAIService {
     proficiencyLevel: ProficiencyLevel;
     contentType: ContentType;
   }): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/generate-content`, {
+    return this.request<string>('/generate-content', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -153,9 +215,6 @@ export class ServerAIService implements IAIService {
         model: this.model,
       }),
     });
-
-    if (!response.ok) throw new Error("Content generation failed");
-    return await response.text();
   }
 
   async generateGameContent(params: {
@@ -166,7 +225,7 @@ export class ServerAIService implements IAIService {
     targetLanguage: string;
     limit?: number;
   }): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/generate-game-content`, {
+    return this.request<string>('/generate-game-content', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -174,9 +233,6 @@ export class ServerAIService implements IAIService {
         model: this.model,
       }),
     });
-
-    if (!response.ok) throw new Error("Game content generation failed");
-    return await response.text();
   }
 }
 

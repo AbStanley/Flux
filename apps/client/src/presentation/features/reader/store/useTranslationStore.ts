@@ -3,13 +3,13 @@ import { createTranslationSlice } from './slices/translationSlice';
 import type { TranslationSlice } from './slices/translationSlice';
 import { createRichDetailsSlice } from './slices/richDetailsSlice';
 import type { RichDetailsSlice, RichDetailsTab } from './slices/richDetailsSlice';
+import { persist } from 'zustand/middleware';
+import { chromeStorage } from '@/lib/chrome-storage';
 
 // Re-export types for consumers
 export type { RichDetailsTab };
 
 export type TranslationState = TranslationSlice & RichDetailsSlice;
-
-import { persist } from 'zustand/middleware';
 
 export const useTranslationStore = create<TranslationState>()(
     persist(
@@ -20,8 +20,8 @@ export const useTranslationStore = create<TranslationState>()(
         {
             name: 'translation-storage',
             storage: {
-                getItem: (name) => {
-                    const str = localStorage.getItem(name);
+                getItem: async (name) => {
+                    const str = await chromeStorage.getItem(name);
                     if (!str) return null;
                     const parsed = JSON.parse(str);
                     return {
@@ -32,7 +32,7 @@ export const useTranslationStore = create<TranslationState>()(
                         },
                     };
                 },
-                setItem: (name, value) => {
+                setItem: async (name, value) => {
                     const str = JSON.stringify({
                         state: {
                             ...value.state,
@@ -40,9 +40,9 @@ export const useTranslationStore = create<TranslationState>()(
                             translationCache: Array.from(value.state.translationCache.entries()),
                         },
                     });
-                    localStorage.setItem(name, str);
+                    await chromeStorage.setItem(name, str);
                 },
-                removeItem: (name) => localStorage.removeItem(name),
+                removeItem: async (name) => await chromeStorage.removeItem(name),
             },
             partialize: (state) => ({
                 selectionTranslations: state.selectionTranslations,
@@ -52,4 +52,3 @@ export const useTranslationStore = create<TranslationState>()(
         }
     )
 );
-

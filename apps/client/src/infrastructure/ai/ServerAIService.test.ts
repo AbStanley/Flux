@@ -43,10 +43,12 @@ describe('ServerAIService', () => {
 
         it('should throw error when response is not ok', async () => {
             (global.fetch as any).mockResolvedValue({
-                ok: false
+                ok: false,
+                headers: { get: () => null },
+                text: () => Promise.resolve('Error')
             });
 
-            await expect(service.translateText('Hello', 'es')).rejects.toThrow('Translation failed');
+            await expect(service.translateText('Hello', 'es')).rejects.toThrow('AI Service Error');
         });
     });
 
@@ -81,6 +83,7 @@ describe('ServerAIService', () => {
             const mockResult = { translation: 'Hola', grammar: {} };
             (global.fetch as any).mockResolvedValue({
                 ok: true,
+                headers: { get: (name: string) => name === 'content-type' ? 'application/json' : null },
                 json: () => Promise.resolve(mockResult)
             });
 
@@ -98,7 +101,12 @@ describe('ServerAIService', () => {
 
     describe('checkHealth', () => {
         it('should return true when fetch is ok', async () => {
-            (global.fetch as any).mockResolvedValue({ ok: true });
+            (global.fetch as any).mockResolvedValue({
+                ok: true,
+                status: 200,
+                headers: { get: () => 'text/plain' },
+                text: () => Promise.resolve('ok')
+            });
             const result = await service.checkHealth();
             expect(result).toBe(true);
         });
@@ -114,6 +122,7 @@ describe('ServerAIService', () => {
         it('should return model names', async () => {
             (global.fetch as any).mockResolvedValue({
                 ok: true,
+                headers: { get: (name: string) => name === 'content-type' ? 'application/json' : null },
                 json: () => Promise.resolve({
                     models: [{ name: 'm1' }, { name: 'm2' }]
                 })

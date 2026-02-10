@@ -6,11 +6,53 @@ export class ApiClient {
     }
 
     private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-        const url = `${this.baseUrl}${endpoint}`;
+        const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
+        const method = options.method || 'GET';
+        const body = options.body;
         const headers = {
             'Content-Type': 'application/json',
-            ...options.headers,
+            ...(options.headers as Record<string, string>),
         };
+
+        // Check for extension context to avoid CORS issues and reach localhost from browser
+        if (typeof chrome !== 'undefined' && chrome?.runtime?.id) {
+            console.log(`[Flux Debug] ApiClient: Proxying ${method} ${url}`);
+            return new Promise<T>((resolve, reject) => {
+                let parsedBody: any = undefined;
+                if (body && typeof body === 'string') {
+                    try {
+                        parsedBody = JSON.parse(body);
+                    } catch (e) {
+                        console.warn('[Flux Debug] ApiClient: Failed to parse body as JSON', e);
+                        parsedBody = body;
+                    }
+                }
+
+                chrome.runtime.sendMessage({
+                    type: 'PROXY_REQUEST',
+                    data: {
+                        url,
+                        method,
+                        headers,
+                        body: parsedBody
+                    }
+                }, (response) => {
+                    if (chrome.runtime.lastError) {
+                        console.error('[Flux Debug] ApiClient: Extension error:', chrome.runtime.lastError.message);
+                        reject(new Error(chrome.runtime.lastError.message));
+                    } else if (!response) {
+                        console.error('[Flux Debug] ApiClient: No response from background script');
+                        reject(new Error('No response from background script'));
+                    } else if (!response.success) {
+                        console.error('[Flux Debug] ApiClient: Proxy failure:', response.error);
+                        reject(new Error(response.error || 'Proxy request failed'));
+                    } else {
+                        console.log('[Flux Debug] ApiClient: Proxy success', response.data);
+                        resolve(response.data as T);
+                    }
+                });
+            });
+        }
 
         const config: RequestInit = {
             ...options,
@@ -20,20 +62,24 @@ export class ApiClient {
         const response = await fetch(url, config);
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            const text = await response.text();
+            throw new Error(`API Error: ${response.status} ${text || response.statusText}`);
         }
 
-        // Handle 204 No Content
         if (response.status === 204) {
             return {} as T;
         }
 
-        return response.json();
+        const contentType = response.headers?.get?.('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        }
+        return response.text() as unknown as T;
     }
 
     get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-        const url = params ? `${endpoint}?${new URLSearchParams(params)}` : endpoint;
-        return this.request<T>(url, { method: 'GET' });
+        const queryStr = params ? `?${new URLSearchParams(params)}` : '';
+        return this.request<T>(`${endpoint}${queryStr}`, { method: 'GET' });
     }
 
     post<T>(endpoint: string, data: unknown): Promise<T> {
@@ -55,5 +101,6 @@ export class ApiClient {
     }
 }
 
-// Singleton instance if needed, or export class to be instantiated with specific config
-export const defaultClient = new ApiClient();
+// Singleton instance with default configuration
+const defaultBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+export const defaultClient = new ApiClient(defaultBaseUrl);

@@ -10,8 +10,8 @@ export class WordsClient {
     private client: ApiClient;
 
     constructor() {
-        let baseUrl = import.meta.env.VITE_OLLAMA_URL;
-        if (baseUrl === undefined) {
+        let baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_OLLAMA_URL;
+        if (!baseUrl) {
             baseUrl = 'http://localhost:3000';
         }
         if (baseUrl.endsWith('/api/ollama')) {

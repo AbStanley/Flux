@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { IAIService } from '../../core/interfaces/IAIService';
 import { MockAIService } from '../../infrastructure/ai/MockAIService';
 import { ServerAIService } from '../../infrastructure/ai/ServerAIService';
@@ -19,14 +19,38 @@ const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 export function ServiceProvider({ children }: { children: ReactNode }) {
     // Default to Backend API
-    const defaultUrl = 'http://localhost:3002/api';
-    const initialUrl = import.meta.env.VITE_AI_API_URL ?? defaultUrl;
+    const defaultUrl = 'http://localhost:3000/api';
+    // Fallback to VITE_API_URL if specific AI URL is not set, but ensure /api suffix if needed
+    const getBaseUrl = () => {
+        if (import.meta.env.VITE_AI_API_URL) return import.meta.env.VITE_AI_API_URL;
+        if (import.meta.env.VITE_API_URL) {
+            return import.meta.env.VITE_API_URL.endsWith('/api')
+                ? import.meta.env.VITE_API_URL
+                : `${import.meta.env.VITE_API_URL}/api`;
+        }
+        return defaultUrl;
+    };
 
-    // Get persisted model from store to survive page refreshes
+    const initialUrl = getBaseUrl();
+
+    // Get persisted model from store
     const persistedModel = useReaderStore((s) => s.aiModel);
-
-    const [aiService, setAiService] = useState<IAIService>(() => new ServerAIService(initialUrl, persistedModel));
     const [currentServiceType, setCurrentServiceType] = useState<'mock' | 'ollama'>('ollama');
+
+    // Initialize aiService state
+    const [aiService, setAiService] = useState<IAIService>(() => {
+        if (currentServiceType === 'ollama') {
+            return new ServerAIService(initialUrl, persistedModel);
+        }
+        return new MockAIService();
+    });
+
+    // Update service when persisted model changes (e.g. from hydration or other tabs)
+    useEffect(() => {
+        if (currentServiceType === 'ollama' && persistedModel) {
+            aiService.setModel(persistedModel);
+        }
+    }, [persistedModel, currentServiceType, aiService]);
 
     // Get the setter from the store to persist model changes
     const setAiModel = useReaderStore((s) => s.setAiModel);
@@ -34,11 +58,10 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
     const setServiceType = (type: 'mock' | 'ollama', config?: OllamaConfig) => {
         setCurrentServiceType(type);
         if (type === 'ollama') {
-            // Use config.url if provided.
-            const url = config?.url ?? import.meta.env.VITE_AI_API_URL ?? defaultUrl;
-            setAiService(new ServerAIService(url, config?.model));
+            const url = config?.url ?? getBaseUrl();
+            const newService = new ServerAIService(url, config?.model || persistedModel);
+            setAiService(newService);
 
-            // Persist model selection to store for page refresh survival
             if (config?.model) {
                 setAiModel(config.model);
             }

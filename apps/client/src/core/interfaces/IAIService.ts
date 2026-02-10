@@ -70,6 +70,16 @@ export interface IAIService {
     getModel(): string;
 
     /**
+     * Set the current model name.
+     */
+    setModel(model: string): void;
+
+    /**
+     * Explains text in a target language.
+     */
+    explainText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string): Promise<string>;
+
+    /**
      * Generates content with strict parameters.
      */
     generateContent(params: {
@@ -78,5 +88,17 @@ export interface IAIService {
         isLearningMode: boolean;
         proficiencyLevel: ProficiencyLevel;
         contentType: ContentType
+    }): Promise<string>;
+
+    /**
+     * Generates game content.
+     */
+    generateGameContent(params: {
+        topic: string;
+        level: string;
+        mode: string;
+        sourceLanguage: string;
+        targetLanguage: string;
+        limit?: number;
     }): Promise<string>;
 }

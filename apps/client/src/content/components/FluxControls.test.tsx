@@ -12,6 +12,9 @@ describe('FluxControls', () => {
         onModeChange: vi.fn(),
         onLangChange: vi.fn(),
         onAction: vi.fn(),
+        autoSave: false,
+        onAutoSaveChange: vi.fn(),
+        isSaving: false,
     };
 
     beforeEach(() => {
@@ -88,5 +91,13 @@ describe('FluxControls', () => {
             expect.any(Function)
         );
         expect(window.chrome.runtime.sendMessage).toHaveBeenCalledWith({ type: 'TEXT_SELECTED', text: 'Hello' });
+        expect(window.chrome.runtime.sendMessage).toHaveBeenCalledWith({ type: 'TEXT_SELECTED', text: 'Hello' });
+    });
+
+    it('toggles auto-save when button is clicked', () => {
+        render(<FluxControls {...defaultProps} />);
+        const toggleBtn = screen.getByTitle('Auto-Save Off');
+        fireEvent.click(toggleBtn);
+        expect(defaultProps.onAutoSaveChange).toHaveBeenCalledWith(true);
     });
 });

@@ -17,6 +17,9 @@ describe('FluxPopup', () => {
         onClose: vi.fn(),
         onMouseEnter: vi.fn(),
         onMouseLeave: vi.fn(),
+        autoSave: false,
+        onAutoSaveChange: vi.fn(),
+        isSaving: false,
     };
 
     it('renders at correct position', () => {

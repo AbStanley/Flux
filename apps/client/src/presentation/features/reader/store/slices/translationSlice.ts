@@ -50,15 +50,29 @@ export interface TranslationSlice {
 // Helpers
 const getContextForIndex = (tokens: string[], index: number): string => {
     if (index < 0 || index >= tokens.length) return '';
-    let startIndex = index;
-    while (startIndex > 0 && !tokens[startIndex - 1].includes('\n')) {
-        startIndex--;
+
+    const WINDOW_SIZE = 25; // ±25 tokens for context
+    const start = Math.max(0, index - WINDOW_SIZE);
+    const end = Math.min(tokens.length - 1, index + WINDOW_SIZE);
+
+    let refinedStart = start;
+    for (let i = index; i >= start; i--) {
+        if (/[.!?\n]/.test(tokens[i])) {
+            refinedStart = i + 1;
+            break;
+        }
     }
-    let endIndex = index;
-    while (endIndex < tokens.length - 1 && !tokens[endIndex + 1].includes('\n')) {
-        endIndex++;
+
+    // Refine end to end of "sentence" if possible
+    let refinedEnd = end;
+    for (let i = index; i <= end; i++) {
+        if (/[.!?\n]/.test(tokens[i])) {
+            refinedEnd = i;
+            break;
+        }
     }
-    return tokens.slice(startIndex, endIndex + 1).join('');
+
+    return tokens.slice(refinedStart, refinedEnd + 1).join('').trim();
 };
 
 const getSelectionGroups = (indices: Set<number>, tokens: string[]): number[][] => {

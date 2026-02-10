@@ -44,10 +44,15 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 chrome.runtime.onMessage.addListener((message: ChromeMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: ChromeResponse) => void) => {
     if (message.type === 'PROXY_REQUEST') {
+        console.log('[Background] Received PROXY_REQUEST:', message.data);
         handleProxyRequest(message.data as ProxyConfig)
-            .then(data => sendResponse({ success: true, data }))
+            .then(data => {
+                console.log('[Background] Proxy success:', data);
+                sendResponse({ success: true, data });
+            })
             .catch((error: unknown) => {
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                console.error('[Background] Proxy error:', errorMessage);
                 sendResponse({ success: false, error: errorMessage });
             });
         return true; // Will respond asynchronously
@@ -82,17 +87,24 @@ async function handleProxyRequest(config: ProxyConfig): Promise<unknown> {
     console.log('[Background] Fetching:', url);
 
     try {
-        const response = await fetch(url, {
+        const fetchOptions: RequestInit = {
             method,
             headers,
-            body: body ? JSON.stringify(body) : undefined
-        });
+            body: body ? JSON.stringify(body) : undefined,
+            credentials: 'include'
+        };
+
+        const response = await fetch(url, fetchOptions);
+        console.log('[Background] Response status:', response.status);
+        console.log('[Background] Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const text = await response.text();
+        console.log('[Background] Response text length:', text.length);
+
         try {
             return JSON.parse(text);
         } catch {

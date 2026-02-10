@@ -35,10 +35,12 @@ export class OllamaService {
   private ollama: Ollama;
   private readonly logger = new Logger(OllamaService.name);
 
+  private readonly ollamaHost: string;
+
   constructor() {
-    const host = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
-    this.ollama = new Ollama({ host });
-    this.logger.log(`Ollama Service initialized with host: ${host}`);
+    this.ollamaHost = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+    this.ollama = new Ollama({ host: this.ollamaHost });
+    this.logger.log(`Ollama Service initialized with host: ${this.ollamaHost}`);
   }
 
   async chat(model: string, messages: any[], stream: boolean = false) {
@@ -481,16 +483,39 @@ export class OllamaService {
         // this.logger.log(`Using first available model: ${m}`);
         return m;
       } else {
+        this.logger.warn('Ollama reachable but no models returned by list().');
         throw new Error('No Ollama models available');
       }
-    } catch {
-      throw new Error('Ollama is not available');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.logger.error(`Failed to ensure/list Ollama models. Host: ${this.ollamaHost}. Error: ${msg}`);
+      throw new Error(`Ollama is not available: ${msg}`);
     }
   }
 
   private cleanResponse(text: string): string {
     // It removes any thought bubbles <think>...</think> if present (common in some thinking models)
     // and generic filler "Here is the translation:" etc if logic wasn't perfect
-    return text.trim();
+    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+    // Remove quotes if the WHOLE response is quoted
+    if (cleaned.startsWith('"') && cleaned.endsWith('"') && cleaned.length > 2) {
+      cleaned = cleaned.slice(1, -1);
+    }
+    if (cleaned.startsWith("'") && cleaned.endsWith("'") && cleaned.length > 2) {
+      cleaned = cleaned.slice(1, -1);
+    }
+
+    // Remove common prefixes
+    const prefixes = [
+      'Translation:', 'The translation is:', 'Here is the translation:', 'Result:', 'Answer:'
+    ];
+    for (const prefix of prefixes) {
+      if (cleaned.toLowerCase().startsWith(prefix.toLowerCase())) {
+        cleaned = cleaned.slice(prefix.length).trim();
+      }
+    }
+
+    return cleaned;
   }
 }

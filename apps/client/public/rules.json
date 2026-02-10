@@ -34,12 +34,37 @@
             ]
         },
         "condition": {
-            "regexFilter": "^http://.*:11434/.*",
+            "regexFilter": "^http://.*:(11434|3000|3002)/.*",
             "resourceTypes": [
                 "xmlhttprequest"
             ],
             "initiatorSchemes": [
                 "chrome-extension"
+            ]
+        }
+    },
+    {
+        "id": 2,
+        "priority": 1,
+        "action": {
+            "type": "modifyHeaders",
+            "requestHeaders": [
+                {
+                    "header": "Referer",
+                    "operation": "set",
+                    "value": "https://www.youtube.com/"
+                },
+                {
+                    "header": "Origin",
+                    "operation": "set",
+                    "value": "https://www.youtube.com"
+                }
+            ]
+        },
+        "condition": {
+            "urlFilter": "|https://www.youtube.com/api/timedtext*",
+            "resourceTypes": [
+                "xmlhttprequest"
             ]
         }
     }

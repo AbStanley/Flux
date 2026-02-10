@@ -60,52 +60,32 @@ Task: Translate the following text ${fromLang}into ${targetLanguage}.
 Instructions:
 1. Translate the full text faithfully.
 2. Maintain original formatting.
-3. Output ONLY the translation. No introductory text.
+3. CRITICALLY IMPORTANT: Output ONLY the translated text. Do NOT include "Here is the translation", "Translation:", or any other conversational filler.
+4. Do NOT output the original text.
 
 Text to Translate:
 "${text}"`;
   }
 
-  let prompt = `Role: Dictionary and Translation Engine.
-Task: Provide the meaning of a specific text segment ${fromLang}into ${targetLanguage}.
-
-Input Data:
-- Full Sentence (Context): "${context || 'None'}"
-- Segment to Translate: "${text}"
+  let prompt = `Role: Context-Aware Dictionary.
+Task: Translate the specific segment "${text}" ${fromLang}into ${targetLanguage}, fitting the context of: "${context || 'None'}".
 
 Instructions:
-1. Look at the "Segment to Translate".
-2. Identify its meaning within the "Full Sentence".
-3. Negation Check: If the segment itself does not contain "no"/"not", the translation MUST be positive.
-4. Preposition Check: If the segment does not include a preposition, do not add one.
-5. STRICT: Translate ONLY the words in "Segment to Translate". Do NOT translate the surrounding words from the context.
-6. Return ONLY the translation text. No explanations.
+1. Analyze the "Context" to determine the exact meaning of "${text}".
+2. Translate ONLY "${text}". Do NOT translate the surrounding sentence.
+3. If "${text}" is a phrase/idiom, translate its meaning.
+4. If "${text}" is a conjugated verb, keep the correct tense/person in the translation if possible, or provide the infinitive with a note if ambiguous (but prefer direct mapping).
+5. CRITICALLY IMPORTANT: Output ONLY the final translated text.
+   - NO "The translation is..."
+   - NO "In this context..."
+   - NO quotes around the result.
+   - NO explanations.
 
-Examples:
-Input: Context="yo no veo donde estas", Segment="estas"
-Output: you are
+Input:
+Context: "${context || 'None'}"
+Segment: "${text}"
 
-Input: Context="yo no veo donde estas", Segment="donde estas"
-Output: where you are
-
-Input: Context="para todos ustedes", Segment="todos ustedes"
-Output: all of you
-
-Input: Context="hasta aqui ya no se que hacer", Segment="se que hacer"
-Output: know what to do
-
-Input: Context="I like to run", Segment="run"
-Output: corrrer
-
-Required Output:
-(Just the translation text. Do not include 'Here is the translation' or quotes around the result.)`;
-
-  if (context) {
-    prompt += `\n\nContext: "${context}"`;
-    prompt += `\nTarget Text: "${text}"`;
-  } else {
-    prompt += `\n\nTarget Text: "${text}"`;
-  }
+Result:`;
 
   return prompt;
 };

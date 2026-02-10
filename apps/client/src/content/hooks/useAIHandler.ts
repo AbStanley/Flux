@@ -1,9 +1,6 @@
 import { useState } from 'react';
-import { ServerAIService } from '../../infrastructure/ai/ServerAIService';
+import { useServices } from '../../presentation/contexts/ServiceContext';
 import { useReaderStore } from '../../presentation/features/reader/store/useReaderStore';
-
-// Initialize Service (Default, will be updated)
-const aiService = new ServerAIService('http://localhost:3002/api');
 
 export type Mode = 'EXPLAIN' | 'TRANSLATE';
 
@@ -11,25 +8,15 @@ export const useAIHandler = () => {
     const [result, setResult] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { aiService } = useServices();
     const { aiModel, setAiModel } = useReaderStore();
 
-    const handleAction = async (text: string, mode: Mode, lang: string) => {
+    const handleAction = async (text: string, mode: Mode, targetLang: string, sourceLang: string = 'Auto') => {
         setLoading(true);
         setError(null);
         setResult('');
 
         try {
-            // Update Service Config from Store
-            // if (aiHost) {
-            //    aiService.setBaseUrl(aiHost); // aiHost was for Ollama direct. ServerAIService uses fixed API URL usually.
-            // }
-            // If model is set in store, use it.
-            if (aiModel) {
-                aiService.setModel(aiModel);
-            }
-
-            let response = '';
-
             // If no model is set, try to auto-detect and save it
             if (!aiModel) {
                 const models = await aiService.getAvailableModels();
@@ -38,12 +25,16 @@ export const useAIHandler = () => {
                     aiService.setModel(preferred);
                     setAiModel(preferred); // Persist it
                 }
+            } else {
+                // Ensure service is using the store's model (ServiceContext should handle this, but double check here)
+                aiService.setModel(aiModel);
             }
 
+            let response = '';
             if (mode === 'EXPLAIN') {
-                response = await aiService.explainText(text, lang);
+                response = await aiService.explainText(text, targetLang, sourceLang);
             } else {
-                response = await aiService.translateText(text, lang);
+                response = await aiService.translateText(text, targetLang, sourceLang);
             }
             setResult(response);
         } catch (err: unknown) {

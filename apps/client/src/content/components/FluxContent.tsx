@@ -28,8 +28,8 @@ export function FluxContent({ loading, error, result }: FluxContentProps) {
                     padding: '12px',
                     borderRadius: '8px',
                     border: '1px solid #334155',
-                    fontSize: '14px',
-                    lineHeight: '1.6'
+                    fontSize: 'inherit',
+                    lineHeight: 'inherit'
                 }}>
                     <ReactMarkdown
                         components={{
