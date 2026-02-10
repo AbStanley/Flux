@@ -1,9 +1,20 @@
 import { Module } from '@nestjs/common';
-import { OllamaService } from './ollama.service';
 import { OllamaController } from './ollama.controller';
+import { OllamaService } from './ollama.service';
+import { OllamaClientService } from './ollama-client.service';
+import { OllamaTranslationService } from './ollama-translation.service';
+import { OllamaGrammarService } from './ollama-grammar.service';
+import { OllamaGenerationService } from './ollama-generation.service';
 
 @Module({
-  providers: [OllamaService],
   controllers: [OllamaController],
+  providers: [
+    OllamaService,
+    OllamaClientService,
+    OllamaTranslationService,
+    OllamaGrammarService,
+    OllamaGenerationService,
+  ],
+  exports: [OllamaService],
 })
 export class OllamaModule {}

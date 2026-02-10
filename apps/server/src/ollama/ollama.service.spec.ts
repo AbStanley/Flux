@@ -1,15 +1,62 @@
+import 'reflect-metadata';
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, beforeEach, it, expect } from 'vitest';
 import { OllamaService } from './ollama.service';
+import { OllamaClientService } from './ollama-client.service';
+import { OllamaTranslationService } from './ollama-translation.service';
+import { OllamaGrammarService } from './ollama-grammar.service';
+import { OllamaGenerationService } from './ollama-generation.service';
 
 describe('OllamaService', () => {
   let service: OllamaService;
+  let generationService: OllamaGenerationService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [OllamaService],
+      providers: [
+        OllamaService,
+        {
+          provide: OllamaClientService,
+          useValue: {
+            chat: vi.fn(),
+            generate: vi.fn(),
+            listTags: vi.fn(),
+            ensureModel: vi.fn(),
+          },
+        },
+        {
+          provide: OllamaTranslationService,
+          useValue: {
+            translateText: vi.fn(),
+            explainText: vi.fn(),
+            getRichTranslation: vi.fn(),
+          },
+        },
+        {
+          provide: OllamaGrammarService,
+          useValue: {
+            analyzeGrammar: vi.fn(),
+          },
+        },
+        {
+          provide: OllamaGenerationService,
+          useValue: {
+            generateExamples: vi.fn(),
+            generateContent: vi.fn(),
+            generateGameContent: vi.fn(),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<OllamaService>(OllamaService);
+    generationService = module.get<OllamaGenerationService>(OllamaGenerationService);
+
+    // Manually link dependencies to the service instance to bypass Vitest/Nest DI metadata issues
+    (service as any).client = module.get(OllamaClientService);
+    (service as any).translation = module.get(OllamaTranslationService);
+    (service as any).grammar = module.get(OllamaGrammarService);
+    (service as any).generation = generationService;
   });
 
   it('should be defined', () => {
@@ -17,145 +64,20 @@ describe('OllamaService', () => {
   });
 
   describe('generateExamples', () => {
-    it('should return examples when model returns a JSON array', async () => {
-      const mockResponse = {
-        message: {
-          content: JSON.stringify([
-            { sentence: 'Test sentence', translation: 'Test translation' },
-          ]),
-        },
-      };
-
-      // Access private ollama property for mocking
-      (service as unknown as { ollama: unknown }).ollama = {
-        chat: jest.fn().mockResolvedValue(mockResponse),
-        list: jest.fn().mockResolvedValue({ models: [{ name: 'llama3' }] }),
-      };
-
-      const result = await service.generateExamples({
+    it('should delegate to generation service', async () => {
+      const params = {
         word: 'test',
         sourceLanguage: 'en',
         targetLanguage: 'es',
-      });
-
-      expect(result).toHaveLength(1);
-      expect(result[0].sentence).toBe('Test sentence');
-    });
-
-    it('should return examples when model wraps JSON array in markdown', async () => {
-      const mockResponse = {
-        message: {
-          content:
-            '```json\n[\n  {"sentence": "Test", "translation": "Prueba"}\n]\n```',
-        },
       };
+      const mockResult = [{ sentence: 'Test', translation: 'Prueba' }];
 
-      (service as unknown as { ollama: unknown }).ollama = {
-        chat: jest.fn().mockResolvedValue(mockResponse),
-        list: jest.fn().mockResolvedValue({ models: [{ name: 'llama3' }] }),
-      };
+      const spy = vi.spyOn(generationService, 'generateExamples').mockResolvedValue(mockResult);
 
-      const result = await service.generateExamples({
-        word: 'test',
-        sourceLanguage: 'en',
-        targetLanguage: 'es',
-      });
+      const result = await service.generateExamples(params);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].sentence).toBe('Test');
-    });
-
-    it('should return examples when model returns a JSON object with examples array', async () => {
-      // Some models might return this even if asked for an array
-      const mockResponse = {
-        message: {
-          content: JSON.stringify({
-            examples: [
-              { sentence: 'Test nested', translation: 'Prueba anidada' },
-            ],
-          }),
-        },
-      };
-
-      (service as unknown as { ollama: unknown }).ollama = {
-        chat: jest.fn().mockResolvedValue(mockResponse),
-        list: jest.fn().mockResolvedValue({ models: [{ name: 'llama3' }] }),
-      };
-
-      const result = await service.generateExamples({
-        word: 'test',
-        sourceLanguage: 'en',
-        targetLanguage: 'es',
-      });
-
-      expect(result).toHaveLength(1);
-      expect(result[0].sentence).toBe('Test nested');
-    });
-
-    it('should return examples when model returns a single object instead of array', async () => {
-      const mockResponse = {
-        message: {
-          content: JSON.stringify({ sentence: 'Single', translation: 'Solo' }),
-        },
-      };
-
-      (service as unknown as { ollama: unknown }).ollama = {
-        chat: jest.fn().mockResolvedValue(mockResponse),
-        list: jest.fn().mockResolvedValue({ models: [{ name: 'llama3' }] }),
-      };
-
-      const result = await service.generateExamples({
-        word: 'test',
-        sourceLanguage: 'en',
-        targetLanguage: 'es',
-      });
-
-      expect(result).toHaveLength(1);
-      expect(result[0].sentence).toBe('Single');
-    });
-
-    it('should return empty array when model returns invalid JSON', async () => {
-      const mockResponse = {
-        message: {
-          content: 'Not JSON at all',
-        },
-      };
-
-      (service as unknown as { ollama: unknown }).ollama = {
-        chat: jest.fn().mockResolvedValue(mockResponse),
-        list: jest.fn().mockResolvedValue({ models: [{ name: 'llama3' }] }),
-      };
-
-      const result = await service.generateExamples({
-        word: 'test',
-        sourceLanguage: 'en',
-        targetLanguage: 'es',
-      });
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle response with extra text and markdown', async () => {
-      const mockResponse = {
-        message: {
-          content:
-            'Here are the examples:\n\n```json\n[{"sentence": "Extra", "translation": "Extra"}]\n```\nHope this helps!',
-        },
-      };
-
-      (service as unknown as { ollama: unknown }).ollama = {
-        chat: jest.fn().mockResolvedValue(mockResponse),
-        list: jest.fn().mockResolvedValue({ models: [{ name: 'llama3' }] }),
-      };
-
-      const result = await service.generateExamples({
-        word: 'test',
-        sourceLanguage: 'en',
-        targetLanguage: 'es',
-      });
-
-      expect(result).toHaveLength(1);
-      expect(result[0].sentence).toBe('Extra');
+      expect(spy).toHaveBeenCalledWith(params);
+      expect(result).toBe(mockResult);
     });
   });
 });

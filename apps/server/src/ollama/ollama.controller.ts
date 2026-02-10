@@ -1,11 +1,11 @@
 import { Body, Controller, Post, Get, Res } from '@nestjs/common';
 import type { Response } from 'express';
+import { OllamaService } from './ollama.service';
 import {
-  OllamaService,
   GrammarAnalysisResponse,
   RichTranslation,
-  OllamaMessage,
-} from './ollama.service';
+  Message,
+} from './interfaces';
 import { GenerateContentDto } from './dto/generate-content.dto';
 
 @Controller('api')
@@ -15,7 +15,7 @@ export class OllamaController {
   @Post('chat')
   async chat(
     @Body()
-    body: { model: string; messages: OllamaMessage[]; stream?: boolean },
+    body: { model: string; messages: Message[]; stream?: boolean },
     @Res() res: Response,
   ) {
     if (body.stream) {
@@ -24,7 +24,7 @@ export class OllamaController {
         body.model,
         body.messages,
         true,
-      )) as AsyncIterable<unknown>;
+      )) as AsyncIterable<any>;
       for await (const part of stream) {
         res.write(JSON.stringify(part) + '\n');
       }
@@ -50,7 +50,7 @@ export class OllamaController {
         body.model,
         body.prompt,
         true,
-      )) as AsyncIterable<unknown>;
+      )) as AsyncIterable<any>;
       for await (const part of stream) {
         res.write(JSON.stringify(part) + '\n');
       }
@@ -96,20 +96,9 @@ export class OllamaController {
       model?: string;
     },
   ): Promise<GrammarAnalysisResponse> {
-    try {
-      return await this.ollamaService.analyzeGrammar(body);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      // If it's a known connection error, 503 Service Unavailable
-      if (message.includes('Could not connect')) {
-        // Rethrow as HttpException if possible, but for now simple throw propagates logging.
-        // Ideally import HttpException from @nestjs/common
-        // Let's just return a formatted error object for now if 500 persists.
-        throw error;
-      }
-      throw error;
-    }
+    return await this.ollamaService.analyzeGrammar(body);
   }
+
   @Post('translate')
   async translate(
     @Body()
@@ -158,6 +147,7 @@ export class OllamaController {
   ) {
     return await this.ollamaService.generateContent(body);
   }
+
   @Post('generate-game-content')
   async generateGameContent(
     @Body()

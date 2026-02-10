@@ -1,3 +1,4 @@
+import { vi, describe, it, expect } from 'vitest';
 import { validate } from 'class-validator';
 import {
   GenerateContentDto,
@@ -42,7 +43,6 @@ describe('GenerateContentDto', () => {
     dto.model = 'hack-model'; // Invalid
 
     const errors = await validate(dto);
-    console.log('Validation errors:', errors);
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].property).toBe('model');
   });

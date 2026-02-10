@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi, describe, beforeEach, it, expect } from 'vitest';
 import { OllamaController } from './ollama.controller';
 import { OllamaService } from './ollama.service';
 
