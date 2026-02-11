@@ -51,7 +51,7 @@ export const AiSetup = () => {
         } finally {
             setLoading(false);
         }
-    }, [config.aiModel, /* config.aiHost, */ updateConfig]);
+    }, [config.aiModel, config.aiHost, updateConfig]);
 
     // Re-fetch models when component mounts or when aiHost changes
     useEffect(() => {

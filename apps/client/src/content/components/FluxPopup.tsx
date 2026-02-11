@@ -1,8 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import type { Mode } from '../hooks/useAIHandler';
 import { FluxHeader } from './FluxHeader';
 import { FluxControls } from './FluxControls';
 import { FluxContent } from './FluxContent';
+import { useDraggable } from '../hooks/useDraggable';
+import { UI_CONSTANTS } from '../constants';
+import { useFluxMessaging } from '../hooks/useFluxMessaging';
 
 interface FluxPopupProps {
     selection: { text: string; x: number; y: number };
@@ -49,77 +52,62 @@ export function FluxPopup({
     onAutoSaveChange,
     isSaving
 }: FluxPopupProps) {
-    const [prevSelection, setPrevSelection] = useState(selection);
     const [isPinned, setIsPinned] = useState(false);
-    const [pos, setPos] = useState({ x: selection.x, y: selection.y });
-    const [isDragging, setIsDragging] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const dragStart = useRef({ x: 0, y: 0 });
+    const { selectAndOpen } = useFluxMessaging();
 
-    // Derived state: Sync position when selection changes, but ONLY if not dragging or pinned
-    if (selection !== prevSelection) {
-        setPrevSelection(selection);
-        if (!isDragging && !isPinned) {
+    const { pos, setPos, isDragging, handleMouseDown } = useDraggable({
+        initialPos: { x: selection.x, y: selection.y },
+        onDragStart: () => {
+            if (!isPinned) {
+                setIsPinned(true);
+                onPinChange?.(true);
+            }
+        }
+    });
+
+    // Update position if selection changes and not pinned/dragging
+    const [lastSelection, setLastSelection] = useState(selection);
+    if (selection !== lastSelection) {
+        setLastSelection(selection);
+        if (!isPinned && !isDragging) {
             setPos({ x: selection.x, y: selection.y });
         }
     }
 
-    const handleMouseDown = (e: React.MouseEvent) => {
-        // Only allow dragging from the header area (top of the box)
-        setIsDragging(true);
+    const handlePinToggle = useCallback(() => {
+        const next = !isPinned;
+        setIsPinned(next);
+        onPinChange?.(next);
+    }, [isPinned, onPinChange]);
 
-        // Auto-pin when starting to drag so it doesn't snap back to words
-        if (!isPinned) {
-            setIsPinned(true);
-            if (onPinChange) onPinChange(true);
-        }
-
-        dragStart.current = {
-            x: e.clientX - pos.x,
-            y: e.clientY - pos.y
-        };
-        e.preventDefault();
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!isDragging) return;
-            setPos({
-                x: e.clientX - dragStart.current.x,
-                y: e.clientY - dragStart.current.y
-            });
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-        };
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-        }
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging]);
-
-    const handleClose = () => {
-        setIsPinned(false);
-        onClose();
-    };
-
-    const handleInternalSave = () => {
+    const handleInternalSave = useCallback(() => {
         if (onSave) {
             onSave(selection.text);
         } else {
-            // Default internal logic if no specialized onSave provided
-            if (window.chrome?.runtime) {
-                window.chrome.runtime.sendMessage({ type: 'TEXT_SELECTED', text: selection.text });
-                window.chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' });
-            }
+            selectAndOpen(selection.text);
         }
+    }, [onSave, selection.text, selectAndOpen]);
+
+    const popupStyles: React.CSSProperties = {
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        color: '#f8fafc',
+        width: isCollapsed ? `${UI_CONSTANTS.POPUP_COLLAPSED_WIDTH}px` : `${UI_CONSTANTS.POPUP_WIDTH}px`,
+        padding: isCollapsed ? '12px 16px' : '20px',
+        borderRadius: '20px',
+        boxShadow: isDragging
+            ? '0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.2)'
+            : '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+        fontSize: '16px',
+        lineHeight: '1.6',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: isCollapsed ? '8px' : '16px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        transform: isDragging ? 'scale(1.02)' : 'scale(1)',
+        transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
     };
 
     return (
@@ -127,46 +115,23 @@ export function FluxPopup({
             onMouseEnter={onMouseEnter}
             onMouseLeave={() => {
                 if (!isPinned) onMouseLeave();
-                if (onAutoPlay) onAutoPlay(); // Play video when leaving box, even if pinned
+                onAutoPlay?.();
             }}
             style={{
-                position: 'fixed', // Use fixed for better stability during scroll/drag
+                position: 'fixed',
                 left: pos.x,
                 top: pos.y,
-                zIndex: 2147483647,
+                zIndex: UI_CONSTANTS.Z_INDEX,
                 fontFamily: 'Inter, system-ui, sans-serif',
-                transition: isDragging ? 'none' : 'all 0.1s ease-out'
+                transition: isDragging ? UI_CONSTANTS.TRANSITION_DRAGGING : UI_CONSTANTS.TRANSITION_DEFAULT
             }}
             onMouseDown={e => e.stopPropagation()}
         >
-            <div style={{
-                backgroundColor: 'rgba(15, 23, 42, 0.75)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                color: '#f8fafc',
-                width: isCollapsed ? '240px' : '320px',
-                padding: isCollapsed ? '12px 16px' : '20px',
-                borderRadius: '20px',
-                boxShadow: isDragging
-                    ? '0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.2)'
-                    : '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                fontSize: `16px`,
-                lineHeight: '1.6',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: isCollapsed ? '8px' : '16px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-                transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-            }}>
+            <div style={popupStyles}>
                 <div onMouseDown={handleMouseDown}>
                     <FluxHeader
-                        onClose={handleClose}
-                        onPinToggle={() => {
-                            const newPinned = !isPinned;
-                            setIsPinned(newPinned);
-                            if (onPinChange) onPinChange(newPinned);
-                        }}
+                        onClose={onClose}
+                        onPinToggle={handlePinToggle}
                         onSave={handleInternalSave}
                         isPinned={isPinned}
                         isCollapsed={isCollapsed}
