@@ -155,8 +155,8 @@ export class ServerAIService implements IAIService {
     targetLanguage: string = "en",
     context?: string,
     sourceLanguage?: string,
-  ): Promise<string> {
-    const data = await this.request<string | { response: string }>('/api/translate', {
+  ): Promise<string | { response: string; sourceLanguage?: string }> {
+    const data = await this.request<string | { response: string; sourceLanguage?: string }>('/api/translate', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -167,6 +167,10 @@ export class ServerAIService implements IAIService {
         model: this.model,
       }),
     });
+
+    if (typeof data === 'object' && data !== null && 'sourceLanguage' in data) {
+      return data;
+    }
 
     return typeof data === 'string' ? data : (data as { response: string }).response || JSON.stringify(data);
   }

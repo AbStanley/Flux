@@ -12,7 +12,7 @@ import { RichTranslation } from '../interfaces/ollama.interfaces';
 export class OllamaTranslationService {
   private readonly logger = new Logger(OllamaTranslationService.name);
 
-  constructor(private readonly ollamaClient: OllamaClientService) {}
+  constructor(private readonly ollamaClient: OllamaClientService) { }
 
   async translateText(params: {
     text: string;
@@ -20,7 +20,7 @@ export class OllamaTranslationService {
     context?: string;
     sourceLanguage?: string;
     model?: string;
-  }): Promise<string> {
+  }): Promise<{ response: string; sourceLanguage?: string }> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getTranslatePrompt(
       params.text,
@@ -29,8 +29,27 @@ export class OllamaTranslationService {
       params.sourceLanguage,
     );
 
+    const isAuto = !params.sourceLanguage || params.sourceLanguage === 'Auto';
     const response = await this.ollamaClient.generate(model, prompt, false);
-    return cleanResponse(response.response);
+
+    if (isAuto) {
+      try {
+        const parsed = cleanAndParseJson<{
+          detectedLanguage: string;
+          translation: string;
+        }>(response.response);
+        return {
+          response: parsed.translation,
+          sourceLanguage: parsed.detectedLanguage,
+        };
+      } catch (e) {
+        this.logger.error('Failed to parse auto-translation JSON:', e);
+        // Fallback to simple cleaning if JSON parse fails
+        return { response: cleanResponse(response.response) };
+      }
+    }
+
+    return { response: cleanResponse(response.response) };
   }
 
   async explainText(params: {

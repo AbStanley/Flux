@@ -47,7 +47,7 @@ export interface IAIService {
      * @param targetLanguage The language code (e.g., 'en', 'es', 'fr'). Defaults to user preference or 'en'.
      * @returns The translated text.
      */
-    translateText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string): Promise<string>;
+    translateText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string): Promise<string | { response: string; sourceLanguage?: string }>;
 
     /**
      * Helper to get rich translation info with grammar and examples

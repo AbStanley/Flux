@@ -34,7 +34,7 @@ interface MockServerAIService {
     getAvailableModels: Mock<() => Promise<string[]>>;
     setModel: Mock<(model: string) => void>;
     explainText: Mock<(text: string, targetLanguage?: string, context?: string) => Promise<string>>;
-    translateText: Mock<(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string) => Promise<string>>;
+    translateText: Mock<(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string) => Promise<string | { response: string; sourceLanguage?: string }>>;
     checkHealth: Mock<() => Promise<boolean>>;
 }
 
@@ -57,7 +57,7 @@ describe('useAIHandler', () => {
     });
 
     it('handles translation flow successfully', async () => {
-        mockService.translateText.mockResolvedValue('Translated Text');
+        mockService.translateText.mockResolvedValue({ response: 'Translated Text' });
 
         const { result } = renderHook(() => useAIHandler(), { wrapper: ServiceProvider });
 
@@ -73,7 +73,7 @@ describe('useAIHandler', () => {
 
         expect(result.current.result).toBe('Translated Text');
         expect(result.current.error).toBe(null);
-        expect(mockService.translateText).toHaveBeenCalledWith('Source Text', 'Spanish', 'Auto');
+        expect(mockService.translateText).toHaveBeenCalledWith('Source Text', 'Spanish', undefined, 'Auto');
         expect(mockService.setModel).toHaveBeenCalledWith('llama3');
     });
 
@@ -91,7 +91,7 @@ describe('useAIHandler', () => {
         });
 
         expect(result.current.result).toBe('Explanation Text');
-        expect(mockService.explainText).toHaveBeenCalledWith('Source', 'English', 'Auto');
+        expect(mockService.explainText).toHaveBeenCalledWith('Source', 'English', undefined, 'Auto');
     });
 
     it('handles error state', async () => {
@@ -113,7 +113,7 @@ describe('useAIHandler', () => {
 
     it('selects preferred model if available', async () => {
         mockService.getAvailableModels.mockResolvedValue(['other-model', 'mistral-7b']);
-        mockService.translateText.mockResolvedValue('');
+        mockService.translateText.mockResolvedValue({ response: '' });
 
         const { result } = renderHook(() => useAIHandler(), { wrapper: ServiceProvider });
         await act(async () => {
@@ -121,5 +121,23 @@ describe('useAIHandler', () => {
         });
 
         expect(mockService.setModel).toHaveBeenCalledWith('mistral-7b');
+    });
+
+    it('handles auto-detection of source language', async () => {
+        mockService.translateText.mockResolvedValue({
+            response: 'Hola Mundo',
+            sourceLanguage: 'Spanish'
+        });
+
+        const { result } = renderHook(() => useAIHandler(), { wrapper: ServiceProvider });
+
+        let aiResult;
+        await act(async () => {
+            aiResult = await result.current.handleAction('Hello World', 'TRANSLATE', 'Spanish', 'Auto');
+        });
+
+        expect(result.current.result).toBe('Hola Mundo');
+        expect(aiResult).toEqual({ detectedLang: 'Spanish' });
+        expect(mockService.translateText).toHaveBeenCalledWith('Hello World', 'Spanish', undefined, 'Auto');
     });
 });

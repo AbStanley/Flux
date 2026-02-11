@@ -74,7 +74,16 @@ export function FluxContentApp() {
     const { result, loading, error, handleAction } = useAIHandler();
 
     // YouTube Logic
-    const { currentCue, isActive: isYouTube, pauseVideo, playVideo } = useYouTubeSubtitles();
+    const {
+        currentCue,
+        isActive: isYouTube,
+        pauseVideo,
+        playVideo,
+        seekPrev,
+        seekNext,
+        hasPrev,
+        hasNext
+    } = useYouTubeSubtitles();
 
     const onYouTubeOverlayHover = (hovering: boolean) => {
         isHoveringRef.current = hovering;
@@ -113,7 +122,12 @@ export function FluxContentApp() {
         setSelection(newSelection);
         setView('POPUP');
 
-        handleAction(newSelection.text, mode, targetLang, sourceLang);
+        const aiResult = await handleAction(newSelection.text, mode, targetLang, sourceLang);
+
+        // Auto-assign detected language if it was "Auto"
+        if (aiResult?.detectedLang && sourceLang === 'Auto') {
+            handleSourceLangChange(aiResult.detectedLang);
+        }
 
         if (autoSave) {
             handleSave(newSelection.text);
@@ -143,9 +157,12 @@ export function FluxContentApp() {
         console.log('[Flux] Component Mounted');
     }, []);
 
-    const onManualAction = () => {
+    const onManualAction = async () => {
         if (selection) {
-            handleAction(selection.text, mode, targetLang, sourceLang);
+            const aiResult = await handleAction(selection.text, mode, targetLang, sourceLang);
+            if (aiResult?.detectedLang && sourceLang === 'Auto') {
+                handleSourceLangChange(aiResult.detectedLang);
+            }
         }
     };
 
@@ -162,6 +179,10 @@ export function FluxContentApp() {
                     onSourceLangChange={setSourceLang}
                     autoSave={autoSave}
                     onAutoSaveChange={setAutoSave}
+                    onPrev={seekPrev}
+                    onNext={seekNext}
+                    hasPrev={hasPrev}
+                    hasNext={hasNext}
                 />
             )}
 

@@ -79,11 +79,13 @@ export class YouTubeService {
 
             const tracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
             if (!tracks || tracks.length === 0) {
+                console.log('[Flux YouTube] No caption tracks found in player response');
                 return [];
             }
 
             // Prefer English, then fallback to the first track
             const track = tracks.find(t => t.languageCode === 'en') || tracks[0];
+            console.log('[Flux YouTube] Selected caption track:', track.languageCode);
             const jsonUrl = track.baseUrl + (track.baseUrl.includes('?') ? '&' : '?') + 'fmt=json3';
 
             try {
@@ -104,6 +106,7 @@ export class YouTubeService {
                 });
 
                 if (!result || (typeof result === 'string' && result.length === 0)) {
+                    console.log('[Flux YouTube] Proxy returned empty, trying XML fallback');
                     return await this.fetchXmlSubtitles(track.baseUrl);
                 }
 
@@ -119,12 +122,15 @@ export class YouTubeService {
                 }
 
                 const cues = this.parseJsonSubtitles(data);
+                console.log(`[Flux YouTube] Successfully parsed ${cues.length} subtitles`);
                 return cues;
 
-            } catch {
+            } catch (err) {
+                console.error('[Flux YouTube] Failed to fetch/parse subtitles:', err);
                 return await this.fetchXmlSubtitles(track.baseUrl);
             }
-        } catch {
+        } catch (err) {
+            console.error('[Flux YouTube] General error in getSubtitles:', err);
             return [];
         }
     }
@@ -212,5 +218,35 @@ export class YouTubeService {
 
     static getVideoElement(): HTMLVideoElement | null {
         return document.querySelector('video.html5-main-video');
+    }
+
+    static seekTo(seconds: number): void {
+        const video = this.getVideoElement();
+        if (video) {
+            video.currentTime = seconds;
+        }
+    }
+
+    static hideNativeSubtitles(): void {
+        const styleId = 'flux-hide-yt-subtitles';
+        if (document.getElementById(styleId)) return;
+
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+            .ytp-caption-window-container {
+                opacity: 0 !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    static showNativeSubtitles(): void {
+        const style = document.getElementById('flux-hide-yt-subtitles');
+        if (style) {
+            style.remove();
+        }
     }
 }

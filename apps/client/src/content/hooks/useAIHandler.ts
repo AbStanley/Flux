@@ -31,12 +31,21 @@ export const useAIHandler = () => {
             }
 
             let response = '';
+            let detectedLang: string | undefined;
+
             if (mode === 'EXPLAIN') {
-                response = await aiService.explainText(text, targetLang, sourceLang);
+                response = await aiService.explainText(text, targetLang, undefined, sourceLang);
             } else {
-                response = await aiService.translateText(text, targetLang, sourceLang);
+                const translateResult = await aiService.translateText(text, targetLang, undefined, sourceLang);
+                if (typeof translateResult === 'object' && translateResult !== null) {
+                    response = translateResult.response;
+                    detectedLang = translateResult.sourceLanguage;
+                } else {
+                    response = translateResult;
+                }
             }
             setResult(response);
+            return { detectedLang };
         } catch (err: unknown) {
             console.error('AI Error:', err);
             const errorMessage = err instanceof Error ? err.message : 'Failed to connect';

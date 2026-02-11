@@ -19,4 +19,9 @@ export interface RichTranslation {
   }[];
 }
 
+export interface TranslationResponse {
+  response: string;
+  sourceLanguage?: string;
+}
+
 export type { Message };

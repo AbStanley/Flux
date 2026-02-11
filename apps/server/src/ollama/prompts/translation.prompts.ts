@@ -4,12 +4,30 @@ export const getTranslatePrompt = (
   context?: string,
   sourceLanguage?: string,
 ): string => {
-  const fromLang =
-    sourceLanguage && sourceLanguage !== 'Auto'
-      ? `from ${sourceLanguage} `
-      : '';
+  const isAuto = !sourceLanguage || sourceLanguage === 'Auto';
+  const fromLang = !isAuto ? `from ${sourceLanguage} ` : '';
 
   const isBlock = text.length > 100 || text.includes('\n');
+
+  if (isAuto) {
+    return `Role: Professional Translator and Language Detector.
+Task: Translate the following text into ${targetLanguage} AND detect the source language.
+
+Instructions:
+1. Translate the text faithfully.
+2. Detect the source language name (e.g., "Spanish", "French", "Japanese").
+3. Output ONLY a JSON object with two keys: "detectedLanguage" and "translation".
+4. Do NOT include any conversational filler.
+
+Text:
+"${text}"
+
+Expected JSON Output:
+{
+  "detectedLanguage": "...",
+  "translation": "..."
+}`;
+  }
 
   if (isBlock) {
     return `Role: Professional Translator.

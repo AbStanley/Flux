@@ -131,25 +131,34 @@ export function FluxControls({
                 </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                 <FluxSelect
                     value={sourceLang || 'Auto'}
                     onChange={(val) => onSourceLangChange && onSourceLangChange(val)}
                     options={['Auto', ...LANGUAGES]}
                     title="Source Language"
-                    style={{ width: '85px', textAlign: 'center' }}
+                    style={{ flex: 1, minWidth: 0, paddingRight: '4px' }}
                 />
-                <div style={{ display: 'flex', alignItems: 'center', color: '#64748b' }}>→</div>
+                <div style={{ color: '#64748b', fontWeight: 'bold', fontSize: '14px' }}>→</div>
 
                 <FluxSelect
                     value={targetLang}
                     onChange={onLangChange}
                     options={LANGUAGES}
                     title="Target Language"
-                    style={{ flex: 1 }}
+                    style={{ flex: 1, minWidth: 0, paddingRight: '4px' }}
                 />
 
-                <FluxButton onClick={onAction}>Go</FluxButton>
+                <FluxButton
+                    onClick={onAction}
+                    style={{
+                        padding: '8px 12px',
+                        minWidth: '42px',
+                        borderRadius: '10px'
+                    }}
+                >
+                    Go
+                </FluxButton>
             </div>
         </div>
     );
