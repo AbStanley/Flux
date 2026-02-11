@@ -44,6 +44,7 @@ export const YouTubeSubtitleOverlay = ({
 }: Props) => {
     const [hoveredWord, setHoveredWord] = useState<{ text: string, x: number, y: number } | null>(null);
     const [isPopupHovered, setIsPopupHovered] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
     const [mode] = useState<Mode>('TRANSLATE'); // Only translate in simplified mode
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -76,61 +77,97 @@ export const YouTubeSubtitleOverlay = ({
                 targetLanguage: targetLang,
                 context: cue?.text || window.location.href,
             });
+            setIsSaved(true);
+            setTimeout(() => setIsSaved(false), 2000);
         } catch (err) {
             console.error('[Flux YouTube] Failed to save word:', err);
         }
     }, [sourceLang, targetLang, cue]);
+    const hoverDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
     const onWordHover = useCallback((event: React.MouseEvent, word: string) => {
         const cleanWord = word.trim().replace(/[.,!?;:]/g, '');
         if (cleanWord.length === 0 && !isSentenceMode) return;
+
         if (timerRef.current) clearTimeout(timerRef.current);
+        if (hoverDebounceRef.current) clearTimeout(hoverDebounceRef.current);
 
         const rect = (event.target as HTMLElement).getBoundingClientRect();
         const textToProcess = isSentenceMode && cue ? cue.text : cleanWord;
 
+        // Show popup frame immediately for responsiveness
         setHoveredWord({ text: textToProcess, x: rect.left + rect.width / 2, y: rect.top });
-        onHover(true);
-        handleAction(textToProcess, mode, targetLang, sourceLang);
-    }, [isSentenceMode, cue, mode, targetLang, sourceLang, onHover, handleAction]);
+
+        // Debounce the actual AI call
+        hoverDebounceRef.current = setTimeout(() => {
+            handleAction(textToProcess, mode, targetLang, sourceLang, cue?.text);
+        }, 100);
+    }, [isSentenceMode, cue, mode, targetLang, sourceLang, handleAction]);
 
     const onWordLeave = useCallback(() => {
+        if (hoverDebounceRef.current) clearTimeout(hoverDebounceRef.current);
         timerRef.current = setTimeout(() => {
             if (!isPopupHovered) {
                 setHoveredWord(null);
-                onHover(false);
                 setResult('');
             }
-        }, 300);
-    }, [isPopupHovered, onHover, setResult]);
+        }, 150);
+    }, [isPopupHovered, setResult]);
 
     const [isOverlayHovered, setIsOverlayHovered] = useState(false);
 
-    // Combined hover state
+    // Combined hover state — used only for translation cleanup
     const isInteracting = isOverlayHovered || !!hoveredWord || isPopupHovered;
 
     useEffect(() => {
-        if (isInteracting) {
-            onHover(true);
-        } else {
+        if (!isInteracting) {
             const timeout = setTimeout(() => {
                 onHover(false);
                 setFullResult('');
-            }, 150);
+                setResult('');
+            }, 100);
             return () => clearTimeout(timeout);
         }
-    }, [isInteracting, onHover, setFullResult]);
+    }, [isInteracting, onHover, setFullResult, setResult]);
 
     const handleOverlayEnter = () => {
         setIsOverlayHovered(true);
-        if (cue?.text && !fullResult && !fullLoading) {
-            handleFullAction(cue.text, 'TRANSLATE', targetLang, sourceLang);
-        }
+        onHover(true);
     };
+
+    const lastTranslatedText = useRef<string>('');
 
     const handleOverlayLeave = () => {
         setIsOverlayHovered(false);
+        if (!isPopupHovered) {
+            setHoveredWord(null);
+            setResult('');
+            onHover(false);
+        }
+        lastTranslatedText.current = '';
     };
+
+    const isFirstMount = useRef(true);
+
+    // Clear full translation when cue changes
+    useEffect(() => {
+        if (isFirstMount.current) {
+            isFirstMount.current = false;
+            return;
+        }
+        setFullResult('');
+    }, [cue?.text, setFullResult]);
+
+
+
+    // Re-translate when cue changes while overlay is hovered (navigation)
+    useEffect(() => {
+        if (isOverlayHovered && cue?.text && cue.text !== lastTranslatedText.current) {
+            lastTranslatedText.current = cue.text;
+            handleFullAction(cue.text, 'TRANSLATE', targetLang, sourceLang);
+        }
+    }, [cue?.text, isOverlayHovered, handleFullAction, targetLang, sourceLang]);
 
     if (!fluxEnabled || !cue) return null;
 
@@ -178,6 +215,8 @@ export const YouTubeSubtitleOverlay = ({
                 {/* Previous Button */}
                 {hasPrev && (
                     <div
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onMouseUp={(e) => e.stopPropagation()}
                         onClick={(e) => { e.stopPropagation(); onPrev?.(); }}
                         style={{
                             position: 'absolute',
@@ -207,18 +246,14 @@ export const YouTubeSubtitleOverlay = ({
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '90%' }}>
                     {tokens.map((token, i) => (
                         <SubtitleToken
-                            key={i}
+                            key={`token-${token}-${i}`}
                             token={token}
                             isHovered={!!hoveredWord}
                             isSentenceMode={isSentenceMode}
                             onMouseEnter={(e) => onWordHover(e, token)}
                             onMouseLeave={onWordLeave}
                             onClick={() => {
-                                // Save on click for simplified mode? Or just relying on auto-save?
-                                // User said "option of auto save", likely implying manual save is less prioritized or exists via popup.
-                                // Let's keep click-to-save-and-pin behavior removed as per request for "simpler". 
-                                // Actually, simplified mode usually means click doesn't pin anymore if we want it to verify strict hover.
-                                if (autoSave && cue) {
+                                if (cue) {
                                     const clean = token.trim().replace(/[.,!?;:]/g, '');
                                     if (clean.length > 0) handleSaveWord(clean);
                                 }
@@ -246,13 +281,19 @@ export const YouTubeSubtitleOverlay = ({
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
                                 <span className="animate-spin">⟳</span> Translating...
                             </span>
-                        ) : fullResult}
+                        ) : (
+                            <span style={{ animation: 'flux-fade-in 0.2s ease-out' }}>
+                                {fullResult}
+                            </span>
+                        )}
                     </div>
                 )}
 
                 {/* Next Button */}
                 {hasNext && (
                     <div
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onMouseUp={(e) => e.stopPropagation()}
                         onClick={(e) => { e.stopPropagation(); onNext?.(); }}
                         style={{
                             position: 'absolute',
@@ -337,6 +378,7 @@ export const YouTubeSubtitleOverlay = ({
                             onSourceLangChange={onSourceLangChange}
                             autoSave={autoSave}
                             onAutoSaveChange={onAutoSaveChange}
+                            isSaved={isSaved}
                             onMouseEnter={() => { setIsPopupHovered(true); if (timerRef.current) clearTimeout(timerRef.current); }}
                             onMouseLeave={() => { setIsPopupHovered(false); onWordLeave(); }}
                         />

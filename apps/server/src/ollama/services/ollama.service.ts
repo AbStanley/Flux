@@ -19,7 +19,7 @@ export class OllamaService {
     private readonly translation: OllamaTranslationService,
     private readonly grammar: OllamaGrammarService,
     private readonly generation: OllamaGenerationService,
-  ) { }
+  ) {}
 
   async chat(model: string, messages: Message[], stream: boolean = false) {
     return this.client.chat(model, messages, stream);

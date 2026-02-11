@@ -2,8 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { YouTubeSubtitleOverlay } from './YouTubeSubtitleOverlay';
 import * as UseAIHandler from '../hooks/useAIHandler';
+import { wordsApi } from '../../infrastructure/api/words';
 
 // Mock child components
+vi.mock('../../infrastructure/api/words', () => ({
+    wordsApi: {
+        create: vi.fn().mockResolvedValue({})
+    }
+}));
+
 vi.mock('@/lib/chrome-storage', () => ({
     chromeStorage: {
         getItem: vi.fn(),
@@ -13,15 +20,16 @@ vi.mock('@/lib/chrome-storage', () => ({
 }));
 
 vi.mock('./FluxMinimalPopup', () => ({
-    FluxMinimalPopup: () => <div data-testid="flux-popup-minimal">Popup</div>
+    FluxMinimalPopup: ({ isSaved }: any) => <div data-testid="flux-popup-minimal" data-is-saved={isSaved}>Popup</div>
 }));
 
 vi.mock('./SubtitleToken', () => ({
-    SubtitleToken: ({ token, onMouseEnter, onMouseLeave }: any) => (
+    SubtitleToken: ({ token, onMouseEnter, onMouseLeave, onClick }: any) => (
         <span
             data-testid="token"
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
+            onClick={onClick}
         >
             {token}
         </span>
@@ -56,9 +64,14 @@ describe('YouTubeSubtitleOverlay', () => {
 
     beforeEach(() => {
         vi.resetAllMocks();
+        vi.useRealTimers();
 
         // Use persistent mock return value to handle multiple renders
         vi.spyOn(UseAIHandler, 'useAIHandler').mockReturnValue(defaultAIHandlerMock as any);
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     const defaultProps = {
@@ -124,8 +137,6 @@ describe('YouTubeSubtitleOverlay', () => {
 
         expect(setFullResultMock).toHaveBeenCalledWith('');
         expect(defaultProps.onHover).toHaveBeenCalledWith(false); // Resume play
-
-        vi.useRealTimers();
     });
 
     it('does not clear translation if word is still hovered', () => {
@@ -136,7 +147,20 @@ describe('YouTubeSubtitleOverlay', () => {
         // Enter overlay
         fireEvent.mouseEnter(overlay!);
 
-        vi.useRealTimers();
+        // Hover a word
+        const token = screen.getAllByTestId('token')[0];
+        fireEvent.mouseEnter(token);
+
+        // Leave overlay
+        fireEvent.mouseLeave(overlay!);
+
+        // Fast forward
+        act(() => {
+            vi.advanceTimersByTime(200);
+        });
+
+        // Should NOT be cleared because word is hovered
+        expect(setFullResultMock).not.toHaveBeenCalled();
     });
 
     it('does NOT re-trigger translation if result already exists', () => {
@@ -153,5 +177,58 @@ describe('YouTubeSubtitleOverlay', () => {
         fireEvent.mouseEnter(overlay!);
 
         expect(handleFullActionMock).not.toHaveBeenCalled();
+    });
+
+    it('saves word on token click and updates popup isSaved state', async () => {
+        vi.useFakeTimers();
+        const { container } = render(<YouTubeSubtitleOverlay {...defaultProps} />);
+        const overlay = container.querySelector('.flux-youtube-overlay');
+
+        // Hover to show tokens
+        fireEvent.mouseEnter(overlay!);
+
+        const token = screen.getAllByTestId('token')[0]; // "Hello"
+
+        // Must hover word first to show popup
+        fireEvent.mouseEnter(token);
+
+        // Click token
+        await act(async () => {
+            fireEvent.click(token);
+        });
+
+        // Verify API call
+        expect(wordsApi.create).toHaveBeenCalledWith(expect.objectContaining({
+            text: "Hello",
+            sourceLanguage: "English",
+            targetLanguage: "Spanish"
+        }));
+
+        // Verify popup shows saved state
+        const popup = screen.getByTestId('flux-popup-minimal');
+        expect(popup).toHaveAttribute('data-is-saved', 'true');
+
+        // Verify state clears after timeout
+        act(() => {
+            vi.advanceTimersByTime(2000);
+        });
+
+        expect(popup).toHaveAttribute('data-is-saved', 'false');
+    });
+
+    it('re-translates when cue changes while overlay is hovered', () => {
+        const { rerender, container } = render(<YouTubeSubtitleOverlay {...defaultProps} />);
+        const overlay = container.querySelector('.flux-youtube-overlay');
+
+        // Hover
+        fireEvent.mouseEnter(overlay!);
+        expect(handleFullActionMock).toHaveBeenCalledWith("Hello world", 'TRANSLATE', "Spanish", "English");
+
+        // Change cue
+        const newCue = { text: "Goodbye world", start: 5, duration: 1 };
+        rerender(<YouTubeSubtitleOverlay {...defaultProps} cue={newCue} />);
+
+        // Should be called again with new text
+        expect(handleFullActionMock).toHaveBeenCalledWith("Goodbye world", 'TRANSLATE', "Spanish", "English");
     });
 });

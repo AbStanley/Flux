@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useServices } from '../../presentation/contexts/ServiceContext';
 import { useReaderStore } from '../../presentation/features/reader/store/useReaderStore';
 
@@ -10,8 +10,10 @@ export const useAIHandler = () => {
     const [error, setError] = useState<string | null>(null);
     const { aiService } = useServices();
     const { aiModel, setAiModel } = useReaderStore();
+    const lastRequestId = useRef(0);
 
-    const handleAction = async (text: string, mode: Mode, targetLang: string, sourceLang: string = 'Auto') => {
+    const handleAction = async (text: string, mode: Mode, targetLang: string, sourceLang: string = 'Auto', context?: string) => {
+        const requestId = ++lastRequestId.current;
         setLoading(true);
         setError(null);
         setResult('');
@@ -34,9 +36,9 @@ export const useAIHandler = () => {
             let detectedLang: string | undefined;
 
             if (mode === 'EXPLAIN') {
-                response = await aiService.explainText(text, targetLang, undefined, sourceLang);
+                response = await aiService.explainText(text, targetLang, context, sourceLang);
             } else {
-                const translateResult = await aiService.translateText(text, targetLang, undefined, sourceLang);
+                const translateResult = await aiService.translateText(text, targetLang, context, sourceLang);
                 if (typeof translateResult === 'object' && translateResult !== null) {
                     response = translateResult.response;
                     detectedLang = translateResult.sourceLanguage;
@@ -44,14 +46,18 @@ export const useAIHandler = () => {
                     response = translateResult;
                 }
             }
+            if (requestId !== lastRequestId.current) return;
             setResult(response);
             return { detectedLang };
         } catch (err: unknown) {
+            if (requestId !== lastRequestId.current) return;
             console.error('AI Error:', err);
             const errorMessage = err instanceof Error ? err.message : 'Failed to connect';
             setError(`Error: ${errorMessage}. Check Host URL.`);
         } finally {
-            setLoading(false);
+            if (requestId === lastRequestId.current) {
+                setLoading(false);
+            }
         }
     };
 

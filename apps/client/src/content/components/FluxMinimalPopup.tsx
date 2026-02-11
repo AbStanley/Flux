@@ -12,6 +12,7 @@ interface FluxMinimalPopupProps {
     onSourceLangChange: (lang: string) => void;
     autoSave: boolean;
     onAutoSaveChange: (enabled: boolean) => void;
+    isSaved?: boolean;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
 }
@@ -25,6 +26,7 @@ export function FluxMinimalPopup({
     onSourceLangChange,
     autoSave,
     onAutoSaveChange,
+    isSaved,
     onMouseEnter,
     onMouseLeave
 }: FluxMinimalPopupProps) {
@@ -63,7 +65,8 @@ export function FluxMinimalPopup({
                 fontWeight: 500,
                 lineHeight: '1.4',
                 color: '#e2e8f0',
-                marginBottom: '4px'
+                marginBottom: '4px',
+                minHeight: '24px' // Prevent collapse
             }}>
                 {loading ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
@@ -120,7 +123,14 @@ export function FluxMinimalPopup({
                         color: autoSave ? '#60a5fa' : '#94a3b8'
                     }}
                 >
-                    {autoSave ? (
+                    {isSaved ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#4ade80' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span style={{ fontSize: '12px', fontWeight: 600 }}>Saved</span>
+                        </div>
+                    ) : autoSave ? (
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>

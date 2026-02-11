@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAIHandler, type Mode } from './hooks/useAIHandler';
 import { useTextSelection } from './hooks/useTextSelection';
 import { useYouTubeSubtitles } from './hooks/useYouTubeSubtitles';
@@ -83,6 +83,7 @@ export function FluxContentApp() {
 
 
     const isHoveringRef = useRef(false);
+    const wasPlayingBeforeHover = useRef(false);
 
     // AI Logic
     const { result, loading, error, handleAction } = useAIHandler();
@@ -93,20 +94,22 @@ export function FluxContentApp() {
         isActive: isYouTube,
         pauseVideo,
         playVideo,
+        getIsPlaying,
         seekPrev,
         seekNext,
         hasPrev,
         hasNext
     } = useYouTubeSubtitles();
 
-    const onYouTubeOverlayHover = (hovering: boolean) => {
+    const onYouTubeOverlayHover = useCallback((hovering: boolean) => {
         isHoveringRef.current = hovering;
         if (hovering) {
+            wasPlayingBeforeHover.current = getIsPlaying();
             pauseVideo();
-        } else {
+        } else if (wasPlayingBeforeHover.current) {
             playVideo();
         }
-    };
+    }, [pauseVideo, playVideo, getIsPlaying]);
 
     const handleSave = async (wordText: string) => {
         setIsSaving(true);
@@ -222,7 +225,6 @@ export function FluxContentApp() {
                     onMouseEnter={() => isHoveringRef.current = true}
                     onMouseLeave={() => {
                         isHoveringRef.current = false;
-                        playVideo(); // Auto-play when leaving global selection popup too
                     }}
                 />
             )}

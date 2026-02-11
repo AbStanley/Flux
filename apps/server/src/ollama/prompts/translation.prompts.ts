@@ -11,16 +11,18 @@ export const getTranslatePrompt = (
 
   if (isAuto) {
     return `Role: Professional Translator and Language Detector.
-Task: Translate the following text into ${targetLanguage} AND detect the source language.
+Task: Translate the segment "${text}" into ${targetLanguage} AND detect the source language.
+
+Context Information:
+- Full Sentence: "${context || 'None'}"
+- Segment to Translate: "${text}"
 
 Instructions:
-1. Translate the text faithfully.
-2. Detect the source language name (e.g., "Spanish", "French", "Japanese").
-3. Output ONLY a JSON object with two keys: "detectedLanguage" and "translation".
-4. Do NOT include any conversational filler.
-
-Text:
-"${text}"
+1. Analyze the "Full Sentence" to determine the exact meaning of "${text}".
+2. Translate ONLY "${text}". Do NOT translate the surrounding sentence.
+3. Detect the source language name (e.g., "Spanish", "French", "Japanese").
+4. Output ONLY a JSON object with two keys: "detectedLanguage" and "translation".
+5. CRITICALLY IMPORTANT: Output ONLY the JSON. No conversational filler.
 
 Expected JSON Output:
 {
@@ -44,22 +46,23 @@ Text to Translate:
   }
 
   const prompt = `Role: Context-Aware Dictionary.
-Task: Translate the specific segment "${text}" ${fromLang}into ${targetLanguage}, fitting the context of: "${context || 'None'}".
+Task: Translate the segment "${text}" ${fromLang} into ${targetLanguage}.
+
+Context Information:
+- Full Sentence: "${context || 'None'}"
+- Segment to Translate: "${text}"
 
 Instructions:
-1. Analyze the "Context" to determine the exact meaning of "${text}".
-2. Translate ONLY "${text}". Do NOT translate the surrounding sentence.
-3. If "${text}" is a phrase/idiom, translate its meaning.
-4. If "${text}" is a conjugated verb, keep the correct tense/person in the translation if possible, or provide the infinitive with a note if ambiguous (but prefer direct mapping).
-5. CRITICALLY IMPORTANT: Output ONLY the final translated text.
+1. Analyze the "Full Sentence" to determine the exact meaning of "${text}" in this specific use case.
+2. Translate ONLY the segment "${text}". Do NOT translate the surrounding sentence.
+3. CRITICALLY IMPORTANT: Output ONLY the final translated text.
    - NO "The translation is..."
    - NO "In this context..."
    - NO quotes around the result.
+   - NO bullet points.
    - NO explanations.
-
-Input:
-Context: "${context || 'None'}"
-Segment: "${text}"
+   - STRICTLY PROHIBITED: Do NOT provide a list of multiple meanings.
+   - Output ONLY the most accurate single translation for this specific context.
 
 Result:`;
 

@@ -12,7 +12,7 @@ import { RichTranslation } from '../interfaces/ollama.interfaces';
 export class OllamaTranslationService {
   private readonly logger = new Logger(OllamaTranslationService.name);
 
-  constructor(private readonly ollamaClient: OllamaClientService) { }
+  constructor(private readonly ollamaClient: OllamaClientService) {}
 
   async translateText(params: {
     text: string;

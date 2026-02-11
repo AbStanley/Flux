@@ -8,6 +8,7 @@ export const useYouTubeSubtitles = () => {
     const [currentIndex, setCurrentIndex] = useState(-1);
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const lastVideoId = useRef<string | null>(null);
+    const lastSeekTime = useRef<number>(0);
 
     // Detect YouTube page and fetch global cues
     useEffect(() => {
@@ -72,11 +73,15 @@ export const useYouTubeSubtitles = () => {
             const video = videoRef.current;
             if (!video) return;
 
-            // If we have full transcript cues, sync by time
+            // Transcript sync mode
             if (allCues.length > 0) {
+                if (Date.now() - lastSeekTime.current < 400) {
+                    return;
+                }
+
                 const time = video.currentTime;
 
-                // Check current index
+                // If current index is valid and time still matches, keep it
                 if (currentIndex >= 0 && currentIndex < allCues.length) {
                     const cue = allCues[currentIndex];
                     if (time >= cue.start && time <= (cue.start + cue.duration)) {
@@ -90,53 +95,94 @@ export const useYouTubeSubtitles = () => {
                     setCurrentCue(newIndex >= 0 ? allCues[newIndex] : null);
                 }
             } else {
-                // Fallback: use DOM if transcript fetch failed or still loading
+                // DOM sync mode (fallback)
                 const domCue = YouTubeService.getSubtitleFromDom();
                 if (domCue && domCue.text !== currentCue?.text) {
-                    console.log('[Flux] Using DOM subtitle fallback');
                     setCurrentCue(domCue);
                 }
             }
         };
 
-        const videoInterval = setInterval(findVideo, 1000);
-        const syncInterval = setInterval(syncWithTime, 200);
+        const vInterval = setInterval(findVideo, 1000);
+        const sInterval = setInterval(syncWithTime, 200);
 
         return () => {
-            clearInterval(videoInterval);
-            clearInterval(syncInterval);
+            clearInterval(vInterval);
+            clearInterval(sInterval);
         };
     }, [isActive, allCues, currentIndex, currentCue?.text]);
 
     const seekPrev = useCallback(() => {
-        if (currentIndex > 0) {
-            const prevCue = allCues[currentIndex - 1];
-            YouTubeService.seekTo(prevCue.start);
-        } else if (allCues.length === 0) {
+        if (allCues.length === 0) {
+            // Fallback: no transcript, just rewind 5s
             const video = videoRef.current || YouTubeService.getVideoElement();
-            if (video) YouTubeService.seekTo(Math.max(0, video.currentTime - 5));
+            if (video) {
+                lastSeekTime.current = Date.now();
+                YouTubeService.seekTo(Math.max(0, video.currentTime - 5));
+            }
+            return;
         }
+
+        let targetIndex: number;
+        if (currentIndex > 0) {
+            targetIndex = currentIndex - 1;
+        } else if (currentIndex === -1) {
+            // In a gap — find the last cue that started before now
+            const video = videoRef.current;
+            const time = video?.currentTime ?? 0;
+            targetIndex = -1;
+            for (let i = allCues.length - 1; i >= 0; i--) {
+                if (allCues[i].start < time) { targetIndex = i; break; }
+            }
+            if (targetIndex === -1) return; // Already before all cues
+        } else {
+            return; // Already at index 0
+        }
+
+        const cue = allCues[targetIndex];
+        lastSeekTime.current = Date.now();
+        YouTubeService.seekTo(cue.start);
+        setCurrentIndex(targetIndex);
+        setCurrentCue(cue);
     }, [currentIndex, allCues]);
 
     const seekNext = useCallback(() => {
-        if (currentIndex >= 0 && currentIndex < allCues.length - 1) {
-            const nextCue = allCues[currentIndex + 1];
-            YouTubeService.seekTo(nextCue.start);
-        } else if (allCues.length === 0) {
+        if (allCues.length === 0) {
+            // Fallback: no transcript, just skip 5s
             const video = videoRef.current || YouTubeService.getVideoElement();
-            if (video) YouTubeService.seekTo(video.currentTime + 5);
-        } else if (currentIndex === -1 && allCues.length > 0) {
-            // If no cue active, find the next one based on current time
-            const video = videoRef.current;
             if (video) {
-                const next = allCues.find(c => c.start > video.currentTime);
-                if (next) YouTubeService.seekTo(next.start);
+                lastSeekTime.current = Date.now();
+                YouTubeService.seekTo(video.currentTime + 5);
             }
+            return;
         }
+
+        let targetIndex: number;
+        if (currentIndex >= 0 && currentIndex < allCues.length - 1) {
+            targetIndex = currentIndex + 1;
+        } else if (currentIndex === -1) {
+            // In a gap — find the next cue that starts after now
+            const video = videoRef.current;
+            const time = video?.currentTime ?? 0;
+            targetIndex = allCues.findIndex(c => c.start > time);
+            if (targetIndex === -1) return; // Already past all cues
+        } else {
+            return; // Already at last cue
+        }
+
+        const cue = allCues[targetIndex];
+        lastSeekTime.current = Date.now();
+        YouTubeService.seekTo(cue.start);
+        setCurrentIndex(targetIndex);
+        setCurrentCue(cue);
     }, [currentIndex, allCues]);
 
     const pauseVideo = useCallback(() => videoRef.current?.pause(), []);
     const playVideo = useCallback(() => videoRef.current?.play(), []);
+    const getIsPlaying = useCallback(() => {
+        const video = videoRef.current || YouTubeService.getVideoElement();
+        return video ? !video.paused : false;
+    }, []);
 
     // If we have full cues, use index. If we are in fallback mode (DOM), always show arrows if active.
     const isFallbackMode = allCues.length === 0 && isActive;
@@ -146,6 +192,7 @@ export const useYouTubeSubtitles = () => {
         isActive,
         pauseVideo,
         playVideo,
+        getIsPlaying,
         seekPrev,
         seekNext,
         hasPrev: (currentIndex > 0) || isFallbackMode,

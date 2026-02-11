@@ -25,12 +25,15 @@ export function cleanResponse(text: string): string {
     'Here is the translation:',
     'Result:',
     'Answer:',
+    'Translated text:',
   ];
   for (const prefix of prefixes) {
     if (cleaned.toLowerCase().startsWith(prefix.toLowerCase())) {
       cleaned = cleaned.slice(prefix.length).trim();
     }
   }
+
+  cleaned = cleaned.split('\n')[0].trim();
 
   return cleaned;
 }
