@@ -100,7 +100,7 @@ export function FluxPopup({
         boxShadow: isDragging
             ? '0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.2)'
             : '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-        fontSize: '16px',
+        fontSize: '14px',
         lineHeight: '1.6',
         display: 'flex',
         flexDirection: 'column',

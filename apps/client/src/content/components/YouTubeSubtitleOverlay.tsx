@@ -6,6 +6,7 @@ import { wordsApi } from '../../infrastructure/api/words';
 import { useReaderStore } from '@/presentation/features/reader/store/useReaderStore';
 import { SelectionMode } from '@/core/types';
 import { useDraggable } from '../hooks/useDraggable';
+import { useResizable } from '../hooks/useResizable';
 import { SubtitleToken } from './SubtitleToken';
 
 interface Props {
@@ -43,6 +44,10 @@ export const YouTubeSubtitleOverlay = ({
 
     const { pos, isDragging, handleMouseDown } = useDraggable({
         initialPos: { x: window.innerWidth / 2, y: window.innerHeight * 0.85 }
+    });
+
+    const { size, handleResizeMouseDown } = useResizable({
+        initialSize: { width: 800, height: 160 }
     });
 
     const tokens = useMemo(() => cue?.text.split(/(\s+)/) || [], [cue?.text]);
@@ -92,12 +97,12 @@ export const YouTubeSubtitleOverlay = ({
         }, 300);
     }, [isPinned, isPopupHovered, onHover, setResult]);
 
-    if (!cue) return null;
-
     const overlayStyles: React.CSSProperties = {
         position: 'fixed',
         top: pos.y,
         left: pos.x,
+        width: size.width,
+        height: size.height,
         transform: isDragging ? 'translate(-50%, -50%) scale(1.02)' : 'translate(-50%, -50%) scale(1)',
         backgroundColor: 'rgba(15, 23, 42, 0.85)',
         backdropFilter: 'blur(12px)',
@@ -108,7 +113,10 @@ export const YouTubeSubtitleOverlay = ({
         fontWeight: 600,
         zIndex: 2147483646,
         textAlign: 'center',
-        maxWidth: '85%',
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignContent: 'center',
         cursor: isDragging ? 'grabbing' : 'grab',
         boxShadow: isDragging
             ? '0 30px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2)'
@@ -116,7 +124,10 @@ export const YouTubeSubtitleOverlay = ({
         border: '1px solid rgba(255, 255, 255, 0.1)',
         transition: isDragging ? 'none' : 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), top 0.1s ease-out, left 0.1s ease-out',
         userSelect: 'none',
+        overflow: 'hidden'
     };
+
+    if (!cue) return null;
 
     return (
         <>
@@ -136,6 +147,7 @@ export const YouTubeSubtitleOverlay = ({
                         onMouseEnter={(e) => onWordHover(e, token)}
                         onMouseLeave={onWordLeave}
                         onClick={() => {
+                            if (!cue) return;
                             const clean = token.trim().replace(/[.,!?;:]/g, '');
                             if (clean.length > 0 || isSentenceMode) {
                                 handleSaveWord(isSentenceMode ? cue.text : clean);
@@ -144,6 +156,31 @@ export const YouTubeSubtitleOverlay = ({
                         }}
                     />
                 ))}
+
+                {/* Resize Handle */}
+                <div
+                    onMouseDown={handleResizeMouseDown}
+                    style={{
+                        position: 'absolute',
+                        bottom: '8px',
+                        right: '8px',
+                        width: '16px',
+                        height: '16px',
+                        cursor: 'nwse-resize',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.5,
+                        transition: 'opacity 0.2s'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.5')}
+                >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="21" y1="21" x2="9" y2="21" />
+                        <line x1="21" y1="21" x2="21" y2="9" />
+                    </svg>
+                </div>
             </div>
 
             {hoveredWord && (
