@@ -39,7 +39,7 @@ export function FluxSelect({
                 const label = typeof opt === 'string' ? opt : opt.label;
                 const val = typeof opt === 'string' ? opt : opt.value;
                 return (
-                    <option key={val} value={val}>
+                    <option key={val} value={val} style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>
                         {label}
                     </option>
                 );

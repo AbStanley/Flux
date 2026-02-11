@@ -33,15 +33,29 @@ export function FluxContentApp() {
     const [isSaving, setIsSaving] = useState(false);
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
+    const [fluxEnabled, setFluxEnabled] = useState(true);
+
     // Load persisted settings
     useEffect(() => {
         if (window.chrome?.storage?.local) {
-            window.chrome.storage.local.get(['fluxAutoSave', 'fluxSourceLang', 'fluxTargetLang'], (items) => {
+            window.chrome.storage.local.get(['fluxAutoSave', 'fluxSourceLang', 'fluxTargetLang', 'fluxEnabled'], (items) => {
                 const result = items as StorageResult;
-                if (result.fluxAutoSave !== undefined) setAutoSave(result.fluxAutoSave);
-                if (result.fluxSourceLang) setSourceLang(result.fluxSourceLang);
-                if (result.fluxTargetLang) setTargetLang(result.fluxTargetLang);
+                if (result) {
+                    if (result.fluxAutoSave !== undefined) setAutoSave(result.fluxAutoSave as boolean);
+                    if (result.fluxSourceLang) setSourceLang(result.fluxSourceLang as string);
+                    if (result.fluxTargetLang) setTargetLang(result.fluxTargetLang as string);
+                    if (result.fluxEnabled !== undefined) setFluxEnabled(result.fluxEnabled as boolean);
+                }
             });
+
+            // Listen for changes (e.g. from popup)
+            const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+                if (changes.fluxEnabled) {
+                    setFluxEnabled(changes.fluxEnabled.newValue as boolean);
+                }
+            };
+            window.chrome.storage.onChanged.addListener(handleStorageChange);
+            return () => window.chrome.storage.onChanged.removeListener(handleStorageChange);
         }
     }, []);
 
@@ -168,7 +182,7 @@ export function FluxContentApp() {
 
     return (
         <>
-            {isYouTube && currentCue && (
+            {isYouTube && currentCue && fluxEnabled && (
                 <YouTubeSubtitleOverlay
                     cue={currentCue}
                     onHover={onYouTubeOverlayHover}
@@ -183,10 +197,11 @@ export function FluxContentApp() {
                     onNext={seekNext}
                     hasPrev={hasPrev}
                     hasNext={hasNext}
+                    fluxEnabled={fluxEnabled}
                 />
             )}
 
-            {view === 'POPUP' && selection && !isOverlayActive && (
+            {view === 'POPUP' && selection && !isOverlayActive && fluxEnabled && (
                 <FluxPopup
                     selection={selection}
                     result={result}

@@ -58,6 +58,7 @@
         }
     ],
     "action": {
-        "default_title": "Open Reader Helper"
+        "default_title": "Open Reader Helper",
+        "default_popup": "popup.html"
     }
 }

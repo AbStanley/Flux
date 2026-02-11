@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { SubtitleCue } from '../services/YouTubeService';
 import { useAIHandler, type Mode } from '../hooks/useAIHandler';
-import { FluxPopup } from './FluxPopup';
+import { FluxMinimalPopup } from './FluxMinimalPopup';
 import { wordsApi } from '../../infrastructure/api/words';
 import { useReaderStore } from '@/presentation/features/reader/store/useReaderStore';
 import { SelectionMode } from '@/core/types';
@@ -23,6 +23,7 @@ interface Props {
     onNext?: () => void;
     hasPrev?: boolean;
     hasNext?: boolean;
+    fluxEnabled: boolean;
 }
 
 export const YouTubeSubtitleOverlay = ({
@@ -38,17 +39,16 @@ export const YouTubeSubtitleOverlay = ({
     onPrev,
     onNext,
     hasPrev,
-    hasNext
+    hasNext,
+    fluxEnabled
 }: Props) => {
     const [hoveredWord, setHoveredWord] = useState<{ text: string, x: number, y: number } | null>(null);
     const [isPopupHovered, setIsPopupHovered] = useState(false);
-    const [isPinned, setIsPinned] = useState(false);
-    const [mode, setMode] = useState<Mode>('TRANSLATE');
-    const [isSaving, setIsSaving] = useState(false);
+    const [mode] = useState<Mode>('TRANSLATE'); // Only translate in simplified mode
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // AI Handlers: one for word hover, one for full cue translation
-    const { result, loading, error, handleAction, setResult } = useAIHandler();
+    // AI Handlers
+    const { result, loading, handleAction, setResult } = useAIHandler();
     const { result: fullResult, loading: fullLoading, handleAction: handleFullAction, setResult: setFullResult } = useAIHandler();
 
     const { selectionMode } = useReaderStore();
@@ -61,20 +61,14 @@ export const YouTubeSubtitleOverlay = ({
         initialSize: { width: 800, height: 160 }
     });
 
-    const tokens = useMemo(() => cue?.text.split(/(\s+)/) || [], [cue?.text]);
+    const tokens = useMemo(() => cue?.text.split(/(\s+)/) || [], [cue]);
     const isSentenceMode = selectionMode === SelectionMode.Sentence;
-
-    // Auto-translate full cue when it changes
-    // Removed auto-translation useEffect to prevent infinite loops and unwanted requests
-    // Translation is now triggered on hover
-
 
     useEffect(() => {
         onPopupStateChange?.(!!hoveredWord);
     }, [hoveredWord, onPopupStateChange]);
 
     const handleSaveWord = useCallback(async (text: string) => {
-        setIsSaving(true);
         try {
             await wordsApi.create({
                 text: text,
@@ -84,10 +78,8 @@ export const YouTubeSubtitleOverlay = ({
             });
         } catch (err) {
             console.error('[Flux YouTube] Failed to save word:', err);
-        } finally {
-            setTimeout(() => setIsSaving(false), 1200);
         }
-    }, [sourceLang, targetLang, cue?.text]);
+    }, [sourceLang, targetLang, cue]);
 
     const onWordHover = useCallback((event: React.MouseEvent, word: string) => {
         const cleanWord = word.trim().replace(/[.,!?;:]/g, '');
@@ -97,13 +89,12 @@ export const YouTubeSubtitleOverlay = ({
         const rect = (event.target as HTMLElement).getBoundingClientRect();
         const textToProcess = isSentenceMode && cue ? cue.text : cleanWord;
 
-        setHoveredWord({ text: textToProcess, x: rect.left, y: rect.top - 340 });
+        setHoveredWord({ text: textToProcess, x: rect.left + rect.width / 2, y: rect.top });
         onHover(true);
         handleAction(textToProcess, mode, targetLang, sourceLang);
     }, [isSentenceMode, cue, mode, targetLang, sourceLang, onHover, handleAction]);
 
     const onWordLeave = useCallback(() => {
-        if (isPinned) return;
         timerRef.current = setTimeout(() => {
             if (!isPopupHovered) {
                 setHoveredWord(null);
@@ -111,25 +102,21 @@ export const YouTubeSubtitleOverlay = ({
                 setResult('');
             }
         }, 300);
-    }, [isPinned, isPopupHovered, onHover, setResult]);
+    }, [isPopupHovered, onHover, setResult]);
 
     const [isOverlayHovered, setIsOverlayHovered] = useState(false);
 
-    // ... existing hooks ...
+    // Combined hover state
+    const isInteracting = isOverlayHovered || !!hoveredWord || isPopupHovered;
 
-    // Combined hover state for video control and translation durability
-    const isInteracting = isOverlayHovered || !!hoveredWord || isPinned;
-
-    // Manage video playback based on interaction
     useEffect(() => {
         if (isInteracting) {
-            onHover(true); // Pause video (handled by parent/hook)
+            onHover(true);
         } else {
-            // Add a small delay before resuming/clearing to prevent flickering
             const timeout = setTimeout(() => {
-                onHover(false); // Play video
-                setFullResult(''); // Clear full translation
-            }, 150); // Short delay for smoother UX
+                onHover(false);
+                setFullResult('');
+            }, 150);
             return () => clearTimeout(timeout);
         }
     }, [isInteracting, onHover, setFullResult]);
@@ -145,28 +132,30 @@ export const YouTubeSubtitleOverlay = ({
         setIsOverlayHovered(false);
     };
 
+    if (!fluxEnabled || !cue) return null;
+
     const overlayStyles: React.CSSProperties = {
         position: 'fixed',
         top: pos.y,
         left: pos.x,
         width: size.width,
-        height: 'auto', // Allow height to grow
-        minHeight: size.height, // But maintain at least the resized height
+        height: 'auto',
+        minHeight: size.height,
         transform: isDragging ? 'translate(-50%, -50%) scale(1.02)' : 'translate(-50%, -50%) scale(1)',
-        backgroundColor: 'rgba(15, 23, 42, 0.95)', // Slightly more opaque for better readability
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
         backdropFilter: 'blur(16px)',
         color: '#f8fafc',
-        padding: '24px 72px 24px', // Reduced bottom padding, relying on flex gap
+        padding: '24px 72px 24px',
         borderRadius: '24px',
         fontSize: '32px',
         fontWeight: 600,
         zIndex: 2147483646,
         textAlign: 'center',
         display: 'flex',
-        flexDirection: 'column', // Stack vertically
-        alignItems: 'center',     // Center horizontally
-        justifyContent: 'center', // Center vertically (if min-height makes it larger)
-        gap: '16px',              // Space between subtitles and translation
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '16px',
         cursor: isDragging ? 'grabbing' : 'grab',
         boxShadow: isDragging
             ? '0 30px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2)'
@@ -174,10 +163,8 @@ export const YouTubeSubtitleOverlay = ({
         border: '1px solid rgba(255, 255, 255, 0.1)',
         transition: isDragging ? 'none' : 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), top 0.1s ease-out, left 0.1s ease-out',
         userSelect: 'none',
-        overflow: 'hidden' // Might need to be visible if popup goes out, but popup is separate
+        overflow: 'hidden'
     };
-
-    if (!cue) return null;
 
     return (
         <>
@@ -227,22 +214,24 @@ export const YouTubeSubtitleOverlay = ({
                             onMouseEnter={(e) => onWordHover(e, token)}
                             onMouseLeave={onWordLeave}
                             onClick={() => {
-                                if (!cue) return;
-                                const clean = token.trim().replace(/[.,!?;:]/g, '');
-                                if (clean.length > 0 || isSentenceMode) {
-                                    handleSaveWord(isSentenceMode ? cue.text : clean);
-                                    setIsPinned(true);
+                                // Save on click for simplified mode? Or just relying on auto-save?
+                                // User said "option of auto save", likely implying manual save is less prioritized or exists via popup.
+                                // Let's keep click-to-save-and-pin behavior removed as per request for "simpler". 
+                                // Actually, simplified mode usually means click doesn't pin anymore if we want it to verify strict hover.
+                                if (autoSave && cue) {
+                                    const clean = token.trim().replace(/[.,!?;:]/g, '');
+                                    if (clean.length > 0) handleSaveWord(clean);
                                 }
                             }}
                         />
                     ))}
                 </div>
 
-                {/* Auto-Translation Display - Now separate in flex flow */}
+                {/* Automation Translation Display */}
                 {(fullResult || fullLoading) && (
                     <div style={{
                         fontSize: '20px',
-                        color: 'rgba(148, 163, 184, 1)', // Muted blue-grey for differentiation
+                        color: 'rgba(148, 163, 184, 1)',
                         fontWeight: 500,
                         fontStyle: 'normal',
                         padding: '12px 24px',
@@ -315,7 +304,6 @@ export const YouTubeSubtitleOverlay = ({
                 </div>
             </div>
 
-            {/* Global style for animation */}
             <style>{`
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(5px); }
@@ -330,30 +318,31 @@ export const YouTubeSubtitleOverlay = ({
                 }
             `}</style>
 
-            {hoveredWord && (
-                <FluxPopup
-                    selection={hoveredWord}
-                    result={result}
-                    loading={loading}
-                    error={error}
-                    mode={mode}
-                    targetLang={targetLang}
-                    sourceLang={sourceLang}
-                    onModeChange={setMode}
-                    onLangChange={onTargetLangChange}
-                    onSourceLangChange={onSourceLangChange}
-                    onAction={() => handleAction(hoveredWord.text, mode, targetLang, sourceLang)}
-                    onClose={() => { setIsPinned(false); setHoveredWord(null); /* onHover(false) handled by effect if overlay also left */ setResult(''); }}
-                    onPinChange={setIsPinned}
-                    onAutoPlay={() => { /* Handled by effect */ }}
-                    onSave={handleSaveWord}
-                    onMouseEnter={() => { setIsPopupHovered(true); if (timerRef.current) clearTimeout(timerRef.current); }}
-                    onMouseLeave={() => { setIsPopupHovered(false); onWordLeave(); }}
-                    autoSave={autoSave}
-                    onAutoSaveChange={onAutoSaveChange}
-                    isSaving={isSaving}
-                />
-            )}
+            {
+                hoveredWord && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: hoveredWord.y,
+                            left: hoveredWord.x,
+                            zIndex: 2147483647
+                        }}
+                    >
+                        <FluxMinimalPopup
+                            result={result}
+                            loading={loading}
+                            targetLang={targetLang}
+                            onLangChange={onTargetLangChange}
+                            sourceLang={sourceLang}
+                            onSourceLangChange={onSourceLangChange}
+                            autoSave={autoSave}
+                            onAutoSaveChange={onAutoSaveChange}
+                            onMouseEnter={() => { setIsPopupHovered(true); if (timerRef.current) clearTimeout(timerRef.current); }}
+                            onMouseLeave={() => { setIsPopupHovered(false); onWordLeave(); }}
+                        />
+                    </div>
+                )
+            }
         </>
     );
 };

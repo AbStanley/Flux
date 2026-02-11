@@ -12,8 +12,8 @@ vi.mock('@/lib/chrome-storage', () => ({
     }
 }));
 
-vi.mock('./FluxPopup', () => ({
-    FluxPopup: () => <div data-testid="flux-popup">Popup</div>
+vi.mock('./FluxMinimalPopup', () => ({
+    FluxMinimalPopup: () => <div data-testid="flux-popup-minimal">Popup</div>
 }));
 
 vi.mock('./SubtitleToken', () => ({
@@ -71,7 +71,11 @@ describe('YouTubeSubtitleOverlay', () => {
         autoSave: false,
         onAutoSaveChange: vi.fn(),
         hasPrev: true,
-        hasNext: true
+        hasNext: true,
+        fluxEnabled: true,
+        onPopupStateChange: vi.fn(),
+        onPrev: vi.fn(),
+        onNext: vi.fn()
     };
 
     it('renders tokens', () => {
@@ -131,17 +135,6 @@ describe('YouTubeSubtitleOverlay', () => {
 
         // Enter overlay
         fireEvent.mouseEnter(overlay!);
-
-        // Hover word (simulated by state change in component - but we can't easily set internal state here without more complex mocking or integration test. 
-        // Instead, we can verify that if we DON'T leave, it stays.)
-
-        // ... valid point, unit testing internal state `isInteracting` composition is hard without enzyme-like access.
-        // We will rely on the "leave" test above proving that leaving triggers the clear.
-        // And we can try to simulate a token hover event if we can trigger the state change.
-
-        // Actually, we can't easily test the internal state composition here without refactoring the test to be an integration test 
-        // or exporting internal state. 
-        // We will trust the logic `isInteracting = isOverlayHovered || !!hoveredWord` and the previous test covering `isOverlayHovered` change.
 
         vi.useRealTimers();
     });

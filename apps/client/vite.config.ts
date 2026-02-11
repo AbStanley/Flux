@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => {
           main: path.resolve(__dirname, 'index.html'),
           content: path.resolve(__dirname, 'src/content/index.tsx'),
           background: path.resolve(__dirname, 'src/background/index.ts'),
+          popup: path.resolve(__dirname, 'popup.html'),
         },
         output: {
           entryFileNames: (chunkInfo) => {
@@ -54,6 +55,9 @@ export default defineConfig(({ mode }) => {
             }
             if (chunkInfo.name === 'background') {
               return 'assets/background.js';
+            }
+            if (chunkInfo.name === 'popup') {
+              return 'assets/popup.js';
             }
             return 'assets/[name]-[hash].js';
           },

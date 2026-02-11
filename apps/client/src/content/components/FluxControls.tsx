@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import type { Mode } from '../hooks/useAIHandler';
-import { useReaderStore } from '@/presentation/features/reader/store/useReaderStore';
-import { SelectionMode } from '@/core/types';
 import { LANGUAGES } from '../constants';
 import { useFluxMessaging } from '../hooks/useFluxMessaging';
 import { FluxIconButton } from './ui/FluxIconButton';
@@ -38,7 +36,6 @@ export function FluxControls({
     isSaving = false
 }: FluxControlsProps) {
     const [copied, setCopied] = useState(false);
-    const { selectionMode, setSelectionMode } = useReaderStore();
     const { selectAndOpen } = useFluxMessaging();
 
     const handleCopy = () => {
@@ -87,25 +84,6 @@ export function FluxControls({
                     <FluxIconButton onClick={handleSave} title="Read in Flux">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                     </FluxIconButton>
-
-                    <div style={{ background: '#334155', borderRadius: '6px', padding: '2px', display: 'flex', marginLeft: '4px' }}>
-                        <FluxIconButton
-                            onClick={() => setSelectionMode(SelectionMode.Word)}
-                            active={selectionMode === SelectionMode.Word}
-                            title="Word Mode"
-                            style={{ padding: '4px 6px', fontSize: '10px', fontWeight: 'bold' }}
-                        >
-                            W
-                        </FluxIconButton>
-                        <FluxIconButton
-                            onClick={() => setSelectionMode(SelectionMode.Sentence)}
-                            active={selectionMode === SelectionMode.Sentence}
-                            title="Sentence Mode"
-                            style={{ padding: '4px 6px', fontSize: '10px', fontWeight: 'bold' }}
-                        >
-                            S
-                        </FluxIconButton>
-                    </div>
 
                     <FluxIconButton
                         onClick={() => onAutoSaveChange(!autoSave)}
