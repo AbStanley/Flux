@@ -11,9 +11,13 @@ graph TD
         Ext["Chrome Extension (Future)"]
     end
 
+    subgraph "Secure Gateway (Docker Host)"
+        Caddy["Caddy (Rev Proxy + TLS)"]
+    end
+
     subgraph "Backend Layer (NestJS)"
         API["API Gateway (Port 3000)"]
-        Auth[Auth Guard]
+        Auth[Auth Guard (JWT)]
         Proxy[AI Proxy Service]
     end
 
@@ -22,8 +26,9 @@ graph TD
         Ollama[[Ollama AI Engine]]
     end
 
-    UI -->|HTTP/REST| API
-    Ext -->|HTTP/REST| API
+    UI -->|HTTPS/WSS| Caddy
+    Ext -->|HTTPS/WSS| Caddy
+    Caddy -->|Reverse Proxy| API
     
     API -->|Read/Write| DB
     API --> Auth

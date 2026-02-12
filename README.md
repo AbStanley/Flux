@@ -53,9 +53,13 @@ Flux is built to run entirely offline (after setup) using **Ollama**:
 
 ## 🚀 Getting Started
 
+### 0. Environment Setup
+1.  Copy `.env.example` to `.env` (or create one).
+2.  Set `JWT_SECRET` to a strong random string.
+
 ### 1. Prerequisites
 -   **Node.js**: v18+
--   **Docker**: Required for the PostgreSQL database.
+-   **Docker**: Required for the PostgreSQL database and Caddy Proxy.
 -   **Ollama**: Installed locally/networked. Run `ollama serve` and pull your models.
 
 ### 2. Installation & Run
@@ -77,8 +81,9 @@ npm run dev
 ```
 
 The platform will be available at:
--   **Frontend**: `http://localhost:5173`
--   **Backend API**: `http://localhost:3000`
+-   **Web App (HTTPS)**: `https://localhost` (or `https://<YOUR-LAN-IP>`)
+    -   *Note: Accept the self-signed certificate warning.*
+-   **Backend API**: Internal only (proxied via Caddy).
 -   **Prisma Studio**: `http://localhost:5555` (View your data)
 
 ---
@@ -95,7 +100,22 @@ Flux is architected as a **"Self-Hosted Cloud"**.
 -   **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand, Framer Motion.
 -   **Backend**: NestJS, prisma (ORM), Express.
 -   **Database**: PostgreSQL (Dockerized).
+-   **Infrastructure**: Caddy (Reverse Proxy + Auto TLS).
 -   **AI**: Ollama (Local LLM).
+
+---
+
+## 🔧 Troubleshooting
+
+### "Port already allocated"
+If Docker fails to start with port errors:
+1.  **Restart Docker Desktop** (Right-click -> Quit -> Start). This clears zombie ports.
+2.  Run `npm run docker:dev` again.
+
+### LAN Access Issues
+1.  Ensure Windows Network Profile is **Private** (Powershell: `Set-NetConnectionProfile -InterfaceAlias "Wi-Fi" -NetworkCategory Private`).
+2.  Use `https://` explicitly.
+3.  Accept the "Not Secure" warning (Advanced -> Proceed).
 
 ---
 
