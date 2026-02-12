@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useSettingsStore } from '../../settings/store/useSettingsStore';
+import { defaultClient } from '../../../../infrastructure/api/api-client';
 
 export interface GrammarAnalysisResult {
     sentence: string;
@@ -36,40 +37,24 @@ export const useGrammarAnalysis = (): UseGrammarAnalysisReturn => {
     };
 
     const performAnalysis = async (text: string, sourceLang: string, targetLang: string, model: string): Promise<GrammarAnalysisResult> => {
-        const response = await fetch('/api/analyze-grammar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+        try {
+            const data = await defaultClient.post<GrammarAnalysisResult>('/api/analyze-grammar', {
                 text,
                 sourceLanguage: sourceLang,
                 targetLanguage: targetLang,
                 model: model || ''
-            }),
-        });
+            });
 
-        if (!response.ok) {
-            let errorMessage = 'Failed to analyze grammar';
-            try {
-                const errorData = await response.json();
-                if (errorData && errorData.message) {
-                    errorMessage = errorData.message;
-                }
-            } catch {
-                errorMessage = `${response.status} ${response.statusText}`;
+            // Validate structure to prevent UI crashes
+            if (!data || !Array.isArray(data.grammar)) {
+                throw new Error("Invalid response: 'grammar' field is missing or invalid");
             }
-            throw new Error(errorMessage);
+
+            return data;
+        } catch (error) {
+            console.error('Grammar analysis failed:', error);
+            throw error;
         }
-
-        const data = await response.json();
-
-        // Validate structure to prevent UI crashes
-        if (!data || !Array.isArray(data.grammar)) {
-            throw new Error("Invalid response: 'grammar' field is missing or invalid");
-        }
-
-        return data;
     };
 
     // Better concurreny handling with Ref
