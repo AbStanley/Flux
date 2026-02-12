@@ -1,13 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ServerAIService } from './ServerAIService';
 
+import { defaultClient } from '../api/api-client';
+
 describe('ServerAIService', () => {
     let service: ServerAIService;
-    const mockBaseUrl = 'http://localhost:3002/api';
+    const mockBaseUrl = 'http://localhost:3002';
     const mockModel = 'test-model';
 
     beforeEach(() => {
         service = new ServerAIService(mockModel);
+
+        const localStorageMock = {
+            getItem: vi.fn(),
+            setItem: vi.fn(),
+            removeItem: vi.fn(),
+            clear: vi.fn(),
+        };
+        vi.stubGlobal('localStorage', localStorageMock);
+
+        defaultClient.setBaseUrl(mockBaseUrl);
         vi.stubGlobal('fetch', vi.fn());
         vi.stubGlobal('chrome', undefined);
     });
@@ -27,9 +39,10 @@ describe('ServerAIService', () => {
             const result = await service.translateText('Hello', 'es');
 
             expect(global.fetch).toHaveBeenCalledWith(
-                `${mockBaseUrl}/translate`,
+                `${mockBaseUrl}/api/translate`,
                 expect.objectContaining({
                     method: 'POST',
+                    headers: expect.any(Object),
                     body: JSON.stringify({
                         text: 'Hello',
                         targetLanguage: 'es',
@@ -49,7 +62,7 @@ describe('ServerAIService', () => {
                 text: () => Promise.resolve('Error')
             });
 
-            await expect(service.translateText('Hello', 'es')).rejects.toThrow('AI Service Error (undefined): Error');
+            await expect(service.translateText('Hello', 'es')).rejects.toThrow('API Error: undefined Error');
         });
     });
 
@@ -64,9 +77,10 @@ describe('ServerAIService', () => {
             const result = await service.explainText('Hello', 'es');
 
             expect(global.fetch).toHaveBeenCalledWith(
-                `${mockBaseUrl}/explain`,
+                `${mockBaseUrl}/api/explain`,
                 expect.objectContaining({
                     method: 'POST',
+                    headers: expect.any(Object),
                     body: JSON.stringify({
                         text: 'Hello',
                         targetLanguage: 'es',
@@ -91,7 +105,7 @@ describe('ServerAIService', () => {
             const result = await service.getRichTranslation('Hello', 'es');
 
             expect(global.fetch).toHaveBeenCalledWith(
-                `${mockBaseUrl}/rich-translation`,
+                `${mockBaseUrl}/api/rich-translation`,
                 expect.objectContaining({
                     method: 'POST'
                 })

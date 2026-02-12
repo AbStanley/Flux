@@ -44,9 +44,7 @@ function App() {
         useGameStore.getState().updateConfig({ aiHost: '' });
       }
 
-      import('@/infrastructure/ai/ServerAIService').then(({ serverAIService }) => {
-        serverAIService.setBaseUrl(urlToSet);
-      });
+
       import('@/infrastructure/api/api-client').then(({ setApiClientBaseUrl }) => {
         setApiClientBaseUrl(urlToSet);
       });

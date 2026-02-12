@@ -23,7 +23,7 @@ export const AiSetup = () => {
         // If config.aiHost is empty/undefined, we still want to set it (to empty string) 
         // to reset any previous manual configuration.
         const urlToSet = config.aiHost || '';
-        serverAIService.setBaseUrl(urlToSet);
+
         setApiClientBaseUrl(urlToSet);
 
         setLoading(true);
@@ -113,7 +113,7 @@ export const AiSetup = () => {
                                 onChange={(e) => {
                                     const val = e.target.value;
                                     updateConfig({ aiHost: val });
-                                    serverAIService.setBaseUrl(val);
+
                                     setApiClientBaseUrl(val);
                                 }}
                                 placeholder={!isExtension ? "Auto (Relative Path)" : "http://localhost:3000"}

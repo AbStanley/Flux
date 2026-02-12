@@ -20,11 +20,7 @@ export class ServerAIService implements IAIService {
     return this.model;
   }
 
-  setBaseUrl(_url: string) {
-    // No-op: Base URL is now managed centrally by ApiClient (and SettingsStore)
-    console.log(_url);
-    console.warn('[ServerAIService] setBaseUrl is deprecated. Use SettingsStore.');
-  }
+
 
   async generateText(
     prompt: string,

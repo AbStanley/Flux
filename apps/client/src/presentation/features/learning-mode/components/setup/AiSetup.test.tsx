@@ -12,9 +12,9 @@ vi.mock('../../store/useGameStore', () => ({
 vi.mock('@/infrastructure/ai/ServerAIService', () => ({
     serverAIService: {
         getAvailableModels: vi.fn().mockResolvedValue(['llama2']),
-        setBaseUrl: vi.fn(),
     }
 }));
+
 
 // Mock LanguageSelector
 vi.mock('./LanguageSelector', () => ({
