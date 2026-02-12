@@ -4,7 +4,7 @@ services:
       context: ./apps/client
       dockerfile: Dockerfile
     ports:
-      - "8080:80"
+      - "127.0.0.1:8083:80"
     restart: always
     networks:
       - app-network
@@ -14,7 +14,7 @@ services:
       context: ./apps/server
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3002:3000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/readerhelper
       - OLLAMA_HOST=http://host.docker.internal:11434
@@ -42,7 +42,21 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5435:5432"
+    networks:
+      - app-network
+
+  caddy:
+    image: caddy:alpine
+    restart: always
+    ports:
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    depends_on:
+      - server
+      - web
     networks:
       - app-network
 
@@ -52,3 +66,4 @@ networks:
 
 volumes:
   postgres_data:
+  caddy_data:

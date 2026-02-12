@@ -1,0 +1,21 @@
+:443 {
+	# Self-signed TLS for LAN encryption
+	tls internal
+
+	# Basic Authentication
+	# User: admin
+	# Pass: admin
+	basic_auth {
+		admin $2a$14$7mIVAcEWXIJXSXiw2tuOZuxOB1U9Emrq26AcHplJKlI0tcG4jbJXW
+	}
+
+	# Proxy /api requests to the backend server
+	handle /api* {
+		reverse_proxy server:3000
+	}
+
+	# Proxy all other requests to the frontend
+	handle {
+		reverse_proxy web:80
+	}
+}
