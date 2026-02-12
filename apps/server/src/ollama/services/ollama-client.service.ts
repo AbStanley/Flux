@@ -40,7 +40,13 @@ export class OllamaClientService {
     prompt: string,
     stream?: S,
     format?: 'json',
-    options?: { num_ctx?: number; num_predict?: number; temperature?: number },
+    options?: {
+      num_ctx?: number;
+      num_predict?: number;
+      temperature?: number;
+      top_k?: number;
+      top_p?: number;
+    },
   ): Promise<
     S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
   > {

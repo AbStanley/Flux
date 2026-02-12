@@ -17,7 +17,7 @@ interface ExampleRecord {
 export class OllamaGenerationService {
   private readonly logger = new Logger(OllamaGenerationService.name);
 
-  constructor(private readonly ollamaClient: OllamaClientService) {}
+  constructor(private readonly ollamaClient: OllamaClientService) { }
 
   async generateExamples(params: {
     word: string;
@@ -75,8 +75,12 @@ export class OllamaGenerationService {
       contentType: params.contentType,
     });
 
-    const response = await this.ollamaClient.generate(model, prompt, false);
-    return cleanResponse(response.response);
+    const response = await this.ollamaClient.generate(model, prompt, false, undefined, {
+      temperature: 0.8,
+      top_p: 0.9,
+      top_k: 40,
+    });
+    return cleanResponse(response.response, { multiline: true });
   }
 
   async generateGameContent(params: {
@@ -98,7 +102,11 @@ export class OllamaGenerationService {
       params.limit,
     );
 
-    const response = await this.ollamaClient.generate(model, prompt, false);
-    return cleanResponse(response.response);
+    const response = await this.ollamaClient.generate(model, prompt, false, undefined, {
+      temperature: 0.8,
+      top_p: 0.9,
+      top_k: 40,
+    });
+    return cleanResponse(response.response, { multiline: true });
   }
 }

@@ -1,4 +1,7 @@
-export function cleanResponse(text: string): string {
+export function cleanResponse(
+  text: string,
+  options?: { multiline?: boolean },
+): string {
   if (!text) return '';
   let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
@@ -33,7 +36,9 @@ export function cleanResponse(text: string): string {
     }
   }
 
-  cleaned = cleaned.split('\n')[0].trim();
+  if (!options?.multiline) {
+    cleaned = cleaned.split('\n')[0].trim();
+  }
 
   return cleaned;
 }
