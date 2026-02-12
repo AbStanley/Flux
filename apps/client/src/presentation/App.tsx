@@ -7,6 +7,8 @@ import { useReaderStore } from './features/reader/store/useReaderStore';
 import { FocusLayout } from './layouts/FocusLayout';
 import { useFocusMode } from './features/reader/hooks/useFocusMode';
 import { useGameStore } from './features/learning-mode/store/useGameStore';
+import { useAuthStore } from './features/auth/store/useAuthStore';
+import { LoginPage } from './features/auth/LoginPage';
 
 /**
  * App: The Main Application Root
@@ -19,30 +21,25 @@ import { useGameStore } from './features/learning-mode/store/useGameStore';
  * cross-component actions like "Read in Flux".
  */
 function App() {
-  // Use the selector to subscribe to updates
   const isReading = useReaderStore(state => state.isReading);
   const setText = useReaderStore(state => state.setText);
   const setIsReading = useReaderStore(state => state.setIsReading);
-
-  // Global Side-effect: Sync API Configuration from Store
-  // This ensures that even if the user reloads on a page other than Setup,
-  // the API clients are correctly configured.
   const config = useGameStore(state => state.config);
 
+  // Auth: initialize from localStorage
+  const { isAuthenticated, isLoading: authLoading, initialize } = useAuthStore();
+  const isExtension = typeof window !== 'undefined'
+    && window.location.protocol === 'chrome-extension:';
+
+  useEffect(() => { initialize(); }, [initialize]);
 
   useEffect(() => {
-    // Dynamically import base-url to get the environment-aware default
     import('@/infrastructure/api/base-url').then(({ getApiBaseUrl }) => {
       const defaultUrl = getApiBaseUrl();
       let urlToSet = config.aiHost || defaultUrl;
 
-      // ONE-TIME MIGRATION / SAFETY CHECK
-      // If we are in the Web App (not extension), and the config is set to localhost,
-      const isExtension = typeof window !== 'undefined' && window.location.protocol === 'chrome-extension:';
       const isLocalhostConfig = urlToSet.includes('localhost') || urlToSet.includes('127.0.0.1');
-
       if (!isExtension && isLocalhostConfig) {
-        console.warn('[Flux Config Correction] Web App Mode cannot use Localhost config. Resetting to relative path.');
         urlToSet = '';
         useGameStore.getState().updateConfig({ aiHost: '' });
       }
@@ -54,11 +51,9 @@ function App() {
         setApiClientBaseUrl(urlToSet);
       });
     });
-  }, [config.aiHost]);
-
+  }, [config.aiHost, isExtension]);
 
   useEffect(() => {
-    // Check if running in extension context
     type ChromeWindow = Window & {
       chrome?: {
         runtime?: {
@@ -85,13 +80,11 @@ function App() {
       };
       w.chrome.runtime.onMessage.addListener(handleMessage);
 
-      // Check for pending text in storage (from "Read in Flux" action)
       if (w.chrome.storage?.local) {
         w.chrome.storage.local.get(['pendingText'], (result: { pendingText?: string }) => {
           if (result.pendingText) {
             setText(result.pendingText);
             setIsReading(true);
-            // Clear it so it doesn't persist forever
             w.chrome.storage.local?.remove('pendingText');
           }
         });
@@ -100,6 +93,14 @@ function App() {
       return () => w.chrome?.runtime?.onMessage?.removeListener(handleMessage);
     }
   }, [setText, setIsReading]);
+
+  // Auth gate: show login for web app users who aren't authenticated
+  if (!isExtension && authLoading) {
+    return null; // Brief loading state while checking token
+  }
+  if (!isExtension && !isAuthenticated) {
+    return <LoginPage />;
+  }
 
   return (
     <ServiceProvider>

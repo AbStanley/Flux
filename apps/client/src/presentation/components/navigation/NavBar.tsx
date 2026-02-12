@@ -1,11 +1,13 @@
-import { BookOpen, Dices, Library } from 'lucide-react';
+import { BookOpen, Dices, Library, LogOut } from 'lucide-react';
 import { useViewStore } from '../../features/navigation/store/useViewStore';
 import { AppView } from '../../features/navigation/types';
 import { Button } from '../ui/button';
 import { SettingsModal } from '../settings/SettingsModal';
+import { useAuthStore } from '../../features/auth/store/useAuthStore';
 
 export function NavBar() {
     const { currentView, setView } = useViewStore();
+    const { isAuthenticated, logout } = useAuthStore();
 
     return (
         <nav className="flex items-center justify-between p-4 border-b bg-background">
@@ -46,7 +48,22 @@ export function NavBar() {
                 </div>
             </div>
 
-            <SettingsModal />
+            <div className="flex items-center gap-2">
+                <SettingsModal />
+                {isAuthenticated && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={logout}
+                        className="gap-2 px-2 md:px-4 text-muted-foreground hover:text-destructive"
+                        title="Logout"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        <span className="hidden md:inline">Logout</span>
+                    </Button>
+                )}
+            </div>
         </nav>
     );
 }
+

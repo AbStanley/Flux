@@ -51,7 +51,13 @@ export class ServerAIService implements IAIService {
     const url = path.startsWith('http') ? path : `${this.baseUrl}${path}`;
     const method = options.method || 'GET';
     const body = options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : undefined;
-    const headers = options.headers || {};
+
+    // Inject JWT token from localStorage
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('flux_auth_token') : null;
+    const headers: Record<string, string> = {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    };
 
     // DEBUG: Connectivity Diagnosis
     console.log(`[Flux Debug] Requesting: ${method} ${url}`);

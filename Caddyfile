@@ -1,12 +1,7 @@
-:443 {
-	# Self-signed TLS for LAN encryption
-	tls internal
 
-	# Basic Authentication
-	# User: admin
-	# Pass: admin
-	basic_auth {
-		admin $2a$14$7mIVAcEWXIJXSXiw2tuOZuxOB1U9Emrq26AcHplJKlI0tcG4jbJXW
+:443 {
+	tls internal {
+		on_demand
 	}
 
 	# Proxy /api requests to the backend server

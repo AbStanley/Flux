@@ -6,15 +6,19 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class WordsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
-  async create(createWordDto: CreateWordDto) {
-    // For now, use a default user since we don't have auth yet
-    let user = await this.prisma.user.findFirst();
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: { email: 'default@local.com' },
-      });
+  async create(createWordDto: CreateWordDto, userId?: string) {
+    // Use authenticated user, or fall back to default for localhost
+    let resolvedUserId = userId;
+    if (!resolvedUserId) {
+      let user = await this.prisma.user.findFirst();
+      if (!user) {
+        user = await this.prisma.user.create({
+          data: { email: 'default@local.com' },
+        });
+      }
+      resolvedUserId = user.id;
     }
 
     const sanitizedText = createWordDto.text
@@ -28,7 +32,7 @@ export class WordsService {
         text: sanitizedText,
         sourceLanguage: createWordDto.sourceLanguage,
         targetLanguage: createWordDto.targetLanguage,
-        userId: user.id,
+        userId: resolvedUserId,
       },
       include: {
         examples: true,
@@ -51,11 +55,11 @@ export class WordsService {
         imageUrl: createWordDto.imageUrl,
         pronunciation: createWordDto.pronunciation,
         type: createWordDto.type, // Map the type from DTO
-        userId: user.id,
+        userId: resolvedUserId,
         examples: createWordDto.examples
           ? {
-              create: createWordDto.examples,
-            }
+            create: createWordDto.examples,
+          }
           : undefined,
       },
       include: {
@@ -71,8 +75,9 @@ export class WordsService {
     skip?: number;
     limit?: number;
     type?: 'word' | 'phrase';
+    userId?: string;
   }) {
-    const { sourceLanguage, targetLanguage, sort, skip, limit, type } =
+    const { sourceLanguage, targetLanguage, sort, skip, limit, type, userId } =
       query || {};
 
     const where: Prisma.WordWhereInput = {
@@ -83,6 +88,7 @@ export class WordsService {
         ? { equals: targetLanguage, mode: 'insensitive' }
         : undefined,
       type,
+      userId: userId ? { equals: userId } : undefined,
     };
 
     try {
@@ -136,13 +142,13 @@ export class WordsService {
           examples:
             examples && examples.length > 0
               ? {
-                  create: examples.map(
-                    (ex: { sentence: string; translation?: string }) => ({
-                      sentence: ex.sentence,
-                      translation: ex.translation,
-                    }),
-                  ),
-                }
+                create: examples.map(
+                  (ex: { sentence: string; translation?: string }) => ({
+                    sentence: ex.sentence,
+                    translation: ex.translation,
+                  }),
+                ),
+              }
               : undefined,
         },
         include: {

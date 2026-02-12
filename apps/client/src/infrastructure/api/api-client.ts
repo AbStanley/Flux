@@ -16,8 +16,12 @@ export class ApiClient {
         console.log(`[Flux Network Probe] Requesting: ${url}`);
         const method = options.method || 'GET';
         const body = options.body;
-        const headers = {
+
+        // Inject JWT token from localStorage
+        const token = localStorage.getItem('flux_auth_token');
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
             ...(options.headers as Record<string, string>),
         };
 
@@ -69,6 +73,11 @@ export class ApiClient {
         const response = await fetch(url, config);
 
         if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('flux_auth_token');
+                window.location.reload();
+                throw new Error('Session expired. Please log in again.');
+            }
             const text = await response.text();
             throw new Error(`API Error: ${response.status} ${text || response.statusText}`);
         }
