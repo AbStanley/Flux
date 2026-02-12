@@ -8,8 +8,19 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
+import { ConfigModule } from '@nestjs/config';
+
 @Module({
-  imports: [OllamaModule, WordsModule, PrismaModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env.local', '.env.docker', '../../.env'],
+    }),
+    OllamaModule,
+    WordsModule,
+    PrismaModule,
+    AuthModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,

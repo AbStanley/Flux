@@ -36,7 +36,7 @@ export function cleanResponse(
     }
   }
 
-  if (!options?.multiline) {
+  if (options?.multiline === false) {
     cleaned = cleaned.split('\n')[0].trim();
   }
 
@@ -44,7 +44,7 @@ export function cleanResponse(
 }
 
 export function cleanAndParseJson<T>(text: string): T {
-  const cleaned = cleanResponse(text);
+  const cleaned = cleanResponse(text, { multiline: true });
 
   try {
     return JSON.parse(cleaned) as T;
@@ -84,7 +84,8 @@ export function cleanAndParseJson<T>(text: string): T {
     }
 
     const snippet =
-      cleaned.length > 100 ? cleaned.substring(0, 100) + '...' : cleaned;
+      cleaned.length > 500 ? cleaned.substring(0, 500) + '...' : cleaned;
+    console.error(`[OllamaUtils] JSON Parse Failed. Cleaned output:\n${snippet}`);
     throw new Error(`Failed to parse JSON from response: "${snippet}"`);
   }
 }

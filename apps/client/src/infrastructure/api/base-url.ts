@@ -12,12 +12,12 @@ export const getApiBaseUrl = (): string => {
     // If running in a Chrome Extension context (background or popup/sidepanel)
     // We check the protocol, which is the most robust way to distinguish extension views from web pages.
     if (typeof window !== 'undefined' && window.location.protocol === 'chrome-extension:') {
-        return 'http://localhost:3000';
+        return import.meta.env.VITE_EXT_API_URL || 'https://localhost';
     }
     // Fallback: Content Scripts run on http/https pages but have access to chrome.runtime.
     // This check catches them. Standard web pages do not have chrome.runtime.id.
     if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
-        return 'http://localhost:3000';
+        return import.meta.env.VITE_EXT_API_URL || 'https://localhost';
     }
 
     return normalizeApiBaseUrl(import.meta.env.VITE_API_URL);

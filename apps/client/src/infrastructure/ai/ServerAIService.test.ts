@@ -7,7 +7,7 @@ describe('ServerAIService', () => {
     const mockModel = 'test-model';
 
     beforeEach(() => {
-        service = new ServerAIService(mockBaseUrl, mockModel);
+        service = new ServerAIService(mockModel);
         vi.stubGlobal('fetch', vi.fn());
         vi.stubGlobal('chrome', undefined);
     });

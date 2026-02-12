@@ -57,6 +57,19 @@ Flux is built to run entirely offline (after setup) using **Ollama**:
 1.  Copy `.env.example` to `.env` (or create one).
 2.  Set `JWT_SECRET` to a strong random string.
 
+#### Configuration
+For a detailed explanation of how environment variables work in this project (Local vs Docker vs Production), see the [**Environment Configuration Guide**](./docs/ENVIRONMENT.md).
+
+**Quick Port Reference (Root `.env`):**
+- `CADDY_PORT_DEV=8443`
+- `CADDY_PORT_PROD=443`
+
+
+Note: You might need to allow the firewall to allow the ports to be accessible from your network.
+``` powershell
+New-NetFirewallRule -DisplayName "Flux Prod Server (443)" -Direction Inbound -LocalPort 443 -Protocol TCP -Action Allow
+```
+
 ### 1. Prerequisites
 -   **Node.js**: v18+
 -   **Docker**: Required for the PostgreSQL database and Caddy Proxy.
@@ -130,4 +143,4 @@ If Docker fails to start with port errors:
 └── README.md          # This file
 ```
 
-For deep architectural details, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+For deep architectural details, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md).

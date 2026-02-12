@@ -12,7 +12,7 @@ import { RichTranslation } from '../interfaces/ollama.interfaces';
 export class OllamaTranslationService {
   private readonly logger = new Logger(OllamaTranslationService.name);
 
-  constructor(private readonly ollamaClient: OllamaClientService) {}
+  constructor(private readonly ollamaClient: OllamaClientService) { }
 
   async translateText(params: {
     text: string;
@@ -88,9 +88,12 @@ export class OllamaTranslationService {
       model,
       prompt,
       false,
-      'json',
+      undefined,
       { num_predict: 4096 },
     );
+
+    this.logger.log(`[RichTranslation] Raw Response (Length ${response.response.length}):\n${response.response.substring(0, 200)}...`);
+
     return cleanAndParseJson<RichTranslation>(response.response);
   }
 }

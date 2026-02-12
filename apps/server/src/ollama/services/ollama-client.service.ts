@@ -51,7 +51,10 @@ export class OllamaClientService {
     S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
   > {
     const action = `generate with model ${model}`;
-    const baseRequest = { model, prompt, format, options };
+    const baseRequest: any = { model, prompt, options };
+    if (format) {
+      baseRequest.format = format;
+    }
 
     if (stream) {
       return this.execute(
