@@ -11,15 +11,15 @@
     "server:dev": "npm run start:dev --workspace=@reader-helper/server",
     "prisma-prepare": "npx prisma generate --workspace=@reader-helper/server",
     "prisma-studio": "npx prisma studio --schema=apps/server/prisma/schema.prisma",
-    "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
     "prepare": "husky",
+    "build": "npm run build --workspaces",
     "start:local:dev": "start \"Client\" npm run client:dev & start \"Server\" npm run server:dev",
+    "db:dev": "docker compose -f docker-compose.dev.yml -p reader-helper-dev up -d postgres",
     "docker:dev": "docker compose -f docker-compose.dev.yml -p reader-helper-dev up --build",
     "docker:prod": "docker compose -f docker-compose.yml -p reader-helper-prod up --build",
-    "docker:prod:no-cache": "docker compose -f docker-compose.yml -p reader-helper-prod build --no-cache && docker compose -f docker-compose.yml -p reader-helper-prod up -d",
-    "db:dev": "docker compose -f docker-compose.dev.yml -p reader-helper-dev up -d postgres"
+    "docker:prod:no-cache": "docker compose -f docker-compose.yml -p reader-helper-prod build --no-cache && docker compose -f docker-compose.yml -p reader-helper-prod up -d"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
