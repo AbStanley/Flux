@@ -4,21 +4,24 @@ export const normalizeApiBaseUrl = (raw?: string): string => {
 };
 
 export const getApiBaseUrl = (): string => {
-    // Docker Build Flag: Forces relative paths for the Web App, ignoring any runtime environment confusion.
+    // Docker Build Flag
     if (import.meta.env.VITE_IS_WEB_APP === 'true') {
-        return normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
+        const url = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
+        return url;
     }
 
-    // If running in a Chrome Extension context (background or popup/sidepanel)
-    // We check the protocol, which is the most robust way to distinguish extension views from web pages.
-    if (typeof window !== 'undefined' && window.location.protocol === 'chrome-extension:') {
-        return import.meta.env.VITE_EXT_API_URL || 'https://localhost';
-    }
-    // Fallback: Content Scripts run on http/https pages but have access to chrome.runtime.
-    // This check catches them. Standard web pages do not have chrome.runtime.id.
-    if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
-        return import.meta.env.VITE_EXT_API_URL || 'https://localhost';
+    // Chrome Extension Check
+    const isExtension = (typeof window !== 'undefined' && window.location.protocol === 'chrome-extension:') ||
+        (typeof chrome !== 'undefined' && !!chrome.runtime?.id);
+
+    if (isExtension) {
+        // Fallback to https://localhost if env var is missing OR empty
+        const envUrl = import.meta.env.VITE_EXT_API_URL;
+        const url = envUrl || 'http://localhost';
+
+        return url;
     }
 
-    return normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
+    const fallback = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
+    return fallback;
 };

@@ -1,4 +1,17 @@
 
+# remove this one if I want strict https, and remove - "80:80" on caddy docker-compose
+:80 {
+	# Proxy /api requests to the backend server
+	handle /api* {
+		reverse_proxy server:3000
+	}
+
+	# Proxy all other requests to the frontend
+	handle {
+		reverse_proxy web:80
+	}
+}
+
 :443 {
 	tls internal {
 		on_demand

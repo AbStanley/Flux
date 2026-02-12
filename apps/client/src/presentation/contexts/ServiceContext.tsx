@@ -3,10 +3,8 @@ import type { IAIService } from '../../core/interfaces/IAIService';
 import { MockAIService } from '../../infrastructure/ai/MockAIService';
 import { ServerAIService } from '../../infrastructure/ai/ServerAIService';
 import { useReaderStore } from '../features/reader/store/useReaderStore';
-import { getApiBaseUrl, normalizeApiBaseUrl } from '../../infrastructure/api/base-url';
 
 interface OllamaConfig {
-    url?: string;
     model?: string;
 }
 
@@ -19,18 +17,6 @@ interface ServiceContextType {
 const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 export function ServiceProvider({ children }: { children: ReactNode }) {
-    // Default to Backend API
-    const defaultUrl = getApiBaseUrl();
-    // Fallback to VITE_API_URL if specific AI URL is not set, but ensure /api suffix if needed
-    const getBaseUrl = () => {
-        if (import.meta.env.VITE_AI_API_URL) {
-            return normalizeApiBaseUrl(import.meta.env.VITE_AI_API_URL);
-        }
-        return defaultUrl;
-    };
-
-    const initialUrl = getBaseUrl();
-
     // Get persisted model from store
     const persistedModel = useReaderStore((s) => s.aiModel);
     const [currentServiceType, setCurrentServiceType] = useState<'mock' | 'ollama'>('ollama');
@@ -38,7 +24,7 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
     // Initialize aiService state
     const [aiService, setAiService] = useState<IAIService>(() => {
         if (currentServiceType === 'ollama') {
-            return new ServerAIService(initialUrl, persistedModel);
+            return new ServerAIService(persistedModel);
         }
         return new MockAIService();
     });
@@ -56,8 +42,8 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
     const setServiceType = (type: 'mock' | 'ollama', config?: OllamaConfig) => {
         setCurrentServiceType(type);
         if (type === 'ollama') {
-            const url = config?.url ?? getBaseUrl();
-            const newService = new ServerAIService(url, config?.model || persistedModel);
+            // Note: URL config is no longer passed to ServerAIService as it uses ApiClient
+            const newService = new ServerAIService(config?.model || persistedModel);
             setAiService(newService);
 
             if (config?.model) {

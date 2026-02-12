@@ -52,6 +52,7 @@ services:
     restart: always
     ports:
       - "${CADDY_PORT_PROD:-443}:443"
+      - "80:80"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data_prod:/data

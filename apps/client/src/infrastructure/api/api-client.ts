@@ -1,4 +1,5 @@
 import { getApiBaseUrl } from './base-url';
+import { getStoredApiUrl } from '../settings/settings.store';
 
 export class ApiClient {
     private baseUrl: string;
@@ -11,14 +12,31 @@ export class ApiClient {
         this.baseUrl = url;
     }
 
+    // Helper to get token from appropriate storage
+    private async getAuthToken(): Promise<string | null> {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+            return new Promise((resolve) => {
+                chrome.storage.local.get(['flux_auth_token'], (result) => {
+                    const data = result as { flux_auth_token?: string };
+                    resolve(data.flux_auth_token || null);
+                });
+            });
+        }
+        return localStorage.getItem('flux_auth_token');
+    }
+
     private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-        const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
+        const storedUrl = await getStoredApiUrl();
+        const activeBaseUrl = storedUrl || this.baseUrl;
+        const url = endpoint.startsWith('http') ? endpoint : `${activeBaseUrl}${endpoint}`;
+
         console.log(`[Flux Network Probe] Requesting: ${url}`);
+
         const method = options.method || 'GET';
         const body = options.body;
 
-        // Inject JWT token from localStorage
-        const token = localStorage.getItem('flux_auth_token');
+        // Inject JWT token from storage
+        const token = await this.getAuthToken();
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
