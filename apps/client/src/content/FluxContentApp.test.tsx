@@ -132,4 +132,24 @@ describe('FluxContentApp', () => {
 
         expect(screen.getByText('Mode: EXPLAIN')).toBeTruthy();
     });
+
+    it('triggers action when mode changes', () => {
+        render(<FluxContentApp />);
+
+        act(() => {
+            triggerSelection({ text: 'Mode Trigger', x: 0, y: 0 });
+        });
+
+        // Clear initial auto-call
+        handleActionMock.mockClear();
+
+        // Change mode via UI (mocked button)
+        const btn = screen.getByText('Set Explain');
+        act(() => {
+            btn.click();
+        });
+
+        // Verify handleAction called with new mode
+        expect(handleActionMock).toHaveBeenCalledWith('Mode Trigger', 'EXPLAIN', 'English', 'Auto');
+    });
 });

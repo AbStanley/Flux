@@ -72,12 +72,44 @@ export function FluxContentApp() {
         if (window.chrome?.storage?.local) {
             window.chrome.storage.local.set({ fluxSourceLang: lang });
         }
+        if (view === 'POPUP' && selection && !isOverlayActive) {
+            handleAction(selection.text, mode, targetLang, lang);
+        }
     };
 
     const handleTargetLangChange = (lang: string) => {
         setTargetLang(lang);
         if (window.chrome?.storage?.local) {
             window.chrome.storage.local.set({ fluxTargetLang: lang });
+        }
+        if (view === 'POPUP' && selection && !isOverlayActive) {
+            handleAction(selection.text, mode, lang, sourceLang);
+        }
+    };
+
+    const handleModeChange = (newMode: Mode) => {
+        setMode(newMode);
+        if (view === 'POPUP' && selection && !isOverlayActive) {
+            handleAction(selection.text, newMode, targetLang, sourceLang);
+        }
+    };
+
+    const handleSwapLanguages = () => {
+        const newSource = targetLang;
+        const newTarget = sourceLang === 'Auto' ? 'English' : sourceLang;
+
+        setSourceLang(newSource);
+        setTargetLang(newTarget);
+
+        if (window.chrome?.storage?.local) {
+            window.chrome.storage.local.set({
+                fluxSourceLang: newSource,
+                fluxTargetLang: newTarget
+            });
+        }
+
+        if (view === 'POPUP' && selection && !isOverlayActive) {
+            handleAction(selection.text, mode, newTarget, newSource);
         }
     };
 
@@ -191,9 +223,9 @@ export function FluxContentApp() {
                     onHover={onYouTubeOverlayHover}
                     onPopupStateChange={setIsOverlayActive}
                     targetLang={targetLang}
-                    onTargetLangChange={setTargetLang}
+                    onTargetLangChange={handleTargetLangChange}
                     sourceLang={sourceLang}
-                    onSourceLangChange={setSourceLang}
+                    onSourceLangChange={handleSourceLangChange}
                     autoSave={autoSave}
                     onAutoSaveChange={setAutoSave}
                     onPrev={seekPrev}
@@ -213,9 +245,10 @@ export function FluxContentApp() {
                     mode={mode}
                     targetLang={targetLang}
                     sourceLang={sourceLang}
-                    onModeChange={setMode}
+                    onModeChange={handleModeChange}
                     onLangChange={handleTargetLangChange}
                     onSourceLangChange={handleSourceLangChange}
+                    onSwapLanguages={handleSwapLanguages}
                     onAction={onManualAction}
                     onSave={handleSave}
                     autoSave={autoSave}

@@ -18,6 +18,7 @@ interface FluxPopupProps {
     onModeChange: (mode: Mode) => void;
     onLangChange: (lang: string) => void;
     onSourceLangChange?: (lang: string) => void;
+    onSwapLanguages?: () => void;
     onAction: () => void;
     onClose: () => void;
     onMouseEnter: () => void;
@@ -41,6 +42,7 @@ export function FluxPopup({
     onModeChange,
     onLangChange,
     onSourceLangChange,
+    onSwapLanguages,
     onAction,
     onClose,
     onMouseEnter,
@@ -149,6 +151,7 @@ export function FluxPopup({
                         onModeChange={onModeChange}
                         onLangChange={onLangChange}
                         onSourceLangChange={onSourceLangChange}
+                        onSwapLanguages={onSwapLanguages}
                         onAction={onAction}
                         autoSave={autoSave}
                         onAutoSaveChange={onAutoSaveChange}

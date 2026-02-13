@@ -15,6 +15,7 @@ interface FluxControlsProps {
     onModeChange: (mode: Mode) => void;
     onLangChange: (lang: string) => void;
     onSourceLangChange?: (lang: string) => void;
+    onSwapLanguages?: () => void;
     onAction: () => void;
     autoSave: boolean;
     onAutoSaveChange: (enabled: boolean) => void;
@@ -30,6 +31,7 @@ export function FluxControls({
     onModeChange,
     onLangChange,
     onSourceLangChange,
+    onSwapLanguages,
     onAction,
     autoSave,
     onAutoSaveChange,
@@ -117,7 +119,19 @@ export function FluxControls({
                     title="Source Language"
                     style={{ flex: 1, minWidth: 0, paddingRight: '4px' }}
                 />
-                <div style={{ color: '#64748b', fontWeight: 'bold', fontSize: '14px' }}>→</div>
+
+                <FluxIconButton
+                    onClick={() => onSwapLanguages?.()}
+                    title="Swap Languages"
+                    style={{
+                        padding: '4px',
+                        color: '#64748b',
+                        fontSize: '14px',
+                        minWidth: '24px'
+                    }}
+                >
+                    ⇄
+                </FluxIconButton>
 
                 <FluxSelect
                     value={targetLang}

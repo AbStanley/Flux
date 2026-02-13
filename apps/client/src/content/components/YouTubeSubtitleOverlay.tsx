@@ -49,8 +49,12 @@ export const YouTubeSubtitleOverlay = ({
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     // AI Handlers
-    const { result, loading, handleAction, setResult } = useAIHandler();
-    const { result: fullResult, loading: fullLoading, handleAction: handleFullAction, setResult: setFullResult } = useAIHandler();
+    const { result, loading, error, handleAction, setResult } = useAIHandler();
+    const { result: fullResult, loading: fullLoading, error: fullError, handleAction: handleFullAction, setResult: setFullResult } = useAIHandler();
+
+    // ... (rest of code)
+
+
 
     const { selectionMode } = useReaderStore();
 
@@ -69,13 +73,14 @@ export const YouTubeSubtitleOverlay = ({
         onPopupStateChange?.(!!hoveredWord);
     }, [hoveredWord, onPopupStateChange]);
 
-    const handleSaveWord = useCallback(async (text: string) => {
+    const handleSaveWord = useCallback(async (text: string, definition?: string) => {
         try {
             await wordsApi.create({
                 text: text,
                 sourceLanguage: sourceLang,
                 targetLanguage: targetLang,
                 context: cue?.text || window.location.href,
+                definition: definition
             });
             setIsSaved(true);
             setTimeout(() => setIsSaved(false), 2000);
@@ -140,11 +145,7 @@ export const YouTubeSubtitleOverlay = ({
 
     const handleOverlayLeave = () => {
         setIsOverlayHovered(false);
-        if (!isPopupHovered) {
-            setHoveredWord(null);
-            setResult('');
-            onHover(false);
-        }
+        // Reliance on isInteracting effect for cleanup to allow for "bridge" to popup
         lastTranslatedText.current = '';
     };
 
@@ -161,13 +162,49 @@ export const YouTubeSubtitleOverlay = ({
 
 
 
+
     // Re-translate when cue changes while overlay is hovered (navigation)
+    const prevTargetLang = useRef(targetLang);
+    const prevSourceLang = useRef(sourceLang);
+
+    // 1. Re-translate when cue changes while overlay is hovered (navigation)
     useEffect(() => {
-        if (isOverlayHovered && cue?.text && cue.text !== lastTranslatedText.current) {
+        // Only trigger if hovered and text is new/different, AND we don't have a result yet
+        // Check for fullResult to avoid re-translation, but if languages change we should re-translate
+        if (isOverlayHovered && cue?.text && (cue.text !== lastTranslatedText.current && !fullResult)) {
             lastTranslatedText.current = cue.text;
-            handleFullAction(cue.text, 'TRANSLATE', targetLang, sourceLang);
+            handleFullAction(cue.text, 'TRANSLATE', targetLang, sourceLang, 'YouTube Subtitle');
         }
-    }, [cue?.text, isOverlayHovered, handleFullAction, targetLang, sourceLang]);
+    }, [cue?.text, isOverlayHovered, handleFullAction, targetLang, sourceLang, fullResult]);
+
+    // 2. Re-translate when language changes explicitly
+    useEffect(() => {
+        const langChanged = targetLang !== prevTargetLang.current || sourceLang !== prevSourceLang.current;
+        prevTargetLang.current = targetLang;
+        prevSourceLang.current = sourceLang;
+
+        if (langChanged && cue?.text) {
+            // Force re-translation even if we have a result
+            lastTranslatedText.current = cue.text;
+            handleFullAction(cue.text, 'TRANSLATE', targetLang, sourceLang, 'YouTube Subtitle');
+        }
+    }, [targetLang, sourceLang, cue?.text, handleFullAction]);
+
+    // Re-translate hovered word when language changes
+    useEffect(() => {
+        if (hoveredWord) {
+            handleAction(hoveredWord.text, mode, targetLang, sourceLang, cue?.text);
+        }
+    }, [targetLang, sourceLang]);
+
+    const handleSwapLanguages = () => {
+        const newSource = targetLang;
+        // Fallback to English if source was Auto - typical behavior for swapping
+        const newTarget = sourceLang === 'Auto' ? 'English' : sourceLang;
+
+        onTargetLangChange(newTarget);
+        onSourceLangChange(newSource);
+    };
 
     if (!fluxEnabled || !cue) return null;
 
@@ -255,7 +292,10 @@ export const YouTubeSubtitleOverlay = ({
                             onClick={() => {
                                 if (cue) {
                                     const clean = token.trim().replace(/[.,!?;:]/g, '');
-                                    if (clean.length > 0) handleSaveWord(clean);
+                                    if (clean.length > 0) {
+                                        const isMatchingHover = hoveredWord?.text === clean;
+                                        handleSaveWord(clean, isMatchingHover ? result : undefined);
+                                    }
                                 }
                             }}
                         />
@@ -263,10 +303,11 @@ export const YouTubeSubtitleOverlay = ({
                 </div>
 
                 {/* Automation Translation Display */}
-                {(fullResult || fullLoading) && (
+                {/* Automation Translation Display */}
+                {(fullResult || fullLoading || fullError) && (
                     <div style={{
                         fontSize: '20px',
-                        color: 'rgba(148, 163, 184, 1)',
+                        color: fullError ? '#ef4444' : 'rgba(148, 163, 184, 1)',
                         fontWeight: 500,
                         fontStyle: 'normal',
                         padding: '12px 24px',
@@ -280,6 +321,10 @@ export const YouTubeSubtitleOverlay = ({
                         {fullLoading ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
                                 <span className="animate-spin">⟳</span> Translating...
+                            </span>
+                        ) : fullError ? (
+                            <span style={{ animation: 'flux-fade-in 0.2s ease-out' }}>
+                                ⚠️ {fullError}
                             </span>
                         ) : (
                             <span style={{ animation: 'flux-fade-in 0.2s ease-out' }}>
@@ -372,10 +417,12 @@ export const YouTubeSubtitleOverlay = ({
                         <FluxMinimalPopup
                             result={result}
                             loading={loading}
+                            error={error}
                             targetLang={targetLang}
                             onLangChange={onTargetLangChange}
                             sourceLang={sourceLang}
                             onSourceLangChange={onSourceLangChange}
+                            onSwapLanguages={handleSwapLanguages}
                             autoSave={autoSave}
                             onAutoSaveChange={onAutoSaveChange}
                             isSaved={isSaved}

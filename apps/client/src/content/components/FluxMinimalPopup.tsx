@@ -6,10 +6,12 @@ import { LANGUAGES } from '../constants';
 interface FluxMinimalPopupProps {
     result: string;
     loading: boolean;
+    error?: string | null;
     targetLang: string;
     onLangChange: (lang: string) => void;
     sourceLang: string;
     onSourceLangChange: (lang: string) => void;
+    onSwapLanguages?: () => void;
     autoSave: boolean;
     onAutoSaveChange: (enabled: boolean) => void;
     isSaved?: boolean;
@@ -20,10 +22,12 @@ interface FluxMinimalPopupProps {
 export function FluxMinimalPopup({
     result,
     loading,
+    error,
     targetLang,
     onLangChange,
     sourceLang,
     onSourceLangChange,
+    onSwapLanguages,
     autoSave,
     onAutoSaveChange,
     isSaved,
@@ -72,6 +76,8 @@ export function FluxMinimalPopup({
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
                         <span className="animate-spin">⟳</span> Translating...
                     </span>
+                ) : error ? (
+                    <span style={{ color: '#ef4444' }}>⚠️ {error}</span>
                 ) : (
                     result || "No translation found"
                 )}
@@ -95,7 +101,18 @@ export function FluxMinimalPopup({
                             maxWidth: '80px'
                         }}
                     />
-                    <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px' }}>→</span>
+                    <FluxIconButton
+                        onClick={() => onSwapLanguages?.()}
+                        title="Swap Languages"
+                        style={{
+                            padding: '4px',
+                            color: 'rgba(255, 255, 255, 0.3)',
+                            fontSize: '12px',
+                            minWidth: '20px'
+                        }}
+                    >
+                        ⇄
+                    </FluxIconButton>
                     <FluxSelect
                         value={targetLang}
                         onChange={onLangChange}

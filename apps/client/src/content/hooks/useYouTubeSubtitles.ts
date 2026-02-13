@@ -46,7 +46,17 @@ export const useYouTubeSubtitles = () => {
 
         checkPage();
 
+        const handleNavigateStart = () => {
+            setIsActive(false);
+            setCurrentCue(null);
+            setAllCues([]);
+            lastVideoId.current = null;
+        };
+
         window.addEventListener('popstate', checkPage);
+        window.addEventListener('yt-navigate-finish', checkPage as EventListener);
+        window.addEventListener('yt-navigate-start', handleNavigateStart as EventListener);
+
         const originalPushState = window.history.pushState;
         window.history.pushState = function (...args) {
             originalPushState.apply(this, args);
@@ -55,6 +65,8 @@ export const useYouTubeSubtitles = () => {
 
         return () => {
             window.removeEventListener('popstate', checkPage);
+            window.removeEventListener('yt-navigate-finish', checkPage as EventListener);
+            window.removeEventListener('yt-navigate-start', handleNavigateStart as EventListener);
             window.history.pushState = originalPushState;
             YouTubeService.showNativeSubtitles();
         };

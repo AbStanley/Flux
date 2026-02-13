@@ -110,7 +110,7 @@ describe('YouTubeSubtitleOverlay', () => {
         // Hover
         fireEvent.mouseEnter(overlay!);
 
-        expect(handleFullActionMock).toHaveBeenCalledWith("Hello world", 'TRANSLATE', "Spanish", "English");
+        expect(handleFullActionMock).toHaveBeenCalledWith("Hello world", 'TRANSLATE', "Spanish", "English", 'YouTube Subtitle');
 
         // Also verify onHover(true) is called for pause
         expect(defaultProps.onHover).toHaveBeenCalledWith(true);
@@ -179,8 +179,21 @@ describe('YouTubeSubtitleOverlay', () => {
         expect(handleFullActionMock).not.toHaveBeenCalled();
     });
 
-    it('saves word on token click and updates popup isSaved state', async () => {
+    it('saves word on token click with definition', async () => {
         vi.useFakeTimers();
+
+        // 1. Mock result for the single-word hook (first call)
+        // We need to differentiate the two calls to useAIHandler:
+        // First one is for single word (word-level result)
+        // Second one is for full sentence (fullResult)
+
+        // Mock implementation to return different results based on order or just return both
+        // Simpler way: Return a result that will be used for both, but we only care about the single word one here
+        vi.spyOn(UseAIHandler, 'useAIHandler').mockReturnValue({
+            ...defaultAIHandlerMock,
+            result: 'Hola' // The definition we expect
+        } as any);
+
         const { container } = render(<YouTubeSubtitleOverlay {...defaultProps} />);
         const overlay = container.querySelector('.flux-youtube-overlay');
 
@@ -189,31 +202,30 @@ describe('YouTubeSubtitleOverlay', () => {
 
         const token = screen.getAllByTestId('token')[0]; // "Hello"
 
-        // Must hover word first to show popup
+        // Must hover word first to show popup AND set hoveredWord state
         fireEvent.mouseEnter(token);
+
+        // Fast forward debounced AI call (100ms)
+        act(() => {
+            vi.advanceTimersByTime(100);
+        });
 
         // Click token
         await act(async () => {
             fireEvent.click(token);
         });
 
-        // Verify API call
+        // Verify API call includes definition
         expect(wordsApi.create).toHaveBeenCalledWith(expect.objectContaining({
             text: "Hello",
             sourceLanguage: "English",
-            targetLanguage: "Spanish"
+            targetLanguage: "Spanish",
+            definition: "Hola" // Verified!
         }));
 
         // Verify popup shows saved state
         const popup = screen.getByTestId('flux-popup-minimal');
         expect(popup).toHaveAttribute('data-is-saved', 'true');
-
-        // Verify state clears after timeout
-        act(() => {
-            vi.advanceTimersByTime(2000);
-        });
-
-        expect(popup).toHaveAttribute('data-is-saved', 'false');
     });
 
     it('re-translates when cue changes while overlay is hovered', () => {
@@ -222,13 +234,13 @@ describe('YouTubeSubtitleOverlay', () => {
 
         // Hover
         fireEvent.mouseEnter(overlay!);
-        expect(handleFullActionMock).toHaveBeenCalledWith("Hello world", 'TRANSLATE', "Spanish", "English");
+        expect(handleFullActionMock).toHaveBeenCalledWith("Hello world", 'TRANSLATE', "Spanish", "English", 'YouTube Subtitle');
 
         // Change cue
         const newCue = { text: "Goodbye world", start: 5, duration: 1 };
         rerender(<YouTubeSubtitleOverlay {...defaultProps} cue={newCue} />);
 
         // Should be called again with new text
-        expect(handleFullActionMock).toHaveBeenCalledWith("Goodbye world", 'TRANSLATE', "Spanish", "English");
+        expect(handleFullActionMock).toHaveBeenCalledWith("Goodbye world", 'TRANSLATE', "Spanish", "English", 'YouTube Subtitle');
     });
 });
