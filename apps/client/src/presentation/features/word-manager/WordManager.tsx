@@ -141,20 +141,10 @@ export function WordManager() {
                                     onEdit={openEditDialog}
                                     onDelete={(id) => handleDelete(id, 'word')}
                                     emptyMessage="No words saved yet."
+                                    hasMore={wordsState.hasMore}
+                                    isLoading={wordsState.isLoading}
+                                    onLoadMore={() => fetchWords('word', wordsState.page + 1)}
                                 />
-                                {wordsState.hasMore && (
-                                    <div className="flex justify-center py-4">
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={() => fetchWords('word', wordsState.page + 1)}
-                                            disabled={wordsState.isLoading}
-                                            className="w-full md:w-auto"
-                                        >
-                                            {wordsState.isLoading ? 'Loading...' : 'Load More Words'}
-                                        </Button>
-                                    </div>
-                                )}
                             </div>
                         )
                     ) : (
@@ -170,20 +160,10 @@ export function WordManager() {
                                     onEdit={openEditDialog}
                                     onDelete={(id) => handleDelete(id, 'phrase')}
                                     emptyMessage="No phrases saved yet."
+                                    hasMore={phrasesState.hasMore}
+                                    isLoading={phrasesState.isLoading}
+                                    onLoadMore={() => fetchWords('phrase', phrasesState.page + 1)}
                                 />
-                                {phrasesState.hasMore && (
-                                    <div className="flex justify-center py-4">
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={() => fetchWords('phrase', phrasesState.page + 1)}
-                                            disabled={phrasesState.isLoading}
-                                            className="w-full md:w-auto"
-                                        >
-                                            {phrasesState.isLoading ? 'Loading...' : 'Load More Phrases'}
-                                        </Button>
-                                    </div>
-                                )}
                             </div>
                         )
                     )}

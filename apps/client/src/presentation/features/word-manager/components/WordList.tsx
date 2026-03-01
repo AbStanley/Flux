@@ -1,3 +1,4 @@
+import { useRef, useCallback } from 'react';
 import { type Word } from '../../../../infrastructure/api/words';
 import {
     TableBody,
@@ -16,9 +17,12 @@ interface WordListProps {
     onEdit: (word: Word) => void;
     onDelete: (id: string) => void;
     emptyMessage?: string;
+    hasMore?: boolean;
+    isLoading?: boolean;
+    onLoadMore?: () => void;
 }
 
-export function WordList({ words, onEdit, onDelete, emptyMessage = "No items found." }: WordListProps) {
+export function WordList({ words, onEdit, onDelete, emptyMessage = "No items found.", hasMore, isLoading, onLoadMore }: WordListProps) {
     const handlePlayAudio = (e: React.MouseEvent, text: string, language?: string) => {
         e.stopPropagation();
 
@@ -31,6 +35,59 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
 
         window.speechSynthesis.speak(utterance);
     };
+
+    const desktopObserver = useRef<IntersectionObserver | null>(null);
+    const mobileObserver = useRef<IntersectionObserver | null>(null);
+
+    const desktopWordElementRef = useCallback(
+        (node: HTMLDivElement | null) => {
+            if (isLoading) return;
+            if (desktopObserver.current) desktopObserver.current.disconnect();
+
+            if (node) {
+                // Desktop uses Radix ScrollArea, which requires a specific viewport root
+                const scrollContainer = node.closest('[data-radix-scroll-area-viewport]') || null;
+
+                desktopObserver.current = new IntersectionObserver(
+                    (entries) => {
+                        if (entries[0].isIntersecting && hasMore) {
+                            onLoadMore?.();
+                        }
+                    },
+                    {
+                        root: scrollContainer,
+                        rootMargin: '200px'
+                    }
+                );
+                desktopObserver.current.observe(node);
+            }
+        },
+        [isLoading, hasMore, onLoadMore]
+    );
+
+    const mobileWordElementRef = useCallback(
+        (node: HTMLDivElement | null) => {
+            if (isLoading) return;
+            if (mobileObserver.current) mobileObserver.current.disconnect();
+
+            if (node) {
+                // Mobile uses the native browser window window for scrolling, no inner root needed
+                mobileObserver.current = new IntersectionObserver(
+                    (entries) => {
+                        if (entries[0].isIntersecting && hasMore) {
+                            onLoadMore?.();
+                        }
+                    },
+                    {
+                        root: null,
+                        rootMargin: '200px'
+                    }
+                );
+                mobileObserver.current.observe(node);
+            }
+        },
+        [isLoading, hasMore, onLoadMore]
+    );
 
     return (
         <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden transition-all hover:shadow-md">
@@ -138,6 +195,16 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                                 </TableRow>
                             ))
                         )}
+                        {/* Sentinel row right at the end of the table data */}
+                        {hasMore && (
+                            <TableRow>
+                                <TableCell colSpan={6} className="h-12 text-center text-muted-foreground border-none p-0">
+                                    <div ref={desktopWordElementRef} className="w-full flex items-center justify-center p-4">
+                                        {isLoading ? 'Loading more items...' : ''}
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </table>
             </ScrollArea>
@@ -241,6 +308,11 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                             </div>
                         </div>
                     ))
+                )}
+                {hasMore && (
+                    <div ref={mobileWordElementRef} className="flex justify-center py-4 text-sm text-muted-foreground">
+                        {isLoading ? 'Loading more items...' : ''}
+                    </div>
                 )}
             </div>
         </div>
