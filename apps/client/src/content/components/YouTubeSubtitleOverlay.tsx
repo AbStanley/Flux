@@ -195,7 +195,7 @@ export const YouTubeSubtitleOverlay = ({
         if (hoveredWord) {
             handleAction(hoveredWord.text, mode, targetLang, sourceLang, cue?.text);
         }
-    }, [targetLang, sourceLang]);
+    }, [targetLang, sourceLang, hoveredWord, mode, handleAction, cue?.text]);
 
     const handleSwapLanguages = () => {
         const newSource = targetLang;
