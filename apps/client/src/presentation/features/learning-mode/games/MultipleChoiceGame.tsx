@@ -15,10 +15,10 @@ export function MultipleChoiceGame() {
     const { playAudio, stopAudio } = useGameAudio();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const currentItem = items[currentIndex];
+    const [currentItem] = useState(() => items[currentIndex]);
 
     // Generate Options with useMemo (deterministic per item)
-    // We use a specific dependency on currentItem.id to ensure we only reshuffle when the question changes,
+    // We use a specific dependency on currentItem?.id to ensure we only reshuffle when the question changes,
     // not when other transient state changes.
     const [options, setOptions] = useState<string[]>([]);
 

@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, useState } from 'react';
 import { useGameStore } from '../../../store/useGameStore';
 import { useGameAudio } from '../../hooks/useGameAudio';
 import { useWordBuilder } from '../../hooks/useWordBuilder';
@@ -7,7 +7,7 @@ export const useBuildWordLogic = () => {
     const { items, currentIndex, submitAnswer, nextItem, isTimerPaused: globalTimerPaused, timeLeft, config } = useGameStore();
     const timerEnabled = config.timerEnabled;
     const { playAudio, stopAudio } = useGameAudio();
-    const currentItem = items[currentIndex];
+    const [currentItem] = useState(() => items[currentIndex]);
 
     // Local state for target parsing
     // Local state for target parsing

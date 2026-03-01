@@ -12,7 +12,7 @@ export function useSentenceScrambleLogic() {
     const { items, currentIndex, submitAnswer, nextItem, timeLeft, config } = useGameStore();
     const { playAudio, stopAudio } = useGameAudio();
 
-    const currentItem = items[currentIndex];
+    const [currentItem] = useState(() => items[currentIndex]);
 
     // Core state
     const [slots, setSlots] = useState<WordSlotData[]>([]);

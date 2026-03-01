@@ -9,7 +9,7 @@ export const useAudioDictationLogic = () => {
     const { items, currentIndex, submitAnswer, nextItem, isTimerPaused: globalTimerPaused, timeLeft, config } = useGameStore();
     const timerEnabled = config.timerEnabled;
     const { playAudio, stopAudio } = useGameAudio();
-    const currentItem = items[currentIndex];
+    const [currentItem] = useState(() => items[currentIndex]);
 
     // Local State
     const [audioMode, setAudioMode] = useState<AudioMode>('target');

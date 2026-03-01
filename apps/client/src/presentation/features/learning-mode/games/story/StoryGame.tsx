@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export const StoryGame = () => {
     const { items, currentIndex, submitAnswer, nextItem, setTime, history } = useGameStore();
-    const currentItem = items[currentIndex];
+    const [currentItem] = useState(() => items[currentIndex]);
 
     const result = currentItem ? history[currentItem.id] : undefined;
     const isSubmitted = result !== undefined;
