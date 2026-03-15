@@ -1,1 +1,16 @@
-export const ALLOWED_MODELS = ['gemma:4b', 'translategemma:4b'];
+export const ALLOWED_MODELS = [
+  'gemma',
+  'gemma:latest',
+  'gemma:2b',
+  'gemma:4b',
+  'gemma:7b',
+  'gemma3',
+  'gemma3:latest',
+  'gemma3:4b',
+  'gemma3:12b',
+  'translategemma',
+  'translategemma:latest',
+  'translategemma:4b',
+  'translategemma:12b',
+  'translategemma:27b',
+];
