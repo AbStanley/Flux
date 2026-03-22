@@ -1,5 +1,20 @@
 import { Message } from 'ollama';
 
+export interface WritingCorrection {
+  type: string;
+  shortDescription: string;
+  longDescription: string;
+  startIndex?: number;
+  endIndex?: number;
+  mistakeText: string;
+  correctionText: string;
+}
+
+export interface WritingAnalysisResponse {
+  text: string;
+  corrections: WritingCorrection[];
+}
+
 export interface GrammarAnalysisResponse {
   grammar: {
     word: string;

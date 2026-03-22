@@ -25,7 +25,7 @@ export class ApiClient {
         return localStorage.getItem('flux_auth_token');
     }
 
-    private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    private async request<T>(endpoint: string, options: RequestInit = {}, signal?: AbortSignal): Promise<T> {
         const storedUrl = await getStoredApiUrl();
         const activeBaseUrl = storedUrl || this.baseUrl;
         const url = endpoint.startsWith('http') ? endpoint : `${activeBaseUrl}${endpoint}`;
@@ -86,6 +86,7 @@ export class ApiClient {
         const config: RequestInit = {
             ...options,
             headers,
+            signal,
         };
 
         const response = await fetch(url, config);
@@ -116,11 +117,11 @@ export class ApiClient {
         return this.request<T>(`${endpoint}${queryStr}`, { method: 'GET' });
     }
 
-    post<T>(endpoint: string, data: unknown): Promise<T> {
+    post<T>(endpoint: string, data: unknown, signal?: AbortSignal): Promise<T> {
         return this.request<T>(endpoint, {
             method: 'POST',
             body: JSON.stringify(data),
-        });
+        }, signal);
     }
 
     patch<T>(endpoint: string, data: unknown): Promise<T> {

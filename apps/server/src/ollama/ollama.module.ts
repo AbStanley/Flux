@@ -5,6 +5,7 @@ import { OllamaClientService } from './services/ollama-client.service';
 import { OllamaTranslationService } from './services/ollama-translation.service';
 import { OllamaGrammarService } from './services/ollama-grammar.service';
 import { OllamaGenerationService } from './services/ollama-generation.service';
+import { OllamaWritingService } from './services/ollama-writing.service';
 
 @Module({
   controllers: [OllamaController],
@@ -14,6 +15,7 @@ import { OllamaGenerationService } from './services/ollama-generation.service';
     OllamaTranslationService,
     OllamaGrammarService,
     OllamaGenerationService,
+    OllamaWritingService,
   ],
   exports: [OllamaService],
 })

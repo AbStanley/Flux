@@ -114,6 +114,7 @@ import { useViewStore } from './features/navigation/store/useViewStore';
 import { AppView } from './features/navigation/types';
 import { WordManager } from './features/word-manager';
 import { LearningModePage } from './features/learning-mode/LearningModePage';
+import { WritingModePage } from './features/interactive-writing/WritingModePage';
 
 function AppContent() {
   const { isReading, hasText, exitReaderMode } = useFocusMode();
@@ -134,6 +135,15 @@ function AppContent() {
       <>
         <NavBar />
         <LearningModePage />
+      </>
+    );
+  }
+
+  if (currentView === AppView.InteractiveWriting) {
+    return (
+      <>
+        <NavBar />
+        <WritingModePage />
       </>
     );
   }

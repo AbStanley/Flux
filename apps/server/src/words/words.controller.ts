@@ -21,7 +21,7 @@ interface AuthenticatedRequest {
 
 @Controller('api/words')
 export class WordsController {
-  constructor(private readonly wordsService: WordsService) { }
+  constructor(private readonly wordsService: WordsService) {}
 
   @Post()
   create(
@@ -85,4 +85,3 @@ export class WordsController {
     return this.wordsService.remove(id) as unknown;
   }
 }
-

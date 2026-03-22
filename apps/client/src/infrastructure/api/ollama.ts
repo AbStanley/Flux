@@ -1,4 +1,5 @@
 import { defaultClient } from './api-client';
+import type { WritingCorrection } from '@/types/writing';
 
 export interface GenerateExamplesRequest {
     word: string;
@@ -24,5 +25,9 @@ export const ollamaApi = {
 
     listTags: async () => {
         return defaultClient.get<{ models: { name: string }[] }>(`${ENDPOINT}/tags`);
+    },
+
+    checkWriting: async (params: { text: string; sourceLanguage: string; model?: string; mode?: 'minimal' | 'full' }, signal?: AbortSignal) => {
+        return defaultClient.post<{ text: string; corrections: WritingCorrection[] }>(`${ENDPOINT}/check-writing`, params, signal);
     }
 };

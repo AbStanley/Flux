@@ -3,21 +3,21 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 interface JwtPayload {
-    sub: string;
-    email: string;
+  sub: string;
+  email: string;
 }
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor() {
-        super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: false,
-            secretOrKey: process.env.JWT_SECRET || 'flux-dev-secret-change-me',
-        });
-    }
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET || 'flux-dev-secret-change-me',
+    });
+  }
 
-    validate(payload: JwtPayload) {
-        return { id: payload.sub, email: payload.email };
-    }
+  validate(payload: JwtPayload) {
+    return { id: payload.sub, email: payload.email };
+  }
 }

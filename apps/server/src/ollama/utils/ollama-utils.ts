@@ -85,7 +85,9 @@ export function cleanAndParseJson<T>(text: string): T {
 
     const snippet =
       cleaned.length > 500 ? cleaned.substring(0, 500) + '...' : cleaned;
-    console.error(`[OllamaUtils] JSON Parse Failed. Cleaned output:\n${snippet}`);
+    console.error(
+      `[OllamaUtils] JSON Parse Failed. Cleaned output:\n${snippet}`,
+    );
     throw new Error(`Failed to parse JSON from response: "${snippet}"`);
   }
 }

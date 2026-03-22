@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import { OllamaService } from './services/ollama.service';
 import {
   GrammarAnalysisResponse,
+  WritingAnalysisResponse,
   RichTranslation,
   Message,
 } from './interfaces/ollama.interfaces';
@@ -161,6 +162,19 @@ export class OllamaController {
       model?: string;
     },
   ) {
-    return await this.ollamaService.generateGameContent(body);
+    return this.ollamaService.generateGameContent(body);
+  }
+
+  @Post('check-writing')
+  async checkWriting(
+    @Body()
+    body: {
+      text: string;
+      sourceLanguage: string;
+      model?: string;
+      mode?: 'minimal' | 'full';
+    },
+  ): Promise<WritingAnalysisResponse> {
+    return this.ollamaService.analyzeWriting(body);
   }
 }

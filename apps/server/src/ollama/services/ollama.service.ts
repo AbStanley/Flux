@@ -5,9 +5,11 @@ import { OllamaGrammarService } from './ollama-grammar.service';
 import { OllamaGenerationService } from './ollama-generation.service';
 import {
   GrammarAnalysisResponse,
+  WritingAnalysisResponse,
   RichTranslation,
   Message,
 } from '../interfaces/ollama.interfaces';
+import { OllamaWritingService } from './ollama-writing.service';
 import { ContentType } from '../prompts';
 
 @Injectable()
@@ -19,6 +21,7 @@ export class OllamaService {
     private readonly translation: OllamaTranslationService,
     private readonly grammar: OllamaGrammarService,
     private readonly generation: OllamaGenerationService,
+    private readonly writing: OllamaWritingService,
   ) {}
 
   async chat(model: string, messages: Message[], stream: boolean = false) {
@@ -104,5 +107,13 @@ export class OllamaService {
     model?: string;
   }): Promise<GrammarAnalysisResponse> {
     return this.grammar.analyzeGrammar(params);
+  }
+
+  async analyzeWriting(params: {
+    text: string;
+    sourceLanguage: string;
+    model?: string;
+  }): Promise<WritingAnalysisResponse> {
+    return this.writing.analyzeWriting(params);
   }
 }
