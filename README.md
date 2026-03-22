@@ -44,6 +44,13 @@ A fully integrated text-to-speech system designed for learners:
 - **Karaoke Highlighting**: Words are highlighted in real-time as they are spoken, aiding in pronunciation and tracking.
 - **Smart Resume**: Playback remembers your position. If paused or stopped, it resumes intelligently from the start of the last spoken sentence or word.
 
+### ✍️ Interactive Writing
+A premium, distraction-free environment for refining your thoughts:
+- **Real-Time AI Polish**: Automatically identifies and suggests improvements for **Grammar**, **Spelling**, **Punctuation**, and **Fluency**.
+- **Interactive Corrections**: Click on highlighted text to see detailed explanations and instantly "Correct" or "Discard" suggestions with one click.
+- **Privacy-First Analysis**: Your writing is processed by your local LLM (via Ollama), ensuring sensitive text never leaves your hardware.
+- **Distraction-Free Mode**: Toggle between "Full" correction mode and a "Minimal" mode for a clean, paper-like writing experience.
+
 ### 🛡️ Privacy & Local AI
 Flux is built to run entirely offline (after setup) using **Ollama**:
 - **Zero Data Leakage**: All translations and text generation happen on your local machine via the Backend Proxy.
