@@ -1,4 +1,5 @@
-import { type ComponentProps } from "react"
+import { forwardRef } from "react"
+import type { ElementRef, ComponentPropsWithoutRef } from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -8,14 +9,17 @@ const labelVariants = cva(
   "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 )
 
-function Label({ className, ref, ...props }: ComponentProps<typeof LabelPrimitive.Root> & VariantProps<typeof labelVariants>) {
-  return (
-    <LabelPrimitive.Root
-      ref={ref}
-      className={cn(labelVariants(), className)}
-      {...props}
-    />
-  )
-}
+const Label = forwardRef<
+  ElementRef<typeof LabelPrimitive.Root>,
+  ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
+    VariantProps<typeof labelVariants>
+>(({ className, ...props }, ref) => (
+  <LabelPrimitive.Root
+    ref={ref}
+    className={cn(labelVariants(), className)}
+    {...props}
+  />
+))
+Label.displayName = LabelPrimitive.Root.displayName
 
 export { Label }

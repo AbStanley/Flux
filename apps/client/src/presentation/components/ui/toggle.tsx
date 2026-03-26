@@ -1,4 +1,6 @@
-import { forwardRef, type ElementRef, type ComponentPropsWithoutRef } from "react"
+/* eslint-disable react-refresh/only-export-components */
+import { forwardRef } from "react"
+import type { ElementRef, ComponentPropsWithoutRef } from "react"
 import * as TogglePrimitive from "@radix-ui/react-toggle"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -29,7 +31,7 @@ const toggleVariants = cva(
 const Toggle = forwardRef<
   ElementRef<typeof TogglePrimitive.Root>,
   ComponentPropsWithoutRef<typeof TogglePrimitive.Root> &
-  VariantProps<typeof toggleVariants>
+    VariantProps<typeof toggleVariants>
 >(({ className, variant, size, ...props }, ref) => (
   <TogglePrimitive.Root
     ref={ref}
@@ -40,5 +42,4 @@ const Toggle = forwardRef<
 
 Toggle.displayName = TogglePrimitive.Root.displayName
 
-// eslint-disable-next-line react-refresh/only-export-components
 export { Toggle, toggleVariants }
