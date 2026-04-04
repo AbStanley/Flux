@@ -5,8 +5,9 @@ import { backendAiApi } from '@/infrastructure/api/backend-ai-api';
 
 import { cn } from '@/lib/utils';
 import { AnimatePresence } from 'framer-motion';
-import { Sparkles, RotateCcw, Cpu } from 'lucide-react';
+import { Sparkles, RotateCcw, Cpu, Languages, Trash2 } from 'lucide-react';
 import { ModelSelect } from '@/presentation/components/ModelSelect';
+import { LANGUAGES } from '@/content/constants';
 import { CorrectionTooltip } from './CorrectionTooltip';
 import { EditorFooter } from './EditorFooter';
 
@@ -186,18 +187,49 @@ export const InteractiveEditor = () => {
           aria-hidden
         />
         <div className="relative p-3 sm:p-4 md:p-5">
-          {/* Toolbar: model (always visible) + actions */}
-          <div className="relative z-40 mb-5 flex w-full flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:max-w-md">
-              <ModelSelect
-                label="Model for Polish"
-                leadingIcon={<Cpu className="h-3.5 w-3.5" aria-hidden />}
-                value={store.evaluationModel}
-                onChange={store.setEvaluationModel}
-                models={modelOptions}
-                placeholder="Server default (first available tag)"
-                className="w-full"
-              />
+          {/* Toolbar: responsive — narrow = stacked sections; lg = one row */}
+          <div className="relative z-40 mb-5 flex w-full min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
+            <div className="flex min-w-0 w-full flex-1 flex-col gap-3">
+              {/* Model full width; language + clear share a row (grow / fixed) */}
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-3">
+                <ModelSelect
+                  label="Model for Polish"
+                  leadingIcon={<Cpu className="h-3.5 w-3.5" aria-hidden />}
+                  value={store.evaluationModel}
+                  onChange={store.setEvaluationModel}
+                  models={modelOptions}
+                  placeholder="Server default (first available tag)"
+                  className="min-w-0 w-full sm:min-w-0 sm:max-w-md sm:flex-1 sm:basis-0"
+                />
+                <div className="flex min-w-0 w-full shrink-0 gap-2 sm:w-auto sm:max-w-full">
+                  <div className="flex min-h-[2.75rem] min-w-0 flex-1 items-center gap-2 rounded-xl border border-border/70 bg-background/55 px-3 py-2 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-background/25 sm:min-w-[12rem] sm:flex-initial sm:py-0">
+                    <Languages className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                    <label htmlFor="flux-writing-lang" className="sr-only">
+                      Writing language
+                    </label>
+                    <select
+                      id="flux-writing-lang"
+                      value={store.sourceLanguage}
+                      onChange={(e) => store.setSourceLanguage(e.target.value)}
+                      className="min-w-0 flex-1 cursor-pointer truncate bg-transparent text-sm font-medium text-foreground focus:outline-none"
+                    >
+                      {LANGUAGES.map((lang) => (
+                        <option key={lang} value={lang}>
+                          {lang}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => store.clearAll()}
+                    className="flex h-[2.75rem] w-[2.75rem] shrink-0 items-center justify-center rounded-xl border border-border/70 bg-background/55 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-destructive/10 hover:text-destructive dark:border-white/10 dark:bg-background/25"
+                    title="Clear all text"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
               {modelsLoadFailed && (
                 <p className="text-xs text-amber-700/90 dark:text-amber-400/95">
                   Could not load model list from the API. You can still use Server default, or fix the API
@@ -205,11 +237,18 @@ export const InteractiveEditor = () => {
                 </p>
               )}
             </div>
-            <div className="flex shrink-0 justify-end gap-2">
+
+            {/* Actions: own row on small screens (full-width Polish); inline on lg */}
+            <div
+              className={cn(
+                'flex w-full min-w-0 gap-2 border-t border-border/40 pt-3',
+                'lg:w-auto lg:shrink-0 lg:border-t-0 lg:pt-0',
+              )}
+            >
               <button
                 type="button"
                 onClick={() => store.undo()}
-                className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                className="flex h-[2.75rem] w-[2.75rem] shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground lg:rounded-full lg:bg-transparent lg:hover:bg-muted/60"
                 title="Undo"
               >
                 <RotateCcw className="h-4 w-4" />
@@ -219,14 +258,15 @@ export const InteractiveEditor = () => {
                 onClick={() => store.checkText(store.text, store.sourceLanguage)}
                 disabled={store.isAnalyzing || !store.text.trim()}
                 className={cn(
-                  'flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold shadow-md transition-all',
+                  'flex min-h-[2.75rem] min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold shadow-md transition-all',
+                  'sm:px-5 lg:flex-none lg:rounded-full lg:px-5',
                   'bg-primary text-primary-foreground hover:bg-primary/90',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   'disabled:opacity-50 disabled:shadow-none',
                 )}
               >
-                <Sparkles className={cn('h-3.5 w-3.5', store.isAnalyzing && 'animate-spin')} />
-                {store.isAnalyzing ? 'Analyzing...' : 'Polish'}
+                <Sparkles className={cn('h-3.5 w-3.5 shrink-0', store.isAnalyzing && 'animate-spin')} />
+                <span className="truncate">{store.isAnalyzing ? 'Analyzing...' : 'Polish'}</span>
               </button>
             </div>
           </div>
