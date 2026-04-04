@@ -33,7 +33,7 @@ export function ReaderInput({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className={cn("absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-foreground bg-background/50 hover:bg-background/80 backdrop-blur-sm")}
+                    className={cn("absolute top-2 right-5 h-8 w-8 text-muted-foreground hover:text-foreground bg-background/50 hover:bg-background/80 backdrop-blur-sm")}
                     onClick={onClear}
                     title="Clear text"
                 >

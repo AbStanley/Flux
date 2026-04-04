@@ -8,56 +8,61 @@ export const EditorFooter = () => {
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t border-zinc-100 dark:border-zinc-800/60 w-full px-1 text-sm select-none">
-      
-      {/* Correction Types Legend */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold">1</div>
-          <span className="text-zinc-600 dark:text-zinc-400 text-xs font-medium">Grammar</span>
+    <div className="mt-5 flex w-full flex-col items-center justify-between gap-4 border-t border-border/50 pt-5 text-sm select-none dark:border-white/[0.06]">
+      <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start md:gap-4">
+        <div className="flex items-center gap-2 rounded-full border border-border/40 bg-background/40 px-2 py-1 backdrop-blur-sm dark:border-white/[0.06] dark:bg-background/20">
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white shadow-sm">
+            1
+          </div>
+          <span className="text-xs font-medium text-muted-foreground">Grammar</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-pink-500 text-white flex items-center justify-center text-[10px] font-bold">2</div>
-          <span className="text-zinc-600 dark:text-zinc-400 text-xs font-medium">Spelling</span>
+        <div className="flex items-center gap-2 rounded-full border border-border/40 bg-background/40 px-2 py-1 backdrop-blur-sm dark:border-white/[0.06] dark:bg-background/20">
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white shadow-sm">
+            2
+          </div>
+          <span className="text-xs font-medium text-muted-foreground">Spelling</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-purple-500 text-white flex items-center justify-center text-[10px] font-bold">3</div>
-          <span className="text-zinc-600 dark:text-zinc-400 text-xs font-medium">Punctuation</span>
+        <div className="flex items-center gap-2 rounded-full border border-border/40 bg-background/40 px-2 py-1 backdrop-blur-sm dark:border-white/[0.06] dark:bg-background/20">
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-[10px] font-bold text-white shadow-sm">
+            3
+          </div>
+          <span className="text-xs font-medium text-muted-foreground">Punctuation</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px] font-bold">4</div>
-          <span className="text-zinc-600 dark:text-zinc-400 text-xs font-medium">Fluency</span>
+        <div className="flex items-center gap-2 rounded-full border border-border/40 bg-background/40 px-2 py-1 backdrop-blur-sm dark:border-white/[0.06] dark:bg-background/20">
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white shadow-sm">
+            4
+          </div>
+          <span className="text-xs font-medium text-muted-foreground">Fluency</span>
         </div>
       </div>
 
-      {/* Right Side: Toggles & Stats */}
-      <div className="flex items-center gap-6">
-        
-        {/* Correction Mode Toggle */}
+      <div className="flex flex-wrap items-center justify-center gap-6 md:justify-end">
         <div className="flex items-center gap-3">
-           <button 
-             onClick={() => setHighlightMode(highlightMode === 'full' ? 'minimal' : 'full')}
-             className={cn(
-               "w-10 h-5 rounded-full relative transition-colors",
-               highlightMode === 'full' ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700"
-             )}
-           >
-             <div className={cn(
-               "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all",
-               highlightMode === 'full' ? "left-[22px]" : "left-0.5"
-             )} />
-           </button>
-           <span className="text-zinc-600 dark:text-zinc-400 text-xs font-bold">
-             {isAnalyzing ? "Analyzing..." : "Correction mode"}
-           </span>
+          <button
+            type="button"
+            onClick={() => setHighlightMode(highlightMode === 'full' ? 'minimal' : 'full')}
+            className={cn(
+              'relative h-5 w-10 rounded-full transition-colors',
+              highlightMode === 'full' ? 'bg-primary' : 'bg-muted dark:bg-zinc-700',
+            )}
+            title="Toggle correction highlights"
+          >
+            <div
+              className={cn(
+                'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all',
+                highlightMode === 'full' ? 'left-[22px]' : 'left-0.5',
+              )}
+            />
+          </button>
+          <span className="text-xs font-bold text-muted-foreground">
+            {isAnalyzing ? 'Analyzing...' : 'Highlights'}
+          </span>
         </div>
 
-        {/* Reading Time stats */}
-        <div className="text-zinc-400 dark:text-zinc-500 text-xs font-medium">
-          {readingTime} min read, {wordCount} words
+        <div className="text-xs font-medium tabular-nums text-muted-foreground">
+          {readingTime} min read · {wordCount} words
         </div>
       </div>
-
     </div>
   );
 };

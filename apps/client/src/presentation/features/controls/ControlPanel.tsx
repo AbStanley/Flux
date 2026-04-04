@@ -68,7 +68,7 @@ export function ControlPanel() {
     };
 
     return (
-        <Card className={cn("w-full mb-2 glass text-card-foreground")}>
+        <Card className={cn("w-full mt-5 mb-2 glass text-card-foreground")}>
             <CardHeader className={cn("space-y-2 p-4")}>
                 <div className={cn("flex flex-col sm:flex-row gap-2 pb-2 border-b border-border/40 items-center sm:items-end justify-center")}>
                     <LanguageSelect
