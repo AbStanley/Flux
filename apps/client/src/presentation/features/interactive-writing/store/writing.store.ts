@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { WritingCorrection } from '@/types/writing';
+import { backendAiApi } from '@/infrastructure/api/backend-ai-api';
 
 interface WritingState {
   text: string;
@@ -8,6 +9,7 @@ interface WritingState {
   isAnalyzing: boolean;
   error: string | null;
   sourceLanguage: string;
+  evaluationModel: string;
   history: string[];
   lastAppliedInfo: { offset: number; length: number; timestamp: number } | null;
   ignoredOriginals: string[];
@@ -18,6 +20,7 @@ interface WritingState {
   // Actions
   setText: (text: string) => void;
   setSourceLanguage: (lang: string) => void;
+  setEvaluationModel: (model: string) => void;
   applyAnalysisResult: (text: string, corrections: WritingCorrection[]) => void;
   setIsAnalyzing: (isAnalyzing: boolean) => void;
   setError: (error: string | null) => void;
@@ -40,6 +43,7 @@ export const useWritingStore = create<WritingState>()(
       isAnalyzing: false,
       error: null,
       sourceLanguage: 'English',
+      evaluationModel: '',
       history: [],
       lastAppliedInfo: null,
       ignoredOriginals: [],
@@ -57,6 +61,8 @@ export const useWritingStore = create<WritingState>()(
       }),
 
       setSourceLanguage: (sourceLanguage) => set({ sourceLanguage }),
+
+      setEvaluationModel: (evaluationModel) => set({ evaluationModel }),
 
       applyAnalysisResult: (newText, rawCorrections) => set((state) => {
         const textToUse = newText || state.text;
@@ -217,7 +223,8 @@ export const useWritingStore = create<WritingState>()(
       }),
 
       checkText: async (text, language) => {
-        const { setIsAnalyzing, applyAnalysisResult, setError, highlightMode } = useWritingStore.getState();
+        const { setIsAnalyzing, applyAnalysisResult, setError, highlightMode, evaluationModel } =
+          useWritingStore.getState();
         if (!text.trim()) {
           applyAnalysisResult('', []);
           return;
@@ -231,11 +238,11 @@ export const useWritingStore = create<WritingState>()(
 
         setIsAnalyzing(true);
         try {
-          const { ollamaApi } = await import('@/infrastructure/api/ollama');
-          const response = await ollamaApi.checkWriting({
+          const response = await backendAiApi.checkWriting({
             text,
             sourceLanguage: language,
             mode: highlightMode,
+            ...(evaluationModel.trim() ? { model: evaluationModel.trim() } : {}),
           }, myController.signal);
 
           // Use AI's text or fallback to original text if missing
@@ -251,16 +258,21 @@ export const useWritingStore = create<WritingState>()(
           const errorMessage = err instanceof Error ? err.message : 'Failed to analyze writing';
           setError(errorMessage);
         } finally {
-          setIsAnalyzing(false);
+          // Only the active request may clear analyzing state (avoids stale runs after abort)
           if (activeAbortController === myController) {
             activeAbortController = null;
+            setIsAnalyzing(false);
           }
         }
       },
     }),
     {
       name: 'writing-storage',
-      partialize: (state) => ({ text: state.text, sourceLanguage: state.sourceLanguage }),
+      partialize: (state) => ({
+        text: state.text,
+        sourceLanguage: state.sourceLanguage,
+        evaluationModel: state.evaluationModel,
+      }),
     }
   )
 );

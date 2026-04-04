@@ -1,10 +1,11 @@
 import { useRef, useState, useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useWritingStore } from '../store/writing.store';
+import { backendAiApi } from '@/infrastructure/api/backend-ai-api';
 
 import { cn } from '@/lib/utils';
 import { AnimatePresence } from 'framer-motion';
-import { Sparkles, RotateCcw } from 'lucide-react';
+import { Sparkles, RotateCcw, Cpu } from 'lucide-react';
 import { CorrectionTooltip } from './CorrectionTooltip';
 import { EditorFooter } from './EditorFooter';
 
@@ -17,11 +18,38 @@ const sharedStyles = cn(
 
 export const InteractiveEditor = () => {
   const store = useWritingStore();
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [modelsLoadFailed, setModelsLoadFailed] = useState(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState<DOMRect | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    backendAiApi
+      .listModels()
+      .then((res) => {
+        if (cancelled) return;
+        setModelsLoadFailed(false);
+        setAvailableModels(res.models?.map((m) => m.name) ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvailableModels([]);
+          setModelsLoadFailed(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const modelOptions =
+    store.evaluationModel && !availableModels.includes(store.evaluationModel)
+      ? [store.evaluationModel, ...availableModels]
+      : availableModels;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -143,22 +171,61 @@ export const InteractiveEditor = () => {
 
   return (
     <div className="relative w-full max-w-7xl mx-auto rounded-3xl bg-white dark:bg-[#1C1C1E] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all p-2 md:p-4 border border-zinc-100 dark:border-zinc-800">
-      {/* Top Toolbar Action */}
-      <div className="flex justify-end mb-4 relative z-40">
-        <button
-          onClick={() => store.undo()}
-          className="p-2.5 mr-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-full transition-all"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => store.checkText(store.text, store.sourceLanguage)}
-          disabled={store.isAnalyzing || !store.text.trim()}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-xs shadow-sm bg-emerald-500 hover:bg-emerald-600 text-white transition-all disabled:opacity-50"
-        >
-          <Sparkles className={cn("w-3.5 h-3.5", store.isAnalyzing && "animate-spin")} />
-          {store.isAnalyzing ? "Analyzing..." : "Polish"}
-        </button>
+      {/* Toolbar: model (always visible) + actions */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4 relative z-40 w-full">
+        <div className="flex flex-col gap-1.5 min-w-0 flex-1 sm:max-w-md">
+          <label
+            htmlFor="flux-writing-model"
+            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+          >
+            <Cpu className="w-3.5 h-3.5 shrink-0" aria-hidden />
+            Ollama model for Polish
+          </label>
+          <select
+            id="flux-writing-model"
+            value={store.evaluationModel}
+            onChange={(e) => store.setEvaluationModel(e.target.value)}
+            title="Which model runs when you click Polish"
+            className={cn(
+              'w-full rounded-xl border px-3 py-2.5 text-sm font-medium shadow-sm',
+              'border-zinc-200 bg-zinc-50 text-zinc-900',
+              'dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100',
+              'focus:outline-none focus:ring-2 focus:ring-emerald-500/40'
+            )}
+          >
+            <option value="">Server default (first available tag)</option>
+            {modelOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+          {modelsLoadFailed && (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Could not load model list from the API. You can still use Server default, or fix the API
+              connection and refresh.
+            </p>
+          )}
+        </div>
+        <div className="flex shrink-0 justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => store.undo()}
+            className="p-2.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-full transition-all"
+            title="Undo"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => store.checkText(store.text, store.sourceLanguage)}
+            disabled={store.isAnalyzing || !store.text.trim()}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-xs shadow-sm bg-emerald-500 hover:bg-emerald-600 text-white transition-all disabled:opacity-50"
+          >
+            <Sparkles className={cn('w-3.5 h-3.5', store.isAnalyzing && 'animate-spin')} />
+            {store.isAnalyzing ? 'Analyzing...' : 'Polish'}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 relative">
