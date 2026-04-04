@@ -14,7 +14,7 @@ describe('GenerateContentDto', () => {
     dto.isLearningMode = true;
     dto.proficiencyLevel = ProficiencyLevel.B1;
     dto.contentType = ContentType.Story;
-    dto.model = 'gemma:4b'; // Valid
+    dto.model = 'gemma4:e4b';
 
     const errors = await validate(dto);
     expect(errors.length).toBe(0);
@@ -40,7 +40,7 @@ describe('GenerateContentDto', () => {
     dto.isLearningMode = true;
     dto.proficiencyLevel = ProficiencyLevel.B1;
     dto.contentType = ContentType.Story;
-    dto.model = 'hack-model'; // Invalid
+    dto.model = 'not a valid tag'; // spaces / injection-shaped input
 
     const errors = await validate(dto);
     expect(errors.length).toBeGreaterThan(0);

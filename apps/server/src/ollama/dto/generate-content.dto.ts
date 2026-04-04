@@ -1,12 +1,15 @@
 import {
   IsBoolean,
   IsEnum,
-  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
+  ValidateIf,
 } from 'class-validator';
-import { ALLOWED_MODELS } from '../constants/ollama.constants';
+
+/** Ollama model tags: letters, digits, and common separators (e.g. gemma4:e4b, llama3.2:3b). */
+const OLLAMA_MODEL_TAG = /^[a-zA-Z0-9._+:-]+$/;
 
 export enum ContentType {
   Story = 'Story',
@@ -41,8 +44,12 @@ export class GenerateContentDto {
   @IsEnum(ContentType)
   contentType: ContentType = ContentType.Story;
 
-  @IsString()
   @IsOptional()
-  @IsIn(ALLOWED_MODELS)
+  @ValidateIf((_, v) => v != null && v !== '')
+  @IsString()
+  @Matches(OLLAMA_MODEL_TAG, {
+    message:
+      'model must be a valid Ollama tag (letters, digits, . _ + : - only)',
+  })
   model?: string;
 }
