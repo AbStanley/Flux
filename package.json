@@ -21,6 +21,10 @@
     "docker:prod": "docker compose -f docker-compose.yml -p reader-helper-prod up --build",
     "docker:prod:no-cache": "docker compose -f docker-compose.yml -p reader-helper-prod build --no-cache && docker compose -f docker-compose.yml -p reader-helper-prod up -d"
   },
+  "overrides": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2",
     "husky": "^9.1.7",
