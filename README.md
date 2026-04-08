@@ -1,4 +1,4 @@
-# Flux: A Privacy-First, Inteligent Learning Assistant
+# Flux: A Privacy-First, Intelligent Learning Assistant
 
 
 ![Status](https://img.shields.io/badge/Status-Operational-success?style=for-the-badge)
@@ -6,7 +6,6 @@
 ![Ollama](https://img.shields.io/badge/Ollama-Enabled-2496ed?style=for-the-badge&logo=ollama)
 
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
 ![NestJS](https://img.shields.io/badge/NestJS-E02347?style=for-the-badge&logo=nestjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
@@ -14,47 +13,87 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-466BB0?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-000000?style=for-the-badge&logo=framer&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
-
-![Architecture](https://img.shields.io/badge/Architecture-Clean-orange?style=for-the-badge)
-
-
-
-
-
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![NPM](https://img.shields.io/badge/NPM-CB3837?style=for-the-badge&logo=npm&logoColor=white)
 
+![Architecture](https://img.shields.io/badge/Architecture-Clean-orange?style=for-the-badge)
 
-**Flux** is a premium, privacy-focused reading / learning assistant application designed to bridge the gap between language learning and fluent reading. It leverages **Self-Hosted AI** to provide instant key-value translations, context-aware insights, and a natural audio reading experience, all running locally on your machine.
+**Flux** is a premium, privacy-focused reading and learning assistant designed to bridge the gap between language learning and fluent reading. It leverages **Self-Hosted AI** (Ollama) to provide context-aware translations, grammar analysis, gamified learning, and a natural audio reading experience -- all running locally on your machine.
 
 > [!NOTE]
-> This project is a **Monorepo** containing both the React Frontend and the NestJS Backend.
+> This project is a **Monorepo** containing both the React 19 Frontend (Vite) and the NestJS Backend, managed with NPM Workspaces.
 
 ## ✨ Core Features
 
 ### 🧠 Smart Reader
-The core reading engine allows for deep interaction with text:
-- **Interactive Tokenization**: Text is processed into interactive tokens, allowing users to select individual words or phrases.
+The core reading engine provides deep interaction with text across two modes:
+- **Interactive Tokenization**: Text is processed into interactive tokens, allowing selection of individual words, phrases, or sentences.
 - **Context-Aware Dictionary**: Hover over any word to see a translation that considers the surrounding sentence context, not just the isolated definition.
+- **Rich Translation Panel**: Multi-tab translation details including word-by-word breakdowns, examples, and alternatives.
+- **Grammar Mode**: Dedicated linguistic analysis mode with color-coded parts of speech, inflection details, conjugation tables, and alternatives.
 - **Streaming Generation**: Generate custom reading material with AI, featuring real-time streaming feedback (NDJSON).
+- **Sentence Navigation**: Jump between sentences with grouped translation context.
+- **Content Import**: Import PDF and EPUB files directly into the reader via drag-and-drop.
 
 ### 🔊 Audio Experience
 A fully integrated text-to-speech system designed for learners:
 - **Neural TTS**: Utilizes the browser's best available voices for natural speech.
 - **Karaoke Highlighting**: Words are highlighted in real-time as they are spoken, aiding in pronunciation and tracking.
 - **Smart Resume**: Playback remembers your position. If paused or stopped, it resumes intelligently from the start of the last spoken sentence or word.
+- **Audio-Page Sync**: Automatic page synchronization during playback.
+
+### 🎮 Learning Mode
+A gamified training arena with five distinct game types:
+- **Multiple Choice**: 4-option vocabulary quizzes with context hints and optional timer.
+- **Word Builder**: Spell words letter-by-letter from a shuffled letter pool.
+- **Audio Dictation**: Listen and spell what you hear, with mode toggling between dictation and translation.
+- **Sentence Scramble**: Reconstruct target-language sentences by ordering word tiles.
+- **Story Mode**: Read AI-generated narrative contexts and translate target words inline.
+
+Three data sources for learning content:
+- **Saved Words (DB)**: Pull from your saved vocabulary, filtered by language pair.
+- **Anki Integration**: Connect to your local Anki via AnkiConnect -- browse decks, select models, and map fields.
+- **AI Generation**: Generate fresh content on-the-fly by topic and proficiency level (A1-C2).
+
+Includes a full progression system with XP, levels, streaks, health, and statistics tracking.
+
+### 📚 Word Manager
+A comprehensive vocabulary management system:
+- **Dual Tabs**: Separate views for Words and Phrases.
+- **Rich Metadata**: Definition, explanation, context, pronunciation, source language/title, and image URL per entry.
+- **AI-Generated Examples**: One-click example sentence generation via Ollama.
+- **Deck Organization**: Group vocabulary into custom decks.
+- **Export**: CSV export and Anki deck export (.apkg format).
+- **Saved Words Panel**: Quick-access panel within the reader for recently saved vocabulary.
 
 ### ✍️ Interactive Writing
 A premium, distraction-free environment for refining your thoughts:
 - **Real-Time AI Polish**: Automatically identifies and suggests improvements for **Grammar**, **Spelling**, **Punctuation**, and **Fluency**.
 - **Interactive Corrections**: Click on highlighted text to see detailed explanations and instantly "Correct" or "Discard" suggestions with one click.
+- **Smart Offset Tracking**: Corrections stay aligned as you continue editing, with intelligent position reconciliation.
+- **History Management**: Undo/redo support with a 20-item history buffer.
 - **Privacy-First Analysis**: Your writing is processed by your local LLM (via Ollama), ensuring sensitive text never leaves your hardware.
 - **Distraction-Free Mode**: Toggle between "Full" correction mode and a "Minimal" mode for a clean, paper-like writing experience.
 
+### 🎨 Themes & Customization
+- **5 Built-in Themes**: Light, Dark, Nordic, Cream, Sunset.
+- **Custom Theme Builder**: Create your own theme with 30+ editable CSS variables.
+- **8 Font Families**: System, Merriweather, Literata, Lora, Crimson Pro, EB Garamond, Inter, Roboto.
+- **4 Font Sizes**: Small, Medium, Large, XL.
+- **Proficiency Levels**: Configure your CEFR level (A1-C2) to control AI content difficulty.
+- **LLM Model Selection**: Auto-detect or manually select available Ollama models.
+
+### 🧩 Chrome Extension
+Flux also works as a Chrome Extension:
+- **Side Panel Mode**: Run the full app inside Chrome's side panel.
+- **Text Selection Capture**: Select text on any web page and send it to the reader.
+- **Chrome Storage Sync**: Persistent state across browser sessions.
+
 ### 🛡️ Privacy & Local AI
 Flux is built to run entirely offline (after setup) using **Ollama**:
-- **Zero Data Leakage**: All translations and text generation happen on your local machine via the Backend Proxy.
+- **Zero Data Leakage**: All translations, grammar analysis, and text generation happen on your local machine via the Backend Proxy.
 - **Cost Efficient**: No API keys or usage fees.
+- **Cloud-Ready Architecture**: The frontend is API-agnostic -- the backend can be extended to proxy OpenAI/Anthropic without changing the client.
 
 ---
 
@@ -81,6 +120,7 @@ New-NetFirewallRule -DisplayName "Flux Prod Server (443)" -Direction Inbound -Lo
 -   **Node.js**: v18+
 -   **Docker**: Required for the PostgreSQL database and Caddy Proxy.
 -   **Ollama**: Installed locally/networked. Run `ollama serve` and pull your models.
+-   **Anki** *(optional)*: For Anki integration, install [AnkiConnect](https://ankiweb.net/shared/info/2055492159) add-on.
 
 ### 2. Installation & Run
 We use **NPM Workspaces** to manage the full stack from the root directory.
@@ -113,13 +153,13 @@ The platform will be available at:
 Flux is architected as a **"Self-Hosted Cloud"**.
 
 ### The Hybrid Monorepo
--   **`apps/client`**: A React 19 application (Vite). It handles the UI, text rendering, and audio orchestration. To the user, it feels like a native app.
--   **`apps/server`**: A NestJS Backend. It acts as the "Brain" and Proxy. It connects to the database for saving words/decks and proxies requests to Ollama to manage AI interactions secureley.
+-   **`apps/client`**: A React 19 application (Vite). It handles the UI, text rendering, audio orchestration, and gamified learning. It can also run as a Chrome Extension.
+-   **`apps/server`**: A NestJS Backend. It acts as the "Brain" and Proxy. It connects to the database for saving words/decks, proxies requests to Ollama, and manages authentication.
 
 ### Tech Stack
--   **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand, Framer Motion.
--   **Backend**: NestJS, prisma (ORM), Express.
--   **Database**: PostgreSQL (Dockerized).
+-   **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand, Framer Motion, Radix UI, PDF.js, EPUB.js.
+-   **Backend**: NestJS 11, Prisma (ORM), Express, JWT Authentication.
+-   **Database**: PostgreSQL 15 (Dockerized).
 -   **Infrastructure**: Caddy (Reverse Proxy + Auto TLS).
 -   **AI**: Ollama (Local LLM).
 
@@ -144,10 +184,23 @@ If Docker fails to start with port errors:
 ```bash
 /
 ├── apps/
-│   ├── client/       # The Frontend Web App
-│   └── server/       # The Backend API & Proxy
-├── docker-compose.yml # Infrastructure (DB)
-└── README.md          # This file
+│   ├── client/                 # The Frontend Web App (React 19 + Vite)
+│   │   └── src/
+│   │       ├── presentation/   # UI Layer
+│   │       │   ├── features/   # Feature modules (reader, learning-mode, word-manager, writing, auth, importer, settings, navigation)
+│   │       │   └── components/ # Shared UI components
+│   │       └── infrastructure/ # Services (API clients, audio, auth, AI, settings)
+│   └── server/                 # The Backend API & Proxy (NestJS)
+│       ├── src/
+│       │   ├── auth/           # JWT Authentication (register, login, guards)
+│       │   ├── words/          # Word/Deck CRUD (controller, service, DTOs)
+│       │   └── ollama/         # AI Proxy (generation, translation, grammar, writing)
+│       └── prisma/             # Database schema & migrations
+├── docs/                       # Documentation (Architecture, Environment, Deployment)
+├── docker-compose.yml          # Production infrastructure
+├── docker-compose.dev.yml      # Development infrastructure
+├── Caddyfile                   # Reverse proxy routing
+└── README.md                   # This file
 ```
 
 For deep architectural details, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md).

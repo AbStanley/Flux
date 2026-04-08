@@ -43,4 +43,18 @@ The client uses different "modes" to determine which API to talk to.
 
 ## 🔒 Security Note
 - Files named `.env*` are **gitignored** (except `.env.docker` and `.env.production` which contain non-sensitive public URLs).
+- `JWT_SECRET` is defined in the root `.env` and must never be committed.
 
+---
+
+## 🔗 External Service Configuration
+
+### Ollama
+Ollama's host URL is configured in the server environment files:
+- **Local**: Points to `http://localhost:11434` (default Ollama port).
+- **Docker**: Points to `http://host.docker.internal:11434` to reach Ollama running on the host.
+
+The server auto-detects available models via the `/api/tags` endpoint.
+
+### Anki (Optional)
+AnkiConnect runs on `http://localhost:8765` by default. The client connects directly (not proxied through the backend) using `text/plain` content-type headers for CORS compatibility. No server-side configuration needed.
