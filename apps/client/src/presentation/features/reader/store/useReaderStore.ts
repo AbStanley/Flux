@@ -23,6 +23,10 @@ interface ReaderState {
     aiModel?: string;
     aiHost?: string;
 
+    // Reading session
+    sessionId: string | null;
+    sessionTitle: string | null;
+
     setConfig: (text: string, sourceLang: string, targetLang: string) => void;
     setText: (text: string) => void;
     setSourceLang: (lang: string) => void;
@@ -37,6 +41,8 @@ interface ReaderState {
     setPage: (page: number) => void;
     handleSelection: (globalIndex: number) => Promise<void>;
     clearSelection: () => void;
+    setSession: (id: string | null, title: string | null) => void;
+    loadText: (text: string) => void;
 }
 
 export const useReaderStore = create<ReaderState>()(
@@ -56,6 +62,8 @@ export const useReaderStore = create<ReaderState>()(
             selectionMode: SelectionMode.Word,
             activePanel: 'DETAILS',
             readingMode: 'STANDARD',
+            sessionId: null,
+            sessionTitle: null,
 
             setConfig: (text, sourceLang, targetLang) => {
                 if (text === get().text && sourceLang === get().sourceLang && targetLang === get().targetLang) {
@@ -89,6 +97,8 @@ export const useReaderStore = create<ReaderState>()(
                     tokens,
                     currentPage: 1,
                     selectedIndices: new Set(),
+                    sessionId: null,
+                    sessionTitle: null,
                 });
             },
 
@@ -164,6 +174,14 @@ export const useReaderStore = create<ReaderState>()(
             setAiHost: (aiHost) => set({ aiHost }),
 
             clearSelection: () => set({ selectedIndices: new Set() }),
+            setSession: (sessionId, sessionTitle) => set({ sessionId, sessionTitle }),
+            loadText: (text) => {
+                const { closeRichInfo, clearSelectionTranslations } = useTranslationStore.getState();
+                closeRichInfo();
+                clearSelectionTranslations();
+                const tokens = text.split(/(\s+)/);
+                set({ text, tokens, currentPage: 1, selectedIndices: new Set() });
+            },
         }),
         {
             name: 'reader-storage',
@@ -176,6 +194,8 @@ export const useReaderStore = create<ReaderState>()(
                 currentPage: state.currentPage,
                 aiModel: state.aiModel,
                 aiHost: state.aiHost,
+                sessionId: state.sessionId,
+                sessionTitle: state.sessionTitle,
             }),
         }
     )

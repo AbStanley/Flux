@@ -17,9 +17,27 @@ model User {
   passwordHash String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
-  words     Word[]
-  decks     Deck[]
+
+  words           Word[]
+  decks           Deck[]
+  readingSessions ReadingSession[]
+}
+
+model ReadingSession {
+  id          String   @id @default(uuid())
+  title       String
+  text        String
+  currentPage Int      @default(0)
+  totalPages  Int      @default(1)
+  sourceLang  String?
+  targetLang  String?
+  fileType    String?  // 'pdf', 'epub', 'text'
+  chapters    Json?    // [{label, href, subitems?}] for EPUBs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Word {

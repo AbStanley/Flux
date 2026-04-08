@@ -5,9 +5,11 @@ import { Loader2 } from 'lucide-react';
 import { useEpub } from './hooks/useEpub';
 import { EpubChapterList } from './components/EpubChapterList';
 
+import { type Chapter, flattenToc as flattenChapters } from './utils/epubUtils';
+
 interface EpubPreviewProps {
     file: File;
-    onExtract: (text: string) => void;
+    onExtract: (text: string, chapters?: Chapter[], fullText?: string) => void;
     onCancel: () => void;
 }
 
@@ -27,8 +29,12 @@ export function EpubPreview({ file, onExtract, onCancel }: EpubPreviewProps) {
 
     const handleExtract = async () => {
         try {
-            const text = await extract(selectedHrefs);
-            onExtract(text);
+            // Extract selected chapters for immediate reading
+            const selectedText = await extract(selectedHrefs);
+            // Extract ALL chapters for storage (so user can switch chapters later)
+            const allHrefs = new Set(flattenChapters(chapters).map(c => c.href));
+            const fullText = await extract(allHrefs);
+            onExtract(selectedText, chapters, fullText);
         } catch (error) {
             console.error('Extraction failed:', error);
         }

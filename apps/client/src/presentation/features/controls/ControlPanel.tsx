@@ -13,6 +13,7 @@ import { useStoryGeneration } from './hooks/useStoryGeneration';
 import { FileImporter } from '../importer/FileImporter';
 import { AIControls } from './AIControls';
 import { ReaderInput } from './ReaderInput';
+import { SessionLibrary } from '../reader/components/SessionLibrary';
 import { cn } from "@/lib/utils";
 
 
@@ -124,6 +125,8 @@ export function ControlPanel() {
             </CardHeader>
 
             <CardContent className={cn("space-y-2 p-4 pt-0")}>
+                <SessionLibrary />
+
                 <ReaderInput
                     text={text}
                     isGenerating={isGenerating}

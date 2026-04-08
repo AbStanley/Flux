@@ -169,30 +169,50 @@ The platform will be available at:
 
 ---
 
-## �️ Prisma Database Commands
+## Prisma Database Commands
 
-### Setup & Migration
+> **Important:** Prisma CLI needs `DATABASE_URL` to connect. Ensure `apps/server/.env` exists with the correct connection string for your environment:
+>
+> - **Local dev** (Docker postgres): `DATABASE_URL=postgresql://postgres:postgres@localhost:5435/readerhelper`
+> - **Docker dev**: Set automatically via `docker-compose.dev.yml`
+> - **Production**: Set automatically via `docker-compose.yml`
 
-- `npx prisma migrate dev --schema=apps/server/prisma/schema.prisma`: Apply pending migrations in development (generates new migration if schema changed)
-- `npx prisma migrate status --schema=apps/server/prisma/schema.prisma`: Check migration status
-- `npx prisma migrate reset --schema=apps/server/prisma/schema.prisma --force`: Reset database and reapply all migrations (development only)
-- `npx prisma migrate resolve --schema=apps/server/prisma/schema.prisma --rolled-back <migration-name>`: Mark a rolled-back migration as resolved
+### Local Development Workflow
 
-### Development Tools
+After changing `apps/server/prisma/schema.prisma`:
 
-- `npm run prisma-prepare`: Generate Prisma client
-- `npm run prisma-studio`: Open Prisma Studio to view/edit data
-- `npx prisma generate --schema=apps/server/prisma/schema.prisma`: Regenerate Prisma client after schema changes
-- `npx prisma db push --schema=apps/server/prisma/schema.prisma`: Push schema changes to database without migrations (development only)
+```bash
+# 1. Create & apply the migration
+cd apps/server && npx prisma migrate dev --name your_migration_name
 
-### Schema Management
+# 2. Regenerate the Prisma client (so TypeScript picks up new types)
+npx prisma generate
 
-- `npx prisma format --schema=apps/server/prisma/schema.prisma`: Format the Prisma schema
-- `npx prisma validate --schema=apps/server/prisma/schema.prisma`: Validate the Prisma schema
+# 3. Restart the server
+cd ../.. && npm run server:dev
+```
 
-### Production
+### Production Deployment
 
-- `npx prisma migrate deploy --schema=apps/server/prisma/schema.prisma`: Apply migrations in production
+```bash
+# Apply pending migrations without creating new ones (safe for prod)
+cd apps/server && npx prisma migrate deploy
+```
+
+### All Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `cd apps/server && npx prisma migrate dev --name <name>` | Create + apply migration (dev only) |
+| `cd apps/server && npx prisma migrate deploy` | Apply pending migrations (prod) |
+| `cd apps/server && npx prisma migrate status` | Check migration status |
+| `cd apps/server && npx prisma migrate reset --force` | Reset DB & reapply all migrations (dev only, destructive) |
+| `cd apps/server && npx prisma generate` | Regenerate Prisma client after schema changes |
+| `npm run prisma-prepare` | Shortcut: generate Prisma client from root |
+| `npm run prisma-studio` | Open Prisma Studio GUI to view/edit data |
+| `cd apps/server && npx prisma db push` | Push schema without creating migration (dev prototyping) |
+| `cd apps/server && npx prisma format` | Format the schema file |
+| `cd apps/server && npx prisma validate` | Validate the schema file |
 
 ---
 

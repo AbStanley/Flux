@@ -6,6 +6,7 @@ import { PdfPreview } from './PdfPreview';
 import { EpubPreview } from './EpubPreview';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/presentation/components/ui/dialog';
 import { useReaderStore } from '../reader/store/useReaderStore';
+import { readingSessionsApi, type ChapterInfo } from '@/infrastructure/api/reading-sessions';
 
 interface FileImporterProps {
     open: boolean;
@@ -32,8 +33,31 @@ export function FileImporter({ open, onOpenChange }: FileImporterProps) {
         multiple: false
     });
 
-    const handleExtract = (text: string) => {
+    const handleExtract = (text: string, chapters?: ChapterInfo[], fullText?: string) => {
+        const { sourceLang, targetLang, PAGE_SIZE } = useReaderStore.getState();
         setText(text);
+
+        const fileName = file?.name?.replace(/\.(pdf|epub)$/i, '') || 'Untitled';
+        const fileType = file?.name?.endsWith('.epub') ? 'epub' : file?.type === 'application/pdf' ? 'pdf' : 'text';
+        // Store full text (all chapters) so user can switch chapters later
+        const textToStore = fullText || text;
+        const storeTokens = textToStore.split(/(\s+)/);
+        const totalPages = Math.ceil(storeTokens.length / PAGE_SIZE);
+
+        // Save to library in background
+        readingSessionsApi.create({
+            title: fileName,
+            text: textToStore,
+            currentPage: 1,
+            totalPages,
+            sourceLang,
+            targetLang,
+            fileType,
+            chapters: chapters,
+        }).then((session) => {
+            useReaderStore.getState().setSession(session.id, session.title);
+        }).catch(console.error);
+
         setFile(null);
         onOpenChange(false);
     };
