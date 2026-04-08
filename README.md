@@ -1,6 +1,5 @@
 # Flux: A Privacy-First, Intelligent Learning Assistant
 
-
 ![Status](https://img.shields.io/badge/Status-Operational-success?style=for-the-badge)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ed?style=for-the-badge&logo=docker)
 ![Ollama](https://img.shields.io/badge/Ollama-Enabled-2496ed?style=for-the-badge&logo=ollama)
@@ -26,7 +25,9 @@
 ## ✨ Core Features
 
 ### 🧠 Smart Reader
+
 The core reading engine provides deep interaction with text across two modes:
+
 - **Interactive Tokenization**: Text is processed into interactive tokens, allowing selection of individual words, phrases, or sentences.
 - **Context-Aware Dictionary**: Hover over any word to see a translation that considers the surrounding sentence context, not just the isolated definition.
 - **Rich Translation Panel**: Multi-tab translation details including word-by-word breakdowns, examples, and alternatives.
@@ -36,14 +37,18 @@ The core reading engine provides deep interaction with text across two modes:
 - **Content Import**: Import PDF and EPUB files directly into the reader via drag-and-drop.
 
 ### 🔊 Audio Experience
+
 A fully integrated text-to-speech system designed for learners:
+
 - **Neural TTS**: Utilizes the browser's best available voices for natural speech.
 - **Karaoke Highlighting**: Words are highlighted in real-time as they are spoken, aiding in pronunciation and tracking.
 - **Smart Resume**: Playback remembers your position. If paused or stopped, it resumes intelligently from the start of the last spoken sentence or word.
 - **Audio-Page Sync**: Automatic page synchronization during playback.
 
 ### 🎮 Learning Mode
+
 A gamified training arena with five distinct game types:
+
 - **Multiple Choice**: 4-option vocabulary quizzes with context hints and optional timer.
 - **Word Builder**: Spell words letter-by-letter from a shuffled letter pool.
 - **Audio Dictation**: Listen and spell what you hear, with mode toggling between dictation and translation.
@@ -51,6 +56,7 @@ A gamified training arena with five distinct game types:
 - **Story Mode**: Read AI-generated narrative contexts and translate target words inline.
 
 Three data sources for learning content:
+
 - **Saved Words (DB)**: Pull from your saved vocabulary, filtered by language pair.
 - **Anki Integration**: Connect to your local Anki via AnkiConnect -- browse decks, select models, and map fields.
 - **AI Generation**: Generate fresh content on-the-fly by topic and proficiency level (A1-C2).
@@ -58,7 +64,9 @@ Three data sources for learning content:
 Includes a full progression system with XP, levels, streaks, health, and statistics tracking.
 
 ### 📚 Word Manager
+
 A comprehensive vocabulary management system:
+
 - **Dual Tabs**: Separate views for Words and Phrases.
 - **Rich Metadata**: Definition, explanation, context, pronunciation, source language/title, and image URL per entry.
 - **AI-Generated Examples**: One-click example sentence generation via Ollama.
@@ -67,7 +75,9 @@ A comprehensive vocabulary management system:
 - **Saved Words Panel**: Quick-access panel within the reader for recently saved vocabulary.
 
 ### ✍️ Interactive Writing
+
 A premium, distraction-free environment for refining your thoughts:
+
 - **Real-Time AI Polish**: Automatically identifies and suggests improvements for **Grammar**, **Spelling**, **Punctuation**, and **Fluency**.
 - **Interactive Corrections**: Click on highlighted text to see detailed explanations and instantly "Correct" or "Discard" suggestions with one click.
 - **Smart Offset Tracking**: Corrections stay aligned as you continue editing, with intelligent position reconciliation.
@@ -76,6 +86,7 @@ A premium, distraction-free environment for refining your thoughts:
 - **Distraction-Free Mode**: Toggle between "Full" correction mode and a "Minimal" mode for a clean, paper-like writing experience.
 
 ### 🎨 Themes & Customization
+
 - **5 Built-in Themes**: Light, Dark, Nordic, Cream, Sunset.
 - **Custom Theme Builder**: Create your own theme with 30+ editable CSS variables.
 - **8 Font Families**: System, Merriweather, Literata, Lora, Crimson Pro, EB Garamond, Inter, Roboto.
@@ -84,13 +95,17 @@ A premium, distraction-free environment for refining your thoughts:
 - **LLM Model Selection**: Auto-detect or manually select available Ollama models.
 
 ### 🧩 Chrome Extension
+
 Flux also works as a Chrome Extension:
+
 - **Side Panel Mode**: Run the full app inside Chrome's side panel.
 - **Text Selection Capture**: Select text on any web page and send it to the reader.
 - **Chrome Storage Sync**: Persistent state across browser sessions.
 
 ### 🛡️ Privacy & Local AI
+
 Flux is built to run entirely offline (after setup) using **Ollama**:
+
 - **Zero Data Leakage**: All translations, grammar analysis, and text generation happen on your local machine via the Backend Proxy.
 - **Cost Efficient**: No API keys or usage fees.
 - **Cloud-Ready Architecture**: The frontend is API-agnostic -- the backend can be extended to proxy OpenAI/Anthropic without changing the client.
@@ -100,29 +115,34 @@ Flux is built to run entirely offline (after setup) using **Ollama**:
 ## 🚀 Getting Started
 
 ### 0. Environment Setup
-1.  Copy `.env.example` to `.env` (or create one).
-2.  Set `JWT_SECRET` to a strong random string.
+
+1. Copy `.env.example` to `.env` (or create one).
+2. Set `JWT_SECRET` to a strong random string.
 
 #### Configuration
+
 For a detailed explanation of how environment variables work in this project (Local vs Docker vs Production), see the [**Environment Configuration Guide**](./docs/ENVIRONMENT.md).
 
 **Quick Port Reference (Root `.env`):**
+
 - `CADDY_PORT_DEV=8443`
 - `CADDY_PORT_PROD=443`
 
-
 Note: You might need to allow the firewall to allow the ports to be accessible from your network.
+
 ``` powershell
 New-NetFirewallRule -DisplayName "Flux Prod Server (443)" -Direction Inbound -LocalPort 443 -Protocol TCP -Action Allow
 ```
 
 ### 1. Prerequisites
--   **Node.js**: v18+
--   **Docker**: Required for the PostgreSQL database and Caddy Proxy.
--   **Ollama**: Installed locally/networked. Run `ollama serve` and pull your models.
--   **Anki** *(optional)*: For Anki integration, install [AnkiConnect](https://ankiweb.net/shared/info/2055492159) add-on.
+
+- **Node.js**: v18+
+- **Docker**: Required for the PostgreSQL database and Caddy Proxy.
+- **Ollama**: Installed locally/networked. Run `ollama serve` and pull your models.
+- **Anki** *(optional)*: For Anki integration, install [AnkiConnect](https://ankiweb.net/shared/info/2055492159) add-on.
 
 ### 2. Installation & Run
+
 We use **NPM Workspaces** to manage the full stack from the root directory.
 
 ```bash
@@ -141,10 +161,11 @@ npm run dev
 ```
 
 The platform will be available at:
--   **Web App (HTTPS)**: `https://localhost` (or `https://<YOUR-LAN-IP>`)
-    -   *Note: Accept the self-signed certificate warning.*
--   **Backend API**: Internal only (proxied via Caddy).
--   **Prisma Studio**: `http://localhost:5555` (View your data)
+
+- **Web App (HTTPS)**: `https://localhost` (or `https://<YOUR-LAN-IP>`)
+  - *Note: Accept the self-signed certificate warning.*
+- **Backend API**: Internal only (proxied via Caddy).
+- **Prisma Studio**: `http://localhost:5555` (View your data)
 
 ---
 
@@ -153,29 +174,34 @@ The platform will be available at:
 Flux is architected as a **"Self-Hosted Cloud"**.
 
 ### The Hybrid Monorepo
--   **`apps/client`**: A React 19 application (Vite). It handles the UI, text rendering, audio orchestration, and gamified learning. It can also run as a Chrome Extension.
--   **`apps/server`**: A NestJS Backend. It acts as the "Brain" and Proxy. It connects to the database for saving words/decks, proxies requests to Ollama, and manages authentication.
+
+- **`apps/client`**: A React 19 application (Vite). It handles the UI, text rendering, audio orchestration, and gamified learning. It can also run as a Chrome Extension.
+- **`apps/server`**: A NestJS Backend. It acts as the "Brain" and Proxy. It connects to the database for saving words/decks, proxies requests to Ollama, and manages authentication.
 
 ### Tech Stack
--   **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand, Framer Motion, Radix UI, PDF.js, EPUB.js.
--   **Backend**: NestJS 11, Prisma (ORM), Express, JWT Authentication.
--   **Database**: PostgreSQL 15 (Dockerized).
--   **Infrastructure**: Caddy (Reverse Proxy + Auto TLS).
--   **AI**: Ollama (Local LLM).
+
+- **Frontend**: React 19, TypeScript, Tailwind CSS, Zustand, Framer Motion, Radix UI, PDF.js, EPUB.js.
+- **Backend**: NestJS 11, Prisma (ORM), Express, JWT Authentication.
+- **Database**: PostgreSQL 15 (Dockerized).
+- **Infrastructure**: Caddy (Reverse Proxy + Auto TLS).
+- **AI**: Ollama (Local LLM).
 
 ---
 
 ## 🔧 Troubleshooting
 
 ### "Port already allocated"
+
 If Docker fails to start with port errors:
-1.  **Restart Docker Desktop** (Right-click -> Quit -> Start). This clears zombie ports.
-2.  Run `npm run docker:dev` again.
+
+1. **Restart Docker Desktop** (Right-click -> Quit -> Start). This clears zombie ports.
+2. Run `npm run docker:dev` again.
 
 ### LAN Access Issues
-1.  Ensure Windows Network Profile is **Private** (Powershell: `Set-NetConnectionProfile -InterfaceAlias "Wi-Fi" -NetworkCategory Private`).
-2.  Use `https://` explicitly.
-3.  Accept the "Not Secure" warning (Advanced -> Proceed).
+
+1. Ensure Windows Network Profile is **Private** (Powershell: `Set-NetConnectionProfile -InterfaceAlias "Wi-Fi" -NetworkCategory Private`).
+2. Use `https://` explicitly.
+3. Accept the "Not Secure" warning (Advanced -> Proceed).
 
 ---
 
