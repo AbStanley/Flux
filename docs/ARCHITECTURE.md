@@ -68,41 +68,48 @@ sequenceDiagram
 ## 🧩 Components
 
 ### 1. Monorepo Structure
+
 We use **NPM Workspaces** to manage multiple applications in a single repository.
--   `apps/client`: The Frontend application (Vite + React 19).
--   `apps/server`: The Backend API (NestJS 11).
+
+- `apps/client`: The Frontend application (Vite + React 19).
+- `apps/server`: The Backend API (NestJS 11).
 
 ### 2. Apps
 
 #### **Client (`@reader-helper/client`)**
--   **Unexpected Design**: It thinks it's talking to a real cloud API, but it's just `localhost:3000`.
--   **Tech**: React 19, Tailwind, Zustand, Framer Motion, Radix UI, PDF.js, EPUB.js.
--   **Responsibility**: User Interface, Text Tokenization, Audio Playback, Gamified Learning, Chrome Extension.
+
+- **Unexpected Design**: It thinks it's talking to a real cloud API, but it's just `localhost:3000`.
+- **Tech**: React 19, Tailwind, Zustand, Framer Motion, Radix UI, PDF.js, EPUB.js.
+- **Responsibility**: User Interface, Text Tokenization, Audio Playback, Gamified Learning, Chrome Extension.
 
 #### **Server (`@reader-helper/server`)**
--   **The Brain**: Centralizes logic that requires persistence or heavy compute access.
--   **Tech**: NestJS 11, Prisma ORM, Express, JWT.
--   **Responsibility**:
-    -   **Persistence**: Saves Words, Examples, Decks, and Users to Postgres.
-    -   **AI Proxying**: Hides the complexity of Ollama. Manages generation, translation, grammar analysis, and writing feedback. Streams responses back to the client.
-    -   **Authentication**: JWT-based auth with registration, login, and route guards.
-    -   **CORS**: Handles security policies for the frontend.
+
+- **The Brain**: Centralizes logic that requires persistence or heavy compute access.
+- **Tech**: NestJS 11, Prisma ORM, Express, JWT.
+- **Responsibility**:
+  - **Persistence**: Saves Words, Examples, Decks, and Users to Postgres.
+  - **AI Proxying**: Hides the complexity of Ollama. Manages generation, translation, grammar analysis, and writing feedback. Streams responses back to the client.
+  - **Authentication**: JWT-based auth with registration, login, and route guards.
+  - **CORS**: Handles security policies for the frontend.
 
 ### 3. Data & AI
 
 #### **PostgreSQL**
--   **Role**: Primary Source of Truth.
--   **Access**: Through Prisma ORM only.
--   **Schema**: Users, Words (with type: word/phrase), Examples (cascade delete), Decks.
+
+- **Role**: Primary Source of Truth.
+- **Access**: Through Prisma ORM only.
+- **Schema**: Users, Words (with type: word/phrase), Examples (cascade delete), Decks.
 
 #### **Ollama**
--   **Role**: The Intelligence Engine.
--   **Services**: Generation, Translation, Grammar Analysis, Writing Feedback, Game Content.
--   **Access**: Hidden behind the NestJS Proxy. The frontend *never* talks to Ollama directly. This allows us to swap Ollama for OpenAI/Anthropic in the future without updating the client.
+
+- **Role**: The Intelligence Engine.
+- **Services**: Generation, Translation, Grammar Analysis, Writing Feedback, Game Content.
+- **Access**: Hidden behind the NestJS Proxy. The frontend *never* talks to Ollama directly. This allows us to swap Ollama for OpenAI/Anthropic in the future without updating the client.
 
 #### **Anki (Optional)**
--   **Role**: External vocabulary source for learning games.
--   **Access**: Direct from the client via AnkiConnect (localhost:8765). Uses `text/plain` content-type headers for CORS compatibility.
+
+- **Role**: External vocabulary source for learning games.
+- **Access**: Direct from the client via AnkiConnect (localhost:8765). Uses `text/plain` content-type headers for CORS compatibility.
 
 ---
 
@@ -147,6 +154,7 @@ We use **NPM Workspaces** to manage multiple applications in a single repository
 ## 🔌 API Endpoints
 
 ### Authentication
+
 | Method | Path | Description |
 | :--- | :--- | :--- |
 | POST | `/api/auth/register` | User registration |
@@ -154,6 +162,7 @@ We use **NPM Workspaces** to manage multiple applications in a single repository
 | GET | `/api/auth/me` | Get current user profile |
 
 ### Words
+
 | Method | Path | Description |
 | :--- | :--- | :--- |
 | GET | `/api/words` | List words (paginated, filterable by language/type) |
@@ -164,6 +173,7 @@ We use **NPM Workspaces** to manage multiple applications in a single repository
 | GET | `/api/words/languages` | Get available language pairs |
 
 ### AI / Ollama
+
 | Method | Path | Description |
 | :--- | :--- | :--- |
 | POST | `/api/chat` | Chat with LLM (streaming) |
