@@ -81,7 +81,7 @@ export function GameSetup() {
                             <Label>Game Mode</Label>
                             <Select
                                 value={config.mode}
-                                onValueChange={(val) => updateConfig({ mode: val as 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' })}
+                                onValueChange={(val) => updateConfig({ mode: val as 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'cloze' })}
                             >
                                 <SelectTrigger className="h-12 text-lg">
                                     <SelectValue placeholder="Select Game Mode" />
@@ -92,6 +92,7 @@ export function GameSetup() {
                                     <SelectItem value="dictation">Audio Dictation</SelectItem>
                                     <SelectItem value="scramble">Sentence Scramble</SelectItem>
                                     <SelectItem value="story" disabled={config.source !== 'ai'}>Story Mode {config.source !== 'ai' && '(AI Only)'}</SelectItem>
+                                    <SelectItem value="cloze">Cloze Deletion</SelectItem>
                                 </SelectContent>
                             </Select>
                             <p className="text-sm text-muted-foreground">
@@ -100,6 +101,7 @@ export function GameSetup() {
                                 {config.mode === 'dictation' && "Listen to the word and spell it out."}
                                 {config.mode === 'scramble' && "Rearrange scrambled words to form the correct sentence."}
                                 {config.mode === 'story' && "Read a story and learn identifying key phrases."}
+                                {config.mode === 'cloze' && "Fill in the missing word from context."}
                             </p>
                         </div>
 

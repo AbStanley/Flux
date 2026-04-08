@@ -5,7 +5,7 @@ import { gameContentService } from '../../../../core/services/game/GameContentSe
 import { useUserStats } from './useUserStats';
 
 export interface GameConfig {
-    mode: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'story';
+    mode: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'story' | 'cloze';
     source: 'db' | 'anki' | 'ai';
     timerEnabled: boolean;
     sourceLang: string;
