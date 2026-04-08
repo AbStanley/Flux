@@ -6,6 +6,7 @@ import { OllamaModule } from './ollama/ollama.module';
 import { WordsModule } from './words/words.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { StatsModule } from './stats/stats.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 import { ConfigModule } from '@nestjs/config';
@@ -20,6 +21,7 @@ import { ConfigModule } from '@nestjs/config';
     WordsModule,
     PrismaModule,
     AuthModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],

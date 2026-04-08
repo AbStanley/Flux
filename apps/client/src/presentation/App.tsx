@@ -116,6 +116,7 @@ import { WordManager } from './features/word-manager';
 import { LearningModePage } from './features/learning-mode/LearningModePage';
 import { WritingModePage } from './features/interactive-writing/WritingModePage';
 import { SrsReviewPage } from './features/srs-review/SrsReviewPage';
+import { StatsPage } from './features/stats/StatsPage';
 
 function AppContent() {
   const { isReading, hasText, exitReaderMode } = useFocusMode();
@@ -154,6 +155,15 @@ function AppContent() {
       <>
         <NavBar />
         <WritingModePage />
+      </>
+    );
+  }
+
+  if (currentView === AppView.Stats) {
+    return (
+      <>
+        <NavBar />
+        <StatsPage />
       </>
     );
   }
