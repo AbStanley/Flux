@@ -169,6 +169,33 @@ The platform will be available at:
 
 ---
 
+## �️ Prisma Database Commands
+
+### Setup & Migration
+
+- `npx prisma migrate dev --schema=apps/server/prisma/schema.prisma`: Apply pending migrations in development (generates new migration if schema changed)
+- `npx prisma migrate status --schema=apps/server/prisma/schema.prisma`: Check migration status
+- `npx prisma migrate reset --schema=apps/server/prisma/schema.prisma --force`: Reset database and reapply all migrations (development only)
+- `npx prisma migrate resolve --schema=apps/server/prisma/schema.prisma --rolled-back <migration-name>`: Mark a rolled-back migration as resolved
+
+### Development Tools
+
+- `npm run prisma-prepare`: Generate Prisma client
+- `npm run prisma-studio`: Open Prisma Studio to view/edit data
+- `npx prisma generate --schema=apps/server/prisma/schema.prisma`: Regenerate Prisma client after schema changes
+- `npx prisma db push --schema=apps/server/prisma/schema.prisma`: Push schema changes to database without migrations (development only)
+
+### Schema Management
+
+- `npx prisma format --schema=apps/server/prisma/schema.prisma`: Format the Prisma schema
+- `npx prisma validate --schema=apps/server/prisma/schema.prisma`: Validate the Prisma schema
+
+### Production
+
+- `npx prisma migrate deploy --schema=apps/server/prisma/schema.prisma`: Apply migrations in production
+
+---
+
 ## 🏗 Technical Architecture
 
 Flux is architected as a **"Self-Hosted Cloud"**.
