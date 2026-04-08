@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class WordsService {
@@ -130,32 +130,44 @@ export class WordsService {
     const { examples, ...wordData } = updateWordDto;
 
     // Use transaction to atomically update word and replace examples
-    return this.prisma.$transaction(async (tx) => {
-      // Delete all existing examples for this word
-      await tx.example.deleteMany({ where: { wordId: id } });
+    return await this.prisma.$transaction(
+      async (
+        tx: Omit<
+          PrismaClient,
+          | '$connect'
+          | '$disconnect'
+          | '$on'
+          | '$transaction'
+          | '$use'
+          | '$extends'
+        >,
+      ) => {
+        // Delete all existing examples for this word
+        await tx.example.deleteMany({ where: { wordId: id } });
 
-      // Update word and create new examples
-      return tx.word.update({
-        where: { id },
-        data: {
-          ...wordData,
-          examples:
-            examples && examples.length > 0
-              ? {
-                  create: examples.map(
-                    (ex: { sentence: string; translation?: string }) => ({
-                      sentence: ex.sentence,
-                      translation: ex.translation,
-                    }),
-                  ),
-                }
-              : undefined,
-        },
-        include: {
-          examples: true,
-        },
-      });
-    });
+        // Update word and create new examples
+        return tx.word.update({
+          where: { id },
+          data: {
+            ...wordData,
+            examples:
+              examples && examples.length > 0
+                ? {
+                    create: examples.map(
+                      (ex: { sentence: string; translation?: string }) => ({
+                        sentence: ex.sentence,
+                        translation: ex.translation,
+                      }),
+                    ),
+                  }
+                : undefined,
+          },
+          include: {
+            examples: true,
+          },
+        });
+      },
+    );
   }
 
   remove(id: string) {
