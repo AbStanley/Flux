@@ -14,6 +14,19 @@ export interface Word {
     createdAt: string;
     examples?: Example[];
     type?: 'word' | 'phrase';
+    // SRS fields
+    srsEaseFactor?: number;
+    srsInterval?: number;
+    srsRepetitions?: number;
+    srsNextReview?: string;
+    srsLastReview?: string | null;
+}
+
+export interface SrsStats {
+    total: number;
+    due: number;
+    learned: number;
+    reviewedToday: number;
 }
 
 export interface Example {
@@ -65,5 +78,31 @@ export const wordsApi = {
 
     update: async (id: string, data: Partial<CreateWordRequest>) => {
         return defaultClient.patch<Word>(`${ENDPOINT}/${id}`, data);
-    }
+    },
+
+    // SRS endpoints
+    getDueWords: async (params?: {
+        sourceLanguage?: string;
+        targetLanguage?: string;
+        deckId?: string;
+        limit?: number;
+    }) => {
+        const queryParams: Record<string, string> = {};
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    queryParams[key] = String(value);
+                }
+            });
+        }
+        return defaultClient.get<Word[]>(`${ENDPOINT}/due`, queryParams);
+    },
+
+    reviewWord: async (id: string, quality: number) => {
+        return defaultClient.post<Word>(`${ENDPOINT}/${id}/review`, { quality });
+    },
+
+    getSrsStats: async () => {
+        return defaultClient.get<SrsStats>(`${ENDPOINT}/srs-stats`);
+    },
 };

@@ -12,8 +12,10 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { WordsService } from './words.service';
+import { SrsService, type SrsQuality } from './srs.service';
 import { CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
+import { ReviewWordDto } from './dto/review-word.dto';
 
 interface AuthenticatedRequest {
   user?: { id: string; email: string };
@@ -21,7 +23,10 @@ interface AuthenticatedRequest {
 
 @Controller('api/words')
 export class WordsController {
-  constructor(private readonly wordsService: WordsService) {}
+  constructor(
+    private readonly wordsService: WordsService,
+    private readonly srsService: SrsService,
+  ) {}
 
   @Post()
   create(
@@ -63,6 +68,35 @@ export class WordsController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  @Get('due')
+  getDueWords(
+    @Query()
+    query: {
+      sourceLanguage?: string;
+      targetLanguage?: string;
+      deckId?: string;
+      limit?: string;
+    },
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.srsService.getDueWords(req.user?.id ?? '', {
+      sourceLanguage: query.sourceLanguage,
+      targetLanguage: query.targetLanguage,
+      deckId: query.deckId,
+      limit: query.limit ? Math.min(50, Math.max(1, +query.limit)) : 20,
+    });
+  }
+
+  @Get('srs-stats')
+  getSrsStats(@Request() req: AuthenticatedRequest) {
+    return this.srsService.getStats(req.user?.id ?? '');
+  }
+
+  @Post(':id/review')
+  reviewWord(@Param('id') id: string, @Body() reviewDto: ReviewWordDto) {
+    return this.srsService.recordReview(id, reviewDto.quality as SrsQuality);
   }
 
   @Get('languages')

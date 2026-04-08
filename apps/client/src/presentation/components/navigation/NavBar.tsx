@@ -1,4 +1,4 @@
-import { BookOpen, Dices, Library, LogOut, Sparkles } from 'lucide-react';
+import { BookOpen, Brain, Dices, Library, LogOut, Sparkles } from 'lucide-react';
 import { useViewStore } from '../../features/navigation/store/useViewStore';
 import { AppView } from '../../features/navigation/types';
 import { Button } from '../ui/button';
@@ -44,6 +44,16 @@ export function NavBar() {
                     >
                         <Dices className="w-4 h-4" />
                         <span className="hidden md:inline">Arena</span>
+                    </Button>
+                    <Button
+                        variant={currentView === AppView.SrsReview ? 'secondary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setView(AppView.SrsReview)}
+                        className="gap-2 px-2 md:px-4"
+                        title="SRS Review"
+                    >
+                        <Brain className="w-4 h-4" />
+                        <span className="hidden md:inline">SRS</span>
                     </Button>
                     <Button
                         variant={currentView === AppView.InteractiveWriting ? 'secondary' : 'ghost'}

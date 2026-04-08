@@ -8,7 +8,7 @@ import {
     TableRow,
 } from '../../../components/ui/table';
 import { Button } from '../../../components/ui/button';
-import { Edit, Trash2, BookOpen, Globe, Quote, Volume2, ArrowRight } from 'lucide-react';
+import { Edit, Trash2, BookOpen, Globe, Quote, Volume2, ArrowRight, Clock } from 'lucide-react';
 import { getLanguageCode } from '../utils/languageUtils';
 import { ScrollArea } from '../../../components/ui/scroll-area';
 
@@ -133,6 +133,7 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                                                     /{word.pronunciation}/
                                                 </span>
                                             )}
+                                            <SrsBadge word={word} />
                                         </div>
                                     </TableCell>
                                     <TableCell className="align-top py-4">
@@ -249,6 +250,7 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                                             <span>{getLanguageCode(word.targetLanguage).toUpperCase()}</span>
                                         </div>
                                     )}
+                                    <SrsBadge word={word} />
                                 </div>
 
                                 <Button
@@ -318,3 +320,29 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
         </div>
     );
 };
+
+function SrsBadge({ word }: { word: Word }) {
+    if (!word.srsNextReview) return null;
+
+    const isDue = new Date(word.srsNextReview) <= new Date();
+    const reps = word.srsRepetitions ?? 0;
+
+    if (isDue) {
+        return (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-orange-600 dark:text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded-full w-fit">
+                <Clock className="w-2.5 h-2.5" />
+                Due
+            </span>
+        );
+    }
+
+    if (reps > 0) {
+        return (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded-full w-fit">
+                {reps}x reviewed
+            </span>
+        );
+    }
+
+    return null;
+}

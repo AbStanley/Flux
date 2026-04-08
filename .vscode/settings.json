@@ -22,5 +22,6 @@
             "changeProcessCWD": true
         }
     ],
-    "eslint.useFlatConfig": true
+    "eslint.useFlatConfig": true,
+    "prisma.pinToPrisma6": true
 }

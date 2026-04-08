@@ -35,13 +35,20 @@ model Word {
   pronunciation String?
   type      String   @default("word")
   createdAt DateTime @default(now())
-  
+
+  // SRS (SM-2 algorithm) fields
+  srsEaseFactor  Float    @default(2.5)
+  srsInterval    Int      @default(0)      // days until next review
+  srsRepetitions Int      @default(0)      // consecutive correct reviews
+  srsNextReview  DateTime @default(now())  // when this word is next due
+  srsLastReview  DateTime?                 // last time reviewed
+
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  
+
   deckId    String?
   deck      Deck?    @relation(fields: [deckId], references: [id])
-  
+
   examples  Example[]
 }
 

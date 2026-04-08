@@ -115,6 +115,7 @@ import { AppView } from './features/navigation/types';
 import { WordManager } from './features/word-manager';
 import { LearningModePage } from './features/learning-mode/LearningModePage';
 import { WritingModePage } from './features/interactive-writing/WritingModePage';
+import { SrsReviewPage } from './features/srs-review/SrsReviewPage';
 
 function AppContent() {
   const { isReading, hasText, exitReaderMode } = useFocusMode();
@@ -135,6 +136,15 @@ function AppContent() {
       <>
         <NavBar />
         <LearningModePage />
+      </>
+    );
+  }
+
+  if (currentView === AppView.SrsReview) {
+    return (
+      <>
+        <NavBar />
+        <SrsReviewPage />
       </>
     );
   }
