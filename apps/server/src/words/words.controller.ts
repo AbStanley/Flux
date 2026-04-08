@@ -95,7 +95,15 @@ export class WordsController {
   }
 
   @Post(':id/review')
-  reviewWord(@Param('id') id: string, @Body() reviewDto: ReviewWordDto) {
+  async reviewWord(
+    @Param('id') id: string,
+    @Body() reviewDto: ReviewWordDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const word = await this.wordsService.findOne(id);
+    if (!word || word.userId !== req.user?.id) {
+      throw new HttpException('Word not found', HttpStatus.NOT_FOUND);
+    }
     return this.srsService.recordReview(id, reviewDto.quality as SrsQuality);
   }
 

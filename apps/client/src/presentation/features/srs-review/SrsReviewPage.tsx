@@ -1,17 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSrsStore } from './store/useSrsStore';
+import { wordsApi } from '../../../infrastructure/api/words';
 import { Button } from '../../components/ui/button';
 import { RotateCcw, Brain, CheckCircle2, Flame, Clock, BookOpen } from 'lucide-react';
 
 export function SrsReviewPage() {
     const {
         status, words, currentIndex, isFlipped, stats,
-        reviewedCount, error, loadDueWords, loadStats, flipCard,
+        reviewedCount, error, sourceLanguage, targetLanguage,
+        setFilter, loadDueWords, loadStats, flipCard,
         submitReview, reset,
     } = useSrsStore();
 
+    const [languages, setLanguages] = useState<{ sourceLanguage: string; targetLanguage: string }[]>([]);
+
     useEffect(() => {
         loadStats();
+        wordsApi.getLanguages().then(setLanguages).catch(() => {});
     }, [loadStats]);
 
     // Idle / Setup
@@ -30,6 +35,31 @@ export function SrsReviewPage() {
                         <StatCard icon={<Clock className="w-4 h-4" />} label="Due Now" value={stats.due} accent />
                         <StatCard icon={<Brain className="w-4 h-4" />} label="Learned" value={stats.learned} />
                         <StatCard icon={<Flame className="w-4 h-4" />} label="Today" value={stats.reviewedToday} />
+                    </div>
+                )}
+
+                {languages.length > 0 && (
+                    <div className="flex justify-center gap-3">
+                        <select
+                            value={sourceLanguage}
+                            onChange={(e) => setFilter('sourceLanguage', e.target.value)}
+                            className="rounded-md border bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="">All source languages</option>
+                            {[...new Set(languages.map((l) => l.sourceLanguage))].map((lang) => (
+                                <option key={lang} value={lang}>{lang}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={targetLanguage}
+                            onChange={(e) => setFilter('targetLanguage', e.target.value)}
+                            className="rounded-md border bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="">All target languages</option>
+                            {[...new Set(languages.map((l) => l.targetLanguage))].map((lang) => (
+                                <option key={lang} value={lang}>{lang}</option>
+                            ))}
+                        </select>
                     </div>
                 )}
 
@@ -168,7 +198,7 @@ export function SrsReviewPage() {
                         sublabel="~1 day"
                         quality={2}
                         color="bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 border-orange-500/30"
-                        onClick={() => submitReview(3)}
+                        onClick={() => submitReview(2)}
                     />
                     <RatingButton
                         label="Good"
