@@ -9,19 +9,63 @@ import { soundService } from '../../../../../core/services/SoundService';
 /**
  * Cloze Deletion Game
  *
- * Shows a context sentence with the target word blanked out.
- * The user must type the missing word.
+ * Shows a context sentence with a word blanked out. The user types the missing word.
  *
- * Data flow:
- * - question = the word (e.g. "Gato")
- * - answer   = the translation/definition (e.g. "Cat")
- * - context  = an example sentence containing the word (e.g. "El gato es negro")
- *
- * The blank replaces `question` inside `context`. The hint shown is `answer`.
+ * The tricky part: `context` is always in the source language of the original word,
+ * but items can be swapped (reverse-fetched), so `question` might not appear in `context`.
+ * We detect which of question/answer appears in context, blank that one, show the other as hint.
  */
 
 function escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+interface ClozeData {
+    /** The sentence with a blank */
+    sentence: string;
+    /** The word the user must type */
+    wordToGuess: string;
+    /** The hint/translation shown to the user */
+    hint: string;
+    /** Language of the hint */
+    hintLang: string;
+    /** Language of the sentence/blank */
+    sentenceLang: string;
+}
+
+function buildClozeData(item: { question: string; answer: string; context?: string; lang?: { source: string; target: string } }): ClozeData | null {
+    if (!item.context) return null;
+
+    const ctx = item.context;
+    const qRegex = new RegExp(`\\b${escapeRegex(item.question)}\\b`, 'i');
+    const aRegex = new RegExp(`\\b${escapeRegex(item.answer)}\\b`, 'i');
+
+    const questionInContext = qRegex.test(ctx);
+    const answerInContext = aRegex.test(ctx);
+
+    if (questionInContext) {
+        // Normal case: question word is in the context sentence
+        return {
+            sentence: ctx.replace(qRegex, '_____'),
+            wordToGuess: item.question,
+            hint: item.answer,
+            hintLang: item.lang?.target ?? '',
+            sentenceLang: item.lang?.source ?? '',
+        };
+    }
+
+    if (answerInContext) {
+        // Swapped case: answer word is in the context sentence
+        return {
+            sentence: ctx.replace(aRegex, '_____'),
+            wordToGuess: item.answer,
+            hint: item.question,
+            hintLang: item.lang?.source ?? '',
+            sentenceLang: item.lang?.target ?? '',
+        };
+    }
+
+    return null;
 }
 
 export function ClozeGame() {
@@ -35,57 +79,37 @@ export function ClozeGame() {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const processingRef = useRef(false);
 
-    const currentItem = items[currentIndex];
-
-    // Filter to only items that have context and are single words
+    // Filter to items that work for cloze (have context with a matchable word)
     const clozeItems = useMemo(
-        () => items.filter(i => i.type === 'word' && i.context && i.context.toLowerCase().includes(i.question.toLowerCase())),
+        () => items.filter(i => buildClozeData(i) !== null),
         [items]
     );
 
-    // Find the current cloze-compatible item
-    const clozeItem = clozeItems.length > 0 ? clozeItems[currentIndex % clozeItems.length] : null;
-    const item = clozeItem ?? currentItem;
+    const activeItem = clozeItems[currentIndex % clozeItems.length] ?? null;
+    const cloze = activeItem ? buildClozeData(activeItem) : null;
 
-    // The word to blank out is the question (the foreign word in the sentence)
-    const targetWord = item?.question ?? '';
-
-    // Build cloze sentence
-    const clozeSentence = useMemo(() => {
-        if (!item?.context) return null;
-        const regex = new RegExp(`(${escapeRegex(targetWord)})`, 'i');
-        if (regex.test(item.context)) {
-            return item.context.replace(regex, '_____');
-        }
-        return null;
-    }, [item, targetWord]);
-
-    // Progressive hints based on the target word
+    // Progressive hints
     const answerHint = (() => {
-        if (!targetWord || hintLevel === 0) return '';
-        if (hintLevel === 1) return targetWord[0] + '·'.repeat(targetWord.length - 1);
-        const half = Math.ceil(targetWord.length / 2);
-        return targetWord.slice(0, half) + '·'.repeat(targetWord.length - half);
+        if (!cloze || hintLevel === 0) return '';
+        const w = cloze.wordToGuess;
+        if (hintLevel === 1) return w[0] + '·'.repeat(w.length - 1);
+        const half = Math.ceil(w.length / 2);
+        return w.slice(0, half) + '·'.repeat(w.length - half);
     })();
 
-    // Give cloze mode more time — 20s instead of 10s
+    // 20s timer for typing
     useEffect(() => {
         if (timerEnabled) setTime(200);
     }, [currentIndex, timerEnabled, setTime]);
 
-    // Focus input
     useEffect(() => {
         setTimeout(() => inputRef.current?.focus(), 100);
     }, [currentIndex]);
 
-    // Cleanup
     useEffect(() => {
-        return () => {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        };
+        return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
     }, []);
 
-    // Handle timeout
     useEffect(() => {
         if (timerEnabled && timeLeft === 0 && !processingRef.current) {
             processingRef.current = true;
@@ -99,7 +123,6 @@ export function ClozeGame() {
         }
     }, [timeLeft, timerEnabled, submitAnswer, nextItem]);
 
-    // Reset on item change
     useEffect(() => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         processingRef.current = false;
@@ -112,19 +135,13 @@ export function ClozeGame() {
     }, [currentIndex]);
 
     const handleSubmit = () => {
-        if (processingRef.current || !input.trim()) return;
+        if (processingRef.current || !cloze || !input.trim()) return;
         processingRef.current = true;
         setIsProcessing(true);
         setShowAnswer(true);
 
-        const isCorrect = input.trim().toLowerCase() === targetWord.toLowerCase();
-
-        if (isCorrect) {
-            soundService.playCorrect();
-        } else {
-            soundService.playWrong();
-        }
-
+        const isCorrect = input.trim().toLowerCase() === cloze.wordToGuess.toLowerCase();
+        (isCorrect ? soundService.playCorrect : soundService.playWrong).call(soundService);
         submitAnswer(isCorrect);
         timeoutRef.current = setTimeout(() => nextItem(), isCorrect ? 1200 : 2500);
     };
@@ -133,49 +150,48 @@ export function ClozeGame() {
         if (e.key === 'Enter') handleSubmit();
     };
 
-    const revealHint = () => {
-        if (hintLevel < 2) setHintLevel(hintLevel + 1);
-    };
-
-    if (!item) return null;
-
-    // No usable cloze items
-    if (!clozeSentence) {
+    // No usable items — but only show error if items have loaded
+    if (items.length > 0 && clozeItems.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
                 <h3 className="text-2xl font-bold">No Cloze Items Available</h3>
                 <p className="text-muted-foreground max-w-md">
-                    Cloze mode needs words that have example sentences containing the word.
-                    Try adding context sentences to your saved words.
+                    Cloze mode needs words with example sentences that contain the word.
+                    Add context sentences to your saved words, or try a different source.
                 </p>
                 <Button onClick={() => useGameStore.getState().reset()} variant="outline">Back</Button>
             </div>
         );
     }
 
-    const isCorrect = input.trim().toLowerCase() === targetWord.toLowerCase();
+    // Still loading
+    if (items.length === 0) return null;
+
+    if (!cloze) return null;
+
+    const isCorrect = input.trim().toLowerCase() === cloze.wordToGuess.toLowerCase();
 
     return (
         <div className="flex flex-col h-full justify-center items-center gap-6 animate-in fade-in duration-500">
             <Card className="w-full max-w-2xl bg-gradient-to-br from-card to-secondary/20 border-2 shadow-lg">
                 <CardContent className="flex flex-col items-center justify-center p-8 md:p-12 min-h-[220px] gap-5">
-                    {/* Translation hint — tells user what word to fill in */}
+                    {/* Hint: the translation of the missing word */}
                     <div className="text-center space-y-1">
                         <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                            What is the {item.lang?.source ?? 'source'} word for...
+                            {cloze.hintLang && `${cloze.hintLang} · `}Translation
                         </p>
                         <h2 className="text-3xl md:text-4xl font-black text-primary">
-                            {item.answer}
+                            {cloze.hint}
                         </h2>
                     </div>
 
                     {/* Context sentence with blank */}
                     <div className="border-t pt-4 w-full text-center">
                         <p className="text-sm uppercase tracking-wider text-muted-foreground mb-3">
-                            Fill in the missing word
+                            {cloze.sentenceLang && `${cloze.sentenceLang} · `}Fill in the missing word
                         </p>
                         <p className="text-xl md:text-2xl font-semibold leading-relaxed">
-                            {clozeSentence.split('_____').map((part, i, arr) => (
+                            {cloze.sentence.split('_____').map((part, i, arr) => (
                                 <span key={i}>
                                     {part}
                                     {i < arr.length - 1 && (
@@ -187,7 +203,7 @@ export function ClozeGame() {
                                                     : "border-red-500 text-red-500"
                                                 : "border-primary/40 text-primary/70"
                                         )}>
-                                            {showAnswer ? targetWord : (input || answerHint || '\u00A0')}
+                                            {showAnswer ? cloze.wordToGuess : (input || answerHint || '\u00A0')}
                                         </span>
                                     )}
                                 </span>
@@ -198,7 +214,7 @@ export function ClozeGame() {
                     {/* Letter count + hint */}
                     {!showAnswer && (
                         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <span>{targetWord.length} letters</span>
+                            <span>{cloze.wordToGuess.length} letters</span>
                             {hintLevel > 0 && (
                                 <span className="font-mono text-primary font-bold tracking-widest">{answerHint}</span>
                             )}
@@ -207,7 +223,7 @@ export function ClozeGame() {
                 </CardContent>
             </Card>
 
-            {/* Input area */}
+            {/* Input */}
             <div className="w-full max-w-md space-y-3">
                 <input
                     ref={inputRef}
@@ -235,10 +251,9 @@ export function ClozeGame() {
                         <>
                             <Button
                                 variant="outline"
-                                onClick={revealHint}
+                                onClick={() => hintLevel < 2 && setHintLevel(hintLevel + 1)}
                                 disabled={hintLevel >= 2}
                                 className="gap-2"
-                                title="Reveal hint"
                             >
                                 <Eye className="w-4 h-4" />
                                 Hint {hintLevel > 0 && `(${hintLevel}/2)`}
@@ -261,10 +276,9 @@ export function ClozeGame() {
                     )}
                 </div>
 
-                {/* Show correct answer on wrong */}
                 {showAnswer && !isCorrect && (
                     <p className="text-center text-lg animate-in fade-in slide-in-from-bottom-2">
-                        Correct: <span className="font-bold text-green-500">{targetWord}</span>
+                        Correct: <span className="font-bold text-green-500">{cloze.wordToGuess}</span>
                     </p>
                 )}
             </div>

@@ -72,7 +72,8 @@ export function GameShell({ children }: GameShellProps) {
     }
 
     const progress = items.length > 0 ? ((currentIndex) / items.length) * 100 : 0;
-    const timeProgress = timeLeft; // Max is 100
+    const maxTime = config.mode === 'cloze' ? 200 : 100;
+    const timeProgress = Math.min((timeLeft / maxTime) * 100, 100);
 
     return (
         <div className="flex flex-col h-full bg-background relative">
@@ -82,8 +83,8 @@ export function GameShell({ children }: GameShellProps) {
                     <div
                         className={cn(
                             "h-full ease-linear",
-                            timeLeft === 100 ? "transition-none" : "transition-all duration-100",
-                            timeLeft > 50 ? "bg-primary" : timeLeft > 20 ? "bg-orange-500" : "bg-red-500"
+                            timeLeft >= maxTime ? "transition-none" : "transition-all duration-100",
+                            timeProgress > 50 ? "bg-primary" : timeProgress > 20 ? "bg-orange-500" : "bg-red-500"
                         )}
                         style={{ width: `${timeProgress}%` }}
                     />
@@ -116,7 +117,7 @@ export function GameShell({ children }: GameShellProps) {
                         {/* Timer Numeric Display */}
                         {timerEnabled && (
                             <div className={cn("flex items-center gap-1.5 font-bold tabular-nums text-sm transition-colors",
-                                timeLeft <= 30 ? "text-red-500 animate-pulse" : "text-muted-foreground"
+                                timeProgress <= 30 ? "text-red-500 animate-pulse" : "text-muted-foreground"
                             )}>
                                 <Timer className="w-3 h-3" />
                                 {Math.ceil(timeLeft / 10)}s
