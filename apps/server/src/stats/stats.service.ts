@@ -68,41 +68,35 @@ export class StatsService {
   }
 
   /**
-   * Get daily activity for the last N days.
-   * Returns arrays of { date, wordsAdded, wordsReviewed }.
+   * Get daily activity for a window of days.
+   * @param days - window size (default 30)
+   * @param offset - how many days back from today the window ends (0 = today)
    */
-  async getActivity(userId: string, days?: number) {
+  async getActivity(userId: string, days = 30, offset = 0) {
     const resolvedUserId = await this.resolveUserId(userId);
     if (!resolvedUserId) return [];
 
-    let since: Date;
+    const end = new Date();
+    end.setDate(end.getDate() - offset);
+    end.setHours(23, 59, 59, 999);
 
-    if (days) {
-      since = new Date();
-      since.setDate(since.getDate() - days);
-      since.setHours(0, 0, 0, 0);
-    } else {
-      // Auto-detect: start from the first word's creation date
-      const firstWord = await this.prisma.word.findFirst({
-        where: { userId: resolvedUserId },
-        orderBy: { createdAt: 'asc' },
-        select: { createdAt: true },
-      });
-      if (!firstWord) return [];
-      since = new Date(firstWord.createdAt);
-      since.setHours(0, 0, 0, 0);
-    }
-
-    const now = new Date();
-    const diffDays = Math.ceil((now.getTime() - since.getTime()) / (1000 * 60 * 60 * 24));
+    const since = new Date(end);
+    since.setDate(since.getDate() - days);
+    since.setHours(0, 0, 0, 0);
 
     const [wordsCreated, wordsReviewed] = await Promise.all([
       this.prisma.word.findMany({
-        where: { userId: resolvedUserId, createdAt: { gte: since } },
+        where: {
+          userId: resolvedUserId,
+          createdAt: { gte: since, lte: end },
+        },
         select: { createdAt: true },
       }),
       this.prisma.word.findMany({
-        where: { userId: resolvedUserId, srsLastReview: { gte: since } },
+        where: {
+          userId: resolvedUserId,
+          srsLastReview: { gte: since, lte: end },
+        },
         select: { srsLastReview: true },
       }),
     ]);
@@ -110,7 +104,7 @@ export class StatsService {
     // Build day-by-day map
     const dayMap = new Map<string, { wordsAdded: number; wordsReviewed: number }>();
 
-    for (let d = 0; d <= diffDays; d++) {
+    for (let d = 0; d <= days; d++) {
       const date = new Date(since);
       date.setDate(date.getDate() + d);
       const key = date.toISOString().slice(0, 10);

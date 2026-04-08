@@ -18,5 +18,5 @@ export interface DailyActivity {
 
 export const statsApi = {
     getOverview: () => defaultClient.get<StatsOverview>(`${ENDPOINT}/overview`),
-    getActivity: (days?: number) => defaultClient.get<DailyActivity[]>(`${ENDPOINT}/activity${days ? `?days=${days}` : ''}`),
+    getActivity: (days = 30, offset = 0) => defaultClient.get<DailyActivity[]>(`${ENDPOINT}/activity?days=${days}&offset=${offset}`),
 };

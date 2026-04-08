@@ -1,23 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
 import { statsApi, type StatsOverview, type DailyActivity } from '../../../infrastructure/api/stats';
-import { BookOpen, Brain, Clock, Flame, Globe, MessageSquare, TrendingUp } from 'lucide-react';
+import { BookOpen, Brain, ChevronLeft, ChevronRight, Clock, Flame, Globe, MessageSquare, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function StatsPage() {
     const [overview, setOverview] = useState<StatsOverview | null>(null);
-    const [activity, setActivity] = useState<DailyActivity[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        Promise.all([
-            statsApi.getOverview(),
-            statsApi.getActivity(),
-        ]).then(([ov, act]) => {
-            setOverview(ov);
-            setActivity(act);
-        }).catch(console.error)
-          .finally(() => setLoading(false));
+        statsApi.getOverview()
+            .then(setOverview)
+            .catch(console.error)
+            .finally(() => setLoading(false));
     }, []);
 
     if (loading) {
@@ -111,14 +107,8 @@ export function StatsPage() {
 
             {/* Activity Chart */}
             <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                        <TrendingUp className="w-5 h-5" />
-                        Activity
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ActivityChart data={activity} />
+                <CardContent className="pt-6">
+                    <PaginatedActivityChart />
                 </CardContent>
             </Card>
 
@@ -177,6 +167,80 @@ function StatCard({ icon, label, value, accent }: {
             <p className={cn("text-2xl font-bold", accent ? "text-primary" : "text-foreground")}>
                 {value}
             </p>
+        </div>
+    );
+}
+
+const PAGE_DAYS = 30;
+
+function PaginatedActivityChart() {
+    const [data, setData] = useState<DailyActivity[]>([]);
+    const [offset, setOffset] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    const fetchPage = useCallback((newOffset: number) => {
+        setLoading(true);
+        statsApi.getActivity(PAGE_DAYS, newOffset)
+            .then(setData)
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
+        // Initial load — offset is already 0
+        let cancelled = false;
+        statsApi.getActivity(PAGE_DAYS, 0)
+            .then(d => { if (!cancelled) setData(d); })
+            .catch(console.error)
+            .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+    }, []);
+
+    const goBack = () => {
+        const next = offset + PAGE_DAYS;
+        setOffset(next);
+        fetchPage(next);
+    };
+
+    const goForward = () => {
+        const next = Math.max(0, offset - PAGE_DAYS);
+        setOffset(next);
+        fetchPage(next);
+    };
+
+    const rangeEnd = new Date();
+    rangeEnd.setDate(rangeEnd.getDate() - offset);
+    const rangeStart = new Date(rangeEnd);
+    rangeStart.setDate(rangeStart.getDate() - PAGE_DAYS);
+
+    const label = `${rangeStart.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} — ${rangeEnd.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+    return (
+        <div className="space-y-3">
+            {/* Header with navigation */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-lg font-semibold">
+                    <TrendingUp className="w-5 h-5" />
+                    Activity
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={goBack}>
+                        <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm text-muted-foreground min-w-[180px] text-center">{label}</span>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={goForward} disabled={offset === 0}>
+                        <ChevronRight className="w-4 h-4" />
+                    </Button>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="flex items-center justify-center h-32">
+                    <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
+            ) : (
+                <ActivityChart data={data} />
+            )}
         </div>
     );
 }

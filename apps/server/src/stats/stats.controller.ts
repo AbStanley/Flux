@@ -17,9 +17,11 @@ export class StatsController {
   @Get('activity')
   getActivity(
     @Query('days') days: string,
+    @Query('offset') offset: string,
     @Request() req: AuthenticatedRequest,
   ) {
-    const numDays = days ? Math.min(365, Math.max(7, +days)) : undefined;
-    return this.statsService.getActivity(req.user?.id ?? '', numDays);
+    const numDays = days ? Math.min(90, Math.max(7, +days)) : 30;
+    const numOffset = offset ? Math.max(0, +offset) : 0;
+    return this.statsService.getActivity(req.user?.id ?? '', numDays, numOffset);
   }
 }
