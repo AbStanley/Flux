@@ -1,8 +1,65 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { OllamaClientService } from './ollama-client.service';
 import { WRITING_ANALYSIS_PROMPT } from '../prompts';
-import { cleanAndParseJson } from '../utils/ollama-utils';
-import { WritingAnalysisResponse } from '../interfaces/ollama.interfaces';
+import { WritingAnalysisResponse, WritingCorrection } from '../interfaces/ollama.interfaces';
+
+interface ParsedWriting {
+  cleanText: string;
+  corrections: WritingCorrection[];
+}
+
+function stripQuotes(s: string): string {
+  return s.replace(/^[""\u201C\u201D'"]+|[""\u201C\u201D'"]+$/g, '').trim();
+}
+
+function parseMarkerText(markerText: string, originalText: string): ParsedWriting {
+  const corrections: WritingCorrection[] = [];
+  let cleanText = '';
+
+  // Flexible regex: matches [fix: "wrong" → "correct" | ...anything... ]
+  // Handles: smart quotes, no quotes, →/->/->/-->, type: with slashes, missing type:
+  const regex = /\[fix:\s*[""\u201C]?(.+?)[""\u201D]?\s*(?:→|->|-->)\s*[""\u201C]?(.+?)[""\u201D]?\s*(?:\|\s*(?:type:\s*)?([\w/]+))?\s*(?:\|\s*(.+?))?\s*\]/g;
+
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(markerText)) !== null) {
+    cleanText += markerText.slice(lastIndex, match.index);
+
+    const wrong = stripQuotes(match[1]);
+    const correct = stripQuotes(match[2]);
+    const type = (match[3] || 'Grammar').split('/')[0];
+    const explanation = stripQuotes(match[4] || '');
+
+    const offset = cleanText.length;
+    cleanText += correct;
+
+    corrections.push({
+      type,
+      shortDescription: type.toUpperCase(),
+      longDescription: explanation,
+      mistakeText: wrong,
+      correctionText: correct,
+      startIndex: offset,
+      endIndex: offset + correct.length,
+      offset,
+      length: correct.length,
+    });
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  cleanText += markerText.slice(lastIndex);
+
+  // Second pass: strip any remaining [fix: ...] markers the regex missed
+  cleanText = cleanText.replace(/\[fix:\s*[^\]]*\]/g, '');
+
+  if (corrections.length === 0) {
+    return { cleanText: originalText, corrections: [] };
+  }
+
+  return { cleanText: cleanText.trim(), corrections };
+}
 
 @Injectable()
 export class OllamaWritingService {
@@ -26,25 +83,17 @@ export class OllamaWritingService {
         model,
         prompt,
         false,
-        'json',
+        undefined,
         {
           num_ctx: 8192,
           num_predict: 4096,
         },
       );
 
-      const rawResult = cleanAndParseJson<any>(
-        response.response,
-      );
+      const rawText = response.response.trim();
+      const { cleanText, corrections } = parseMarkerText(rawText, params.text);
 
-      const result: WritingAnalysisResponse = {
-        text: Array.isArray(rawResult?.text) 
-          ? rawResult.text.join('\n') 
-          : (rawResult?.text || ''),
-        corrections: rawResult?.corrections || [],
-      };
-
-      return result;
+      return { text: cleanText, corrections };
     } catch (error: unknown) {
       this.logger.error('Error analyzing writing', error);
       const errorMessage =

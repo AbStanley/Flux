@@ -67,91 +67,37 @@ export const useWritingStore = create<WritingState>()(
       applyAnalysisResult: (newText, rawCorrections) => set((state) => {
         const textToUse = newText || state.text;
 
-        const safeCorrections = (Array.isArray(rawCorrections) ? rawCorrections : (rawCorrections as Record<string, unknown>)?.corrections || []) as WritingCorrection[];
-        
-        let lastOldIndex = 0;
+        const safeCorrections = (Array.isArray(rawCorrections) ? rawCorrections : []) as WritingCorrection[];
 
-        const verifiedCorrections = safeCorrections
-          .filter((c): c is WritingCorrection => c !== null && typeof c === 'object') // Ensure valid object
-          .filter(c => c.mistakeText !== c.correctionText) // Filter out noise
-          .map((correction, idx) => {
-            if (!correction.correctionText || !correction.mistakeText) return null;
-            
-            // TRIM whitespace to prevent trailing/leading spaces from being highlighted
-            const orig = correction.correctionText.trim(); 
-            const mistakeStr = correction.mistakeText.trim();
-            const actualLength = orig.length;
-            if (actualLength === 0) return null; // Drop empty highlights
-            
-            // 1. Trust AI startIndex if valid
-            if (correction.startIndex !== undefined &&
-                textToUse.substring(correction.startIndex, correction.startIndex + actualLength) === orig) {
-              return { ...correction, mistakeText: mistakeStr, correctionText: orig, offset: correction.startIndex, length: actualLength, originalIndex: idx } as WritingCorrection;
-            }
-
-            // 2. Establish Expected Locality relative to the OLD text
-            let oldIndex = state.text.toLowerCase().indexOf(mistakeStr.toLowerCase(), lastOldIndex);
-            if (oldIndex === -1) {
-              // Fallback if AI skipped ahead or mutated heavily
-              oldIndex = state.text.toLowerCase().indexOf(mistakeStr.toLowerCase());
-              if (oldIndex === -1) oldIndex = Math.max(0, lastOldIndex);
-            }
-            lastOldIndex = oldIndex + mistakeStr.length;
-            const expectedOffset = oldIndex;
-
-            // 3. Find all occurrences of the corrected text in the NEW text
-            const occurrences: number[] = [];
-            let i = -1;
-            while ((i = textToUse.indexOf(orig, i + 1)) !== -1) {
-              occurrences.push(i);
-            }
-
-            // Case-Insensitive fallback occurrences
-            if (occurrences.length === 0) {
-              const textLower = textToUse.toLowerCase();
-              const origLower = orig.toLowerCase();
-              let j = -1;
-              while ((j = textLower.indexOf(origLower, j + 1)) !== -1) {
-                occurrences.push(j);
-              }
-            }
-
-            // 4. Pick the physical occurrence closest to where the mistake used to be
-            if (occurrences.length > 0) {
-              let bestMatch = occurrences[0];
-              let minDiff = Math.abs(bestMatch - expectedOffset);
-              
-              for (const pos of occurrences) {
-                const diff = Math.abs(pos - expectedOffset);
-                if (diff < minDiff) {
-                  minDiff = diff;
-                  bestMatch = pos;
-                }
-              }
-              return { ...correction, mistakeText: mistakeStr, correctionText: orig, offset: bestMatch, length: actualLength, originalIndex: idx } as WritingCorrection;
-            }
-
-            return null; // Drop if not found anywhere in new text
-          })
-          .filter((c): c is WritingCorrection => c !== null);
-
-        // Deduplicate overlapping offsets
-        const uniqueOffsets = new Set<number>();
-        const finalCorrections = verifiedCorrections.filter(c => {
-           if (c.offset === undefined) return false;
-           if (uniqueOffsets.has(c.offset)) return false;
-           uniqueOffsets.add(c.offset);
-           return true;
-        });
+        // Server now returns pre-computed offsets from marker parsing
+        const finalCorrections = safeCorrections
+          .filter((c): c is WritingCorrection =>
+            c !== null &&
+            typeof c === 'object' &&
+            c.mistakeText !== c.correctionText &&
+            !!c.correctionText &&
+            !!c.mistakeText
+          )
+          .map((c) => ({
+            ...c,
+            mistakeText: c.mistakeText.trim(),
+            correctionText: c.correctionText.trim(),
+            offset: c.offset ?? c.startIndex ?? 0,
+            length: c.length ?? c.correctionText.trim().length,
+          }))
+          .filter((c, _i, arr) => {
+            // Deduplicate overlapping offsets
+            return arr.findIndex(other => other.offset === c.offset) === arr.indexOf(c);
+          });
 
         const newHistory = [...state.history, state.text].slice(-20);
 
-        return { 
-          text: textToUse, 
-          corrections: finalCorrections, 
+        return {
+          text: textToUse,
+          corrections: finalCorrections,
           history: newHistory,
           lastPolishedText: textToUse,
-          lastAppliedInfo: null 
+          lastAppliedInfo: null
         };
       }),
 

@@ -126,7 +126,7 @@ export const InteractiveEditor = () => {
           data-correction-id={corr.originalIndex}
           onClick={(e) => {
             e.stopPropagation();
-            store.revertCorrection(store.corrections[corr.originalIndex!]);
+            store.dismissCorrection(store.corrections[corr.originalIndex!].mistakeText);
             setHoveredId(null); setTooltipPos(null);
           }}
           onMouseEnter={(e) => {

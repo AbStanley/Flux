@@ -6,6 +6,8 @@ export interface WritingCorrection {
   longDescription: string;
   startIndex?: number;
   endIndex?: number;
+  offset?: number;
+  length?: number;
   mistakeText: string;
   correctionText: string;
 }
