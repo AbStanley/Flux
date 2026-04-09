@@ -16,11 +16,10 @@
 
 - [x] **Flashcard Review Mode** -- SRS review page with flip-to-reveal cards (built into SRS feature)
 - [x] **Cloze Deletion Game** -- Fill-in-the-blank from context sentences, hints, 20s timer
-- [ ] **Listening Comprehension** -- Play audio of a passage and quiz the user on content
 
 ## Quality of Life
 
-- [ ] **Multi-User Support** -- Switching between users with separate libraries, decks, and progress
+- [ ] **Multi-User Support** -- Switching between users with separate libraries, decks, and progress with a UI toggle and profile UI
 - [ ] **Offline Model Management UI** -- Settings panel to pull/delete Ollama models from the app
 - [ ] **Mobile-Responsive Layout** -- Optimize reader and games for tablet/phone via LAN
 

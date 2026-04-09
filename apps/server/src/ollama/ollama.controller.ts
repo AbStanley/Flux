@@ -1,6 +1,7 @@
-import { Body, Controller, Post, Get, Res } from '@nestjs/common';
+import { Body, Controller, Post, Get, Delete, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { OllamaService } from './services/ollama.service';
+import { OllamaClientService } from './services/ollama-client.service';
 import {
   GrammarAnalysisResponse,
   WritingAnalysisResponse,
@@ -11,7 +12,10 @@ import { GenerateContentDto } from './dto/generate-content.dto';
 
 @Controller('api')
 export class OllamaController {
-  constructor(private readonly ollamaService: OllamaService) {}
+  constructor(
+    private readonly ollamaService: OllamaService,
+    private readonly ollamaClient: OllamaClientService,
+  ) {}
 
   @Post('chat')
   async chat(
@@ -176,5 +180,20 @@ export class OllamaController {
     },
   ): Promise<WritingAnalysisResponse> {
     return this.ollamaService.analyzeWriting(body);
+  }
+
+  @Post('models/pull')
+  async pullModel(@Body() body: { model: string }, @Res() res: Response) {
+    res.setHeader('Content-Type', 'application/x-ndjson');
+    const stream = await this.ollamaClient.pullModel(body.model, true);
+    for await (const part of stream) {
+      res.write(JSON.stringify(part) + '\n');
+    }
+    res.end();
+  }
+
+  @Delete('models')
+  async deleteModel(@Body() body: { model: string }) {
+    return this.ollamaClient.deleteModel(body.model);
   }
 }

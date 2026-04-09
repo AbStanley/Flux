@@ -104,6 +104,29 @@ export class OllamaClientService {
     }
   }
 
+  async pullModel(
+    model: string,
+    stream: true,
+  ): Promise<AsyncIterable<{ status: string; total?: number; completed?: number }>> {
+    return this.execute(
+      () =>
+        this.ollama.pull({ model, stream: true }) as unknown as Promise<
+          AsyncIterable<{ status: string; total?: number; completed?: number }>
+        >,
+      `pull model ${model}`,
+    );
+  }
+
+  async deleteModel(model: string): Promise<{ status: string }> {
+    return this.execute(
+      () =>
+        this.ollama.delete({ model }) as unknown as Promise<{
+          status: string;
+        }>,
+      `delete model ${model}`,
+    );
+  }
+
   async ensureModel(model?: string): Promise<string> {
     if (model) return model;
 

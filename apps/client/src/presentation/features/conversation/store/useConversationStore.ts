@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { defaultClient } from '../../../../infrastructure/api/api-client';
+import { getSocket } from '../../../../infrastructure/api/socket';
 
 export interface ChatMessage {
     role: 'user' | 'assistant' | 'system';
@@ -52,6 +53,38 @@ FIRST MESSAGE:
 - Include one [vocab: ...] suggestion to start.`;
 }
 
+async function streamViaNdjson(
+    messages: { role: string; content: string }[],
+    model: string,
+    appendToken: (token: string, fullContent: string) => string,
+) {
+    const response = await fetch(
+        `${defaultClient.getBaseUrl()}/api/chat`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: model || undefined, messages, stream: true }),
+        },
+    );
+    if (!response.ok) throw new Error(`Chat failed: ${response.status}`);
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('No response stream');
+    const decoder = new TextDecoder();
+    let fullContent = '';
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const lines = decoder.decode(value, { stream: true }).split('\n').filter(Boolean);
+        for (const line of lines) {
+            try {
+                const parsed = JSON.parse(line);
+                const token = parsed?.message?.content ?? '';
+                fullContent = appendToken(token, fullContent);
+            } catch { /* skip */ }
+        }
+    }
+}
+
 export const useConversationStore = create<ConversationState>()(
     persist(
         (set, get) => ({
@@ -98,66 +131,65 @@ export const useConversationStore = create<ConversationState>()(
 
                 set({ messages: withAssistant, isStreaming: true, error: null });
 
+                const ollamaMessages = updatedMessages.map((m) => ({
+                    role: m.role,
+                    content: m.content,
+                }));
+
+                const appendToken = (token: string, fullContent: string) => {
+                    const updated = fullContent + token;
+                    set((state) => {
+                        const msgs = [...state.messages];
+                        msgs[msgs.length - 1] = { role: 'assistant', content: updated };
+                        return { messages: msgs };
+                    });
+                    return updated;
+                };
+
                 try {
-                    // Build Ollama messages payload (exclude empty assistant placeholder)
-                    const ollamaMessages = updatedMessages.map((m) => ({
-                        role: m.role,
-                        content: m.content,
-                    }));
+                    // Try WebSocket first
+                    const socket = getSocket();
+                    if (socket.connected) {
+                        await new Promise<void>((resolve, reject) => {
+                            let fullContent = '';
 
-                    const response = await fetch(
-                        `${defaultClient.getBaseUrl()}/api/chat`,
-                        {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                model: model || undefined,
-                                messages: ollamaMessages,
-                                stream: true,
-                            }),
-                        },
-                    );
+                            const onToken = (data: { content: string }) => {
+                                fullContent = appendToken(data.content, fullContent);
+                            };
+                            const onDone = () => { cleanup(); resolve(); };
+                            const onError = (data: { error: string }) => { cleanup(); reject(new Error(data.error)); };
 
-                    if (!response.ok) {
-                        throw new Error(`Chat failed: ${response.status}`);
-                    }
+                            const cleanup = () => {
+                                socket.off('chat:token', onToken);
+                                socket.off('chat:done', onDone);
+                                socket.off('chat:error', onError);
+                            };
 
-                    const reader = response.body?.getReader();
-                    if (!reader) throw new Error('No response stream');
-
-                    const decoder = new TextDecoder();
-                    let fullContent = '';
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-
-                        const chunk = decoder.decode(value, { stream: true });
-                        const lines = chunk.split('\n').filter(Boolean);
-
-                        for (const line of lines) {
-                            try {
-                                const parsed = JSON.parse(line);
-                                const token = parsed?.message?.content ?? '';
-                                fullContent += token;
-
-                                // Update the last message in place
-                                set((state) => {
-                                    const msgs = [...state.messages];
-                                    msgs[msgs.length - 1] = {
-                                        role: 'assistant',
-                                        content: fullContent,
-                                    };
-                                    return { messages: msgs };
-                                });
-                            } catch {
-                                // skip malformed chunks
-                            }
-                        }
+                            socket.on('chat:token', onToken);
+                            socket.on('chat:done', onDone);
+                            socket.on('chat:error', onError);
+                            socket.emit('chat', { model: model || undefined, messages: ollamaMessages });
+                        });
+                    } else {
+                        // Fallback to NDJSON
+                        await streamViaNdjson(ollamaMessages, model, appendToken);
                     }
                 } catch (e) {
-                    const msg = e instanceof Error ? e.message : 'Failed to send message';
-                    set({ error: msg });
+                    // If WebSocket fails, try NDJSON fallback
+                    try {
+                        let fullContent = '';
+                        const msgs = get().messages;
+                        const lastMsg = msgs[msgs.length - 1];
+                        if (lastMsg?.role === 'assistant') fullContent = lastMsg.content;
+                        if (!fullContent) {
+                            await streamViaNdjson(ollamaMessages, model, appendToken);
+                        } else {
+                            throw e; // Already had partial content from WS, surface the error
+                        }
+                    } catch (fallbackErr) {
+                        const msg = fallbackErr instanceof Error ? fallbackErr.message : 'Failed to send message';
+                        set({ error: msg });
+                    }
                 } finally {
                     set({ isStreaming: false });
                 }

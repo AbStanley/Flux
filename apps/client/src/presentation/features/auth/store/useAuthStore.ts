@@ -1,9 +1,26 @@
 import { create } from 'zustand';
 import { authApi } from '@/infrastructure/api/auth';
 
+const USER_KEY = 'flux_auth_user';
+
 interface AuthUser {
     id: string;
     email: string;
+}
+
+function getStoredUser(): AuthUser | null {
+    try {
+        const raw = localStorage.getItem(USER_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+}
+
+function setStoredUser(user: AuthUser | null) {
+    if (user) {
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } else {
+        localStorage.removeItem(USER_KEY);
+    }
 }
 
 interface AuthState {
@@ -25,18 +42,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     isLoading: true,
     error: null,
 
-    initialize: async () => {
+    initialize: () => {
         const token = authApi.getStoredToken();
+        const user = getStoredUser();
         if (token) {
-            set({ token, isAuthenticated: true });
-            try {
-                const user = await authApi.getMe();
-                set({ user, isLoading: false });
-            } catch {
-                // Token expired or invalid
-                authApi.clearStoredToken();
-                set({ token: null, isAuthenticated: false, isLoading: false });
-            }
+            set({ token, user, isAuthenticated: true, isLoading: false });
         } else {
             set({ isLoading: false });
         }
@@ -47,6 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             const response = await authApi.login(email, password);
             authApi.setStoredToken(response.accessToken);
+            setStoredUser(response.user);
             set({
                 token: response.accessToken,
                 user: response.user,
@@ -65,6 +76,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             const response = await authApi.register(email, password);
             authApi.setStoredToken(response.accessToken);
+            setStoredUser(response.user);
             set({
                 token: response.accessToken,
                 user: response.user,
@@ -80,6 +92,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     logout: () => {
         authApi.clearStoredToken();
+        setStoredUser(null);
         set({
             token: null,
             user: null,
