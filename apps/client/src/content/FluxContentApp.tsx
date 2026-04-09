@@ -101,7 +101,7 @@ export function FluxContentApp() {
             window.chrome.storage.onChanged.addListener(handleStorageChange);
             return () => window.chrome.storage.onChanged.removeListener(handleStorageChange);
         }
-    }, []);
+    }, [aiService]);
 
     // Save settings when changed
     const handleAutoSaveChange = (enabled: boolean) => {
