@@ -31,11 +31,11 @@ export class SrsService {
     prevInterval: number,
     prevReps: number,
   ): Sm2Result {
-    // If quality < 3, reset (lapse)
+    // If quality < 3, reset (lapse) — 10 minutes
     if (quality < 3) {
       return {
         easeFactor: Math.max(1.3, prevEase - 0.2),
-        interval: 1,
+        interval: 0,
         repetitions: 0,
       };
     }
@@ -135,7 +135,12 @@ export class SrsService {
     );
 
     const nextReview = new Date();
-    nextReview.setDate(nextReview.getDate() + interval);
+    if (interval === 0) {
+      // "Again" — re-show in 10 minutes
+      nextReview.setMinutes(nextReview.getMinutes() + 10);
+    } else {
+      nextReview.setDate(nextReview.getDate() + interval);
+    }
 
     return this.prisma.word.update({
       where: { id: wordId },

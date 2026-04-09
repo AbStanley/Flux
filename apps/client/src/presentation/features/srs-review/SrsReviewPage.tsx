@@ -267,7 +267,7 @@ function previewSm2Interval(
     prevInterval: number = 0,
     prevReps: number = 0,
 ): number {
-    if (quality < 3) return 1;
+    if (quality < 3) return 0; // 10 minutes (sub-day)
 
     const newEase = Math.max(
         1.3,
@@ -291,7 +291,7 @@ function previewSm2Interval(
 }
 
 function formatInterval(days: number): string {
-    if (days <= 0) return '1 day';
+    if (days <= 0) return '10 min';
     if (days === 1) return '1 day';
     if (days < 30) return `${days} days`;
     if (days < 365) return `${Math.round(days / 30)} mo`;
