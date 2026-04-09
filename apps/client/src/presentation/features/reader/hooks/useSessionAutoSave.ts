@@ -18,7 +18,7 @@ export function useSessionAutoSave() {
     const isReading = useReaderStore(s => s.isReading);
     const setSession = useReaderStore(s => s.setSession);
 
-    const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+    const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const savingRef = useRef(false);
 
     // Auto-create session when reading starts without one
