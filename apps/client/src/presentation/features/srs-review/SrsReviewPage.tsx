@@ -191,28 +191,28 @@ export function SrsReviewPage() {
                 <div className="grid grid-cols-4 gap-2 animate-in fade-in slide-in-from-bottom-4">
                     <RatingButton
                         label="Again"
-                        sublabel="< 1 min"
+                        sublabel={formatInterval(previewSm2Interval(1, word.srsEaseFactor, word.srsInterval, word.srsRepetitions))}
                         quality={1}
                         color="bg-red-500/10 hover:bg-red-500/20 text-red-600 border-red-500/30"
                         onClick={() => submitReview(1)}
                     />
                     <RatingButton
                         label="Hard"
-                        sublabel="~1 day"
-                        quality={2}
+                        sublabel={formatInterval(previewSm2Interval(3, word.srsEaseFactor, word.srsInterval, word.srsRepetitions))}
+                        quality={3}
                         color="bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 border-orange-500/30"
-                        onClick={() => submitReview(2)}
+                        onClick={() => submitReview(3)}
                     />
                     <RatingButton
                         label="Good"
-                        sublabel={formatInterval(word.srsInterval)}
+                        sublabel={formatInterval(previewSm2Interval(4, word.srsEaseFactor, word.srsInterval, word.srsRepetitions))}
                         quality={4}
                         color="bg-green-500/10 hover:bg-green-500/20 text-green-600 border-green-500/30"
                         onClick={() => submitReview(4)}
                     />
                     <RatingButton
                         label="Easy"
-                        sublabel={formatInterval(Math.round((word.srsInterval || 1) * (word.srsEaseFactor || 2.5)))}
+                        sublabel={formatInterval(previewSm2Interval(5, word.srsEaseFactor, word.srsInterval, word.srsRepetitions))}
                         quality={5}
                         color="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border-blue-500/30"
                         onClick={() => submitReview(5)}
@@ -260,8 +260,38 @@ function RatingButton({ label, sublabel, color, onClick }: {
     );
 }
 
-function formatInterval(days?: number): string {
-    if (!days || days <= 0) return '~1 day';
+/** Client-side SM-2 preview — mirrors the server's calculateSm2 exactly. */
+function previewSm2Interval(
+    quality: number,
+    prevEase: number = 2.5,
+    prevInterval: number = 0,
+    prevReps: number = 0,
+): number {
+    if (quality < 3) return 1;
+
+    const newEase = Math.max(
+        1.3,
+        prevEase + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)),
+    );
+
+    if (prevReps === 0) {
+        if (quality === 3) return 1;
+        if (quality === 4) return 3;
+        return 7; // quality 5
+    }
+    if (prevReps === 1) {
+        if (quality === 3) return 4;
+        if (quality === 4) return 6;
+        return 10; // quality 5
+    }
+    // Mature cards
+    if (quality === 3) return Math.round(prevInterval * 1.2);
+    if (quality === 5) return Math.round(prevInterval * newEase * 1.3);
+    return Math.round(prevInterval * newEase); // quality 4
+}
+
+function formatInterval(days: number): string {
+    if (days <= 0) return '1 day';
     if (days === 1) return '1 day';
     if (days < 30) return `${days} days`;
     if (days < 365) return `${Math.round(days / 30)} mo`;

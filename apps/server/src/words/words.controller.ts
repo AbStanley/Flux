@@ -101,7 +101,8 @@ export class WordsController {
     @Request() req: AuthenticatedRequest,
   ) {
     const word = await this.wordsService.findOne(id);
-    if (!word || word.userId !== req.user?.id) {
+    const userId = req.user?.id ?? (await this.srsService.resolveUserId());
+    if (!word || word.userId !== userId) {
       throw new HttpException('Word not found', HttpStatus.NOT_FOUND);
     }
     return this.srsService.recordReview(id, reviewDto.quality as SrsQuality);

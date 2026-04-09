@@ -192,7 +192,7 @@ export class OllamaController {
   @Post('models/pull')
   async pullModel(@Body() body: { model: string }, @Res() res: Response) {
     res.setHeader('Content-Type', 'application/x-ndjson');
-    const stream = await this.ollamaClient.pullModel(body.model, true);
+    const stream = await this.ollamaClient.pullModel(body.model);
     for await (const part of stream) {
       res.write(JSON.stringify(part) + '\n');
     }

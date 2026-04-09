@@ -52,10 +52,12 @@ export class OllamaClientService {
   > {
     const action = `generate with model ${model}`;
 
-    const baseRequest: any = { model, prompt, options };
-    if (format) {
-      baseRequest.format = format;
-    }
+    const baseRequest = {
+      model,
+      prompt,
+      ...(options && { options }),
+      ...(format && { format }),
+    };
 
     if (stream) {
       return this.execute(
@@ -106,8 +108,9 @@ export class OllamaClientService {
 
   async pullModel(
     model: string,
-    stream: true,
-  ): Promise<AsyncIterable<{ status: string; total?: number; completed?: number }>> {
+  ): Promise<
+    AsyncIterable<{ status: string; total?: number; completed?: number }>
+  > {
     return this.execute(
       () =>
         this.ollama.pull({ model, stream: true }) as unknown as Promise<
@@ -140,9 +143,10 @@ export class OllamaClientService {
 
     if (available.includes(model)) return model;
 
-    const hint = available.length > 0
-      ? ` Available: ${available.join(', ')}`
-      : ' No models found in Ollama.';
+    const hint =
+      available.length > 0
+        ? ` Available: ${available.join(', ')}`
+        : ' No models found in Ollama.';
     throw new HttpException(
       `Model '${model}' not found.${hint}`,
       HttpStatus.NOT_FOUND,

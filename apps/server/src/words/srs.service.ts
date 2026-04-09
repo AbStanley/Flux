@@ -40,7 +40,7 @@ export class SrsService {
       };
     }
 
-    // Successful recall
+    // Successful recall — update ease factor
     const newEase = Math.max(
       1.3,
       prevEase + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)),
@@ -48,11 +48,20 @@ export class SrsService {
 
     let newInterval: number;
     if (prevReps === 0) {
-      newInterval = 1;
+      // Graduating intervals — differentiate by quality on first review
+      if (quality === 3) newInterval = 1;
+      else if (quality === 4) newInterval = 3;
+      else newInterval = 7; // quality 5
     } else if (prevReps === 1) {
-      newInterval = 6;
+      if (quality === 3) newInterval = 4;
+      else if (quality === 4) newInterval = 6;
+      else newInterval = 10; // quality 5
     } else {
-      newInterval = Math.round(prevInterval * newEase);
+      // Mature cards — scale by quality
+      if (quality === 3) newInterval = Math.round(prevInterval * 1.2);
+      else if (quality === 5)
+        newInterval = Math.round(prevInterval * newEase * 1.3);
+      else newInterval = Math.round(prevInterval * newEase); // quality 4
     }
 
     return {
@@ -62,7 +71,7 @@ export class SrsService {
     };
   }
 
-  private async resolveUserId(userId?: string): Promise<string | undefined> {
+  async resolveUserId(userId?: string): Promise<string | undefined> {
     if (userId) return userId;
     const user = await this.prisma.user.findFirst();
     return user?.id;
