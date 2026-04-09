@@ -1,6 +1,7 @@
 export const SelectionMode = {
     Word: 'word',
-    Sentence: 'sentence'
+    Sentence: 'sentence',
+    Paragraph: 'paragraph'
 } as const;
 
 export type SelectionMode = typeof SelectionMode[keyof typeof SelectionMode];

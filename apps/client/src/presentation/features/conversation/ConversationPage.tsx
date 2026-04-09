@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useConversationStore, type ChatMessage } from './store/useConversationStore';
 import { useServices } from '../../contexts/ServiceContext';
 import { Button } from '../../components/ui/button';
@@ -238,6 +240,10 @@ interface TextToken {
 
 type Token = CorrectionToken | VocabToken | TextToken;
 
+function stripQuotes(s: string): string {
+    return s.replace(/^[""\u201C\u201D'"]+|[""\u201C\u201D'"]+$/g, '');
+}
+
 function parseContent(content: string): Token[] {
     const tokens: Token[] = [];
     // Match [correction: "wrong" → "correct" | explanation] and [vocab: "term" — meaning]
@@ -262,9 +268,9 @@ function parseContent(content: string): Token[] {
             if (arrowMatch) {
                 tokens.push({
                     kind: 'correction',
-                    wrong: arrowMatch[1].trim(),
-                    correct: arrowMatch[2].trim(),
-                    explanation: arrowMatch[3]?.trim() || '',
+                    wrong: stripQuotes(arrowMatch[1].trim()),
+                    correct: stripQuotes(arrowMatch[2].trim()),
+                    explanation: stripQuotes(arrowMatch[3]?.trim() || ''),
                 });
             } else {
                 tokens.push({ kind: 'text', value: match[0] });
@@ -275,8 +281,8 @@ function parseContent(content: string): Token[] {
             if (dashMatch) {
                 tokens.push({
                     kind: 'vocab',
-                    term: dashMatch[1].trim(),
-                    meaning: dashMatch[2].trim(),
+                    term: stripQuotes(dashMatch[1].trim()),
+                    meaning: stripQuotes(dashMatch[2].trim()),
                 });
             } else {
                 tokens.push({ kind: 'text', value: match[0] });
@@ -294,6 +300,29 @@ function parseContent(content: string): Token[] {
 }
 
 // ─── Formatted content renderer ──────────────────────
+
+function MarkdownBlock({ text }: { text: string }) {
+    return (
+        <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+                p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                em: ({ children }) => <em>{children}</em>,
+                ul: ({ children }) => <ul className="list-disc pl-4 mb-1">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-4 mb-1">{children}</ol>,
+                li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                table: ({ children }) => <table className="border-collapse text-xs my-2 w-full">{children}</table>,
+                thead: ({ children }) => <thead className="bg-muted/50">{children}</thead>,
+                th: ({ children }) => <th className="border border-border/50 px-2 py-1 font-semibold text-left">{children}</th>,
+                td: ({ children }) => <td className="border border-border/50 px-2 py-1">{children}</td>,
+                code: ({ children }) => <code className="bg-muted/50 px-1 py-0.5 rounded text-xs">{children}</code>,
+            }}
+        >
+            {text}
+        </ReactMarkdown>
+    );
+}
 
 function FormattedContent({ content, targetLanguage, nativeLanguage }: {
     content: string;
@@ -327,7 +356,7 @@ function FormattedContent({ content, targetLanguage, nativeLanguage }: {
                         />
                     );
                 }
-                return <span key={i}>{token.value}</span>;
+                return <MarkdownBlock key={i} text={token.value} />;
             })}
         </div>
     );
@@ -352,9 +381,10 @@ function CorrectionChip({ token, targetLanguage, nativeLanguage }: {
         setSaving(true);
         try {
             await wordsApi.create({
-                text: token.correct,
-                definition: token.explanation || `Corrected from: "${token.wrong}"`,
+                text: token.wrong,
+                definition: token.correct,
                 context: `${token.wrong} → ${token.correct}`,
+                explanation: token.explanation || undefined,
                 sourceLanguage: targetLanguage,
                 targetLanguage: nativeLanguage,
                 sourceTitle: 'Conversation Practice',

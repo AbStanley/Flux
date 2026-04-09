@@ -1,3 +1,40 @@
+// Helper to find paragraph boundaries (double newline or large whitespace gap)
+export const getParagraphRange = (index: number, tokens: string[]): number[] => {
+    const isParagraphBreak = (token: string) => {
+        // A paragraph break is a token containing two or more newlines
+        const newlineCount = (token.match(/\n/g) || []).length;
+        return newlineCount >= 2;
+    };
+
+    // Search backwards for paragraph start
+    let start = index;
+    for (let i = index - 1; i >= 0; i--) {
+        if (isParagraphBreak(tokens[i])) {
+            start = i + 1;
+            break;
+        }
+        if (i === 0) start = 0;
+    }
+
+    // Search forwards for paragraph end
+    let end = index;
+    for (let i = index + 1; i < tokens.length; i++) {
+        if (isParagraphBreak(tokens[i])) {
+            end = i - 1;
+            break;
+        }
+        if (i === tokens.length - 1) end = i;
+    }
+
+    // Trim whitespace tokens from edges
+    while (start <= end && (!tokens[start] || !tokens[start].trim())) start++;
+    while (end >= start && (!tokens[end] || !tokens[end].trim())) end--;
+
+    const range: number[] = [];
+    for (let k = start; k <= end; k++) range.push(k);
+    return range;
+};
+
 // Helper to find sentence boundaries
 export const getSentenceRange = (index: number, tokens: string[]): number[] => {
     // Common abbreviations that shouldn't end a sentence

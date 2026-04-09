@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { SelectionMode } from '../../../../core/types';
 import { useTranslationStore } from './useTranslationStore';
-import { getSentenceRange } from '../../../../core/utils/text-utils';
+import { getSentenceRange, getParagraphRange } from '../../../../core/utils/text-utils';
 import { chromeStorage } from '@/lib/chrome-storage';
 
 interface ReaderState {
@@ -122,8 +122,10 @@ export const useReaderStore = create<ReaderState>()(
 
                 const newSelection = new Set(selectedIndices);
 
-                if (selectionMode === SelectionMode.Sentence) {
-                    const range = getSentenceRange(globalIndex, tokens);
+                if (selectionMode === SelectionMode.Sentence || selectionMode === SelectionMode.Paragraph) {
+                    const range = selectionMode === SelectionMode.Paragraph
+                        ? getParagraphRange(globalIndex, tokens)
+                        : getSentenceRange(globalIndex, tokens);
                     const start = range[0];
                     const end = range[range.length - 1];
 

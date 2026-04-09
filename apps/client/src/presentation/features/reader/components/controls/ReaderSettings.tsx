@@ -30,6 +30,7 @@ export function ReaderSettings({
                 <SelectContent>
                     <SelectItem value={SelectionMode.Word} className="text-xs">Word Selection</SelectItem>
                     <SelectItem value={SelectionMode.Sentence} className="text-xs">Sentence Selection</SelectItem>
+                    <SelectItem value={SelectionMode.Paragraph} className="text-xs">Paragraph Selection</SelectItem>
                 </SelectContent>
             </Select>
         </div>
