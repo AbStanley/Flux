@@ -6,6 +6,8 @@ export class OllamaClientService {
   private ollama: Ollama;
   private readonly logger = new Logger(OllamaClientService.name);
   private readonly ollamaHost: string;
+  private verifiedModels = new Set<string>();
+  private verifiedAt = 0;
 
   constructor() {
     this.ollamaHost = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
@@ -138,8 +140,16 @@ export class OllamaClientService {
       );
     }
 
+    // Cache verified models for 60s to avoid hammering /api/tags
+    const now = Date.now();
+    if (this.verifiedModels.has(model) && now - this.verifiedAt < 60_000) {
+      return model;
+    }
+
     const tags = await this.listTags();
     const available = tags.models?.map((m) => m.name) ?? [];
+    this.verifiedModels = new Set(available);
+    this.verifiedAt = now;
 
     if (available.includes(model)) return model;
 

@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { FluxHeader } from './FluxHeader';
+import { THEMES } from '../constants';
 
 describe('FluxHeader', () => {
     it('renders with correct title', () => {
@@ -11,6 +12,7 @@ describe('FluxHeader', () => {
             isPinned={false}
             isCollapsed={false}
             onCollapseToggle={() => { }}
+            theme={THEMES.dark}
         />);
         expect(screen.getByText('Flux')).toBeInTheDocument();
     });
@@ -24,6 +26,7 @@ describe('FluxHeader', () => {
             isPinned={false}
             isCollapsed={false}
             onCollapseToggle={() => { }}
+            theme={THEMES.dark}
         />);
 
         const closeButton = screen.getByRole('button', { name: /✕/i });

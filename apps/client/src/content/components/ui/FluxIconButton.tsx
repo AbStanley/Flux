@@ -1,4 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react';
+import type { FluxTheme } from '../../constants';
 
 interface FluxIconButtonProps {
     onClick: (e: MouseEvent) => void;
@@ -7,6 +8,7 @@ interface FluxIconButtonProps {
     style?: React.CSSProperties;
     active?: boolean;
     disabled?: boolean;
+    theme?: FluxTheme;
 }
 
 export function FluxIconButton({
@@ -15,7 +17,8 @@ export function FluxIconButton({
     children,
     style,
     active,
-    disabled
+    disabled,
+    theme,
 }: FluxIconButtonProps) {
     return (
         <button
@@ -28,8 +31,8 @@ export function FluxIconButton({
             title={title}
             disabled={disabled}
             style={{
-                background: active ? '#475569' : '#334155',
-                color: active ? 'white' : '#94a3b8',
+                background: active ? (theme?.surfaceActive ?? '#475569') : (theme?.surface ?? '#334155'),
+                color: active ? (theme?.text ?? 'white') : (theme?.textSecondary ?? '#94a3b8'),
                 border: 'none',
                 borderRadius: '6px',
                 padding: '6px',

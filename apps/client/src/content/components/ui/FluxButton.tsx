@@ -1,4 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react';
+import type { FluxTheme } from '../../constants';
 
 interface FluxButtonProps {
     onClick: (e: MouseEvent) => void;
@@ -6,6 +7,7 @@ interface FluxButtonProps {
     variant?: 'primary' | 'secondary' | 'ghost';
     style?: React.CSSProperties;
     disabled?: boolean;
+    theme?: FluxTheme;
 }
 
 export function FluxButton({
@@ -13,25 +15,26 @@ export function FluxButton({
     children,
     variant = 'primary',
     style,
-    disabled
+    disabled,
+    theme,
 }: FluxButtonProps) {
     const getVariantStyles = (): React.CSSProperties => {
         switch (variant) {
             case 'primary':
                 return {
-                    background: '#3b82f6',
+                    background: theme?.accent ?? '#3b82f6',
                     color: 'white',
-                    boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)',
+                    boxShadow: `0 4px 6px -1px ${theme?.accentGlow ?? 'rgba(59, 130, 246, 0.3)'}`,
                 };
             case 'secondary':
                 return {
-                    background: '#334155',
-                    color: '#94a3b8',
+                    background: theme?.surface ?? '#334155',
+                    color: theme?.textSecondary ?? '#94a3b8',
                 };
             case 'ghost':
                 return {
                     background: 'transparent',
-                    color: '#94a3b8',
+                    color: theme?.textSecondary ?? '#94a3b8',
                 };
             default:
                 return {};

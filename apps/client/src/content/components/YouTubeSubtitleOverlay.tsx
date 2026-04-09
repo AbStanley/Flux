@@ -7,7 +7,7 @@ import { useReaderStore } from '@/presentation/features/reader/store/useReaderSt
 import { SelectionMode } from '@/core/types';
 import { useDraggable } from '../hooks/useDraggable';
 import { useResizable } from '../hooks/useResizable';
-import { SubtitleToken } from './SubtitleToken';
+import type { FluxTheme } from '../constants';
 
 interface Props {
     cue: SubtitleCue | null;
@@ -24,6 +24,7 @@ interface Props {
     hasPrev?: boolean;
     hasNext?: boolean;
     fluxEnabled: boolean;
+    theme: FluxTheme;
 }
 
 export const YouTubeSubtitleOverlay = ({
@@ -40,7 +41,8 @@ export const YouTubeSubtitleOverlay = ({
     onNext,
     hasPrev,
     hasNext,
-    fluxEnabled
+    fluxEnabled,
+    theme,
 }: Props) => {
     const [hoveredWord, setHoveredWord] = useState<{ text: string, x: number, y: number } | null>(null);
     const [isPopupHovered, setIsPopupHovered] = useState(false);
@@ -91,15 +93,23 @@ export const YouTubeSubtitleOverlay = ({
     const hoverDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 
+    const lastHoveredWord = useRef('');
+
+     
     const onWordHover = useCallback((event: React.MouseEvent, word: string) => {
         const cleanWord = word.trim().replace(/[.,!?;:]/g, '');
         if (cleanWord.length === 0 && !isSentenceMode) return;
+
+        const textToProcess = isSentenceMode && cue ? cue.text : cleanWord;
+
+        // Skip if same word is already being processed
+        if (textToProcess === lastHoveredWord.current) return;
+        lastHoveredWord.current = textToProcess;
 
         if (timerRef.current) clearTimeout(timerRef.current);
         if (hoverDebounceRef.current) clearTimeout(hoverDebounceRef.current);
 
         const rect = (event.target as HTMLElement).getBoundingClientRect();
-        const textToProcess = isSentenceMode && cue ? cue.text : cleanWord;
 
         // Show popup frame immediately for responsiveness
         setHoveredWord({ text: textToProcess, x: rect.left + rect.width / 2, y: rect.top });
@@ -107,7 +117,7 @@ export const YouTubeSubtitleOverlay = ({
         // Debounce the actual AI call
         hoverDebounceRef.current = setTimeout(() => {
             handleAction(textToProcess, mode, targetLang, sourceLang, cue?.text);
-        }, 100);
+        }, 350);
     }, [isSentenceMode, cue, mode, targetLang, sourceLang, handleAction]);
 
     const onWordLeave = useCallback(() => {
@@ -116,6 +126,7 @@ export const YouTubeSubtitleOverlay = ({
             if (!isPopupHovered) {
                 setHoveredWord(null);
                 setResult('');
+                lastHoveredWord.current = '';
             }
         }, 150);
     }, [isPopupHovered, setResult]);
@@ -190,12 +201,17 @@ export const YouTubeSubtitleOverlay = ({
         }
     }, [targetLang, sourceLang, cue?.text, handleFullAction]);
 
-    // Re-translate hovered word when language changes
+    // Re-translate hovered word when language changes (not on hoveredWord change — that's handled by onWordHover)
+    const prevWordLangTarget = useRef(targetLang);
+    const prevWordLangSource = useRef(sourceLang);
     useEffect(() => {
-        if (hoveredWord) {
+        const changed = targetLang !== prevWordLangTarget.current || sourceLang !== prevWordLangSource.current;
+        prevWordLangTarget.current = targetLang;
+        prevWordLangSource.current = sourceLang;
+        if (changed && hoveredWord) {
             handleAction(hoveredWord.text, mode, targetLang, sourceLang, cue?.text);
         }
-    }, [targetLang, sourceLang, hoveredWord, mode, handleAction, cue?.text]);
+    }, [targetLang, sourceLang]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSwapLanguages = () => {
         const newSource = targetLang;
@@ -216,9 +232,9 @@ export const YouTubeSubtitleOverlay = ({
         height: 'auto',
         minHeight: size.height,
         transform: isDragging ? 'translate(-50%, -50%) scale(1.02)' : 'translate(-50%, -50%) scale(1)',
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        backgroundColor: theme.bg.replace(/[\d.]+\)$/, '0.95)'),
         backdropFilter: 'blur(16px)',
-        color: '#f8fafc',
+        color: theme.text,
         padding: '24px 72px 24px',
         borderRadius: '24px',
         fontSize: '32px',
@@ -232,9 +248,9 @@ export const YouTubeSubtitleOverlay = ({
         gap: '16px',
         cursor: isDragging ? 'grabbing' : 'grab',
         boxShadow: isDragging
-            ? '0 30px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2)'
-            : '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+            ? `0 30px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px ${theme.border}`
+            : `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px ${theme.border}`,
+        border: `1px solid ${theme.border}`,
         transition: isDragging ? 'none' : 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), top 0.1s ease-out, left 0.1s ease-out',
         userSelect: 'none',
         overflow: 'hidden'
@@ -263,15 +279,15 @@ export const YouTubeSubtitleOverlay = ({
                             cursor: 'pointer',
                             padding: '12px',
                             borderRadius: '50%',
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            backgroundColor: theme.border,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             transition: 'all 0.2s',
                             zIndex: 10
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.surface)}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = theme.border)}
                     >
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="15 18 9 12 15 6" />
@@ -280,26 +296,39 @@ export const YouTubeSubtitleOverlay = ({
                 )}
 
                 {/* Subtitle Tokens Container */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '90%' }}>
-                    {tokens.map((token, i) => (
-                        <SubtitleToken
-                            key={`token-${token}-${i}`}
-                            token={token}
-                            isHovered={!!hoveredWord}
-                            isSentenceMode={isSentenceMode}
-                            onMouseEnter={(e) => onWordHover(e, token)}
-                            onMouseLeave={onWordLeave}
-                            onClick={() => {
-                                if (cue) {
-                                    const clean = token.trim().replace(/[.,!?;:]/g, '');
-                                    if (clean.length > 0) {
+                <div
+                    style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '90%' }}
+                    onMouseOver={(e) => {
+                        const el = (e.target as HTMLElement).closest('[data-flux-token]') as HTMLElement | null;
+                        if (el?.dataset.fluxToken) onWordHover(e as unknown as React.MouseEvent, el.dataset.fluxToken);
+                    }}
+                    onMouseLeave={onWordLeave}
+                >
+                    {tokens.map((token, i) => {
+                        const clean = token.trim().replace(/[.,!?;:]/g, '');
+                        return (
+                            <span
+                                key={`token-${i}`}
+                                data-flux-token={clean || undefined}
+                                onClick={() => {
+                                    if (cue && clean.length > 0) {
                                         const isMatchingHover = hoveredWord?.text === clean;
                                         handleSaveWord(clean, isMatchingHover ? result : undefined);
                                     }
-                                }
-                            }}
-                        />
-                    ))}
+                                }}
+                                style={{
+                                    cursor: clean ? 'pointer' : 'default',
+                                    display: 'inline-block',
+                                    transition: 'all 0.2s ease',
+                                    margin: '0 4px',
+                                    color: (isSentenceMode && hoveredWord) ? theme.accent : undefined,
+                                    transform: (isSentenceMode && hoveredWord) ? 'scale(1.05)' : undefined,
+                                }}
+                            >
+                                {token}
+                            </span>
+                        );
+                    })}
                 </div>
 
                 {/* Automation Translation Display */}
@@ -307,14 +336,14 @@ export const YouTubeSubtitleOverlay = ({
                 {(fullResult || fullLoading || fullError) && (
                     <div style={{
                         fontSize: '20px',
-                        color: fullError ? '#ef4444' : 'rgba(148, 163, 184, 1)',
+                        color: fullError ? theme.error : theme.textSecondary,
                         fontWeight: 500,
                         fontStyle: 'normal',
                         padding: '12px 24px',
                         textAlign: 'center',
                         width: '100%',
                         maxWidth: '85%',
-                        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderTop: `1px solid ${theme.border}`,
                         marginTop: '8px',
                         animation: 'fadeIn 0.3s ease-in-out'
                     }}>
@@ -348,15 +377,15 @@ export const YouTubeSubtitleOverlay = ({
                             cursor: 'pointer',
                             padding: '12px',
                             borderRadius: '50%',
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            backgroundColor: theme.border,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             transition: 'all 0.2s',
                             zIndex: 10
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.surface)}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = theme.border)}
                     >
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="9 18 15 12 9 6" />

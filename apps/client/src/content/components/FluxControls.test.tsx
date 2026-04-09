@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { FluxControls } from './FluxControls';
 import type { Mode } from '../hooks/useAIHandler';
+import { THEMES } from '../constants';
 
 describe('FluxControls', () => {
     const defaultProps = {
@@ -15,6 +16,12 @@ describe('FluxControls', () => {
         autoSave: false,
         onAutoSaveChange: vi.fn(),
         isSaving: false,
+        theme: THEMES.dark,
+        themeId: 'dark',
+        onThemeChange: vi.fn(),
+        model: '',
+        availableModels: [] as string[],
+        onModelChange: vi.fn(),
     };
 
     beforeEach(() => {

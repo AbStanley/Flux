@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { FluxPopup } from './FluxPopup';
 import type { Mode } from '../hooks/useAIHandler';
+import { THEMES } from '../constants';
 
 describe('FluxPopup', () => {
     const defaultProps = {
@@ -20,6 +21,12 @@ describe('FluxPopup', () => {
         autoSave: false,
         onAutoSaveChange: vi.fn(),
         isSaving: false,
+        theme: THEMES.dark,
+        themeId: 'dark',
+        onThemeChange: vi.fn(),
+        model: '',
+        availableModels: [] as string[],
+        onModelChange: vi.fn(),
     };
 
     it('renders at correct position', () => {

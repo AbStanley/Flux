@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSettingsStore } from '../infrastructure/settings/settings.store';
 import { useExtensionAuthStore } from '../infrastructure/auth/extension-auth.store';
+import { THEMES, DEFAULT_THEME } from '../content/constants';
 
 export default function FluxExtensionPopup() {
     const [enabled, setEnabled] = useState(true);
     const [showSettings, setShowSettings] = useState(false);
     const [tempUrl, setTempUrl] = useState('');
+    const [themeId, setThemeId] = useState(DEFAULT_THEME);
+    const [selectedModel, setSelectedModel] = useState('');
+    const [availableModels, setAvailableModels] = useState<string[]>([]);
 
     // Settings & Auth Stores
     const { apiUrl, setApiUrl, loadSettings } = useSettingsStore();
@@ -20,18 +24,28 @@ export default function FluxExtensionPopup() {
     useEffect(() => {
         // Load initial state
         if (window.chrome?.storage?.local) {
-            window.chrome.storage.local.get(['fluxEnabled', 'flux_last_email'], (result) => {
-                if (result.fluxEnabled !== undefined) {
-                    setEnabled(result.fluxEnabled as boolean);
-                }
-                if (result.flux_last_email) {
-                    setEmail(result.flux_last_email as string);
-                }
+            window.chrome.storage.local.get(['fluxEnabled', 'flux_last_email', 'fluxTheme', 'fluxModel'], (result) => {
+                if (result.fluxEnabled !== undefined) setEnabled(result.fluxEnabled as boolean);
+                if (result.flux_last_email) setEmail(result.flux_last_email as string);
+                if (result.fluxTheme) setThemeId(result.fluxTheme as string);
+                if (result.fluxModel) setSelectedModel(result.fluxModel as string);
             });
         }
         loadSettings();
         loadAuth();
     }, [loadSettings, loadAuth]);
+
+    // Fetch available models
+    useEffect(() => {
+        const url = apiUrl || 'http://localhost:3000';
+        fetch(`${url}/api/tags`)
+            .then(r => r.json())
+            .then(data => {
+                const names = (data?.models || []).map((m: { name: string }) => m.name);
+                setAvailableModels(names);
+            })
+            .catch(() => {});
+    }, [apiUrl]);
 
     // Auto-focus once after auth state is resolved
     const didFocus = useRef(false);
@@ -44,6 +58,18 @@ export default function FluxExtensionPopup() {
             }, 100);
         }
     }, [isAuthenticated, authLoading]);
+
+    const handleThemeChange = (id: string) => {
+        setThemeId(id);
+        window.chrome?.storage?.local?.set({ fluxTheme: id });
+    };
+
+    const handleModelChange = (model: string) => {
+        setSelectedModel(model);
+        window.chrome?.storage?.local?.set({ fluxModel: model });
+    };
+
+    const theme = THEMES[themeId] || THEMES[DEFAULT_THEME];
 
     // Sync local state when store updates
     useEffect(() => {
@@ -339,10 +365,11 @@ export default function FluxExtensionPopup() {
             justifyContent: 'center',
             height: '100%',
             padding: '20px',
-            backgroundColor: '#0f172a',
-            color: '#f8fafc',
+            backgroundColor: theme.bgSolid,
+            color: theme.text,
             textAlign: 'center',
-            position: 'relative' // For absolute positioning if needed
+            position: 'relative',
+            transition: 'background-color 0.3s, color 0.3s',
         }}>
             {/* Settings Gear - Absolute Top Right */}
             <button
@@ -353,7 +380,7 @@ export default function FluxExtensionPopup() {
                     right: '20px',
                     background: 'none',
                     border: 'none',
-                    color: '#64748b',
+                    color: theme.textSecondary,
                     cursor: 'pointer',
                     padding: '4px'
                 }}
@@ -370,7 +397,7 @@ export default function FluxExtensionPopup() {
                 <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Flux Reader</h2>
             </div>
 
-            <p style={{ margin: '0 0 20px', fontSize: '0.9rem', color: '#94a3b8' }}>
+            <p style={{ margin: '0 0 20px', fontSize: '0.9rem', color: theme.textSecondary }}>
                 Welcome, {user?.email}
             </p>
 
@@ -379,11 +406,12 @@ export default function FluxExtensionPopup() {
                 alignItems: 'center',
                 gap: '12px',
                 padding: '12px 20px',
-                backgroundColor: '#1e293b',
+                backgroundColor: theme.surface,
                 borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${theme.border}`,
                 width: '100%',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                transition: 'background-color 0.3s',
             }}>
                 <span style={{ flex: 1, textAlign: 'left', fontWeight: 500 }}>Enable Flux</span>
                 <button
@@ -393,7 +421,7 @@ export default function FluxExtensionPopup() {
                         width: '44px',
                         height: '24px',
                         borderRadius: '999px',
-                        backgroundColor: enabled ? '#3b82f6' : '#cbd5e1',
+                        backgroundColor: enabled ? theme.accent : '#cbd5e1',
                         border: 'none',
                         cursor: 'pointer',
                         transition: 'background-color 0.2s'
@@ -413,6 +441,82 @@ export default function FluxExtensionPopup() {
                 </button>
             </div>
 
+            {/* Theme picker */}
+            <div style={{
+                marginTop: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 20px',
+                backgroundColor: theme.surface,
+                borderRadius: '12px',
+                border: `1px solid ${theme.border}`,
+                transition: 'background-color 0.3s',
+                width: '100%',
+                boxSizing: 'border-box'
+            }}>
+                <span style={{ flex: 1, textAlign: 'left', fontWeight: 500, fontSize: '0.9rem' }}>Theme</span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                    {Object.values(THEMES).map(t => (
+                        <button
+                            key={t.id}
+                            onClick={() => handleThemeChange(t.id)}
+                            title={t.name}
+                            style={{
+                                width: '20px',
+                                height: '20px',
+                                borderRadius: '50%',
+                                background: t.id === 'light' ? '#e2e8f0' : t.bgSolid,
+                                border: themeId === t.id ? `2px solid ${theme.accent}` : '2px solid rgba(255, 255, 255, 0.15)',
+                                cursor: 'pointer',
+                                padding: 0,
+                                boxShadow: themeId === t.id ? `0 0 8px ${theme.accent}` : 'none',
+                                transition: 'all 0.2s',
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Model selector */}
+            {availableModels.length > 0 && (
+                <div style={{
+                    marginTop: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 20px',
+                    backgroundColor: theme.surface,
+                    borderRadius: '12px',
+                    border: `1px solid ${theme.border}`,
+                    transition: 'background-color 0.3s',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                }}>
+                    <span style={{ textAlign: 'left', fontWeight: 500, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Model</span>
+                    <select
+                        value={selectedModel || availableModels[0]}
+                        onChange={(e) => handleModelChange(e.target.value)}
+                        style={{
+                            flex: 1,
+                            background: theme.surfaceActive,
+                            color: theme.text,
+                            border: `1px solid ${theme.border}`,
+                            borderRadius: '8px',
+                            padding: '6px 8px',
+                            fontSize: '0.8rem',
+                            outline: 'none',
+                            cursor: 'pointer',
+                            minWidth: 0,
+                        }}
+                    >
+                        {availableModels.map(m => (
+                            <option key={m} value={m} style={{ backgroundColor: theme.bgSolid }}>{m}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
             <button
                 onClick={openSidePanel}
                 style={{
@@ -422,14 +526,14 @@ export default function FluxExtensionPopup() {
                     justifyContent: 'center',
                     gap: '10px',
                     padding: '12px 20px',
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: theme.accent,
                     color: 'white',
                     borderRadius: '12px',
                     border: 'none',
                     width: '100%',
                     fontWeight: 600,
                     cursor: 'pointer',
-                    transition: 'opacity 0.2s'
+                    transition: 'opacity 0.2s, background-color 0.3s'
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
@@ -448,7 +552,7 @@ export default function FluxExtensionPopup() {
                 alignItems: 'center',
                 width: '100%'
             }}>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: theme.textSecondary }}>
                     {enabled ? 'Flux is active on all pages.' : 'Flux is disabled.'}
                 </p>
                 <button
@@ -456,15 +560,15 @@ export default function FluxExtensionPopup() {
                     style={{
                         background: 'none',
                         border: 'none',
-                        color: '#64748b',
+                        color: theme.textSecondary,
                         cursor: 'pointer',
                         fontSize: '0.75rem',
                         padding: '4px 8px',
                         borderRadius: '6px',
                         transition: 'color 0.2s'
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#f87171')}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = theme.error)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = theme.textSecondary)}
                 >
                     Log out
                 </button>

@@ -3,6 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { YouTubeSubtitleOverlay } from './YouTubeSubtitleOverlay';
 import * as UseAIHandler from '../hooks/useAIHandler';
 import { wordsApi } from '../../infrastructure/api/words';
+import { THEMES } from '../constants';
 
 // Mock child components
 vi.mock('../../infrastructure/api/words', () => ({
@@ -88,7 +89,8 @@ describe('YouTubeSubtitleOverlay', () => {
         fluxEnabled: true,
         onPopupStateChange: vi.fn(),
         onPrev: vi.fn(),
-        onNext: vi.fn()
+        onNext: vi.fn(),
+        theme: THEMES.dark,
     };
 
     it('renders tokens', () => {

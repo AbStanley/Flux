@@ -4,7 +4,7 @@ import { FluxHeader } from './FluxHeader';
 import { FluxControls } from './FluxControls';
 import { FluxContent } from './FluxContent';
 import { useDraggable } from '../hooks/useDraggable';
-import { UI_CONSTANTS } from '../constants';
+import { UI_CONSTANTS, type FluxTheme } from '../constants';
 import { useFluxMessaging } from '../hooks/useFluxMessaging';
 
 interface FluxPopupProps {
@@ -29,6 +29,12 @@ interface FluxPopupProps {
     autoSave: boolean;
     onAutoSaveChange: (enabled: boolean) => void;
     isSaving?: boolean;
+    theme: FluxTheme;
+    themeId: string;
+    onThemeChange: (id: string) => void;
+    model: string;
+    availableModels: string[];
+    onModelChange: (model: string) => void;
 }
 
 export function FluxPopup({
@@ -52,7 +58,13 @@ export function FluxPopup({
     onSave,
     autoSave,
     onAutoSaveChange,
-    isSaving
+    isSaving,
+    theme,
+    themeId,
+    onThemeChange,
+    model,
+    availableModels,
+    onModelChange,
 }: FluxPopupProps) {
     const [isPinned, setIsPinned] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -92,22 +104,22 @@ export function FluxPopup({
     }, [onSave, selection.text, selectAndOpen]);
 
     const popupStyles: React.CSSProperties = {
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        backgroundColor: theme.bg,
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        color: '#f8fafc',
+        color: theme.text,
         width: isCollapsed ? `${UI_CONSTANTS.POPUP_COLLAPSED_WIDTH}px` : `${UI_CONSTANTS.POPUP_WIDTH}px`,
         padding: isCollapsed ? '12px 16px' : '20px',
         borderRadius: '20px',
         boxShadow: isDragging
-            ? '0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.2)'
-            : '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+            ? `0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px ${theme.border}`
+            : `0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px ${theme.border}`,
         fontSize: '13px',
         lineHeight: '1.6',
         display: 'flex',
         flexDirection: 'column',
         gap: isCollapsed ? '8px' : '16px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: `1px solid ${theme.border}`,
         transform: isDragging ? 'scale(1.02)' : 'scale(1)',
         transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
     };
@@ -138,6 +150,7 @@ export function FluxPopup({
                         isPinned={isPinned}
                         isCollapsed={isCollapsed}
                         onCollapseToggle={() => setIsCollapsed(!isCollapsed)}
+                        theme={theme}
                     />
                 </div>
 
@@ -156,6 +169,12 @@ export function FluxPopup({
                         autoSave={autoSave}
                         onAutoSaveChange={onAutoSaveChange}
                         isSaving={isSaving}
+                        theme={theme}
+                        themeId={themeId}
+                        onThemeChange={onThemeChange}
+                        model={model}
+                        availableModels={availableModels}
+                        onModelChange={onModelChange}
                     />
                 )}
 
@@ -163,6 +182,7 @@ export function FluxPopup({
                     loading={loading}
                     error={error}
                     result={result}
+                    theme={theme}
                 />
             </div>
         </div>

@@ -5,6 +5,9 @@ import { useYouTubeSubtitles } from './hooks/useYouTubeSubtitles';
 import { FluxPopup } from './components/FluxPopup';
 import { YouTubeSubtitleOverlay } from './components/YouTubeSubtitleOverlay';
 import { wordsApi } from '../infrastructure/api/words';
+import { useServices } from '../presentation/contexts/ServiceContext';
+import { useReaderStore } from '../presentation/features/reader/store/useReaderStore';
+import { THEMES, DEFAULT_THEME, type FluxTheme } from './constants';
 
 type ViewState = 'HIDDEN' | 'FAB' | 'POPUP';
 
@@ -12,6 +15,8 @@ interface StorageResult {
     fluxAutoSave?: boolean;
     fluxSourceLang?: string;
     fluxTargetLang?: string;
+    fluxModel?: string;
+    fluxTheme?: string;
     [key: string]: unknown;
 }
 
@@ -34,24 +39,63 @@ export function FluxContentApp() {
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
     const [fluxEnabled, setFluxEnabled] = useState(true);
+    const [themeId, setThemeId] = useState(DEFAULT_THEME);
+    const [selectedModel, setSelectedModel] = useState('');
+    const [availableModels, setAvailableModels] = useState<string[]>([]);
+    const { aiService } = useServices();
+    const theme: FluxTheme = THEMES[themeId] || THEMES[DEFAULT_THEME];
+
+    // Fetch available models on mount
+    useEffect(() => {
+        aiService.getAvailableModels().then(setAvailableModels).catch(() => {});
+    }, [aiService]);
+
+    // Sync model to aiService + reader store so useAIHandler picks it up
+    const setAiModel = useReaderStore((s) => s.setAiModel);
+    useEffect(() => {
+        if (selectedModel) {
+            aiService.setModel(selectedModel);
+            setAiModel(selectedModel);
+        }
+    }, [selectedModel, aiService, setAiModel]);
+
+    const handleModelChange = (model: string) => {
+        setSelectedModel(model);
+        if (window.chrome?.storage?.local) {
+            window.chrome.storage.local.set({ fluxModel: model });
+        }
+    };
+
+    const handleThemeChange = (id: string) => {
+        setThemeId(id);
+        if (window.chrome?.storage?.local) {
+            window.chrome.storage.local.set({ fluxTheme: id });
+        }
+    };
 
     // Load persisted settings
     useEffect(() => {
         if (window.chrome?.storage?.local) {
-            window.chrome.storage.local.get(['fluxAutoSave', 'fluxSourceLang', 'fluxTargetLang', 'fluxEnabled'], (items) => {
+            window.chrome.storage.local.get(['fluxAutoSave', 'fluxSourceLang', 'fluxTargetLang', 'fluxEnabled', 'fluxModel', 'fluxTheme'], (items) => {
                 const result = items as StorageResult;
                 if (result) {
                     if (result.fluxAutoSave !== undefined) setAutoSave(result.fluxAutoSave as boolean);
                     if (result.fluxSourceLang) setSourceLang(result.fluxSourceLang as string);
                     if (result.fluxTargetLang) setTargetLang(result.fluxTargetLang as string);
                     if (result.fluxEnabled !== undefined) setFluxEnabled(result.fluxEnabled as boolean);
+                    if (result.fluxModel) setSelectedModel(result.fluxModel as string);
+                    if (result.fluxTheme) setThemeId(result.fluxTheme as string);
                 }
             });
 
             // Listen for changes (e.g. from popup)
             const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
-                if (changes.fluxEnabled) {
-                    setFluxEnabled(changes.fluxEnabled.newValue as boolean);
+                if (changes.fluxEnabled) setFluxEnabled(changes.fluxEnabled.newValue as boolean);
+                if (changes.fluxTheme) setThemeId(changes.fluxTheme.newValue as string);
+                if (changes.fluxModel) {
+                    const model = changes.fluxModel.newValue as string;
+                    setSelectedModel(model);
+                    if (model) aiService.setModel(model);
                 }
             };
             window.chrome.storage.onChanged.addListener(handleStorageChange);
@@ -233,6 +277,7 @@ export function FluxContentApp() {
                     hasPrev={hasPrev}
                     hasNext={hasNext}
                     fluxEnabled={fluxEnabled}
+                    theme={theme}
                 />
             )}
 
@@ -259,6 +304,12 @@ export function FluxContentApp() {
                     onMouseLeave={() => {
                         isHoveringRef.current = false;
                     }}
+                    theme={theme}
+                    themeId={themeId}
+                    onThemeChange={handleThemeChange}
+                    model={selectedModel}
+                    availableModels={availableModels}
+                    onModelChange={handleModelChange}
                 />
             )}
 
@@ -267,7 +318,7 @@ export function FluxContentApp() {
                     position: 'fixed',
                     bottom: '24px',
                     right: '24px',
-                    backgroundColor: notification.type === 'success' ? '#10b981' : '#ef4444',
+                    backgroundColor: notification.type === 'success' ? theme.success : theme.error,
                     color: 'white',
                     padding: '12px 20px',
                     borderRadius: '12px',

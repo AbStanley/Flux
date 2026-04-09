@@ -1,3 +1,5 @@
+import type { FluxTheme } from '../constants';
+
 interface FluxHeaderProps {
     onClose: () => void;
     onPinToggle: () => void;
@@ -5,6 +7,7 @@ interface FluxHeaderProps {
     isPinned: boolean;
     isCollapsed: boolean;
     onCollapseToggle: () => void;
+    theme: FluxTheme;
 }
 
 export function FluxHeader({
@@ -14,7 +17,7 @@ export function FluxHeader({
     isPinned,
     isCollapsed,
     onCollapseToggle,
-
+    theme,
 }: FluxHeaderProps) {
     return (
         <div
@@ -24,7 +27,7 @@ export function FluxHeader({
                 alignItems: 'center',
                 cursor: 'grab',
                 paddingBottom: '8px',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                borderBottom: `1px solid ${theme.borderLight}`,
                 marginBottom: '4px',
                 userSelect: 'none'
             }}
@@ -37,8 +40,8 @@ export function FluxHeader({
                     width: '8px',
                     height: '8px',
                     borderRadius: '50%',
-                    backgroundColor: isPinned ? '#3b82f6' : 'rgba(255, 255, 255, 0.2)',
-                    boxShadow: isPinned ? '0 0 10px #3b82f6' : 'none',
+                    backgroundColor: isPinned ? theme.accent : theme.border,
+                    boxShadow: isPinned ? `0 0 10px ${theme.accent}` : 'none',
                     transition: 'all 0.3s ease'
                 }} />
                 <span style={{
@@ -46,7 +49,7 @@ export function FluxHeader({
                     fontWeight: '700',
                     textTransform: 'uppercase',
                     letterSpacing: '1px',
-                    color: 'rgba(255, 255, 255, 0.5)'
+                    color: theme.textDim
                 }}>
                     Flux
                 </span>
@@ -60,7 +63,7 @@ export function FluxHeader({
                     style={{
                         background: 'none',
                         border: 'none',
-                        color: 'rgba(59, 130, 246, 0.8)',
+                        color: theme.accent,
                         cursor: 'pointer',
                         padding: '4px',
                         borderRadius: '6px',
@@ -69,7 +72,7 @@ export function FluxHeader({
                         justifyContent: 'center',
                         transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+                    onMouseEnter={(e) => e.currentTarget.style.background = theme.accentGlow}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -84,9 +87,9 @@ export function FluxHeader({
                     onClick={(e) => { e.stopPropagation(); onCollapseToggle(); }}
                     title={isCollapsed ? "Expand" : "Collapse"}
                     style={{
-                        background: isCollapsed ? 'rgba(59, 130, 246, 0.2)' : 'none',
+                        background: isCollapsed ? theme.accentGlow : 'none',
                         border: 'none',
-                        color: 'white',
+                        color: theme.text,
                         cursor: 'pointer',
                         padding: '4px',
                         borderRadius: '6px',
@@ -109,9 +112,9 @@ export function FluxHeader({
                 <button
                     onClick={(e) => { e.stopPropagation(); onPinToggle(); }}
                     style={{
-                        background: isPinned ? 'rgba(59, 130, 246, 0.2)' : 'none',
+                        background: isPinned ? theme.accentGlow : 'none',
                         border: 'none',
-                        color: isPinned ? '#3b82f6' : 'white',
+                        color: isPinned ? theme.accent : theme.text,
                         cursor: 'pointer',
                         padding: '4px',
                         borderRadius: '6px',
@@ -132,7 +135,7 @@ export function FluxHeader({
                     style={{
                         background: 'none',
                         border: 'none',
-                        color: 'white',
+                        color: theme.text,
                         cursor: 'pointer',
                         padding: '4px',
                         borderRadius: '6px',
