@@ -466,7 +466,7 @@ export default function FluxExtensionPopup() {
                                 width: '20px',
                                 height: '20px',
                                 borderRadius: '50%',
-                                background: t.id === 'light' ? '#e2e8f0' : t.bgSolid,
+                                background: t.dot,
                                 border: themeId === t.id ? `2px solid ${theme.accent}` : '2px solid rgba(255, 255, 255, 0.15)',
                                 cursor: 'pointer',
                                 padding: 0,

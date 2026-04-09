@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { FluxSelect } from './ui/FluxSelect';
 import { FluxIconButton } from './ui/FluxIconButton';
-import { LANGUAGES } from '../constants';
+import { LANGUAGES, type FluxTheme } from '../constants';
 
 interface FluxMinimalPopupProps {
     result: string;
@@ -17,6 +17,7 @@ interface FluxMinimalPopupProps {
     isSaved?: boolean;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    theme?: FluxTheme;
 }
 
 export function FluxMinimalPopup({
@@ -32,9 +33,19 @@ export function FluxMinimalPopup({
     onAutoSaveChange,
     isSaved,
     onMouseEnter,
-    onMouseLeave
+    onMouseLeave,
+    theme,
 }: FluxMinimalPopupProps) {
     const popupRef = useRef<HTMLDivElement>(null);
+
+    const bg = theme?.bgSolid ?? '#0f172a';
+    const text = theme?.text ?? '#f8fafc';
+    const textSec = theme?.textSecondary ?? '#cbd5e1';
+    const accent = theme?.accent ?? '#3b82f6';
+    const accentGlow = theme?.accentGlow ?? 'rgba(59, 130, 246, 0.2)';
+    const border = theme?.border ?? 'rgba(255, 255, 255, 0.1)';
+    const errColor = theme?.error ?? '#ef4444';
+    const successColor = theme?.success ?? '#4ade80';
 
     return (
         <div
@@ -44,14 +55,14 @@ export function FluxMinimalPopup({
             onMouseLeave={onMouseLeave}
             style={{
                 position: 'absolute',
-                bottom: '12px', // Position above the word, growing upwards
+                bottom: '12px',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                backgroundColor: '#0f172a',
-                color: '#f8fafc',
+                backgroundColor: bg,
+                color: text,
                 padding: '12px 16px',
                 borderRadius: '12px',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                boxShadow: `0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 0 0 1px ${border}`,
                 zIndex: 2147483647,
                 minWidth: '240px',
                 maxWidth: '320px',
@@ -59,54 +70,54 @@ export function FluxMinimalPopup({
                 flexDirection: 'column',
                 gap: '8px',
                 backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${border}`,
                 animation: 'flux-fade-in 0.2s ease-out'
             }}
         >
-            {/* Translations Result */}
+            {/* Translation Result */}
             <div style={{
                 fontSize: '16px',
                 fontWeight: 500,
                 lineHeight: '1.4',
-                color: '#e2e8f0',
+                color: text,
                 marginBottom: '4px',
-                minHeight: '24px' // Prevent collapse
+                minHeight: '24px'
             }}>
                 {loading ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
                         <span className="animate-spin">⟳</span> Translating...
                     </span>
                 ) : error ? (
-                    <span style={{ color: '#ef4444' }}>⚠️ {error}</span>
+                    <span style={{ color: errColor }}>⚠️ {error}</span>
                 ) : (
                     result || "No translation found"
                 )}
             </div>
 
             {/* Controls Row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px', borderTop: `1px solid ${border}`, paddingTop: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <FluxSelect
                         value={sourceLang}
                         onChange={onSourceLangChange}
                         options={[{ value: 'auto', label: 'Auto' }, ...LANGUAGES.map(l => ({ value: l, label: l }))]}
                         title="Source Language"
+                        theme={theme}
                         style={{
                             padding: '4px 8px',
                             fontSize: '12px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
                             border: 'none',
                             borderRadius: '6px',
-                            color: '#cbd5e1',
                             maxWidth: '80px'
                         }}
                     />
                     <FluxIconButton
                         onClick={() => onSwapLanguages?.()}
                         title="Swap Languages"
+                        theme={theme}
                         style={{
                             padding: '4px',
-                            color: 'rgba(255, 255, 255, 0.3)',
+                            color: textSec,
                             fontSize: '12px',
                             minWidth: '20px'
                         }}
@@ -118,13 +129,12 @@ export function FluxMinimalPopup({
                         onChange={onLangChange}
                         options={LANGUAGES}
                         title="Target Language"
+                        theme={theme}
                         style={{
                             padding: '4px 8px',
                             fontSize: '12px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
                             border: 'none',
                             borderRadius: '6px',
-                            color: '#cbd5e1',
                             maxWidth: '80px'
                         }}
                     />
@@ -133,15 +143,16 @@ export function FluxMinimalPopup({
                 <FluxIconButton
                     onClick={() => onAutoSaveChange(!autoSave)}
                     title={autoSave ? "Auto-Save On" : "Auto-Save Off"}
+                    theme={theme}
                     style={{
                         padding: '4px',
                         borderRadius: '6px',
-                        backgroundColor: autoSave ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                        color: autoSave ? '#60a5fa' : '#94a3b8'
+                        backgroundColor: autoSave ? accentGlow : 'transparent',
+                        color: autoSave ? accent : textSec
                     }}
                 >
                     {isSaved ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#4ade80' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: successColor }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
@@ -169,9 +180,9 @@ export function FluxMinimalPopup({
                 transform: 'translateX(-50%) rotate(45deg)',
                 width: '12px',
                 height: '12px',
-                backgroundColor: '#0f172a',
-                borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                backgroundColor: bg,
+                borderRight: `1px solid ${border}`,
+                borderBottom: `1px solid ${border}`
             }} />
         </div>
     );

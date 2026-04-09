@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Mode } from '../hooks/useAIHandler';
-import { LANGUAGES, THEMES, type FluxTheme } from '../constants';
+import { LANGUAGES, type FluxTheme } from '../constants';
 import { useFluxMessaging } from '../hooks/useFluxMessaging';
 import { FluxIconButton } from './ui/FluxIconButton';
 import { FluxSelect } from './ui/FluxSelect';
@@ -21,8 +21,8 @@ interface FluxControlsProps {
     onAutoSaveChange: (enabled: boolean) => void;
     isSaving?: boolean;
     theme: FluxTheme;
-    themeId: string;
-    onThemeChange: (id: string) => void;
+    themeId?: string;
+    onThemeChange?: (id: string) => void;
     model: string;
     availableModels: string[];
     onModelChange: (model: string) => void;
@@ -43,8 +43,6 @@ export function FluxControls({
     onAutoSaveChange,
     isSaving = false,
     theme,
-    themeId,
-    onThemeChange,
     model,
     availableModels,
     onModelChange,
@@ -124,27 +122,6 @@ export function FluxControls({
                         )}
                     </FluxIconButton>
 
-                    {/* Theme picker */}
-                    <div style={{ display: 'flex', gap: '3px', alignItems: 'center', marginLeft: '6px' }}>
-                        {Object.values(THEMES).map(t => (
-                            <button
-                                key={t.id}
-                                onClick={() => onThemeChange(t.id)}
-                                title={t.name}
-                                style={{
-                                    width: '14px',
-                                    height: '14px',
-                                    borderRadius: '50%',
-                                    background: t.dot,
-                                    border: themeId === t.id ? `2px solid ${theme.accent}` : `1px solid ${theme.border}`,
-                                    cursor: 'pointer',
-                                    padding: 0,
-                                    boxShadow: themeId === t.id ? `0 0 6px ${theme.accent}` : 'none',
-                                    transition: 'all 0.2s',
-                                }}
-                            />
-                        ))}
-                    </div>
                 </div>
             </div>
 

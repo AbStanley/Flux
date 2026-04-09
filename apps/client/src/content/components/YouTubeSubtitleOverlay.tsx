@@ -455,6 +455,7 @@ export const YouTubeSubtitleOverlay = ({
                             autoSave={autoSave}
                             onAutoSaveChange={onAutoSaveChange}
                             isSaved={isSaved}
+                            theme={theme}
                             onMouseEnter={() => { setIsPopupHovered(true); if (timerRef.current) clearTimeout(timerRef.current); }}
                             onMouseLeave={() => { setIsPopupHovered(false); onWordLeave(); }}
                         />
