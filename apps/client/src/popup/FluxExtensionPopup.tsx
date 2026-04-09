@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSettingsStore } from '../infrastructure/settings/settings.store';
 import { useExtensionAuthStore } from '../infrastructure/auth/extension-auth.store';
 
@@ -14,19 +14,36 @@ export default function FluxExtensionPopup() {
     // Login Form State
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const passwordRef = useRef<HTMLInputElement>(null);
+    const emailRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         // Load initial state
         if (window.chrome?.storage?.local) {
-            window.chrome.storage.local.get(['fluxEnabled'], (result) => {
+            window.chrome.storage.local.get(['fluxEnabled', 'flux_last_email'], (result) => {
                 if (result.fluxEnabled !== undefined) {
                     setEnabled(result.fluxEnabled as boolean);
+                }
+                if (result.flux_last_email) {
+                    setEmail(result.flux_last_email as string);
                 }
             });
         }
         loadSettings();
         loadAuth();
     }, [loadSettings, loadAuth]);
+
+    // Auto-focus once after auth state is resolved
+    const didFocus = useRef(false);
+    useEffect(() => {
+        if (!isAuthenticated && !authLoading && !didFocus.current) {
+            didFocus.current = true;
+            setTimeout(() => {
+                if (emailRef.current?.value) passwordRef.current?.focus();
+                else emailRef.current?.focus();
+            }, 100);
+        }
+    }, [isAuthenticated, authLoading]);
 
     // Sync local state when store updates
     useEffect(() => {
@@ -85,6 +102,10 @@ export default function FluxExtensionPopup() {
         e.preventDefault();
         try {
             await login(email, password);
+            // Remember email for next time
+            if (window.chrome?.storage?.local) {
+                window.chrome.storage.local.set({ flux_last_email: email });
+            }
         } catch (e) {
             console.error(e);
         }
@@ -243,13 +264,14 @@ export default function FluxExtensionPopup() {
                 </button>
 
                 <div style={{ marginBottom: '30px', marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                    <img src="/flux-reader-helper.png" alt="Flux Logo" style={{ width: '60px', height: '60px' }} />
+                    <img src="/flux-logo.png" alt="Flux Logo" style={{ width: '60px', height: '60px' }} />
                     <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Flux Reader</h2>
                     <p style={{ margin: 0, color: '#94a3b8' }}>Please log in to continue</p>
                 </div>
 
                 <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <input
+                        ref={emailRef}
                         type="email"
                         placeholder="Email"
                         value={email}
@@ -265,6 +287,7 @@ export default function FluxExtensionPopup() {
                         }}
                     />
                     <input
+                        ref={passwordRef}
                         type="password"
                         placeholder="Password"
                         value={password}
@@ -343,7 +366,7 @@ export default function FluxExtensionPopup() {
             </button>
 
             <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <img src="/flux-reader-helper.png" alt="Flux Logo" style={{ width: '40px', height: '40px' }} />
+                <img src="/flux-logo.png" alt="Flux Logo" style={{ width: '40px', height: '40px' }} />
                 <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Flux Reader</h2>
             </div>
 
@@ -418,13 +441,34 @@ export default function FluxExtensionPopup() {
                 Open Side Panel
             </button>
 
-            <p style={{
+            <div style={{
                 marginTop: '20px',
-                fontSize: '0.8rem',
-                color: '#64748b'
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%'
             }}>
-                {enabled ? 'Flux is active on all pages.' : 'Flux is disabled.'}
-            </p>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
+                    {enabled ? 'Flux is active on all pages.' : 'Flux is disabled.'}
+                </p>
+                <button
+                    onClick={logout}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#64748b',
+                        cursor: 'pointer',
+                        fontSize: '0.75rem',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        transition: 'color 0.2s'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#f87171')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                >
+                    Log out
+                </button>
+            </div>
         </div>
     );
 }

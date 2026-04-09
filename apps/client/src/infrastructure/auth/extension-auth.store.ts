@@ -29,9 +29,9 @@ export const useExtensionAuthStore = create<ExtensionAuthStore>((set) => ({
         set({ isLoading: true });
         try {
             if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-                const result = await new Promise<{ flux_auth_token?: string, flux_user?: User }>((resolve) => {
-                    chrome.storage.local.get(['flux_auth_token', 'flux_user'], (res) => {
-                        const data = res as { flux_auth_token?: string, flux_user?: User };
+                const result = await new Promise<{ flux_auth_token?: string, flux_user?: User, flux_api_url?: string }>((resolve) => {
+                    chrome.storage.local.get(['flux_auth_token', 'flux_user', 'flux_api_url'], (res) => {
+                        const data = res as { flux_auth_token?: string, flux_user?: User, flux_api_url?: string };
                         resolve(data);
                     });
                 });
@@ -44,6 +44,23 @@ export const useExtensionAuthStore = create<ExtensionAuthStore>((set) => ({
                         isLoading: false
                     });
                     return;
+                }
+
+                // Auto-connect for localhost (server skips auth for local requests)
+                const apiUrl = result.flux_api_url || import.meta.env.VITE_EXT_API_URL || 'http://localhost:3000';
+                if (apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1')) {
+                    try {
+                        const res = await fetch(`${apiUrl}/api/health`);
+                        if (res.ok) {
+                            set({
+                                token: null,
+                                user: { id: 'local', email: 'localhost' },
+                                isAuthenticated: true,
+                                isLoading: false
+                            });
+                            return;
+                        }
+                    } catch { /* server not reachable, fall through to unauthenticated */ }
                 }
             }
         } catch (e) {

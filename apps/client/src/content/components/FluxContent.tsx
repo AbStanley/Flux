@@ -17,7 +17,22 @@ export function FluxContent({ loading, error, result }: FluxContentProps) {
             )}
 
             {error && (
-                <div style={{ color: '#f87171', padding: '8px 0' }}>{error}</div>
+                <div style={{ color: '#f87171', padding: '8px 0' }}>
+                    {error}
+                    {(error.includes('401') || error.includes('auth') || error.includes('Failed to connect')) && (
+                        <div style={{
+                            marginTop: '8px',
+                            padding: '8px 12px',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '8px',
+                            color: '#93c5fd',
+                            fontSize: '12px'
+                        }}>
+                            Make sure your server is running and check the extension popup to configure the connection.
+                        </div>
+                    )}
+                </div>
             )}
 
             {!loading && !error && result && (

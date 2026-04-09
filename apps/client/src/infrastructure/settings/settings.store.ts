@@ -33,8 +33,10 @@ const storageSet = (key: string, value: string): Promise<void> => {
     });
 };
 
+const DEFAULT_API_URL = import.meta.env.VITE_EXT_API_URL || 'http://localhost:3000';
+
 export const useSettingsStore = create<SettingsState>((set) => ({
-    apiUrl: '', // Default to empty, will load from storage
+    apiUrl: DEFAULT_API_URL,
     setApiUrl: async (url: string) => {
         if (typeof chrome !== 'undefined' && chrome.storage) {
             await storageSet('flux_api_url', url);

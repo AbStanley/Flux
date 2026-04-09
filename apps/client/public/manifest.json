@@ -7,9 +7,9 @@
     },
     "description": "Flux: A Privacy-First, Inteligent Learning Assistant",
     "icons": {
-        "16": "flux-reader-helper.png",
-        "48": "flux-reader-helper.png",
-        "128": "flux-reader-helper.png"
+        "16": "flux-logo.png",
+        "48": "flux-logo.png",
+        "128": "flux-logo.png"
     },
     "permissions": [
         "sidePanel",
@@ -58,7 +58,12 @@
         }
     ],
     "action": {
-        "default_title": "Open Reader Helper",
+        "default_title": "Open Flux Reader",
+        "default_icon": {
+            "16": "flux-logo.png",
+            "48": "flux-logo.png",
+            "128": "flux-logo.png"
+        },
         "default_popup": "popup.html"
     }
 }
