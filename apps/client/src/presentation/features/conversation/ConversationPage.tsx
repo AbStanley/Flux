@@ -7,6 +7,30 @@ import { Button } from '../../components/ui/button';
 import { MessageCircle, Send, RotateCcw, Loader2, BookmarkPlus, Check } from 'lucide-react';
 import { wordsApi } from '../../../infrastructure/api/words';
 
+const LANGUAGES = [
+    'Spanish', 'English', 'French', 'German', 'Italian', 'Portuguese',
+    'Russian', 'Chinese', 'Japanese', 'Korean', 'Arabic', 'Hindi',
+    'Dutch', 'Swedish', 'Polish', 'Turkish', 'Greek', 'Hebrew',
+];
+
+const TOPICS = [
+    { value: '', label: 'Free conversation' },
+    { value: 'ordering food at a restaurant', label: 'Ordering food' },
+    { value: 'weekend plans and hobbies', label: 'Weekend plans' },
+    { value: 'travel and vacations', label: 'Travel' },
+    { value: 'daily routine and work', label: 'Daily routine' },
+    { value: 'shopping and prices', label: 'Shopping' },
+    { value: 'weather and seasons', label: 'Weather' },
+    { value: 'family and relationships', label: 'Family' },
+    { value: 'movies, music, and entertainment', label: 'Entertainment' },
+    { value: 'health and fitness', label: 'Health' },
+    { value: 'giving and asking for directions', label: 'Directions' },
+    { value: 'job interview practice', label: 'Job interview' },
+    { value: 'describing your city or hometown', label: 'My city' },
+    { value: 'cooking and recipes', label: 'Cooking' },
+    { value: 'technology and social media', label: 'Technology' },
+];
+
 export function ConversationPage() {
     const { status } = useConversationStore();
 
@@ -41,33 +65,41 @@ function SetupScreen() {
                 <div className="grid grid-cols-2 gap-4">
                     <label className="space-y-1.5">
                         <span className="text-sm font-medium text-foreground">I speak</span>
-                        <input
-                            type="text"
+                        <select
                             value={nativeLanguage}
                             onChange={(e) => setConfig({ nativeLanguage: e.target.value })}
                             className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        >
+                            {LANGUAGES.map((l) => (
+                                <option key={l} value={l}>{l}</option>
+                            ))}
+                        </select>
                     </label>
                     <label className="space-y-1.5">
                         <span className="text-sm font-medium text-foreground">I'm learning</span>
-                        <input
-                            type="text"
+                        <select
                             value={targetLanguage}
                             onChange={(e) => setConfig({ targetLanguage: e.target.value })}
                             className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        >
+                            {LANGUAGES.map((l) => (
+                                <option key={l} value={l}>{l}</option>
+                            ))}
+                        </select>
                     </label>
                 </div>
 
                 <label className="space-y-1.5 block">
-                    <span className="text-sm font-medium text-foreground">Topic (optional)</span>
-                    <input
-                        type="text"
+                    <span className="text-sm font-medium text-foreground">Topic</span>
+                    <select
                         value={topic}
                         onChange={(e) => setConfig({ topic: e.target.value })}
-                        placeholder="e.g. ordering food, weekend plans, travel..."
                         className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    >
+                        {TOPICS.map((t) => (
+                            <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                    </select>
                 </label>
 
                 {models.length > 0 && (

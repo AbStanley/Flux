@@ -46,7 +46,11 @@ const SIZES: { value: FontSize; label: string }[] = [
     { value: 'xl', label: 'XL' },
 ];
 
-export function SettingsModal() {
+export function SettingsModal({ open, onOpenChange, hideTrigger }: {
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    hideTrigger?: boolean;
+} = {}) {
     const { theme, setTheme } = useTheme();
     const { font, fontSize, setFont, setFontSize, customThemes, removeCustomTheme } = useSettingsStore();
 
@@ -74,17 +78,19 @@ export function SettingsModal() {
 
     return (
         <>
-            <Dialog>
-                <DialogTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full w-10 h-10 bg-background/50 hover:bg-background/80 backdrop-blur-sm border border-border/50"
-                    >
-                        <Settings className="h-5 w-5" />
-                        <span className="sr-only">Settings</span>
-                    </Button>
-                </DialogTrigger>
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                {!hideTrigger && (
+                    <DialogTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full w-10 h-10 bg-background/50 hover:bg-background/80 backdrop-blur-sm border border-border/50"
+                        >
+                            <Settings className="h-5 w-5" />
+                            <span className="sr-only">Settings</span>
+                        </Button>
+                    </DialogTrigger>
+                )}
                 <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
                     <DialogHeader>
                         <DialogTitle>Reader Settings</DialogTitle>

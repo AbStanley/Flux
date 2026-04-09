@@ -25,10 +25,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     isLoading: true,
     error: null,
 
-    initialize: () => {
+    initialize: async () => {
         const token = authApi.getStoredToken();
         if (token) {
-            set({ token, isAuthenticated: true, isLoading: false });
+            set({ token, isAuthenticated: true });
+            try {
+                const user = await authApi.getMe();
+                set({ user, isLoading: false });
+            } catch {
+                // Token expired or invalid
+                authApi.clearStoredToken();
+                set({ token: null, isAuthenticated: false, isLoading: false });
+            }
         } else {
             set({ isLoading: false });
         }
