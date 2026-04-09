@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { DetectedVideo, ActiveTrackCue, SubtitleTrack } from '../../types/subtitles';
 import type { FluxTheme } from '../../constants';
 import { SubtitleTrackLine } from './SubtitleTrackLine';
@@ -53,8 +53,43 @@ export function UniversalSubtitleOverlay({
     onManualSeek,
 }: Props) {
     const [showPanel, setShowPanel] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
-    const rect = video.rect;
+    // Detect fullscreen + move shadow host into fullscreen element
+    useEffect(() => {
+        const host = document.getElementById('flux-reader-host');
+        if (!host) return;
+
+        const onFsChange = () => {
+            const fsEl = document.fullscreenElement;
+            if (fsEl && (fsEl === video.element || fsEl.contains(video.element))) {
+                // Move our shadow host inside the fullscreen element so it renders above
+                fsEl.appendChild(host);
+                setIsFullscreen(true);
+            } else {
+                // Move back to body
+                if (host.parentElement !== document.body) {
+                    document.body.appendChild(host);
+                }
+                setIsFullscreen(false);
+            }
+        };
+        document.addEventListener('fullscreenchange', onFsChange);
+        // Also check on mount
+        onFsChange();
+        return () => {
+            document.removeEventListener('fullscreenchange', onFsChange);
+            // Ensure host is back on body when component unmounts
+            if (host.parentElement !== document.body) {
+                document.body.appendChild(host);
+            }
+        };
+    }, [video.element]);
+
+    // In fullscreen, the video fills the screen
+    const rect = isFullscreen
+        ? { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight, right: window.innerWidth, bottom: window.innerHeight }
+        : video.rect;
     const hasAnyCue = activeCues.some(c => c.cue !== null);
     const videoDuration = video.element.duration || 0;
 
@@ -234,6 +269,9 @@ export function UniversalSubtitleOverlay({
                         onSeek={handleSeek}
                         onClose={() => setShowPanel(false)}
                         theme={theme}
+                        isManualMode={isManualMode}
+                        manualPlaying={manualPlaying}
+                        onToggleManualPlay={onToggleManualPlay}
                     />
                 </div>
             )}
