@@ -88,6 +88,17 @@ export class OllamaService {
     return this.generation.generateContent(params);
   }
 
+  async generateContentStream(params: {
+    topic?: string;
+    sourceLanguage: string;
+    isLearningMode: boolean;
+    proficiencyLevel: string;
+    contentType: ContentType;
+    model?: string;
+  }) {
+    return this.generation.generateContentStream(params);
+  }
+
   async generateGameContent(params: {
     topic: string;
     level: string;

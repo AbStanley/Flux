@@ -52,4 +52,8 @@ export class GenerateContentDto {
       'model must be a valid Ollama tag (letters, digits, . _ + : - only)',
   })
   model?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  stream?: boolean;
 }

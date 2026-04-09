@@ -433,9 +433,9 @@ function CorrectionChip({ token, targetLanguage, nativeLanguage }: {
         <span ref={ref} className="relative inline-block">
             <span
                 onClick={() => setShowPopover(!showPopover)}
-                className="inline-flex items-center gap-1 bg-red-500/15 text-red-700 dark:text-red-300
+                className="inline-flex items-center gap-1 bg-destructive/15 text-destructive
                     px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer
-                    hover:bg-red-500/25 transition-colors border border-red-500/20 mx-0.5"
+                    hover:bg-destructive/25 transition-colors border border-destructive/20 mx-0.5"
             >
                 <span className="line-through opacity-60">{token.wrong}</span>
                 <span className="mx-0.5">→</span>
@@ -449,7 +449,7 @@ function CorrectionChip({ token, targetLanguage, nativeLanguage }: {
                             <div>
                                 <p className="text-xs text-muted-foreground">Correction</p>
                                 <p className="text-sm">
-                                    <span className="line-through text-red-500">{token.wrong}</span>
+                                    <span className="line-through text-destructive">{token.wrong}</span>
                                     {' → '}
                                     <span className="font-semibold text-green-600 dark:text-green-400">{token.correct}</span>
                                 </p>
@@ -521,9 +521,9 @@ function VocabChip({ token, targetLanguage, nativeLanguage }: {
         <span ref={ref} className="relative inline-block">
             <span
                 onClick={() => setShowPopover(!showPopover)}
-                className="inline-flex items-center gap-1 bg-blue-500/15 text-blue-700 dark:text-blue-300
+                className="inline-flex items-center gap-1 bg-primary/15 text-primary
                     px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer
-                    hover:bg-blue-500/25 transition-colors border border-blue-500/20 mx-0.5"
+                    hover:bg-primary/25 transition-colors border border-primary/20 mx-0.5"
             >
                 <span className="font-semibold">{token.term}</span>
                 <span className="opacity-60">— {token.meaning}</span>

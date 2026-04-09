@@ -146,11 +146,18 @@ export class OllamaController {
   }
 
   @Post('generate-content')
-  async generateContent(
-    @Body()
-    body: GenerateContentDto,
-  ) {
-    return await this.ollamaService.generateContent(body);
+  async generateContent(@Body() body: GenerateContentDto, @Res() res: Response) {
+    if (body.stream) {
+      res.setHeader('Content-Type', 'application/x-ndjson');
+      const stream = await this.ollamaService.generateContentStream(body);
+      for await (const part of stream) {
+        res.write(JSON.stringify(part) + '\n');
+      }
+      res.end();
+    } else {
+      const result = await this.ollamaService.generateContent(body);
+      res.json(result);
+    }
   }
 
   @Post('generate-game-content')

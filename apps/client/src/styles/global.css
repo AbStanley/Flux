@@ -94,7 +94,7 @@
     --accent: 215 25% 20%;
     --accent-foreground: 210 20% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 50% 55%;
     --destructive-foreground: 210 20% 98%;
 
     --border: 215 25% 22%;
@@ -142,7 +142,7 @@
     /* Subtle teal accent */
     --accent-foreground: 210 15% 95%;
 
-    --destructive: 0 60% 50%;
+    --destructive: 0 45% 58%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 220 12% 25%;
@@ -273,6 +273,150 @@
     /* Navy-ish */
     --reader-textarea-bg: hsl(43 60% 94%);
     /* Opaque light cream for Sunset */
+  }
+
+  .rose-pine {
+    /* Rosé Pine — soft, muted dark theme with rose and gold accents */
+    --background: 249 22% 12%;
+    /* #191724 */
+    --foreground: 245 7% 81%;
+    /* #e0def4 */
+
+    --card: 247 23% 15%;
+    /* #1f1d2e */
+    --card-foreground: 245 7% 81%;
+
+    --popover: 249 18% 18%;
+    /* #26233a */
+    --popover-foreground: 245 7% 81%;
+
+    --primary: 2 55% 70%;
+    /* #ebbcba — rose */
+    --primary-foreground: 249 22% 12%;
+
+    --secondary: 249 15% 20%;
+    /* #2a283e */
+    --secondary-foreground: 245 7% 81%;
+
+    --muted: 249 12% 22%;
+    --muted-foreground: 248 10% 55%;
+
+    --accent: 35 88% 72%;
+    /* #f6c177 — gold accent */
+    --accent-foreground: 249 22% 12%;
+
+    --destructive: 343 60% 60%;
+    /* Muted love pink — distinct from rose primary */
+    --destructive-foreground: 249 22% 12%;
+
+    --border: 249 15% 22%;
+    --input: 249 15% 20%;
+    --input-background: 249 15% 20%;
+    --ring: 2 55% 70%;
+
+    --chart-1: 2 55% 70%;
+    --chart-2: 35 88% 72%;
+    --chart-3: 189 43% 73%;
+    --chart-4: 267 57% 78%;
+    --chart-5: 343 76% 68%;
+
+    --link-color: 189 43% 73%;
+    /* foam */
+    --reader-textarea-bg: hsl(var(--secondary) / 0.3);
+  }
+
+  .evergreen {
+    /* Evergreen — warm forest theme for comfortable long reading sessions */
+    --background: 150 15% 96%;
+    /* Soft mint white */
+    --foreground: 160 20% 18%;
+    /* Deep forest ink */
+
+    --card: 145 18% 93%;
+    /* Pale sage card */
+    --card-foreground: 160 20% 18%;
+
+    --popover: 140 14% 90%;
+    --popover-foreground: 160 20% 18%;
+
+    --primary: 158 40% 42%;
+    /* Forest green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 148 20% 88%;
+    /* Light sage */
+    --secondary-foreground: 160 20% 22%;
+
+    --muted: 146 14% 90%;
+    --muted-foreground: 155 12% 45%;
+
+    --accent: 148 20% 88%;
+    --accent-foreground: 160 20% 18%;
+
+    --destructive: 0 65% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 148 16% 82%;
+    --input: 148 14% 88%;
+    --input-background: 150 15% 96%;
+    --ring: 158 40% 42%;
+
+    --chart-1: 158 40% 42%;
+    --chart-2: 120 30% 50%;
+    --chart-3: 180 35% 45%;
+    --chart-4: 90 40% 55%;
+    --chart-5: 40 60% 55%;
+
+    --link-color: 158 50% 35%;
+    --reader-textarea-bg: hsl(var(--secondary) / 0.3);
+  }
+
+  .moonlight {
+    /* Moonlight — rich indigo dark theme with cyan and peach accents */
+    --background: 232 30% 10%;
+    /* #161a2e — deep indigo night */
+    --foreground: 225 15% 85%;
+    /* #c8d0e0 — soft silver */
+
+    --card: 232 28% 13%;
+    /* #1b2036 */
+    --card-foreground: 225 15% 85%;
+
+    --popover: 232 25% 16%;
+    /* #222845 */
+    --popover-foreground: 225 15% 85%;
+
+    --primary: 185 70% 60%;
+    /* Cyan glow */
+    --primary-foreground: 232 30% 10%;
+
+    --secondary: 232 22% 18%;
+    /* #262d4a */
+    --secondary-foreground: 225 15% 85%;
+
+    --muted: 232 20% 20%;
+    --muted-foreground: 228 15% 55%;
+
+    --accent: 25 80% 68%;
+    /* Warm peach */
+    --accent-foreground: 232 30% 10%;
+
+    --destructive: 0 45% 58%;
+    --destructive-foreground: 225 15% 90%;
+
+    --border: 232 20% 22%;
+    --input: 232 22% 18%;
+    --input-background: 232 22% 18%;
+    --ring: 185 70% 60%;
+
+    --chart-1: 185 70% 60%;
+    --chart-2: 25 80% 68%;
+    --chart-3: 265 60% 68%;
+    --chart-4: 145 50% 55%;
+    --chart-5: 340 55% 65%;
+
+    --link-color: 185 70% 65%;
+    --reader-textarea-bg: hsl(var(--secondary) / 0.3);
   }
 }
 

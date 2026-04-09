@@ -89,6 +89,30 @@ export class OllamaGenerationService {
     return cleanResponse(response.response, { multiline: true });
   }
 
+  async generateContentStream(params: {
+    topic?: string;
+    sourceLanguage: string;
+    isLearningMode: boolean;
+    proficiencyLevel: string;
+    contentType: ContentType;
+    model?: string;
+  }): Promise<AsyncIterable<{ response: string; done: boolean }>> {
+    const model = await this.ollamaClient.ensureModel(params.model);
+    const prompt = getStoryPrompt({
+      sourceLang: params.sourceLanguage,
+      isLearningMode: params.isLearningMode,
+      topic: params.topic,
+      proficiencyLevel: params.proficiencyLevel,
+      contentType: params.contentType,
+    });
+
+    return this.ollamaClient.generate(model, prompt, true, undefined, {
+      temperature: 0.8,
+      top_p: 0.9,
+      top_k: 40,
+    }) as unknown as AsyncIterable<{ response: string; done: boolean }>;
+  }
+
   async generateGameContent(params: {
     topic: string;
     level: string;

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import type { IAIService } from '../../../../core/interfaces/IAIService';
 import type { ContentType, ProficiencyLevel } from '../../../../core/types/AIConfig';
+import { defaultClient } from '../../../../infrastructure/api/api-client';
 
 interface UseStoryGenerationProps {
     aiService: IAIService;
@@ -27,25 +28,48 @@ export const useStoryGeneration = ({
 
     const generateStory = async () => {
         setIsGenerating(true);
-        // Clear previous text to start fresh
         setText('');
 
         abortControllerRef.current = new AbortController();
 
         try {
-            // Updated to use the new server-side generation
-            const generatedText = await aiService.generateContent({
-                topic,
-                sourceLanguage: sourceLang,
-                isLearningMode,
-                proficiencyLevel,
-                contentType
+            const baseUrl = defaultClient.getBaseUrl();
+            const response = await fetch(`${baseUrl}/api/generate-content`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic,
+                    sourceLanguage: sourceLang,
+                    isLearningMode,
+                    proficiencyLevel,
+                    contentType,
+                    model: aiService.getModel(),
+                    stream: true,
+                }),
+                signal: abortControllerRef.current.signal,
             });
 
-            // Set full text at once since streaming might not be fully supported yet 
-            // or handled differently in the new service
-            setText(generatedText);
+            if (!response.ok) throw new Error(`Generation failed: ${response.status}`);
 
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error('No response stream');
+
+            const decoder = new TextDecoder();
+            let fullText = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const lines = decoder.decode(value, { stream: true }).split('\n').filter(Boolean);
+                for (const line of lines) {
+                    try {
+                        const data = JSON.parse(line);
+                        fullText += data.response ?? '';
+                        setText(fullText);
+                    } catch { /* skip */ }
+                }
+            }
         } catch (error: unknown) {
             const errorName = error instanceof Error ? error.name : '';
             const errorMessage = error instanceof Error ? error.message : '';
