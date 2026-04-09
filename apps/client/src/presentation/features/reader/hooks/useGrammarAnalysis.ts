@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useSettingsStore } from '../../settings/store/useSettingsStore';
+import { useReaderStore } from '../store/useReaderStore';
 import { defaultClient } from '../../../../infrastructure/api/api-client';
 
 export interface GrammarAnalysisResult {
@@ -30,7 +30,7 @@ export const useGrammarAnalysis = (): UseGrammarAnalysisReturn => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [analysisResult, setAnalysisResult] = useState<GrammarAnalysisResult | null>(null);
-    const llmModel = useSettingsStore((state) => state.llmModel);
+    const llmModel = useReaderStore((state) => state.aiModel);
 
     const getCacheKey = (text: string, sourceLang: string, targetLang: string, model: string) => {
         return `${text.trim()}|${sourceLang}|${targetLang}|${model}`;

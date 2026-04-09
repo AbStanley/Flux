@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { type CreateWordRequest, type Word } from '../../../../infrastructure/api/words';
 import { ollamaApi } from '../../../../infrastructure/api/ollama';
+import { useReaderStore } from '../../reader/store/useReaderStore';
 
 const DEFAULT_FORM_STATE: CreateWordRequest = {
     text: '',
@@ -28,6 +29,7 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
     const [isLoading, setIsLoading] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [showLimitWarning, setShowLimitWarning] = useState(false);
+    const aiModel = useReaderStore((s) => s.aiModel);
 
     useEffect(() => {
         if (isOpen) {
@@ -118,7 +120,8 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
                 sourceLanguage: formData.sourceLanguage,
                 targetLanguage: formData.targetLanguage,
                 count: 3,
-                existingExamples: existingSentencesList
+                existingExamples: existingSentencesList,
+                model: aiModel || undefined,
             });
 
             console.log('AI Generated Examples:', generated);

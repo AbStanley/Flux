@@ -128,14 +128,24 @@ export class OllamaClientService {
   }
 
   async ensureModel(model?: string): Promise<string> {
-    if (model) return model;
-
-    const tags = await this.listTags();
-    if (tags.models && tags.models.length > 0) {
-      return tags.models[0].name;
+    if (!model) {
+      throw new HttpException(
+        'No model specified. Please select a model first.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    this.logger.warn(`No models found at ${this.ollamaHost}`);
-    throw new HttpException('No Ollama models available', HttpStatus.NOT_FOUND);
+    const tags = await this.listTags();
+    const available = tags.models?.map((m) => m.name) ?? [];
+
+    if (available.includes(model)) return model;
+
+    const hint = available.length > 0
+      ? ` Available: ${available.join(', ')}`
+      : ' No models found in Ollama.';
+    throw new HttpException(
+      `Model '${model}' not found.${hint}`,
+      HttpStatus.NOT_FOUND,
+    );
   }
 }

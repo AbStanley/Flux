@@ -18,7 +18,6 @@ import { ReaderTextContent } from './ReaderTextContent';
 import { PlayerControls } from './PlayerControls';
 import { RichInfoPanel } from './RichInfoPanel';
 import { GrammarSlideshow } from './GrammarSlideshow';
-import { useSettingsStore } from '../../settings/store/useSettingsStore';
 
 export function ReaderMainPanel() {
     const {
@@ -62,24 +61,6 @@ export function ReaderMainPanel() {
     const availableVoices = useAudioStore(s => s.availableVoices);
     const setVoiceByLanguageName = useAudioStore(s => s.setVoiceByLanguageName);
 
-    const llmModel = useSettingsStore(state => state.llmModel);
-    const setLlmModel = useSettingsStore(state => state.setLlmModel);
-
-    // Auto-detect and set model if missing or legacy 'llama2'
-    useEffect(() => {
-        if (!llmModel || llmModel === 'translategemma:4b') {
-            fetch('/api/tags')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.models && data.models.length > 0) {
-                        const firstModel = data.models[0].name;
-                        console.log('Auto-setting LLM model:', firstModel);
-                        setLlmModel(firstModel);
-                    }
-                })
-                .catch(err => console.error('Failed to auto-detect models', err));
-        }
-    }, [llmModel, setLlmModel]);
 
     useEffect(() => {
         if (sourceLang) {

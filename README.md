@@ -169,6 +169,24 @@ The platform will be available at:
 
 ---
 
+## Prisma Migrations Workflow
+
+When you make changes to the database schema (`apps/server/prisma/schema.prisma`), you need to create and apply a new migration.
+
+Here's the exact sequence after pulling migration changes:
+
+### Step 1: cd into the server app
+
+  cd apps/server  
+
+### Step 2: Apply any new migrations to your local DB
+
+  npx prisma migrate dev
+
+### Step 3: Regenerate the Prisma client (so TypeScript gets new types)
+
+  npx prisma generate
+
 ## Prisma Database Commands
 
 > **Important:** Prisma CLI needs `DATABASE_URL` to connect. Ensure `apps/server/.env` exists with the correct connection string for your environment:

@@ -8,7 +8,7 @@ import { defaultClient } from "../api/api-client";
 export class ServerAIService implements IAIService {
   private model: string;
 
-  constructor(model: string = "translategemma:4b") {
+  constructor(model: string = "") {
     this.model = model;
   }
 
