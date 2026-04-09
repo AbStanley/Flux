@@ -15,7 +15,7 @@ export function SavedWordsPanel() {
     // Refresh words when panel opens
     useEffect(() => {
         fetchWords('word');
-    }, [fetchWords]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleEdit = (word: Word) => {
         setEditingWord(word);

@@ -31,7 +31,7 @@ function App() {
   const isExtension = typeof window !== 'undefined'
     && window.location.protocol === 'chrome-extension:';
 
-  useEffect(() => { initialize(); }, [initialize]);
+  useEffect(() => { initialize(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     import('@/infrastructure/api/base-url').then(({ getApiBaseUrl }) => {

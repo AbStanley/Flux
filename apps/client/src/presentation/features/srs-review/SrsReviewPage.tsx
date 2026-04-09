@@ -17,7 +17,7 @@ export function SrsReviewPage() {
     useEffect(() => {
         loadStats();
         wordsApi.getLanguages().then(setLanguages).catch(() => {});
-    }, [loadStats]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Idle / Setup
     if (status === 'idle' || status === 'loading') {
@@ -64,8 +64,11 @@ export function SrsReviewPage() {
                 )}
 
                 {error && (
-                    <div className="p-4 rounded-md bg-destructive/15 text-destructive font-medium">
-                        {error}
+                    <div className="p-4 rounded-md bg-destructive/15 text-destructive font-medium flex items-center justify-between">
+                        <span>{error}</span>
+                        <Button variant="outline" size="sm" onClick={() => { loadStats(); wordsApi.getLanguages().then(setLanguages).catch(() => {}); }}>
+                            Retry
+                        </Button>
                     </div>
                 )}
 

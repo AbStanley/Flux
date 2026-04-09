@@ -84,7 +84,7 @@ export const useWordsStore = create<WordsState>((set, get) => ({
         } catch (err) {
             set(state => ({
                 error: err instanceof Error ? err.message : 'An error occurred',
-                [stateKey]: { ...state[stateKey], isLoading: false }
+                [stateKey]: { ...state[stateKey], isLoading: false, hasMore: false }
             }));
         }
     },

@@ -15,7 +15,7 @@ export function WordManager() {
     useEffect(() => {
         fetchWords('word', 1);
         fetchWords('phrase', 1);
-    }, [fetchWords]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleCreate = async (data: CreateWordRequest) => {
         await addWord(data);
@@ -92,8 +92,11 @@ export function WordManager() {
             </div>
 
             {error && (
-                <div className="p-4 rounded-md bg-destructive/15 text-destructive font-medium animate-in fade-in slide-in-from-top-2">
-                    {error}
+                <div className="p-4 rounded-md bg-destructive/15 text-destructive font-medium animate-in fade-in slide-in-from-top-2 flex items-center justify-between">
+                    <span>{error}</span>
+                    <Button variant="outline" size="sm" onClick={() => { fetchWords('word', 1); fetchWords('phrase', 1); }}>
+                        Retry
+                    </Button>
                 </div>
             )}
 
