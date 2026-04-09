@@ -71,3 +71,16 @@ export const THEMES: Record<string, FluxTheme> = {
 };
 
 export const DEFAULT_THEME = 'dark';
+
+export const TRACK_COLORS = [
+    '#FFFF00', // yellow — classic subtitle color
+    '#00FFFF', // cyan
+    '#FF69B4', // hot pink
+    '#7CFC00', // lawn green
+    '#FF8C00', // dark orange
+    '#DDA0DD', // plum
+    '#87CEEB', // sky blue
+    '#FFD700', // gold
+];
+
+export const SUBTITLE_OFFSET_STEP = 100; // ms

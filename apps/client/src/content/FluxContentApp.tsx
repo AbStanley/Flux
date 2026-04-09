@@ -4,10 +4,15 @@ import { useTextSelection } from './hooks/useTextSelection';
 import { useYouTubeSubtitles } from './hooks/useYouTubeSubtitles';
 import { FluxPopup } from './components/FluxPopup';
 import { YouTubeSubtitleOverlay } from './components/YouTubeSubtitleOverlay';
+import { UniversalSubtitleOverlay } from './components/universal-subs/UniversalSubtitleOverlay';
+import { VideoPickerOverlay } from './components/universal-subs/VideoPickerOverlay';
 import { wordsApi } from '../infrastructure/api/words';
 import { useServices } from '../presentation/contexts/ServiceContext';
 import { useReaderStore } from '../presentation/features/reader/store/useReaderStore';
 import { THEMES, DEFAULT_THEME, type FluxTheme } from './constants';
+import { useVideoDetector } from './hooks/useVideoDetector';
+import { useSubtitleTracks } from './hooks/useSubtitleTracks';
+import { useVideoSync } from './hooks/useVideoSync';
 
 type ViewState = 'HIDDEN' | 'FAB' | 'POPUP';
 
@@ -177,6 +182,14 @@ export function FluxContentApp() {
         hasNext
     } = useYouTubeSubtitles();
 
+    // Universal Subtitle Logic (non-YouTube videos)
+    const videoDetector = useVideoDetector();
+    const { selectedVideo, isPicking, scannedVideos, startPicking, selectVideo: pickVideo, cancelPicking } = videoDetector;
+    const subtitleTracks = useSubtitleTracks();
+    const videoSync = useVideoSync(selectedVideo, subtitleTracks.tracks);
+    const { activeCues, currentTime: subCurrentTime } = videoSync;
+    const showUniversalSubs = !isYouTube && !!selectedVideo && fluxEnabled;
+
     const onYouTubeOverlayHover = useCallback((hovering: boolean) => {
         isHoveringRef.current = hovering;
         if (hovering) {
@@ -281,6 +294,29 @@ export function FluxContentApp() {
                 />
             )}
 
+            {showUniversalSubs && (
+                <UniversalSubtitleOverlay
+                    video={selectedVideo!}
+                    activeCues={activeCues}
+                    tracks={subtitleTracks.tracks}
+                    currentTime={subCurrentTime}
+                    targetLang={targetLang}
+                    sourceLang={sourceLang}
+                    onTargetLangChange={handleTargetLangChange}
+                    onSourceLangChange={handleSourceLangChange}
+                    onAddFiles={subtitleTracks.addFiles}
+                    onAddUrl={subtitleTracks.addTrackFromUrl}
+                    onRemoveTrack={subtitleTracks.removeTrack}
+                    onToggleVisibility={subtitleTracks.toggleVisibility}
+                    onSetOffset={subtitleTracks.setOffset}
+                    theme={theme}
+                    isManualMode={videoSync.isManualMode}
+                    manualPlaying={videoSync.manualPlaying}
+                    onToggleManualPlay={videoSync.toggleManualPlay}
+                    onManualSeek={videoSync.seekManual}
+                />
+            )}
+
             {view === 'POPUP' && selection && !isOverlayActive && fluxEnabled && (
                 <FluxPopup
                     selection={selection}
@@ -335,6 +371,48 @@ export function FluxContentApp() {
                     {notification.type === 'success' ? '✅' : '❌'} {notification.message}
                 </div>
             )}
+            {/* Video picker overlay */}
+            {isPicking && (
+                <VideoPickerOverlay
+                    videos={scannedVideos}
+                    onSelect={pickVideo}
+                    onCancel={cancelPicking}
+                    theme={theme}
+                />
+            )}
+
+            {/* Floating scan button — non-YouTube, no video selected, not picking */}
+            {!isYouTube && !selectedVideo && !isPicking && fluxEnabled && (
+                <button
+                    onClick={startPicking}
+                    title="Find video & add subtitles"
+                    style={{
+                        position: 'fixed',
+                        bottom: '24px',
+                        left: '24px',
+                        zIndex: 2147483640,
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        backgroundColor: theme.bgSolid,
+                        color: theme.accent,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '20px',
+                        boxShadow: `0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px ${theme.border}`,
+                        transition: 'all 0.2s',
+                        backdropFilter: 'blur(8px)',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.backgroundColor = theme.accent; e.currentTarget.style.color = 'white'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.backgroundColor = theme.bgSolid; e.currentTarget.style.color = theme.accent; }}
+                >
+                    CC
+                </button>
+            )}
+
             <style>{`
                 @keyframes flux-fade-in {
                     from { opacity: 0; transform: translateY(10px); }
