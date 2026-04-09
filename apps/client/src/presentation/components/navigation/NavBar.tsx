@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, Brain, Dices, Library, LogOut, Sparkles } from 'lucide-react';
+import { BarChart3, BookOpen, Brain, Dices, Library, LogOut, MessageCircle, Sparkles } from 'lucide-react';
 import { useViewStore } from '../../features/navigation/store/useViewStore';
 import { AppView } from '../../features/navigation/types';
 import { Button } from '../ui/button';
@@ -64,6 +64,16 @@ export function NavBar() {
                     >
                         <Sparkles className="w-4 h-4" />
                         <span className="hidden md:inline">Writing</span>
+                    </Button>
+                    <Button
+                        variant={currentView === AppView.Conversation ? 'secondary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setView(AppView.Conversation)}
+                        className="gap-2 px-2 md:px-4"
+                        title="Chat"
+                    >
+                        <MessageCircle className="w-4 h-4" />
+                        <span className="hidden md:inline">Chat</span>
                     </Button>
                     <Button
                         variant={currentView === AppView.Stats ? 'secondary' : 'ghost'}

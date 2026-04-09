@@ -8,6 +8,10 @@ export class ApiClient {
         this.baseUrl = baseUrl;
     }
 
+    public getBaseUrl(): string {
+        return this.baseUrl;
+    }
+
     public setBaseUrl(url: string) {
         this.baseUrl = url;
     }

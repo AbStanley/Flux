@@ -116,6 +116,7 @@ import { WordManager } from './features/word-manager';
 import { LearningModePage } from './features/learning-mode/LearningModePage';
 import { WritingModePage } from './features/interactive-writing/WritingModePage';
 import { SrsReviewPage } from './features/srs-review/SrsReviewPage';
+import { ConversationPage } from './features/conversation/ConversationPage';
 import { StatsPage } from './features/stats/StatsPage';
 
 function AppContent() {
@@ -155,6 +156,15 @@ function AppContent() {
       <>
         <NavBar />
         <WritingModePage />
+      </>
+    );
+  }
+
+  if (currentView === AppView.Conversation) {
+    return (
+      <>
+        <NavBar />
+        <ConversationPage />
       </>
     );
   }

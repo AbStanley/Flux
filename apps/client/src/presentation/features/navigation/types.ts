@@ -4,7 +4,8 @@ export const AppView = {
     LearningMode: 'LEARNING_MODE',
     InteractiveWriting: 'INTERACTIVE_WRITING',
     SrsReview: 'SRS_REVIEW',
-    Stats: 'STATS'
+    Stats: 'STATS',
+    Conversation: 'CONVERSATION'
 } as const;
 
 export type AppView = typeof AppView[keyof typeof AppView];
