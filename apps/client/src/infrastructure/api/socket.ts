@@ -5,7 +5,8 @@ let socket: Socket | null = null;
 
 export async function getSocket(): Promise<Socket> {
     if (!socket) {
-        const baseUrl = (await defaultClient.getActiveBaseUrl()) || window.location.origin;
+        const wsUrl = import.meta.env.VITE_WS_URL as string | undefined;
+        const baseUrl = wsUrl || (await defaultClient.getActiveBaseUrl());
         const token = await getAuthToken();
         socket = io(`${baseUrl}/ws`, {
             transports: ['websocket'],
