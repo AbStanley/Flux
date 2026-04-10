@@ -72,6 +72,8 @@ export function UniversalSubtitleOverlay({
     const fluxFsRef = useRef<HTMLDivElement | null>(null);
     const portalDivRef = useRef<HTMLDivElement | null>(null);
     const videoElRef = useRef(video.element);
+    const placeholderRef = useRef<Comment | null>(null);
+    const origStyleRef = useRef('');
 
     // Keep video ref in sync via effect
     useEffect(() => { videoElRef.current = video.element; }, [video.element]);
@@ -79,9 +81,23 @@ export function UniversalSubtitleOverlay({
     const isFullscreen = fluxFs || nativeFs;
 
     // ── Custom fullscreen ──
+    // Move the actual video element into our container (not clone — cloning
+    // fails for MSE/blob sources). A placeholder comment keeps the original
+    // DOM position so we can restore it on exit.
     const enterFluxFs = useCallback(() => {
         if (fluxFsRef.current) return;
 
+        const el = videoElRef.current;
+
+        // Save original position with a placeholder
+        const placeholder = document.createComment('flux-fs-placeholder');
+        el.parentNode?.insertBefore(placeholder, el);
+        placeholderRef.current = placeholder;
+
+        // Save original inline style so we can restore it
+        origStyleRef.current = el.getAttribute('style') || '';
+
+        // Create fullscreen wrapper
         const container = document.createElement('div');
         container.id = 'flux-fs-container';
         container.style.cssText = [
@@ -92,22 +108,14 @@ export function UniversalSubtitleOverlay({
         document.documentElement.appendChild(container);
         fluxFsRef.current = container;
 
-        const el = videoElRef.current;
-        if (el.tagName === 'VIDEO') {
-            const original = el as HTMLVideoElement;
-            const clone = original.cloneNode(true) as HTMLVideoElement;
-            clone.style.cssText = 'width:100%;height:100%;object-fit:contain;';
-            clone.currentTime = original.currentTime;
-            clone.muted = original.muted;
-            container.appendChild(clone);
-            original.pause();
-            clone.play().catch(() => {});
-            container.dataset.isClone = 'true';
-        }
+        // Move the video into our container
+        container.appendChild(el);
+        el.style.cssText = 'width:100%;height:100%;object-fit:contain;';
 
         setFluxFsEl(container);
         setFluxFs(true);
 
+        // Try real fullscreen as enhancement (may fail in extensions)
         container.requestFullscreen?.().catch(() => {});
     }, []);
 
@@ -115,14 +123,23 @@ export function UniversalSubtitleOverlay({
         const container = fluxFsRef.current;
         if (!container) return;
 
-        if (container.dataset.isClone === 'true') {
-            const clone = container.querySelector('video');
-            const original = videoElRef.current as HTMLVideoElement;
-            if (clone && original) {
-                original.currentTime = clone.currentTime;
-                original.play().catch(() => {});
-            }
+        const el = videoElRef.current;
+        const placeholder = placeholderRef.current;
+
+        // Move video back to its original position
+        if (placeholder?.parentNode) {
+            placeholder.parentNode.insertBefore(el, placeholder);
+            placeholder.remove();
         }
+        placeholderRef.current = null;
+
+        // Restore original style
+        if (origStyleRef.current) {
+            el.setAttribute('style', origStyleRef.current);
+        } else {
+            el.removeAttribute('style');
+        }
+        origStyleRef.current = '';
 
         if (document.fullscreenElement === container) {
             document.exitFullscreen().catch(() => {});
@@ -216,9 +233,6 @@ export function UniversalSubtitleOverlay({
             onManualSeek(time);
         } else {
             seekVideo(videoElRef.current, time);
-            // Also sync the clone if in custom fullscreen
-            const clone = fluxFsRef.current?.querySelector('video');
-            if (clone) clone.currentTime = time;
         }
     }, [isManualMode, onManualSeek]);
 
