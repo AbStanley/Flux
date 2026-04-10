@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { DetectedVideo, ActiveTrackCue, SubtitleTrack } from '../../types/subtitles';
 import type { FluxTheme } from '../../constants';
 import { SubtitleTrackLine } from './SubtitleTrackLine';
@@ -54,42 +55,50 @@ export function UniversalSubtitleOverlay({
 }: Props) {
     const [showPanel, setShowPanel] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const portalRef = useRef<HTMLDivElement | null>(null);
 
-    // Detect fullscreen + move shadow host into fullscreen element
+    // Fullscreen: create a portal container inside the fullscreen element
     useEffect(() => {
-        const host = document.getElementById('flux-reader-host');
-        if (!host) return;
-
         const onFsChange = () => {
             const fsEl = document.fullscreenElement;
-            if (fsEl && (fsEl === video.element || fsEl.contains(video.element))) {
-                // Move our shadow host inside the fullscreen element so it renders above
-                fsEl.appendChild(host);
+            const isVideoFs = !!fsEl && (fsEl === video.element || fsEl.contains(video.element));
+
+            if (isVideoFs && fsEl) {
+                // Create portal container inside fullscreen element
+                if (!portalRef.current || !fsEl.contains(portalRef.current)) {
+                    const div = document.createElement('div');
+                    div.id = 'flux-subtitle-fs-portal';
+                    div.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none;';
+                    fsEl.appendChild(div);
+                    portalRef.current = div;
+                }
                 setIsFullscreen(true);
             } else {
-                // Move back to body
-                if (host.parentElement !== document.body) {
-                    document.body.appendChild(host);
+                // Clean up portal
+                if (portalRef.current) {
+                    portalRef.current.remove();
+                    portalRef.current = null;
                 }
                 setIsFullscreen(false);
             }
         };
+
         document.addEventListener('fullscreenchange', onFsChange);
-        // Also check on mount
         onFsChange();
+
         return () => {
             document.removeEventListener('fullscreenchange', onFsChange);
-            // Ensure host is back on body when component unmounts
-            if (host.parentElement !== document.body) {
-                document.body.appendChild(host);
+            if (portalRef.current) {
+                portalRef.current.remove();
+                portalRef.current = null;
             }
         };
     }, [video.element]);
 
-    // In fullscreen, the video fills the screen
     const rect = isFullscreen
-        ? { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight, right: window.innerWidth, bottom: window.innerHeight }
+        ? { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight, right: window.innerWidth }
         : video.rect;
+
     const hasAnyCue = activeCues.some(c => c.cue !== null);
     const videoDuration = video.element.duration || 0;
 
@@ -97,37 +106,36 @@ export function UniversalSubtitleOverlay({
         if (isManualMode && onManualSeek) {
             onManualSeek(time);
         } else if (video.element.tagName === 'VIDEO') {
-            // eslint-disable-next-line react-hooks/immutability
-            (video.element as HTMLVideoElement).currentTime = time;
+            (video.element as HTMLVideoElement).currentTime = time; // eslint-disable-line react-hooks/immutability
         }
     }, [video.element, isManualMode, onManualSeek]);
-    const hasTracks = tracks.length > 0;
 
+    const hasTracks = tracks.length > 0;
     const togglePanel = useCallback(() => setShowPanel(p => !p), []);
 
-    return (
+    const overlayContent = (
         <>
             {/* Subtitle lines — positioned at bottom of video */}
-            <div
-                style={{
-                    position: 'fixed',
-                    left: rect.left,
-                    top: rect.top,
-                    width: rect.width,
-                    height: rect.height,
-                    pointerEvents: 'none',
-                    zIndex: 2147483645,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'flex-end',
-                    alignItems: 'center',
-                    padding: '0 20px 24px',
-                    boxSizing: 'border-box',
-                }}
-            >
-                {/* No tracks yet — show drop zone inline */}
+            <div style={{
+                position: 'fixed',
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height,
+                pointerEvents: 'none',
+                zIndex: 2147483645,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                padding: '0 20px 24px',
+                boxSizing: 'border-box',
+            }}>
                 {!hasTracks && (
-                    <div style={{ pointerEvents: 'auto', width: '320px', marginBottom: '20px' }}>
+                    <div
+                        onWheel={stopScroll}
+                        style={{ pointerEvents: 'auto', width: '320px', marginBottom: '20px' }}
+                    >
                         <div style={{
                             backgroundColor: theme.bgSolid,
                             borderRadius: '16px',
@@ -143,7 +151,6 @@ export function UniversalSubtitleOverlay({
                     </div>
                 )}
 
-                {/* Active cue lines */}
                 {hasAnyCue && (
                     <div style={{
                         display: 'flex',
@@ -173,90 +180,49 @@ export function UniversalSubtitleOverlay({
                 )}
             </div>
 
-            {/* Manual mode play/seek controls — when video is in an iframe */}
+            {/* Manual mode controls */}
             {isManualMode && hasTracks && (
                 <div style={{
-                    position: 'fixed',
-                    top: rect.top + 12,
-                    left: rect.left + 12,
-                    zIndex: 2147483646,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    pointerEvents: 'auto',
+                    position: 'fixed', top: rect.top + 12, left: rect.left + 12,
+                    zIndex: 2147483646, display: 'flex', alignItems: 'center', gap: '6px', pointerEvents: 'auto',
                 }}>
-                    <button
-                        onClick={onToggleManualPlay}
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            border: 'none',
-                            backgroundColor: manualPlaying ? theme.accent : 'rgba(0,0,0,0.5)',
-                            color: 'white',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backdropFilter: 'blur(8px)',
-                        }}
-                        title={manualPlaying ? 'Pause subtitles' : 'Play subtitles'}
-                    >
+                    <button onClick={onToggleManualPlay} style={{
+                        width: '32px', height: '32px', borderRadius: '50%', border: 'none',
+                        backgroundColor: manualPlaying ? theme.accent : 'rgba(0,0,0,0.5)',
+                        color: 'white', cursor: 'pointer', fontSize: '14px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)',
+                    }} title={manualPlaying ? 'Pause subtitles' : 'Play subtitles'}>
                         {manualPlaying ? '⏸' : '▶'}
                     </button>
                     <div style={{
-                        backgroundColor: 'rgba(0,0,0,0.5)',
-                        backdropFilter: 'blur(8px)',
-                        borderRadius: '8px',
-                        padding: '4px 10px',
-                        color: 'white',
-                        fontSize: '12px',
-                        fontFamily: 'monospace',
-                    }}>
-                        {formatManualTime(currentTime)}
-                    </div>
+                        backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', borderRadius: '8px',
+                        padding: '4px 10px', color: 'white', fontSize: '12px', fontFamily: 'monospace',
+                    }}>{formatManualTime(currentTime)}</div>
                 </div>
             )}
 
-            {/* Gear button — fixed at top-right of video */}
+            {/* Gear button */}
             {hasTracks && (
-                <button
-                    onClick={togglePanel}
-                    style={{
-                        position: 'fixed',
-                        top: rect.top + 12,
-                        right: window.innerWidth - rect.right + 12,
-                        zIndex: 2147483646,
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        border: 'none',
-                        backgroundColor: showPanel ? theme.accent : 'rgba(0,0,0,0.5)',
-                        color: 'white',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '16px',
-                        transition: 'all 0.2s',
-                        backdropFilter: 'blur(8px)',
-                    }}
-                    title="Subtitle settings"
-                >
-                    ⚙
-                </button>
+                <button onClick={togglePanel} style={{
+                    position: 'fixed', top: rect.top + 12,
+                    right: (isFullscreen ? 12 : window.innerWidth - (rect as DOMRect).right + 12),
+                    zIndex: 2147483646, width: '32px', height: '32px', borderRadius: '50%', border: 'none',
+                    backgroundColor: showPanel ? theme.accent : 'rgba(0,0,0,0.5)',
+                    color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '16px', transition: 'all 0.2s', backdropFilter: 'blur(8px)', pointerEvents: 'auto',
+                }} title="Subtitle settings">⚙</button>
             )}
 
             {/* Control panel */}
             {showPanel && (
-                <div style={{
-                    position: 'fixed',
-                    top: rect.top + 50,
-                    right: window.innerWidth - rect.right + 12,
-                    zIndex: 2147483647,
-                    width: '340px',
-                }}>
+                <div
+                    onWheel={stopScroll}
+                    style={{
+                        position: 'fixed', top: rect.top + 50,
+                        right: (isFullscreen ? 12 : window.innerWidth - (rect as DOMRect).right + 12),
+                        zIndex: 2147483647, width: '340px', pointerEvents: 'auto',
+                    }}
+                >
                     <SubtitleControlPanel
                         tracks={tracks}
                         currentTime={currentTime}
@@ -277,4 +243,17 @@ export function UniversalSubtitleOverlay({
             )}
         </>
     );
+
+    // In fullscreen, render via portal into the fullscreen element
+    if (isFullscreen && portalRef.current) {
+        return createPortal(overlayContent, portalRef.current);
+    }
+
+    return overlayContent;
+}
+
+function stopScroll(e: React.WheelEvent) {
+    e.stopPropagation();
+    // Also prevent the event from reaching the page
+    e.nativeEvent.stopImmediatePropagation();
 }

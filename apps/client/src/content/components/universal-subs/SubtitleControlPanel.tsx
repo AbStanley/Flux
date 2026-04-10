@@ -201,7 +201,9 @@ function TrackRow({ track, isExpanded, currentTime, onToggleExpand, onRemove, on
     };
 
     return (
-        <div style={{
+        <div
+            onWheel={(e) => e.stopPropagation()}
+            style={{
             backgroundColor: theme.surface,
             borderRadius: '10px',
             overflow: 'hidden',
