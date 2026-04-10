@@ -1,6 +1,18 @@
 import { getApiBaseUrl } from './base-url';
 import { getStoredApiUrl } from '../settings/settings.store';
 
+export async function getAuthToken(): Promise<string | null> {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        return new Promise((resolve) => {
+            chrome.storage.local.get(['flux_auth_token'], (result) => {
+                const data = result as { flux_auth_token?: string };
+                resolve(data.flux_auth_token || null);
+            });
+        });
+    }
+    return localStorage.getItem('flux_auth_token');
+}
+
 export class ApiClient {
     private baseUrl: string;
 
@@ -12,26 +24,17 @@ export class ApiClient {
         return this.baseUrl;
     }
 
+    public async getActiveBaseUrl(): Promise<string> {
+        const storedUrl = await getStoredApiUrl();
+        return storedUrl || this.baseUrl;
+    }
+
     public setBaseUrl(url: string) {
         this.baseUrl = url;
     }
 
-    // Helper to get token from appropriate storage
-    private async getAuthToken(): Promise<string | null> {
-        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-            return new Promise((resolve) => {
-                chrome.storage.local.get(['flux_auth_token'], (result) => {
-                    const data = result as { flux_auth_token?: string };
-                    resolve(data.flux_auth_token || null);
-                });
-            });
-        }
-        return localStorage.getItem('flux_auth_token');
-    }
-
     private async request<T>(endpoint: string, options: RequestInit = {}, signal?: AbortSignal): Promise<T> {
-        const storedUrl = await getStoredApiUrl();
-        const activeBaseUrl = storedUrl || this.baseUrl;
+        const activeBaseUrl = await this.getActiveBaseUrl();
         const url = endpoint.startsWith('http') ? endpoint : `${activeBaseUrl}${endpoint}`;
 
         console.log(`[Flux Network Probe] Requesting: ${url}`);
@@ -40,7 +43,7 @@ export class ApiClient {
         const body = options.body;
 
         // Inject JWT token from storage
-        const token = await this.getAuthToken();
+        const token = await getAuthToken();
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {}),

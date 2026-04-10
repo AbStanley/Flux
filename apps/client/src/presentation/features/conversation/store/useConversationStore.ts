@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { defaultClient } from '../../../../infrastructure/api/api-client';
+import { defaultClient, getAuthToken } from '../../../../infrastructure/api/api-client';
 import { getSocket } from '../../../../infrastructure/api/socket';
 
 export interface ChatMessage {
@@ -58,11 +58,16 @@ async function streamViaNdjson(
     model: string,
     appendToken: (token: string, fullContent: string) => string,
 ) {
+    const baseUrl = await defaultClient.getActiveBaseUrl();
+    const token = await getAuthToken();
     const response = await fetch(
-        `${defaultClient.getBaseUrl()}/api/chat`,
+        `${baseUrl}/api/chat`,
         {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
             body: JSON.stringify({ model: model || undefined, messages, stream: true }),
         },
     );
@@ -148,7 +153,7 @@ export const useConversationStore = create<ConversationState>()(
 
                 try {
                     // Try WebSocket first
-                    const socket = getSocket();
+                    const socket = await getSocket();
                     if (socket.connected) {
                         await new Promise<void>((resolve, reject) => {
                             let fullContent = '';

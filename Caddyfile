@@ -6,6 +6,11 @@
 		reverse_proxy server:3000
 	}
 
+	# Proxy WebSocket requests to the backend server
+	handle /socket.io* {
+		reverse_proxy server:3000
+	}
+
 	# Proxy all other requests to the frontend
 	handle {
 		reverse_proxy web:80
@@ -19,6 +24,11 @@
 
 	# Proxy /api requests to the backend server
 	handle /api* {
+		reverse_proxy server:3000
+	}
+
+	# Proxy WebSocket requests to the backend server
+	handle /socket.io* {
 		reverse_proxy server:3000
 	}
 

@@ -21,6 +21,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     ]);
     if (isPublic) return true;
 
+    // WebSocket auth is handled by Socket.IO middleware at connection time
+    if (context.getType() === 'ws') return true;
+
     // Allow localhost requests without auth (Extension compatibility)
     const request = context.switchToHttp().getRequest<{
       ip?: string;

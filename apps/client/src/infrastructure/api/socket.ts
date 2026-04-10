@@ -1,14 +1,16 @@
 import { io, type Socket } from 'socket.io-client';
-import { defaultClient } from './api-client';
+import { defaultClient, getAuthToken } from './api-client';
 
 let socket: Socket | null = null;
 
-export function getSocket(): Socket {
+export async function getSocket(): Promise<Socket> {
     if (!socket) {
-        const baseUrl = defaultClient.getBaseUrl() || window.location.origin;
+        const baseUrl = (await defaultClient.getActiveBaseUrl()) || window.location.origin;
+        const token = await getAuthToken();
         socket = io(`${baseUrl}/ws`, {
             transports: ['websocket'],
             autoConnect: true,
+            auth: token ? { token } : undefined,
         });
     }
     return socket;

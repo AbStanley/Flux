@@ -7,8 +7,10 @@ import { OllamaGrammarService } from './services/ollama-grammar.service';
 import { OllamaGenerationService } from './services/ollama-generation.service';
 import { OllamaWritingService } from './services/ollama-writing.service';
 import { OllamaGateway } from './ollama.gateway';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
+  imports: [AuthModule],
   controllers: [OllamaController],
   providers: [
     OllamaService,

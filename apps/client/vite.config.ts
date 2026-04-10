@@ -66,6 +66,11 @@ export default defineConfig(({ mode }) => {
           timeout: 300000, // 5 minutes
           proxyTimeout: 300000,
         },
+        "/socket.io": {
+          target: env.VITE_API_TARGET || "http://127.0.0.1:3000",
+          changeOrigin: true,
+          ws: true,
+        },
         "/anki": {
           target: "http://127.0.0.1:8765",
           changeOrigin: true,
