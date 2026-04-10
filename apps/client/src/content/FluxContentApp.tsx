@@ -154,7 +154,16 @@ export function FluxContentApp() {
 
     useEffect(() => {
         console.log('[Flux] Component Mounted');
-    }, []);
+
+        // Listen for messages from the popup/background
+        const onMessage = (message: { type: string }) => {
+            if (message.type === 'SCAN_SUBTITLES') {
+                startPicking();
+            }
+        };
+        window.chrome?.runtime?.onMessage?.addListener(onMessage);
+        return () => { window.chrome?.runtime?.onMessage?.removeListener(onMessage); };
+    }, [startPicking]);
 
     const onManualAction = async () => {
         if (selection) {

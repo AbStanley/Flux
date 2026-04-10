@@ -47,6 +47,16 @@ export default function FluxExtensionPopup() {
         }
     };
 
+    const scanSubtitles = () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            const tabId = tabs[0]?.id;
+            if (tabId) {
+                chrome.tabs.sendMessage(tabId, { type: 'SCAN_SUBTITLES' });
+                window.close();
+            }
+        });
+    };
+
     if (showSettings) {
         return (
             <PopupSettingsView
@@ -182,9 +192,27 @@ export default function FluxExtensionPopup() {
             )}
 
             <button
-                onClick={openSidePanel}
+                onClick={scanSubtitles}
                 style={{
                     marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    gap: '10px', padding: '12px 20px', backgroundColor: theme.surface, color: theme.text,
+                    borderRadius: '12px', border: `1px solid ${theme.border}`, width: '100%', fontWeight: 600,
+                    cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="6" width="20" height="12" rx="2" />
+                    <path d="M6 14h2M10 14h8" />
+                </svg>
+                Scan Videos for Subtitles
+            </button>
+
+            <button
+                onClick={openSidePanel}
+                style={{
+                    marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: 'white',
                     borderRadius: '12px', border: 'none', width: '100%', fontWeight: 600,
                     cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
