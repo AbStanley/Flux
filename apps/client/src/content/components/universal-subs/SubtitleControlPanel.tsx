@@ -33,7 +33,6 @@ function formatOffset(ms: number): string {
     return `${sign}${(ms / 1000).toFixed(1)}s`;
 }
 
-/** Find prev/next cue boundaries for jumping */
 function findPrevNextCue(cues: SubtitleCue[], time: number, offsetMs: number): { prev: number | null; next: number | null } {
     const adjusted = time - offsetMs / 1000;
     let prev: number | null = null;
@@ -46,24 +45,13 @@ function findPrevNextCue(cues: SubtitleCue[], time: number, offsetMs: number): {
 }
 
 export function SubtitleControlPanel({
-    tracks,
-    currentTime,
-    videoDuration,
-    onAddFiles,
-    onAddUrl,
-    onRemoveTrack,
-    onToggleVisibility,
-    onSetOffset,
-    onSeek,
-    onClose,
-    theme,
-    isManualMode,
-    manualPlaying,
-    onToggleManualPlay,
+    tracks, currentTime, videoDuration, onAddFiles, onAddUrl,
+    onRemoveTrack, onToggleVisibility, onSetOffset, onSeek, onClose,
+    theme, isManualMode, manualPlaying, onToggleManualPlay,
 }: Props) {
     const [expandedTrack, setExpandedTrack] = useState<string | null>(null);
+    const expandedData = expandedTrack ? tracks.find(t => t.id === expandedTrack) : null;
 
-    // Jump to prev/next cue (uses first visible track)
     const visibleTrack = tracks.find(t => t.visible);
     const jumpTargets = visibleTrack ? findPrevNextCue(visibleTrack.cues, currentTime, visibleTrack.offsetMs) : { prev: null, next: null };
 
@@ -75,236 +63,200 @@ export function SubtitleControlPanel({
                 backgroundColor: theme.bgSolid,
                 border: `1px solid ${theme.border}`,
                 borderRadius: '16px',
-                padding: '14px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                maxHeight: '500px',
-                overflowY: 'auto',
+                display: 'flex', flexDirection: 'column',
+                maxHeight: '80vh',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-                color: theme.text,
-                fontSize: '13px',
+                color: theme.text, fontSize: '13px',
             }}
         >
-            {/* Header with transport controls */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '14px' }}>Subtitles</span>
-                    {isManualMode && (
-                        <span style={{ fontSize: '10px', color: theme.accent, backgroundColor: theme.accentGlow, padding: '1px 6px', borderRadius: '4px' }}>
-                            Manual
-                        </span>
-                    )}
+            {/* ── Fixed header: title, transport, timeline ── */}
+            <div style={{ padding: '14px 14px 10px', display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '14px' }}>Subtitles</span>
+                        {isManualMode && (
+                            <span style={{ fontSize: '10px', color: theme.accent, backgroundColor: theme.accentGlow, padding: '1px 6px', borderRadius: '4px' }}>
+                                Manual
+                            </span>
+                        )}
+                    </div>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer', fontSize: '16px', padding: '2px 6px' }}>✕</button>
                 </div>
-                <button onClick={onClose} style={{ background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer', fontSize: '16px', padding: '2px 6px' }}>✕</button>
-            </div>
 
-            {/* Transport bar — jump prev, play/pause (manual), jump next */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-                <button
-                    onClick={() => jumpTargets.prev !== null && onSeek(jumpTargets.prev)}
-                    disabled={jumpTargets.prev === null}
-                    style={transportBtn(theme, jumpTargets.prev === null)}
-                    title="Previous cue"
-                >⏮</button>
-
-                {isManualMode && (
-                    <button
-                        onClick={onToggleManualPlay}
-                        style={{
-                            ...transportBtn(theme, false),
-                            width: '36px',
-                            height: '36px',
-                            fontSize: '16px',
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                    <button onClick={() => jumpTargets.prev !== null && onSeek(jumpTargets.prev)}
+                        disabled={jumpTargets.prev === null} style={transportBtn(theme, jumpTargets.prev === null)} title="Previous cue">⏮</button>
+                    {isManualMode && (
+                        <button onClick={onToggleManualPlay} style={{
+                            ...transportBtn(theme, false), width: '36px', height: '36px', fontSize: '16px',
                             backgroundColor: manualPlaying ? theme.accent : theme.surfaceActive,
                             color: manualPlaying ? 'white' : theme.text,
-                        }}
-                        title={manualPlaying ? 'Pause' : 'Play'}
-                    >{manualPlaying ? '⏸' : '▶'}</button>
-                )}
+                        }} title={manualPlaying ? 'Pause' : 'Play'}>{manualPlaying ? '⏸' : '▶'}</button>
+                    )}
+                    <button onClick={() => jumpTargets.next !== null && onSeek(jumpTargets.next)}
+                        disabled={jumpTargets.next === null} style={transportBtn(theme, jumpTargets.next === null)} title="Next cue">⏭</button>
+                </div>
 
-                <button
-                    onClick={() => jumpTargets.next !== null && onSeek(jumpTargets.next)}
-                    disabled={jumpTargets.next === null}
-                    style={transportBtn(theme, jumpTargets.next === null)}
-                    title="Next cue"
-                >⏭</button>
+                <SubtitleTimeline tracks={tracks} currentTime={currentTime} duration={videoDuration} onSeek={onSeek} theme={theme} />
             </div>
 
-            {/* Timeline with cue markers */}
-            <SubtitleTimeline
-                tracks={tracks}
-                currentTime={currentTime}
-                duration={videoDuration}
-                onSeek={onSeek}
-                theme={theme}
-            />
+            {/* ── Fixed offset controls (shown when a track is expanded) ── */}
+            {expandedData && (
+                <div style={{ padding: '0 14px 8px', flexShrink: 0, borderBottom: `1px solid ${theme.borderLight}` }}>
+                    <OffsetControls track={expandedData} onSetOffset={(ms) => onSetOffset(expandedData.id, ms)} theme={theme} />
+                </div>
+            )}
 
-            {/* Track list */}
-            {tracks.map(track => {
-                const isExpanded = expandedTrack === track.id;
-                return (
-                    <TrackRow
-                        key={track.id}
-                        track={track}
-                        isExpanded={isExpanded}
-                        currentTime={currentTime}
-                        onToggleExpand={() => setExpandedTrack(isExpanded ? null : track.id)}
-                        onRemove={() => onRemoveTrack(track.id)}
-                        onToggleVisibility={() => onToggleVisibility(track.id)}
-                        onSetOffset={(ms) => onSetOffset(track.id, ms)}
-                        onSeek={onSeek}
-                        theme={theme}
-                    />
-                );
-            })}
+            {/* ── Scrollable: track list + cue list + add zone ── */}
+            <div style={{ overflowY: 'auto', padding: '8px 14px 14px', display: 'flex', flexDirection: 'column', gap: '6px', minHeight: 0 }}>
+                {/* Track headers — always visible */}
+                {tracks.map(track => {
+                    const isExpanded = expandedTrack === track.id;
+                    return (
+                        <TrackHeader
+                            key={track.id} track={track} isExpanded={isExpanded}
+                            onToggleExpand={() => setExpandedTrack(isExpanded ? null : track.id)}
+                            onRemove={() => onRemoveTrack(track.id)}
+                            onToggleVisibility={() => onToggleVisibility(track.id)}
+                            theme={theme}
+                        />
+                    );
+                })}
 
-            {/* Add tracks */}
-            <FileDropZone onFiles={onAddFiles} onUrl={onAddUrl} theme={theme} compact />
+                {/* Cue list for the expanded track — directly below track list */}
+                {expandedData && (
+                    <CueList track={expandedData} currentTime={currentTime} onSeek={onSeek} theme={theme} />
+                )}
+
+                <FileDropZone onFiles={onAddFiles} onUrl={onAddUrl} theme={theme} compact />
+            </div>
         </div>
     );
 }
 
-function TrackRow({ track, isExpanded, currentTime, onToggleExpand, onRemove, onToggleVisibility, onSetOffset, onSeek, theme }: {
-    track: SubtitleTrack;
-    isExpanded: boolean;
-    currentTime: number;
-    onToggleExpand: () => void;
-    onRemove: () => void;
-    onToggleVisibility: () => void;
-    onSetOffset: (ms: number) => void;
-    onSeek: (time: number) => void;
+/* ── Offset controls (always visible when track expanded) ── */
+function OffsetControls({ track, onSetOffset, theme }: {
+    track: SubtitleTrack; onSetOffset: (ms: number) => void; theme: FluxTheme;
+}) {
+    const [offsetInput, setOffsetInput] = useState((track.offsetMs / 1000).toFixed(1));
+    const [isEditing, setIsEditing] = useState(false);
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { if (!isEditing) setOffsetInput((track.offsetMs / 1000).toFixed(1)); }, [track.offsetMs, isEditing]);
+
+    const commit = () => {
+        const val = parseFloat(offsetInput);
+        if (!isNaN(val)) onSetOffset(Math.round(val * 1000));
+        setIsEditing(false);
+    };
+
+    return (
+        <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: track.color, flexShrink: 0 }} />
+                <span style={{ fontSize: '11px', color: theme.textSecondary, fontWeight: 600 }}>Offset</span>
+                <div style={{ flex: 1 }} />
+                <button onClick={() => onSetOffset(track.offsetMs - 1000)} style={stepBtn(theme)}>−1s</button>
+                <button onClick={() => onSetOffset(track.offsetMs - 100)} style={stepBtn(theme)}>−.1</button>
+                <input
+                    type="text"
+                    value={isEditing ? offsetInput : formatOffset(track.offsetMs)}
+                    onChange={(e) => { setOffsetInput(e.target.value); setIsEditing(true); }}
+                    onFocus={() => { setIsEditing(true); setOffsetInput((track.offsetMs / 1000).toFixed(1)); }}
+                    onBlur={commit}
+                    onKeyDown={(e) => { if (e.key === 'Enter') commit(); }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        width: '52px', textAlign: 'center', padding: '2px 4px', borderRadius: '4px',
+                        border: `1px solid ${isEditing ? theme.accent : theme.border}`,
+                        backgroundColor: theme.surfaceActive,
+                        color: track.offsetMs === 0 ? theme.textSecondary : theme.accent,
+                        fontSize: '11px', fontFamily: 'monospace', outline: 'none',
+                    }}
+                />
+                <button onClick={() => onSetOffset(track.offsetMs + 100)} style={stepBtn(theme)}>+.1</button>
+                <button onClick={() => onSetOffset(track.offsetMs + 1000)} style={stepBtn(theme)}>+1s</button>
+            </div>
+            <input
+                type="range" min={-30000} max={30000} step={100} value={track.offsetMs}
+                onChange={(e) => onSetOffset(parseInt(e.target.value))}
+                onClick={(e) => e.stopPropagation()}
+                style={{ width: '100%', accentColor: track.color, cursor: 'pointer', height: '4px' }}
+            />
+        </div>
+    );
+}
+
+/* ── Compact track header ── */
+function TrackHeader({ track, isExpanded, onToggleExpand, onRemove, onToggleVisibility, theme }: {
+    track: SubtitleTrack; isExpanded: boolean;
+    onToggleExpand: () => void; onRemove: () => void; onToggleVisibility: () => void;
     theme: FluxTheme;
 }) {
-    const [offsetInput, setOffsetInput] = useState(String(track.offsetMs / 1000));
-    const [isEditingOffset, setIsEditingOffset] = useState(false);
-    const cueListRef = useRef<HTMLDivElement>(null);
+    return (
+        <div
+            onClick={onToggleExpand}
+            style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', cursor: 'pointer',
+                backgroundColor: isExpanded ? `${track.color}15` : theme.surface,
+                borderRadius: '8px',
+                border: isExpanded ? `1px solid ${track.color}40` : '1px solid transparent',
+                transition: 'all 0.15s',
+            }}
+        >
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: track.color, flexShrink: 0 }} />
+            <span style={{ flex: 1, fontWeight: 600, opacity: track.visible ? 1 : 0.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {track.label}
+            </span>
+            <span style={{ fontSize: '10px', color: theme.textSecondary }}>{track.cues.length}</span>
+            <span style={{ fontSize: '12px', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', color: theme.textSecondary }}>▾</span>
+            <button onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: track.visible ? theme.text : theme.textSecondary, opacity: track.visible ? 1 : 0.4, padding: '2px' }}>
+                {track.visible ? '👁' : '👁‍🗨'}
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                style={{ background: 'none', border: 'none', color: theme.error, cursor: 'pointer', fontSize: '11px', padding: '2px', opacity: 0.5 }}>✕</button>
+        </div>
+    );
+}
 
-    // Sync input display when offset changes externally (slider, buttons)
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    useEffect(() => { if (!isEditingOffset) setOffsetInput((track.offsetMs / 1000).toFixed(1)); }, [track.offsetMs, isEditingOffset]);
-
-    // Auto-scroll cue list to current cue
+/* ── Scrollable cue list ── */
+function CueList({ track, currentTime, onSeek, theme }: {
+    track: SubtitleTrack; currentTime: number; onSeek: (time: number) => void; theme: FluxTheme;
+}) {
+    const listRef = useRef<HTMLDivElement>(null);
     const adjusted = currentTime - track.offsetMs / 1000;
     const currentCueIdx = track.cues.findIndex(c => c.start <= adjusted && c.end >= adjusted);
 
     useEffect(() => {
-        if (!isExpanded || !cueListRef.current || currentCueIdx < 0) return;
-        const el = cueListRef.current.children[currentCueIdx] as HTMLElement | undefined;
-        if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }, [currentCueIdx, isExpanded]);
-
-    const commitOffset = () => {
-        const val = parseFloat(offsetInput);
-        if (!isNaN(val)) onSetOffset(Math.round(val * 1000));
-        setIsEditingOffset(false);
-    };
+        const list = listRef.current;
+        if (!list || currentCueIdx < 0) return;
+        const el = list.children[currentCueIdx] as HTMLElement | undefined;
+        if (el) {
+            const target = el.offsetTop - list.offsetTop - list.clientHeight / 2 + el.clientHeight / 2;
+            list.scrollTo({ top: target, behavior: 'smooth' });
+        }
+    }, [currentCueIdx]);
 
     return (
         <div
+            ref={listRef}
             onWheel={(e) => e.stopPropagation()}
             style={{
-            backgroundColor: theme.surface,
-            borderRadius: '10px',
-            overflow: 'hidden',
-            border: isExpanded ? `1px solid ${track.color}40` : '1px solid transparent',
-            transition: 'border 0.2s',
-        }}>
-            {/* Header */}
-            <div onClick={onToggleExpand} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', cursor: 'pointer' }}>
-                <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: track.color, flexShrink: 0 }} />
-                <span style={{ flex: 1, fontWeight: 600, opacity: track.visible ? 1 : 0.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {track.label}
-                </span>
-                <span style={{ fontSize: '10px', color: theme.textSecondary }}>{track.cues.length}</span>
-                <span style={{ fontSize: '12px', cursor: 'pointer', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', color: theme.textSecondary }}>▾</span>
-                <button onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: track.visible ? theme.text : theme.textSecondary, opacity: track.visible ? 1 : 0.4, padding: '2px' }}>
-                    {track.visible ? '👁' : '👁‍🗨'}
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                    style={{ background: 'none', border: 'none', color: theme.error, cursor: 'pointer', fontSize: '11px', padding: '2px', opacity: 0.5 }}>✕</button>
-            </div>
-
-            {isExpanded && (
-                <div style={{ padding: '8px 10px', borderTop: `1px solid ${theme.borderLight}`, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {/* Offset control — typeable + slider + buttons */}
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                            <span style={{ fontSize: '11px', color: theme.textSecondary }}>Offset</span>
-                            <div style={{ flex: 1 }} />
-                            <button onClick={() => onSetOffset(track.offsetMs - 1000)} style={stepBtn(theme)}>−1s</button>
-                            <button onClick={() => onSetOffset(track.offsetMs - 100)} style={stepBtn(theme)}>−.1</button>
-                            <input
-                                type="text"
-                                value={isEditingOffset ? offsetInput : formatOffset(track.offsetMs)}
-                                onChange={(e) => { setOffsetInput(e.target.value); setIsEditingOffset(true); }}
-                                onFocus={() => { setIsEditingOffset(true); setOffsetInput((track.offsetMs / 1000).toFixed(1)); }}
-                                onBlur={commitOffset}
-                                onKeyDown={(e) => { if (e.key === 'Enter') commitOffset(); }}
-                                onClick={(e) => e.stopPropagation()}
-                                style={{
-                                    width: '52px',
-                                    textAlign: 'center',
-                                    padding: '2px 4px',
-                                    borderRadius: '4px',
-                                    border: `1px solid ${isEditingOffset ? theme.accent : theme.border}`,
-                                    backgroundColor: theme.surfaceActive,
-                                    color: track.offsetMs === 0 ? theme.textSecondary : theme.accent,
-                                    fontSize: '11px',
-                                    fontFamily: 'monospace',
-                                    outline: 'none',
-                                }}
-                            />
-                            <button onClick={() => onSetOffset(track.offsetMs + 100)} style={stepBtn(theme)}>+.1</button>
-                            <button onClick={() => onSetOffset(track.offsetMs + 1000)} style={stepBtn(theme)}>+1s</button>
-                        </div>
-                        <input
-                            type="range"
-                            min={-30000}
-                            max={30000}
-                            step={100}
-                            value={track.offsetMs}
-                            onChange={(e) => onSetOffset(parseInt(e.target.value))}
-                            onClick={(e) => e.stopPropagation()}
-                            style={{ width: '100%', accentColor: track.color, cursor: 'pointer', height: '4px' }}
-                        />
-                    </div>
-
-                    {/* Scrollable full cue list */}
-                    <div
-                        ref={cueListRef}
-                        onWheel={(e) => e.stopPropagation()}
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '1px',
-                            fontSize: '11px',
-                            borderTop: `1px solid ${theme.borderLight}`,
-                            paddingTop: '6px',
-                            maxHeight: '180px',
-                            overflowY: 'auto',
-                            scrollBehavior: 'smooth',
-                        }}
-                    >
-                        {track.cues.map((cue, i) => {
-                            const isActive = i === currentCueIdx;
-                            return (
-                                <CueLine
-                                    key={i}
-                                    cue={cue}
-                                    offsetMs={track.offsetMs}
-                                    color={isActive ? track.color : theme.textSecondary}
-                                    active={isActive}
-                                    dim={!isActive}
-                                    onSeek={onSeek}
-                                    theme={theme}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+                display: 'flex', flexDirection: 'column', gap: '1px', fontSize: '11px',
+                borderTop: `1px solid ${theme.borderLight}`, paddingTop: '6px',
+                maxHeight: '200px', overflowY: 'auto', scrollBehavior: 'smooth',
+                borderRadius: '8px', backgroundColor: theme.surface, padding: '6px',
+            }}
+        >
+            {track.cues.map((cue, i) => {
+                const isActive = i === currentCueIdx;
+                return (
+                    <CueLine key={i} cue={cue} offsetMs={track.offsetMs}
+                        color={isActive ? track.color : theme.textSecondary}
+                        active={isActive} dim={!isActive} onSeek={onSeek} theme={theme} />
+                );
+            })}
         </div>
     );
 }
@@ -318,13 +270,8 @@ function CueLine({ cue, offsetMs, color, dim, active, onSeek, theme }: {
         <div
             onClick={() => onSeek(jumpTime)}
             style={{
-                display: 'flex',
-                gap: '6px',
-                alignItems: 'baseline',
-                opacity: dim ? 0.45 : 1,
-                cursor: 'pointer',
-                padding: '3px 4px',
-                borderRadius: '4px',
+                display: 'flex', gap: '6px', alignItems: 'baseline',
+                opacity: dim ? 0.45 : 1, cursor: 'pointer', padding: '3px 4px', borderRadius: '4px',
                 backgroundColor: active ? `${color}15` : 'transparent',
                 borderLeft: active ? `2px solid ${color}` : '2px solid transparent',
                 transition: 'background-color 0.15s',
@@ -344,33 +291,19 @@ function CueLine({ cue, offsetMs, color, dim, active, onSeek, theme }: {
 
 function transportBtn(theme: FluxTheme, disabled: boolean): React.CSSProperties {
     return {
-        width: '30px',
-        height: '30px',
-        borderRadius: '50%',
-        border: 'none',
+        width: '30px', height: '30px', borderRadius: '50%', border: 'none',
         backgroundColor: theme.surfaceActive,
         color: disabled ? theme.textDim : theme.text,
         cursor: disabled ? 'not-allowed' : 'pointer',
-        fontSize: '13px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: disabled ? 0.4 : 1,
-        transition: 'all 0.15s',
+        fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: disabled ? 0.4 : 1, transition: 'all 0.15s',
     };
 }
 
 function stepBtn(theme: FluxTheme): React.CSSProperties {
     return {
-        background: theme.surfaceActive,
-        border: 'none',
-        color: theme.text,
-        cursor: 'pointer',
-        padding: '3px 6px',
-        borderRadius: '4px',
-        fontSize: '10px',
-        fontWeight: 700,
-        lineHeight: 1,
-        whiteSpace: 'nowrap',
+        background: theme.surfaceActive, border: 'none', color: theme.text,
+        cursor: 'pointer', padding: '3px 6px', borderRadius: '4px',
+        fontSize: '10px', fontWeight: 700, lineHeight: 1, whiteSpace: 'nowrap',
     };
 }

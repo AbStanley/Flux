@@ -26,6 +26,7 @@ export function useVideoSync(video: DetectedVideo | null, tracks: SubtitleTrack[
     // Manual timer for iframe-based videos (no currentTime access)
     const [isManualMode, setIsManualMode] = useState(false);
     const [manualPlaying, setManualPlaying] = useState(false);
+    const [hadTracks, setHadTracks] = useState(false);
     const manualStartRef = useRef(0); // wall-clock time when play started
     const manualOffsetRef = useRef(0); // subtitle time when play started
 
@@ -42,6 +43,12 @@ export function useVideoSync(video: DetectedVideo | null, tracks: SubtitleTrack[
         }
     }, [manualPlaying]);
 
+    // Auto-start manual playback when first subtitle track is loaded.
+    if (isManualMode && !hadTracks && tracks.length > 0) {
+        setHadTracks(true);
+        setManualPlaying(true);
+    }
+
     const seekManual = useCallback((time: number) => {
         manualOffsetRef.current = time;
         manualStartRef.current = Date.now();
@@ -57,6 +64,11 @@ export function useVideoSync(video: DetectedVideo | null, tracks: SubtitleTrack[
         const isReal = isRealVideo(video.element);
         // Defer mode setting to avoid direct setState in effect
         setTimeout(() => setIsManualMode(!isReal), 0);
+
+        // Initialize manual timer when playback starts
+        if (!isReal && manualPlaying && manualStartRef.current === 0) {
+            manualStartRef.current = Date.now();
+        }
 
         const sync = () => {
             let time: number;

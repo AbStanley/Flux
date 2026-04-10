@@ -33,6 +33,13 @@ function formatManualTime(s: number): string {
     return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
+/** Seek a video element by querying the DOM (avoids mutating the prop directly). */
+function seekVideo(el: HTMLElement, time: number) {
+    if (el.tagName === 'VIDEO') {
+        (el as HTMLVideoElement).currentTime = time;
+    }
+}
+
 export function UniversalSubtitleOverlay({
     video,
     activeCues,
@@ -54,94 +61,192 @@ export function UniversalSubtitleOverlay({
     onManualSeek,
 }: Props) {
     const [showPanel, setShowPanel] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-    const portalRef = useRef<HTMLDivElement | null>(null);
+    const [fluxFs, setFluxFs] = useState(false);
+    const [nativeFs, setNativeFs] = useState(false);
 
-    // Fullscreen: create a portal container inside the fullscreen element
+    // Portal targets stored as state so they're readable during render
+    const [fluxFsEl, setFluxFsEl] = useState<HTMLDivElement | null>(null);
+    const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
+
+    // Internal refs for cleanup (only accessed in effects/callbacks, never during render)
+    const fluxFsRef = useRef<HTMLDivElement | null>(null);
+    const portalDivRef = useRef<HTMLDivElement | null>(null);
+    const videoElRef = useRef(video.element);
+
+    // Keep video ref in sync via effect
+    useEffect(() => { videoElRef.current = video.element; }, [video.element]);
+
+    const isFullscreen = fluxFs || nativeFs;
+
+    // ── Custom fullscreen ──
+    const enterFluxFs = useCallback(() => {
+        if (fluxFsRef.current) return;
+
+        const container = document.createElement('div');
+        container.id = 'flux-fs-container';
+        container.style.cssText = [
+            'position:fixed', 'inset:0', 'z-index:2147483647',
+            'background:#000', 'display:flex', 'align-items:center',
+            'justify-content:center',
+        ].join(';');
+        document.documentElement.appendChild(container);
+        fluxFsRef.current = container;
+
+        const el = videoElRef.current;
+        if (el.tagName === 'VIDEO') {
+            const original = el as HTMLVideoElement;
+            const clone = original.cloneNode(true) as HTMLVideoElement;
+            clone.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+            clone.currentTime = original.currentTime;
+            clone.muted = original.muted;
+            container.appendChild(clone);
+            original.pause();
+            clone.play().catch(() => {});
+            container.dataset.isClone = 'true';
+        }
+
+        setFluxFsEl(container);
+        setFluxFs(true);
+
+        container.requestFullscreen?.().catch(() => {});
+    }, []);
+
+    const exitFluxFs = useCallback(() => {
+        const container = fluxFsRef.current;
+        if (!container) return;
+
+        if (container.dataset.isClone === 'true') {
+            const clone = container.querySelector('video');
+            const original = videoElRef.current as HTMLVideoElement;
+            if (clone && original) {
+                original.currentTime = clone.currentTime;
+                original.play().catch(() => {});
+            }
+        }
+
+        if (document.fullscreenElement === container) {
+            document.exitFullscreen().catch(() => {});
+        }
+
+        container.remove();
+        fluxFsRef.current = null;
+        setFluxFsEl(null);
+        setFluxFs(false);
+    }, []);
+
+    // ── Native fullscreen detection ──
     useEffect(() => {
-        const onFsChange = () => {
-            const fsEl = document.fullscreenElement;
-            const isVideoFs = !!fsEl && (fsEl === video.element || fsEl.contains(video.element));
+        const getFullscreenEl = (): Element | null =>
+            document.fullscreenElement
+            ?? (document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement
+            ?? null;
 
-            if (isVideoFs && fsEl) {
-                // Create portal container inside fullscreen element
-                if (!portalRef.current || !fsEl.contains(portalRef.current)) {
+        const onFsChange = () => {
+            const fsEl = getFullscreenEl();
+
+            if (fsEl === fluxFsRef.current) return;
+
+            if (!fsEl && fluxFsRef.current) {
+                exitFluxFs();
+                return;
+            }
+
+            if (!fsEl) {
+                if (portalDivRef.current) { portalDivRef.current.remove(); portalDivRef.current = null; }
+                setPortalEl(null);
+                setNativeFs(false);
+                return;
+            }
+
+            const isVideoFs = fsEl === video.element || fsEl.contains(video.element);
+            if (isVideoFs) {
+                if (!portalDivRef.current || !fsEl.contains(portalDivRef.current)) {
                     const div = document.createElement('div');
                     div.id = 'flux-subtitle-fs-portal';
                     div.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none;';
                     fsEl.appendChild(div);
-                    portalRef.current = div;
+                    portalDivRef.current = div;
+                    setPortalEl(div);
                 }
-                setIsFullscreen(true);
-            } else {
-                // Clean up portal
-                if (portalRef.current) {
-                    portalRef.current.remove();
-                    portalRef.current = null;
-                }
-                setIsFullscreen(false);
+                setNativeFs(true);
             }
         };
 
         document.addEventListener('fullscreenchange', onFsChange);
-        onFsChange();
+        document.addEventListener('webkitfullscreenchange', onFsChange);
 
         return () => {
             document.removeEventListener('fullscreenchange', onFsChange);
-            if (portalRef.current) {
-                portalRef.current.remove();
-                portalRef.current = null;
-            }
+            document.removeEventListener('webkitfullscreenchange', onFsChange);
+            if (portalDivRef.current) { portalDivRef.current.remove(); portalDivRef.current = null; }
+            setPortalEl(null);
         };
-    }, [video.element]);
+    }, [video.element, exitFluxFs]);
 
+    // Clean up on unmount
+    useEffect(() => () => {
+        if (fluxFsRef.current) { fluxFsRef.current.remove(); fluxFsRef.current = null; }
+    }, []);
+
+    // ESC exits custom fullscreen
+    useEffect(() => {
+        if (!fluxFs) return;
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') exitFluxFs(); };
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, [fluxFs, exitFluxFs]);
+
+    const toggleFullscreen = useCallback(() => {
+        if (fluxFs) exitFluxFs();
+        else enterFluxFs();
+    }, [fluxFs, enterFluxFs, exitFluxFs]);
+
+    // ── Layout ──
     const rect = isFullscreen
         ? { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight, right: window.innerWidth }
         : video.rect;
 
-    const hasAnyCue = activeCues.some(c => c.cue !== null);
+    const visibleCueCount = activeCues.filter(c => c.cue !== null).length;
+    const hasAnyCue = visibleCueCount > 0;
     const videoDuration = video.element.duration || 0;
+    const subFontSize = visibleCueCount <= 2 ? 22 : visibleCueCount === 3 ? 18 : 15;
 
     const handleSeek = useCallback((time: number) => {
         if (isManualMode && onManualSeek) {
             onManualSeek(time);
-        } else if (video.element.tagName === 'VIDEO') {
-            (video.element as HTMLVideoElement).currentTime = time; // eslint-disable-line react-hooks/immutability
+        } else {
+            seekVideo(videoElRef.current, time);
+            // Also sync the clone if in custom fullscreen
+            const clone = fluxFsRef.current?.querySelector('video');
+            if (clone) clone.currentTime = time;
         }
-    }, [video.element, isManualMode, onManualSeek]);
+    }, [isManualMode, onManualSeek]);
 
     const hasTracks = tracks.length > 0;
     const togglePanel = useCallback(() => setShowPanel(p => !p), []);
 
+    const pos: 'fixed' | 'absolute' = fluxFs ? 'absolute' : 'fixed';
+    const rightOffset = isFullscreen ? 12 : window.innerWidth - (rect as DOMRect).right + 12;
+
     const overlayContent = (
         <>
-            {/* Subtitle lines — positioned at bottom of video */}
+            {/* Subtitle lines — bottom of video */}
             <div style={{
-                position: 'fixed',
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height,
+                position: pos,
+                left: fluxFs ? 0 : rect.left,
+                top: fluxFs ? 0 : rect.top,
+                width: fluxFs ? '100%' : rect.width,
+                height: fluxFs ? '100%' : rect.height,
                 pointerEvents: 'none',
                 zIndex: 2147483645,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                padding: '0 20px 24px',
-                boxSizing: 'border-box',
+                display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center',
+                padding: '0 20px 24px', boxSizing: 'border-box',
             }}>
                 {!hasTracks && (
-                    <div
-                        onWheel={stopScroll}
-                        style={{ pointerEvents: 'auto', width: '320px', marginBottom: '20px' }}
-                    >
+                    <div onWheel={stopScroll} style={{ pointerEvents: 'auto', width: '320px', marginBottom: '20px' }}>
                         <div style={{
-                            backgroundColor: theme.bgSolid,
-                            borderRadius: '16px',
-                            padding: '16px',
-                            border: `1px solid ${theme.border}`,
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                            backgroundColor: theme.bgSolid, borderRadius: '16px', padding: '16px',
+                            border: `1px solid ${theme.border}`, boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
                         }}>
                             <div style={{ color: theme.text, fontSize: '13px', fontWeight: 600, marginBottom: '8px', textAlign: 'center' }}>
                                 Add Subtitles
@@ -153,27 +258,17 @@ export function UniversalSubtitleOverlay({
 
                 {hasAnyCue && (
                     <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '4px',
-                        pointerEvents: 'auto',
-                        padding: '8px 16px',
-                        borderRadius: '12px',
-                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                        backdropFilter: 'blur(8px)',
-                        maxWidth: '90%',
+                        display: 'flex', flexDirection: 'column', gap: '4px', pointerEvents: 'auto',
+                        padding: '8px 16px', borderRadius: '12px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)',
+                        maxWidth: '90%', flexShrink: 0,
                     }}>
                         {activeCues.filter(c => c.cue).map(({ track, cue }) => (
                             <SubtitleTrackLine
-                                key={track.id}
-                                cue={cue!}
-                                color={track.color}
-                                label={track.label}
-                                targetLang={targetLang}
-                                sourceLang={sourceLang}
-                                onTargetLangChange={onTargetLangChange}
-                                onSourceLangChange={onSourceLangChange}
-                                theme={theme}
+                                key={track.id} cue={cue!} color={track.color} label={track.label}
+                                targetLang={targetLang} sourceLang={sourceLang}
+                                onTargetLangChange={onTargetLangChange} onSourceLangChange={onSourceLangChange}
+                                theme={theme} fontSize={subFontSize}
                             />
                         ))}
                     </div>
@@ -183,7 +278,7 @@ export function UniversalSubtitleOverlay({
             {/* Manual mode controls */}
             {isManualMode && hasTracks && (
                 <div style={{
-                    position: 'fixed', top: rect.top + 12, left: rect.left + 12,
+                    position: pos, top: fluxFs ? 12 : rect.top + 12, left: fluxFs ? 12 : rect.left + 12,
                     zIndex: 2147483646, display: 'flex', alignItems: 'center', gap: '6px', pointerEvents: 'auto',
                 }}>
                     <button onClick={onToggleManualPlay} style={{
@@ -201,42 +296,42 @@ export function UniversalSubtitleOverlay({
                 </div>
             )}
 
-            {/* Gear button */}
+            {/* Top-right buttons */}
             {hasTracks && (
-                <button onClick={togglePanel} style={{
-                    position: 'fixed', top: rect.top + 12,
-                    right: (isFullscreen ? 12 : window.innerWidth - (rect as DOMRect).right + 12),
-                    zIndex: 2147483646, width: '32px', height: '32px', borderRadius: '50%', border: 'none',
-                    backgroundColor: showPanel ? theme.accent : 'rgba(0,0,0,0.5)',
-                    color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '16px', transition: 'all 0.2s', backdropFilter: 'blur(8px)', pointerEvents: 'auto',
-                }} title="Subtitle settings">⚙</button>
+                <div style={{
+                    position: pos, top: fluxFs ? 12 : rect.top + 12, right: rightOffset,
+                    zIndex: 2147483646, display: 'flex', gap: '6px', pointerEvents: 'auto',
+                }}>
+                    <button onClick={toggleFullscreen} style={{
+                        width: '32px', height: '32px', borderRadius: '50%', border: 'none',
+                        backgroundColor: isFullscreen ? theme.accent : 'rgba(0,0,0,0.5)',
+                        color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '14px', transition: 'all 0.2s', backdropFilter: 'blur(8px)',
+                    }} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen with subtitles'}>
+                        {isFullscreen ? '✕' : '⛶'}
+                    </button>
+                    <button onClick={togglePanel} style={{
+                        width: '32px', height: '32px', borderRadius: '50%', border: 'none',
+                        backgroundColor: showPanel ? theme.accent : 'rgba(0,0,0,0.5)',
+                        color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '16px', transition: 'all 0.2s', backdropFilter: 'blur(8px)',
+                    }} title="Subtitle settings">⚙</button>
+                </div>
             )}
 
             {/* Control panel */}
             {showPanel && (
-                <div
-                    onWheel={stopScroll}
-                    style={{
-                        position: 'fixed', top: rect.top + 50,
-                        right: (isFullscreen ? 12 : window.innerWidth - (rect as DOMRect).right + 12),
-                        zIndex: 2147483647, width: '340px', pointerEvents: 'auto',
-                    }}
-                >
+                <div onWheel={stopScroll} style={{
+                    position: pos, top: fluxFs ? 50 : rect.top + 50, right: rightOffset,
+                    zIndex: 2147483647, width: '340px', pointerEvents: 'auto',
+                }}>
                     <SubtitleControlPanel
-                        tracks={tracks}
-                        currentTime={currentTime}
-                        videoDuration={videoDuration}
-                        onAddFiles={onAddFiles}
-                        onAddUrl={onAddUrl}
-                        onRemoveTrack={onRemoveTrack}
-                        onToggleVisibility={onToggleVisibility}
-                        onSetOffset={onSetOffset}
-                        onSeek={handleSeek}
-                        onClose={() => setShowPanel(false)}
-                        theme={theme}
-                        isManualMode={isManualMode}
-                        manualPlaying={manualPlaying}
+                        tracks={tracks} currentTime={currentTime} videoDuration={videoDuration}
+                        onAddFiles={onAddFiles} onAddUrl={onAddUrl}
+                        onRemoveTrack={onRemoveTrack} onToggleVisibility={onToggleVisibility}
+                        onSetOffset={onSetOffset} onSeek={handleSeek}
+                        onClose={() => setShowPanel(false)} theme={theme}
+                        isManualMode={isManualMode} manualPlaying={manualPlaying}
                         onToggleManualPlay={onToggleManualPlay}
                     />
                 </div>
@@ -244,9 +339,14 @@ export function UniversalSubtitleOverlay({
         </>
     );
 
-    // In fullscreen, render via portal into the fullscreen element
-    if (isFullscreen && portalRef.current) {
-        return createPortal(overlayContent, portalRef.current);
+    // Custom fullscreen: portal into our container (state-based, safe to read during render)
+    if (fluxFs && fluxFsEl) {
+        return createPortal(overlayContent, fluxFsEl);
+    }
+
+    // Native fullscreen: portal into injected div
+    if (nativeFs && portalEl) {
+        return createPortal(overlayContent, portalEl);
     }
 
     return overlayContent;
@@ -254,6 +354,5 @@ export function UniversalSubtitleOverlay({
 
 function stopScroll(e: React.WheelEvent) {
     e.stopPropagation();
-    // Also prevent the event from reaching the page
     e.nativeEvent.stopImmediatePropagation();
 }

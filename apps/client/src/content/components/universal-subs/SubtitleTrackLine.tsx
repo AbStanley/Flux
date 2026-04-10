@@ -13,6 +13,7 @@ interface Props {
     onTargetLangChange: (lang: string) => void;
     onSourceLangChange: (lang: string) => void;
     theme: FluxTheme;
+    fontSize?: number;
 }
 
 export function SubtitleTrackLine({
@@ -24,6 +25,7 @@ export function SubtitleTrackLine({
     onTargetLangChange,
     onSourceLangChange,
     theme,
+    fontSize = 22,
 }: Props) {
     const [hoveredWord, setHoveredWord] = useState<{ text: string; x: number; y: number } | null>(null);
     const [isPopupHovered, setIsPopupHovered] = useState(false);
@@ -81,7 +83,7 @@ export function SubtitleTrackLine({
                 onMouseLeave={onLeave}
                 style={{
                     color,
-                    fontSize: '22px',
+                    fontSize: `${fontSize}px`,
                     fontWeight: 600,
                     textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.9)',
                     lineHeight: 1.4,
