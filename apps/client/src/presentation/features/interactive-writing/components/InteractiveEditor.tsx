@@ -1,7 +1,6 @@
-import { useRef, useState, useEffect, type ReactNode } from 'react';
+import { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useWritingStore } from '../store/writing.store';
-import { backendAiApi } from '@/infrastructure/api/backend-ai-api';
 
 import { cn } from '@/lib/utils';
 import { AnimatePresence } from 'framer-motion';
@@ -10,6 +9,9 @@ import { ModelSelect } from '@/presentation/components/ModelSelect';
 import { LANGUAGES } from '@/content/constants';
 import { CorrectionTooltip } from './CorrectionTooltip';
 import { EditorFooter } from './EditorFooter';
+import { HighlightedText } from './HighlightedText';
+import { useAvailableModels } from '../hooks/useAvailableModels';
+import { useCorrectionTooltip } from '../hooks/useCorrectionTooltip';
 
 const editorLayerStyles = cn(
   'grid-area-1 w-full min-h-[min(28rem,55vh)] md:min-h-[32rem] text-lg leading-[1.85] whitespace-pre-wrap break-words border-none focus:ring-0 outline-none antialiased',
@@ -20,33 +22,11 @@ const editorLayerStyles = cn(
 
 export const InteractiveEditor = () => {
   const store = useWritingStore();
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [modelsLoadFailed, setModelsLoadFailed] = useState(false);
-  const [hoveredId, setHoveredId] = useState<number | null>(null);
-  const [tooltipPos, setTooltipPos] = useState<DOMRect | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
-  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    backendAiApi
-      .listModels()
-      .then((res) => {
-        if (cancelled) return;
-        setModelsLoadFailed(false);
-        setAvailableModels(res.models?.map((m) => m.name) ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAvailableModels([]);
-          setModelsLoadFailed(true);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { availableModels, modelsLoadFailed } = useAvailableModels();
+  const tooltip = useCorrectionTooltip();
 
   const modelOptions =
     store.evaluationModel && !availableModels.includes(store.evaluationModel)
@@ -74,104 +54,7 @@ export const InteractiveEditor = () => {
     if (backdropRef.current) backdropRef.current.scrollTop = e.currentTarget.scrollTop;
   };
 
-  useEffect(() => {
-    if (hoveredId === null) return;
-    const update = () => {
-      const el = document.querySelector(`[data-correction-id="${hoveredId}"]`);
-      if (el) setTooltipPos(el.getBoundingClientRect());
-    };
-    window.addEventListener('scroll', update, true);
-    window.addEventListener('resize', update);
-    return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
-  }, [hoveredId]);
-
-  const renderHighlightedText = () => {
-    if (!store.text) return null;
-    if (store.highlightMode !== 'full') return store.text;
-
-    const sorted = [...store.corrections].map((c, i) => ({ ...c, originalIndex: i }))
-      .sort((a, b) => (a.offset || 0) - (b.offset || 0));
-
-    const result: ReactNode[] = [];
-    let lastIndex = 0;
-
-    sorted.forEach((corr) => {
-      if (corr.offset! < lastIndex) return;
-
-      const actualText = store.text.slice(corr.offset!, corr.offset! + corr.length!);
-      const matches = actualText.toLowerCase() === corr.correctionText.toLowerCase();
-
-      if (corr.offset! > lastIndex) {
-        const part = store.text.slice(lastIndex, corr.offset!);
-        result.push(part);
-      }
-
-      if (!matches) {
-        result.push(actualText);
-        lastIndex = corr.offset! + corr.length!;
-        return;
-      }
-
-      const isHovered = hoveredId === corr.originalIndex;
-      const t = corr.type.toLowerCase();
-      // UX redesign styling: dotted/dashed underlines
-      let styling = 'border-b-[2.5px] border-dotted border-emerald-500 hover:bg-emerald-500/10 dark:text-emerald-100';
-      if (t === 'spelling') styling = 'border-b-[2.5px] border-dotted border-pink-500 hover:bg-pink-500/10 dark:text-pink-100';
-      if (t === 'punctuation') styling = 'border-b-[2.5px] border-dotted border-purple-500 hover:bg-purple-500/10 dark:text-purple-100';
-      if (t === 'fluency' || t === 'style') styling = 'border-b-[2.5px] border-dotted border-orange-500 hover:bg-orange-500/10 dark:text-orange-100';
-
-      result.push(
-        <span
-          key={`corr-${corr.originalIndex}-${corr.offset}`}
-          data-correction-id={corr.originalIndex}
-          onClick={(e) => {
-            e.stopPropagation();
-            store.dismissCorrection(store.corrections[corr.originalIndex!].mistakeText);
-            setHoveredId(null); setTooltipPos(null);
-          }}
-          onMouseEnter={(e) => {
-            if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-            setHoveredId(corr.originalIndex!);
-            setTooltipPos(e.currentTarget.getBoundingClientRect());
-          }}
-          onMouseLeave={() => {
-            hideTimeoutRef.current = setTimeout(() => {
-              setHoveredId(null); setTooltipPos(null);
-            }, 100);
-          }}
-          className={cn(
-            'relative z-30 cursor-pointer rounded-sm transition-all pointer-events-auto',
-            styling,
-            isHovered && 'shadow-sm ring-2 ring-primary/25 dark:ring-emerald-400/30',
-          )}
-        >
-          {actualText}
-        </span>
-      );
-      lastIndex = corr.offset! + corr.length!;
-    });
-
-    if (lastIndex < store.text.length) {
-      result.push(store.text.slice(lastIndex));
-    }
-    return result;
-  };
-
-  const getPosInfo = () => {
-    if (!tooltipPos) return { style: { opacity: 0 }, showAbove: false };
-    const spaceBelow = window.innerHeight - tooltipPos.bottom;
-    const showAbove = spaceBelow < 220 && tooltipPos.top > spaceBelow;
-    return {
-      style: {
-        top: showAbove ? tooltipPos.top - 12 : tooltipPos.bottom + 12,
-        left: Math.max(16, Math.min(window.innerWidth - 320, tooltipPos.left + tooltipPos.width / 2 - 160)),
-        transformOrigin: showAbove ? 'bottom center' : 'top center',
-      },
-      showAbove,
-    };
-  };
-
-  const { style, showAbove } = getPosInfo();
+  const { style, showAbove } = tooltip.getPosInfo();
 
   return (
     <div className="relative mx-auto w-full max-w-7xl">
@@ -187,10 +70,9 @@ export const InteractiveEditor = () => {
           aria-hidden
         />
         <div className="relative p-3 sm:p-4 md:p-5">
-          {/* Toolbar: responsive — narrow = stacked sections; lg = one row */}
+          {/* Toolbar */}
           <div className="relative z-40 mb-5 flex w-full min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
             <div className="flex min-w-0 w-full flex-1 flex-col gap-3">
-              {/* Model full width; language + clear share a row (grow / fixed) */}
               <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-3">
                 <ModelSelect
                   label="Model for Polish"
@@ -238,7 +120,6 @@ export const InteractiveEditor = () => {
               )}
             </div>
 
-            {/* Actions: own row on small screens (full-width Polish); inline on lg */}
             <div
               className={cn(
                 'flex w-full min-w-0 gap-2 border-t border-border/40 pt-3',
@@ -271,7 +152,7 @@ export const InteractiveEditor = () => {
             </div>
           </div>
 
-          {/* Writing canvas — neutral inset well (no chromatic gradients) */}
+          {/* Writing canvas */}
           <div className="rounded-2xl border border-border/60 bg-muted/20 p-[1px] dark:border-white/[0.07] dark:bg-white/[0.03]">
             <div
               className={cn(
@@ -299,7 +180,18 @@ export const InteractiveEditor = () => {
                   className={cn(editorLayerStyles, 'pointer-events-none z-10 p-0 text-transparent [grid-area:1/1]')}
                   aria-hidden="true"
                 >
-                  {renderHighlightedText()}
+                  <HighlightedText
+                    text={store.text}
+                    corrections={store.corrections}
+                    highlightMode={store.highlightMode}
+                    hoveredId={tooltip.hoveredId}
+                    onCorrectionClick={(mistakeText) => {
+                      store.dismissCorrection(mistakeText);
+                      tooltip.clearTooltip();
+                    }}
+                    onCorrectionEnter={tooltip.onCorrectionEnter}
+                    onCorrectionLeave={tooltip.onCorrectionLeave}
+                  />
                 </div>
               </div>
             </div>
@@ -312,29 +204,20 @@ export const InteractiveEditor = () => {
       {typeof document !== 'undefined' &&
         createPortal(
           <AnimatePresence>
-            {hoveredId !== null && store.corrections[hoveredId] && (
+            {tooltip.hoveredId !== null && store.corrections[tooltip.hoveredId] && (
               <CorrectionTooltip
-                correction={store.corrections[hoveredId]}
+                correction={store.corrections[tooltip.hoveredId]}
                 position={{ style, showAbove }}
                 onDismiss={() => {
-                  store.dismissCorrection(store.corrections[hoveredId].mistakeText);
-                  setHoveredId(null);
-                  setTooltipPos(null);
+                  store.dismissCorrection(store.corrections[tooltip.hoveredId!].mistakeText);
+                  tooltip.clearTooltip();
                 }}
                 onRevert={() => {
-                  store.revertCorrection(store.corrections[hoveredId]);
-                  setHoveredId(null);
-                  setTooltipPos(null);
+                  store.revertCorrection(store.corrections[tooltip.hoveredId!]);
+                  tooltip.clearTooltip();
                 }}
-                onMouseEnter={() => {
-                  if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-                }}
-                onMouseLeave={() => {
-                  hideTimeoutRef.current = setTimeout(() => {
-                    setHoveredId(null);
-                    setTooltipPos(null);
-                  }, 100);
-                }}
+                onMouseEnter={tooltip.onTooltipEnter}
+                onMouseLeave={tooltip.onTooltipLeave}
               />
             )}
           </AnimatePresence>,

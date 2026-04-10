@@ -1,6 +1,11 @@
-
 import type { StateCreator } from 'zustand';
 import type { IAIService } from '../../../../../core/interfaces/IAIService';
+import {
+    getContextForIndex,
+    getSelectionGroups,
+    fetchTranslationHelper,
+    pendingRequests,
+} from './translationUtils';
 
 export interface TranslationSlice {
     translationCache: Map<string, string>;
@@ -22,7 +27,7 @@ export interface TranslationSlice {
 
     handleHover: (
         index: number,
-        source: 'token' | 'popup', // New param
+        source: 'token' | 'popup',
         tokens: string[],
         currentPage: number,
         PAGE_SIZE: number,
@@ -46,92 +51,6 @@ export interface TranslationSlice {
     clearSelectionTranslations: () => void;
     removeTranslation: (key: string, text?: string, targetLang?: string) => void;
 }
-
-// Helpers
-const getContextForIndex = (tokens: string[], index: number): string => {
-    if (index < 0 || index >= tokens.length) return '';
-
-    const WINDOW_SIZE = 25; // ±25 tokens for context
-    const start = Math.max(0, index - WINDOW_SIZE);
-    const end = Math.min(tokens.length - 1, index + WINDOW_SIZE);
-
-    let refinedStart = start;
-    for (let i = index; i >= start; i--) {
-        if (/[.!?\n]/.test(tokens[i])) {
-            refinedStart = i + 1;
-            break;
-        }
-    }
-
-    // Refine end to end of "sentence" if possible
-    let refinedEnd = end;
-    for (let i = index; i <= end; i++) {
-        if (/[.!?\n]/.test(tokens[i])) {
-            refinedEnd = i;
-            break;
-        }
-    }
-
-    return tokens.slice(refinedStart, refinedEnd + 1).join('').trim();
-};
-
-const getSelectionGroups = (indices: Set<number>, tokens: string[]): number[][] => {
-    const sorted = Array.from(indices).sort((a, b) => a - b);
-    if (sorted.length === 0) return [];
-    const groups: number[][] = [];
-    let currentGroup: number[] = [sorted[0]];
-    for (let i = 1; i < sorted.length; i++) {
-        const prev = sorted[i - 1];
-        const curr = sorted[i];
-        let isContiguous = true;
-        for (let k = prev + 1; k < curr; k++) {
-            // Only break continuity if we hit something that looks like a "word" (letters/numbers)
-            // This treats punctuation, spaces, ZWSP, symbols as "bridgeable" gaps.
-            const hasContent = /[\p{L}\p{N}]/u.test(tokens[k]);
-            if (hasContent || tokens[k].includes('\n')) {
-                isContiguous = false;
-                break;
-            }
-        }
-        if (isContiguous) {
-            currentGroup.push(curr);
-        } else {
-            groups.push(currentGroup);
-            currentGroup = [curr];
-        }
-    }
-    groups.push(currentGroup);
-    return groups;
-};
-
-const fetchTranslationHelper = async (
-    text: string,
-    context: string,
-    sourceLang: string,
-    targetLang: string,
-    aiService: IAIService,
-    retries = 3
-): Promise<string | null> => {
-    if (!text.trim()) return null;
-    let attempt = 0;
-    while (attempt < retries) {
-        try {
-            // Add 15s timeout to prevent infinite hanging
-            const fetchPromise = aiService.translateText(text.trim(), targetLang, context, sourceLang);
-            const timeoutPromise = new Promise<null>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000));
-
-            return await Promise.race([fetchPromise, timeoutPromise]) as string;
-        } catch (error: unknown) {
-            console.warn(`Translation attempt ${attempt + 1} failed:`, error);
-            attempt++;
-            if (attempt >= retries) return null;
-            await new Promise(resolve => setTimeout(resolve, 500 * attempt));
-        }
-    }
-    return null;
-};
-
-const pendingRequests = new Map<string, Promise<string | null>>();
 
 export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get) => ({
     translationCache: new Map(), // <"text_targetLang", translation>
