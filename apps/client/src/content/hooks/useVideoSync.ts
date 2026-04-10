@@ -98,12 +98,16 @@ export function useVideoSync(video: DetectedVideo | null, tracks: SubtitleTrack[
         const interval = setInterval(sync, 200);
         if (isReal) {
             video.element.addEventListener('seeked', sync);
+            video.element.addEventListener('play', sync);
+            video.element.addEventListener('pause', sync);
         }
 
         return () => {
             clearInterval(interval);
             if (isReal) {
                 video.element.removeEventListener('seeked', sync);
+                video.element.removeEventListener('play', sync);
+                video.element.removeEventListener('pause', sync);
             }
         };
     }, [video, tracks, manualPlaying]);

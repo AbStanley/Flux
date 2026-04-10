@@ -104,6 +104,7 @@ export function UniversalSubtitleOverlay({
             'position:fixed', 'inset:0', 'z-index:2147483647',
             'background:#000', 'display:flex', 'align-items:center',
             'justify-content:center',
+            'font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif',
         ].join(';');
         document.documentElement.appendChild(container);
         fluxFsRef.current = container;
@@ -180,7 +181,7 @@ export function UniversalSubtitleOverlay({
                 if (!portalDivRef.current || !fsEl.contains(portalDivRef.current)) {
                     const div = document.createElement('div');
                     div.id = 'flux-subtitle-fs-portal';
-                    div.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none;';
+                    div.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;';
                     fsEl.appendChild(div);
                     portalDivRef.current = div;
                     setPortalEl(div);
@@ -353,14 +354,22 @@ export function UniversalSubtitleOverlay({
         </>
     );
 
+    // When portaling into the light DOM, wrap content so font-family cascades
+    // to all children (settings panel, buttons, etc.)
+    const portalWrapped = (
+        <div style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' }}>
+            {overlayContent}
+        </div>
+    );
+
     // Custom fullscreen: portal into our container (state-based, safe to read during render)
     if (fluxFs && fluxFsEl) {
-        return createPortal(overlayContent, fluxFsEl);
+        return createPortal(portalWrapped, fluxFsEl);
     }
 
     // Native fullscreen: portal into injected div
     if (nativeFs && portalEl) {
-        return createPortal(overlayContent, portalEl);
+        return createPortal(portalWrapped, portalEl);
     }
 
     return overlayContent;
