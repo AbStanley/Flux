@@ -45,23 +45,6 @@ export const useExtensionAuthStore = create<ExtensionAuthStore>((set) => ({
                     });
                     return;
                 }
-
-                // Auto-connect for localhost (server skips auth for local requests)
-                const apiUrl = result.flux_api_url || import.meta.env.VITE_EXT_API_URL || 'http://localhost:3000';
-                if (apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1')) {
-                    try {
-                        const res = await fetch(`${apiUrl}/api/health`);
-                        if (res.ok) {
-                            set({
-                                token: null,
-                                user: { id: 'local', email: 'localhost' },
-                                isAuthenticated: true,
-                                isLoading: false
-                            });
-                            return;
-                        }
-                    } catch { /* server not reachable, fall through to unauthenticated */ }
-                }
             }
         } catch (e) {
             console.error('Failed to load auth from storage', e);

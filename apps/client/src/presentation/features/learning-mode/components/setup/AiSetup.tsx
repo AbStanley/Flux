@@ -109,14 +109,14 @@ export const AiSetup = () => {
                                 {!isExtension && <span className="ml-2 text-[10px] text-green-500 font-mono bg-green-500/10 px-1.5 py-0.5 rounded">WEB APP MODE</span>}
                             </label>
                             <Input
-                                value={!isExtension ? '' : (config.aiHost || 'http://localhost:3000')}
+                                value={!isExtension ? '' : (config.aiHost || 'http://localhost')}
                                 onChange={(e) => {
                                     const val = e.target.value;
                                     updateConfig({ aiHost: val });
 
                                     setApiClientBaseUrl(val);
                                 }}
-                                placeholder={!isExtension ? "Auto (Relative Path)" : "http://localhost:3000"}
+                                placeholder={!isExtension ? "Auto (Relative Path)" : "http://localhost"}
                                 disabled={!isExtension}
                                 className={cn("bg-[var(--input-background)] font-mono text-xs", !isExtension && "opacity-50 cursor-not-allowed")}
                             />

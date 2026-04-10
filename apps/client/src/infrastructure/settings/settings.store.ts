@@ -33,7 +33,7 @@ const storageSet = (key: string, value: string): Promise<void> => {
     });
 };
 
-const DEFAULT_API_URL = import.meta.env.VITE_EXT_API_URL || 'http://localhost:3000';
+const DEFAULT_API_URL = import.meta.env.VITE_EXT_API_URL || 'http://localhost';
 
 export const useSettingsStore = create<SettingsState>((set) => ({
     apiUrl: DEFAULT_API_URL,

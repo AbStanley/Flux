@@ -57,7 +57,7 @@ export function PopupSettingsView({
                     type="text"
                     value={tempUrl}
                     onChange={(e) => onTempUrlChange(e.target.value)}
-                    placeholder="http://localhost:3000"
+                    placeholder="http://localhost"
                     style={{
                         width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #334155',
                         backgroundColor: '#1e293b', color: 'white', outline: 'none', boxSizing: 'border-box',

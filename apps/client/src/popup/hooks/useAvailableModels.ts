@@ -4,7 +4,7 @@ export function useAvailableModels(apiUrl: string) {
     const [availableModels, setAvailableModels] = useState<string[]>([]);
 
     useEffect(() => {
-        const url = apiUrl || 'http://localhost:3000';
+        const url = apiUrl || 'http://localhost';
         fetch(`${url}/api/tags`)
             .then((r) => r.json())
             .then((data) => {

@@ -98,7 +98,6 @@ export class ApiClient {
         if (!response.ok) {
             if (response.status === 401) {
                 localStorage.removeItem('flux_auth_token');
-                window.location.reload();
                 throw new Error('Session expired. Please log in again.');
             }
             const text = await response.text();
