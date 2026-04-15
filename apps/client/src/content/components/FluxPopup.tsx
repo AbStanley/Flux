@@ -125,24 +125,24 @@ export function FluxPopup({
                     style={{
                         backgroundColor: theme.bgSolid,
                         color: theme.text,
-                        padding: '8px 14px',
+                        padding: '10px 14px',
                         borderRadius: '12px',
                         boxShadow: `0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px ${theme.border}`,
                         fontSize: '14px',
-                        lineHeight: '1.4',
+                        lineHeight: '1.5',
                         display: 'flex',
-                        alignItems: 'center',
+                        alignItems: 'flex-start',
                         gap: '10px',
-                        maxWidth: '320px',
+                        maxWidth: '360px',
                         backdropFilter: 'blur(12px)',
                         border: `1px solid ${theme.border}`,
                     }}
                 >
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
+                    <span style={{ flex: 1, fontWeight: 500, maxHeight: '200px', overflowY: 'auto' }}>
                         {loading ? '...' : error ? 'Error' : result || '—'}
                     </span>
                     <button
-                        onClick={(e) => { e.stopPropagation(); setIsCollapsed(false); }}
+                        onClick={(e) => { e.stopPropagation(); setIsPinned(false); onPinChange?.(false); setIsCollapsed(false); }}
                         style={{
                             background: 'none', border: 'none', color: theme.textSecondary,
                             cursor: 'pointer', padding: '2px', display: 'flex', flexShrink: 0,
