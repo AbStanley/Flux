@@ -106,6 +106,12 @@ export function FluxPopup({
         }
     }, [onSave, selection.text, result, selectAndOpen]);
 
+    // When not pinned, use absolute positioning (scrolls with page).
+    // When pinned (dragged), use fixed positioning (stays in viewport).
+    const positioning: React.CSSProperties = isPinned
+        ? { position: 'fixed', left: pos.x, top: pos.y }
+        : { position: 'absolute', left: pos.x + window.scrollX, top: pos.y + window.scrollY };
+
     // Collapsed = compact translation chip (not draggable, follows selection)
     if (isCollapsed) {
         return (
@@ -113,9 +119,7 @@ export function FluxPopup({
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
                 style={{
-                    position: 'fixed',
-                    left: pos.x,
-                    top: pos.y,
+                    ...positioning,
                     zIndex: UI_CONSTANTS.Z_INDEX,
                     fontFamily: 'Inter, system-ui, sans-serif',
                 }}
@@ -204,9 +208,7 @@ export function FluxPopup({
                 onAutoPlay?.();
             }}
             style={{
-                position: 'fixed',
-                left: pos.x,
-                top: pos.y,
+                ...positioning,
                 zIndex: UI_CONSTANTS.Z_INDEX,
                 fontFamily: 'Inter, system-ui, sans-serif',
                 transition: isDragging ? UI_CONSTANTS.TRANSITION_DRAGGING : UI_CONSTANTS.TRANSITION_DEFAULT
