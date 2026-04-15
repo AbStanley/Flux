@@ -23,6 +23,7 @@ export function FluxContentApp() {
     const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
     const [mode, setMode] = useState<Mode>('TRANSLATE');
     const [isOverlayActive, setIsOverlayActive] = useState(false);
+    const [popupCollapsed, setPopupCollapsed] = useState(false);
 
     const { aiService } = useServices();
     const settings = useChromeSettings(aiService);
@@ -122,11 +123,8 @@ export function FluxContentApp() {
         setSelection(newSelection);
         setView('POPUP');
 
-        const aiResult = await handleAction(newSelection.text, mode, settings.targetLang, settings.sourceLang);
-
-        if (aiResult?.detectedLang && settings.sourceLang === 'Auto') {
-            handleSourceLangChange(aiResult.detectedLang);
-        }
+        await handleAction(newSelection.text, mode, settings.targetLang, settings.sourceLang);
+        // Don't persist auto-detected language — keep 'Auto' so it works on any page
 
         if (settings.autoSave) {
             handleSave(newSelection.text);
@@ -158,10 +156,7 @@ export function FluxContentApp() {
 
     const onManualAction = async () => {
         if (selection) {
-            const aiResult = await handleAction(selection.text, mode, settings.targetLang, settings.sourceLang);
-            if (aiResult?.detectedLang && settings.sourceLang === 'Auto') {
-                handleSourceLangChange(aiResult.detectedLang);
-            }
+            await handleAction(selection.text, mode, settings.targetLang, settings.sourceLang);
         }
     };
 
@@ -237,6 +232,8 @@ export function FluxContentApp() {
                     model={settings.selectedModel}
                     availableModels={settings.availableModels}
                     onModelChange={settings.persistModel}
+                    collapsed={popupCollapsed}
+                    onCollapsedChange={setPopupCollapsed}
                 />
             )}
 

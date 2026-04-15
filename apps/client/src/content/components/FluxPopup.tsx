@@ -35,6 +35,8 @@ interface FluxPopupProps {
     model: string;
     availableModels: string[];
     onModelChange: (model: string) => void;
+    collapsed: boolean;
+    onCollapsedChange: (collapsed: boolean) => void;
 }
 
 export function FluxPopup({
@@ -65,9 +67,10 @@ export function FluxPopup({
     model,
     availableModels,
     onModelChange,
+    collapsed: isCollapsed,
+    onCollapsedChange: setIsCollapsed,
 }: FluxPopupProps) {
     const [isPinned, setIsPinned] = useState(false);
-    const [isCollapsed, setIsCollapsed] = useState(false);
     const { selectAndOpen } = useFluxMessaging();
 
     const { pos, setPos, isDragging, handleMouseDown } = useDraggable({
@@ -103,13 +106,75 @@ export function FluxPopup({
         }
     }, [onSave, selection.text, selectAndOpen]);
 
+    // Collapsed = compact translation chip (not draggable, follows selection)
+    if (isCollapsed) {
+        return (
+            <div
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
+                style={{
+                    position: 'fixed',
+                    left: pos.x,
+                    top: pos.y,
+                    zIndex: UI_CONSTANTS.Z_INDEX,
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                }}
+                onMouseDown={e => e.stopPropagation()}
+            >
+                <div
+                    style={{
+                        backgroundColor: theme.bgSolid,
+                        color: theme.text,
+                        padding: '8px 14px',
+                        borderRadius: '12px',
+                        boxShadow: `0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px ${theme.border}`,
+                        fontSize: '14px',
+                        lineHeight: '1.4',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        maxWidth: '320px',
+                        backdropFilter: 'blur(12px)',
+                        border: `1px solid ${theme.border}`,
+                    }}
+                >
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
+                        {loading ? '...' : error ? 'Error' : result || '—'}
+                    </span>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setIsCollapsed(false); }}
+                        style={{
+                            background: 'none', border: 'none', color: theme.textSecondary,
+                            cursor: 'pointer', padding: '2px', display: 'flex', flexShrink: 0,
+                        }}
+                        title="Expand"
+                    >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onClose(); }}
+                        style={{
+                            background: 'none', border: 'none', color: theme.textSecondary,
+                            cursor: 'pointer', padding: '2px', display: 'flex', fontSize: '12px', flexShrink: 0,
+                            opacity: 0.6,
+                        }}
+                    >
+                        ✕
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     const popupStyles: React.CSSProperties = {
         backgroundColor: theme.bg,
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         color: theme.text,
-        width: isCollapsed ? `${UI_CONSTANTS.POPUP_COLLAPSED_WIDTH}px` : `${UI_CONSTANTS.POPUP_WIDTH}px`,
-        padding: isCollapsed ? '12px 16px' : '20px',
+        width: `${UI_CONSTANTS.POPUP_WIDTH}px`,
+        padding: '20px',
         borderRadius: '20px',
         boxShadow: isDragging
             ? `0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px ${theme.border}`
@@ -118,7 +183,7 @@ export function FluxPopup({
         lineHeight: '1.6',
         display: 'flex',
         flexDirection: 'column',
-        gap: isCollapsed ? '8px' : '16px',
+        gap: '16px',
         border: `1px solid ${theme.border}`,
         transform: isDragging ? 'scale(1.02)' : 'scale(1)',
         transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
@@ -148,41 +213,40 @@ export function FluxPopup({
                         onPinToggle={handlePinToggle}
                         onSave={handleInternalSave}
                         isPinned={isPinned}
-                        isCollapsed={isCollapsed}
-                        onCollapseToggle={() => setIsCollapsed(!isCollapsed)}
+                        isCollapsed={false}
+                        onCollapseToggle={() => setIsCollapsed(true)}
                         theme={theme}
                     />
                 </div>
 
-                {!isCollapsed && (
-                    <FluxControls
-                        mode={mode}
-                        targetLang={targetLang}
-                        sourceLang={sourceLang}
-                        result={result}
-                        selection={selection}
-                        onModeChange={onModeChange}
-                        onLangChange={onLangChange}
-                        onSourceLangChange={onSourceLangChange}
-                        onSwapLanguages={onSwapLanguages}
-                        onAction={onAction}
-                        autoSave={autoSave}
-                        onAutoSaveChange={onAutoSaveChange}
-                        isSaving={isSaving}
-                        theme={theme}
-                        themeId={themeId}
-                        onThemeChange={onThemeChange}
-                        model={model}
-                        availableModels={availableModels}
-                        onModelChange={onModelChange}
-                    />
-                )}
-
+                {/* Translation result first — most important content */}
                 <FluxContent
                     loading={loading}
                     error={error}
                     result={result}
                     theme={theme}
+                />
+
+                <FluxControls
+                    mode={mode}
+                    targetLang={targetLang}
+                    sourceLang={sourceLang}
+                    result={result}
+                    selection={selection}
+                    onModeChange={onModeChange}
+                    onLangChange={onLangChange}
+                    onSourceLangChange={onSourceLangChange}
+                    onSwapLanguages={onSwapLanguages}
+                    onAction={onAction}
+                    autoSave={autoSave}
+                    onAutoSaveChange={onAutoSaveChange}
+                    isSaving={isSaving}
+                    theme={theme}
+                    themeId={themeId}
+                    onThemeChange={onThemeChange}
+                    model={model}
+                    availableModels={availableModels}
+                    onModelChange={onModelChange}
                 />
             </div>
         </div>

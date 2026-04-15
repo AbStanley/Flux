@@ -41,20 +41,18 @@ export function FluxContent({ loading, error, result, theme }: FluxContentProps)
                 <div style={{
                     maxHeight: '200px',
                     overflowY: 'auto',
-                    background: theme.bgSolid,
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: `1px solid ${theme.surface}`,
-                    fontSize: 'inherit',
-                    lineHeight: 'inherit'
+                    fontSize: '15px',
+                    lineHeight: '1.5',
+                    fontWeight: 500,
+                    color: theme.text,
                 }}>
                     <ReactMarkdown
                         components={{
-                            p: ({ ...props }) => <p style={{ marginBottom: '8px' }} {...props} />,
-                            ul: ({ ...props }) => <ul style={{ marginLeft: '16px', listStyleType: 'disc', marginBottom: '8px' }} {...props} />,
-                            ol: ({ ...props }) => <ol style={{ marginLeft: '16px', listStyleType: 'decimal', marginBottom: '8px' }} {...props} />,
-                            li: ({ ...props }) => <li style={{ marginBottom: '4px' }} {...props} />,
-                            strong: ({ ...props }) => <strong style={{ color: theme.info, fontWeight: '600' }} {...props} />
+                            p: ({ ...props }) => <p style={{ marginBottom: '6px' }} {...props} />,
+                            ul: ({ ...props }) => <ul style={{ marginLeft: '16px', listStyleType: 'disc', marginBottom: '6px' }} {...props} />,
+                            ol: ({ ...props }) => <ol style={{ marginLeft: '16px', listStyleType: 'decimal', marginBottom: '6px' }} {...props} />,
+                            li: ({ ...props }) => <li style={{ marginBottom: '2px' }} {...props} />,
+                            strong: ({ ...props }) => <strong style={{ color: theme.accent, fontWeight: '600' }} {...props} />
                         }}
                     >
                         {result}
