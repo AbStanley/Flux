@@ -74,10 +74,12 @@ export const useTextSelection = (
                 if (selectionText && selectionText.length > 0 && selectionRect) {
                     // Check if new selection
                     if (selectionRect && (selectionText !== selectionRef.current?.text)) {
+                        // Use viewport-relative coordinates (no scroll offset)
+                        // since FluxPopup uses position: fixed
                         const newSelection = {
                             text: selectionText,
-                            x: selectionRect.left + window.scrollX,
-                            y: selectionRect.bottom + window.scrollY + 10
+                            x: selectionRect.left,
+                            y: selectionRect.bottom + 10,
                         };
 
                         selectionRef.current = newSelection;

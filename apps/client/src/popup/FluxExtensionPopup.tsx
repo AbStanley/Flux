@@ -75,6 +75,8 @@ export default function FluxExtensionPopup() {
                 authError={authError}
                 authLoading={authLoading}
                 onSettingsClick={() => setShowSettings(true)}
+                rememberedUsers={storage.rememberedUsers}
+                onForgetUser={storage.forgetUser}
             />
         );
     }
