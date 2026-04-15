@@ -3,9 +3,9 @@ import { useReaderStore } from '../store/useReaderStore';
 import { readingSessionsApi } from '@/infrastructure/api/reading-sessions';
 
 /**
- * Auto-saves reading position to the server.
- * - Creates a new session when reading starts (if none exists).
- * - Updates currentPage on page changes (debounced).
+ * Auto-saves reading sessions to the server.
+ * - Creates a new session when text is loaded (if none exists).
+ * - Updates currentPage on page changes while reading (debounced).
  */
 export function useSessionAutoSave() {
     const text = useReaderStore(s => s.text);
@@ -21,9 +21,10 @@ export function useSessionAutoSave() {
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const savingRef = useRef(false);
 
-    // Auto-create session when reading starts without one
+    // Auto-create session when text is loaded (with or without reading mode)
+    // Skip if sessionId is set (including placeholder '_importing' from file imports)
     useEffect(() => {
-        if (!isReading || !text || sessionId || savingRef.current) return;
+        if (!text || sessionId || savingRef.current) return;
         savingRef.current = true;
 
         const totalPages = Math.ceil(tokens.length / PAGE_SIZE);
@@ -40,7 +41,7 @@ export function useSessionAutoSave() {
             setSession(session.id, session.title);
         }).catch(console.error)
           .finally(() => { savingRef.current = false; });
-    }, [isReading, text, sessionId, tokens.length, PAGE_SIZE, currentPage, sourceLang, targetLang, setSession]);
+    }, [text, sessionId, tokens.length, PAGE_SIZE, currentPage, sourceLang, targetLang, setSession]);
 
     // Auto-update page on changes (debounced)
     useEffect(() => {

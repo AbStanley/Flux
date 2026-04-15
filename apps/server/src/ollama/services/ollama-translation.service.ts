@@ -96,6 +96,21 @@ export class OllamaTranslationService {
       `[RichTranslation] Raw Response (Length ${response.response.length}):\n${response.response.substring(0, 200)}...`,
     );
 
-    return cleanAndParseJson<RichTranslation>(response.response);
+    const result = cleanAndParseJson<RichTranslation>(response.response);
+
+    // Guard: if input is a single word but LLM returned a full sentence as translation,
+    // truncate to just the first clause/phrase to avoid displaying a whole paragraph.
+    const isSingleWord = !params.text.trim().includes(' ');
+    const obj = result as unknown as Record<string, unknown>;
+    if (
+      isSingleWord &&
+      typeof obj.translation === 'string' &&
+      obj.translation.split(' ').length > 6
+    ) {
+      const short = obj.translation.split(/[,.\n]/)[0].trim();
+      if (short) obj.translation = short;
+    }
+
+    return result;
   }
 }

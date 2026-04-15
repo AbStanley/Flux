@@ -7,6 +7,10 @@ import {
     pendingRequests,
 } from './translationUtils';
 
+/** Strip leading/trailing punctuation so translations are clean */
+const stripPunctuation = (s: string): string =>
+    s.replace(/^[\s.,;:!?¡¿"""''«»()[\]{}\-–—…]+|[\s.,;:!?¡¿"""''«»()[\]{}\-–—…]+$/g, '');
+
 export interface TranslationSlice {
     translationCache: Map<string, string>;
     selectionTranslations: Map<string, string>;
@@ -246,8 +250,10 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
 
     handleHover: async (index, source, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
-        const token = tokens[globalIndex];
-        if (!token?.trim()) return;
+        const rawToken = tokens[globalIndex];
+        if (!rawToken?.trim()) return;
+        const token = stripPunctuation(rawToken);
+        if (!token) return;
 
         set({ hoveredIndex: globalIndex, hoverTranslation: null, hoverSource: source });
 
@@ -257,7 +263,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             return;
         }
 
-        const cacheKey = `${token.trim()}_${targetLang}`;
+        const cacheKey = `${token}_${targetLang}`;
         const currentCache = get().translationCache;
 
         if (currentCache.has(cacheKey)) {
@@ -290,14 +296,16 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
 
     regenerateHover: async (index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
-        const token = tokens[globalIndex];
-        if (!token?.trim()) return;
+        const rawToken = tokens[globalIndex];
+        if (!rawToken?.trim()) return;
+        const token = stripPunctuation(rawToken);
+        if (!token) return;
 
         // Force Loading State for Hover
         set({ hoverTranslation: "..." });
 
         const context = getContextForIndex(tokens, globalIndex);
-        const cacheKey = `${token.trim()}_${targetLang}`;
+        const cacheKey = `${token}_${targetLang}`;
 
         // Force Fetch (bypass cache check initially)
         const result = await fetchTranslationHelper(token, context, sourceLang, targetLang, aiService);

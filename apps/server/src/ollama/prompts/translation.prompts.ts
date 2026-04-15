@@ -79,85 +79,56 @@ export const getRichTranslationPrompt = (
     sourceLanguage && sourceLanguage !== 'Auto'
       ? `from ${sourceLanguage} `
       : '';
+  const srcLang = sourceLanguage || 'the source language';
 
-  return `Role: Expert Linguist and Translator.
-Task: Analyze the text segment "${text}" ${fromLang}and translate it to ${targetLanguage}. Provide detailed grammatical information, usage examples, and alternatives.
+  return `Translate and analyze "${text}" ${fromLang}into ${targetLanguage}.
+Context: "${context || 'None'}"
 
-Input Data:
-- Full Sentence (Context): "${context || 'None'}"
-- Segment to Analyze: "${text}"
-- Source Language: "${sourceLanguage || 'Unknown'}"
-- Target Language: "${targetLanguage}"
+Return JSON ONLY — no markdown, no commentary.
 
-Instructions:
-1. Determine if "Segment to Analyze" is a SINGLE WORD or a SENTENCE.
-   - HINT: If the segment matches a single lexical unit (no spaces, or a standard compound word), treat it as a WORD.
-   - HINT: If it is a conjugated verb form (like "era", "fui", "running"), treat it as a WORD.
+Determine if "${text}" is a SINGLE WORD or a SENTENCE/PHRASE:
+- A single lexical unit (no spaces, or a conjugated verb like "llegado", "running") = WORD.
+- Multiple words forming a clause = SENTENCE.
 
-2. Translate the segment accurately within the given context.
-   - CRITICAL: "Segment to Analyze" MUST be translated based on the "Full Sentence". Do not provide a generic dictionary definition if it doesn't fit the context.
-
-IF IT IS A *SENTENCE* (or Phrase):
-   - Set "type" to "sentence".
-   - Provide a "syntaxAnalysis": Breakdown (Subject + Verb + Object).
-   - Provide "grammarRules".
-   - OMIT "conjugations" UNLESS the phrase is effectively a phrasal verb acting as a single verb unit.
-
-IF IT IS A *SINGLE WORD*:
-   - Set "type" to "word".
-   - Identify the Part of Speech.
-   - If it's a VERB (or acts as one in context):
-     - MUST include "conjugations" in ${sourceLanguage || 'the source language'}:
-       - Include "Present".
-       - For Romance languages (Spanish, French, etc), MUST include BOTH "Preterite" AND "Imperfect".
-       - Include "Future".
-       - CRITICAL: You MUST include the specific tense of the "Segment to Analyze" if it is not one of the above.
-      - IMPORTANT: Use ALL standard personal pronouns for the language (e.g., I, You, He/She/It, We, You(pl), They).
-      - Ensure all persons (1st, 2nd, 3rd) and numbers (singular, plural) are represented.
-      - If multiple pronouns share the same verb form (e.g. "He/She" or "They/You"), you may group them or list them distinctively, but ensure NO standard pronoun is missing.
-      - Do NOT repeat the exact same conjugation row multiple times unnecessarily, but DO ensure the user sees the conjugation for every person.
-     - STRICT PROHIBITION: Do NOT translate the conjugated verb forms into ${targetLanguage}. They MUST remain in ${sourceLanguage || 'the source language'}.
-   - If it's NOT a verb, OMIT "conjugations".
-   - OMIT "grammar" object usually used for single words (Part of Speech, etc) unless relevant to the *whole* sentence structure.
-
-3. Provide 3 usage examples in ${sourceLanguage || 'the source language'} WITH translations in ${targetLanguage}.
-   - CRITICAL: "sentence" MUST be in ${sourceLanguage || 'the source language'}.
-   - CRITICAL: "translation" MUST be in ${targetLanguage}.
-   - Ensure the examples are distinct from the input text.
-
-4. Provide 1-2 common alternatives in ${sourceLanguage || 'the source language'} WITH translations in ${targetLanguage}.
-
-Output Format: JSON ONLY.
-Structure:
 {
   "type": "word" or "sentence",
-  "translation": "translated text (${targetLanguage})",
-  "segment": "original text",
-  
-  // IF WORD:
+  "translation": "...",
+  "segment": "${text}",
   "grammar": {
     "partOfSpeech": "...",
-    "tense": "...",
-    "gender": "...",
-    "infinitive": "...",
-    "explanation": "..."
+    "infinitive": "... (if verb, in ${srcLang})",
+    "tense": "... (if verb)",
+    "gender": "... (if applicable)",
+    "explanation": "brief grammar note in ${targetLanguage}"
   },
-  "conjugations": { 
-      "Present": [ {"pronoun": "...", "conjugation": "..."} ],
-      "Preterite": [ ... ],
-      "Future": [ ... ]
-  }, // Only if VERB
-
-  // IF SENTENCE:
-  "syntaxAnalysis": "Subject (...) + Verb (...) ...",
-  "grammarRules": ["Rule 1...", "Rule 2..."],
-
+  "conjugations": {
+    "Present": [{"pronoun": "...", "conjugation": "..."}],
+    "Preterite": [{"pronoun": "...", "conjugation": "..."}],
+    "Imperfect": [{"pronoun": "...", "conjugation": "..."}],
+    "Future": [{"pronoun": "...", "conjugation": "..."}]
+  },
   "examples": [
-    { "sentence": "Foreign language sentence (${sourceLanguage || 'source'})", "translation": "Native language translation (${targetLanguage})" }
+    {"sentence": "${srcLang} example", "translation": "${targetLanguage} translation"}
   ],
-  "alternatives": ["Alternative 1 (Translation)", "Alternative 2 (Translation)"]
+  "alternatives": ["alt1 (translation)", "alt2 (translation)"]
 }
-`;
+
+CRITICAL RULES for "translation" field:
+- If type is "word": translate ONLY the word "${text}" — output a single word or minimal equivalent in ${targetLanguage}. NEVER translate the surrounding context. Example: "llegado" → "arrivé", NOT a full sentence.
+- If type is "sentence": translate the full phrase into ${targetLanguage}.
+
+CRITICAL RULES for "conjugations":
+- Include ONLY if the word is a verb. Omit entirely for non-verbs.
+- BOTH "pronoun" AND "conjugation" values MUST be in ${srcLang}. NEVER use ${targetLanguage} pronouns or verb forms.
+- Use the standard pronouns of ${srcLang}. For example in Spanish: Yo, Tú, Él/Ella, Nosotros, Vosotros, Ellos/Ellas. In French: Je, Tu, Il/Elle, Nous, Vous, Ils/Elles. In German: Ich, Du, Er/Sie, Wir, Ihr, Sie.
+- Do NOT mix pronouns or verb forms from different languages. Every value must be 100% ${srcLang}.
+- Include all 6 persons (1st/2nd/3rd singular + 1st/2nd/3rd plural).
+- For Romance languages include Preterite, Imperfect, AND Future.
+
+Other rules:
+- "explanation" must be written in ${targetLanguage}.
+- For sentences: omit "conjugations", add "syntaxAnalysis" and "grammarRules" instead.
+- Provide 2-3 examples and 1-2 alternatives.`;
 };
 
 export const getExplainPrompt = (
