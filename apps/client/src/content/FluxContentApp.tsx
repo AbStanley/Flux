@@ -53,7 +53,7 @@ export function FluxContentApp() {
 
     // Universal Subtitle Logic (non-YouTube videos)
     const videoDetector = useVideoDetector();
-    const { selectedVideo, isPicking, scannedVideos, selectVideo: pickVideo, cancelPicking } = videoDetector;
+    const { selectedVideo, isPicking, scannedVideos, startPicking, selectVideo: pickVideo, cancelPicking } = videoDetector;
     const subtitleTracks = useSubtitleTracks();
     const videoSync = useVideoSync(selectedVideo, subtitleTracks.tracks);
     const { activeCues, currentTime: subCurrentTime } = videoSync;

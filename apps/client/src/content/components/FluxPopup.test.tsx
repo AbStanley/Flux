@@ -27,6 +27,8 @@ describe('FluxPopup', () => {
         model: '',
         availableModels: [] as string[],
         onModelChange: vi.fn(),
+        collapsed: false,
+        onCollapsedChange: vi.fn(),
     };
 
     it('renders at correct position', () => {
