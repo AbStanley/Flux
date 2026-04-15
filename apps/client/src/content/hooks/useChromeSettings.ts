@@ -23,6 +23,7 @@ const STORAGE_KEYS = [
     'fluxEnabled',
     'fluxModel',
     'fluxTheme',
+    'fluxPopupCollapsed',
 ] as const;
 
 function persistToStorage(data: Record<string, unknown>) {
@@ -37,6 +38,7 @@ export function useChromeSettings(aiService: AIServiceLike) {
     const [themeId, setThemeId] = useState(DEFAULT_THEME);
     const [selectedModel, setSelectedModel] = useState('');
     const [availableModels, setAvailableModels] = useState<string[]>([]);
+    const [popupCollapsed, setPopupCollapsed] = useState(false);
 
     // Fetch available models on mount
     useEffect(() => {
@@ -56,6 +58,7 @@ export function useChromeSettings(aiService: AIServiceLike) {
             if (result.fluxEnabled !== undefined) setFluxEnabled(result.fluxEnabled as boolean);
             if (result.fluxModel) setSelectedModel(result.fluxModel as string);
             if (result.fluxTheme) setThemeId(result.fluxTheme as string);
+            if (result.fluxPopupCollapsed !== undefined) setPopupCollapsed(result.fluxPopupCollapsed as boolean);
         });
 
         const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
@@ -97,6 +100,11 @@ export function useChromeSettings(aiService: AIServiceLike) {
         persistToStorage({ fluxTheme: id });
     };
 
+    const persistPopupCollapsed = (collapsed: boolean) => {
+        setPopupCollapsed(collapsed);
+        persistToStorage({ fluxPopupCollapsed: collapsed });
+    };
+
     const swapLanguages = (): { newSource: string; newTarget: string } => {
         const newSource = targetLang;
         const newTarget = sourceLang === 'Auto' ? 'English' : sourceLang;
@@ -116,12 +124,14 @@ export function useChromeSettings(aiService: AIServiceLike) {
         themeId,
         selectedModel,
         availableModels,
+        popupCollapsed,
 
         persistAutoSave,
         persistSourceLang,
         persistTargetLang,
         persistModel,
         persistTheme,
+        persistPopupCollapsed,
         swapLanguages,
     };
 }

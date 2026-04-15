@@ -23,7 +23,6 @@ export function FluxContentApp() {
     const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
     const [mode, setMode] = useState<Mode>('TRANSLATE');
     const [isOverlayActive, setIsOverlayActive] = useState(false);
-    const [popupCollapsed, setPopupCollapsed] = useState(false);
 
     const { aiService } = useServices();
     const settings = useChromeSettings(aiService);
@@ -70,11 +69,12 @@ export function FluxContentApp() {
         }
     }, [pauseVideo, playVideo, getIsPlaying]);
 
-    const handleSave = async (wordText: string) => {
+    const handleSave = async (wordText: string, definition?: string) => {
         setIsSaving(true);
         try {
             await wordsApi.create({
                 text: wordText,
+                definition: definition || undefined,
                 sourceLanguage: settings.sourceLang,
                 targetLanguage: settings.targetLang,
                 context: window.location.href,
@@ -232,8 +232,8 @@ export function FluxContentApp() {
                     model={settings.selectedModel}
                     availableModels={settings.availableModels}
                     onModelChange={settings.persistModel}
-                    collapsed={popupCollapsed}
-                    onCollapsedChange={setPopupCollapsed}
+                    collapsed={settings.popupCollapsed}
+                    onCollapsedChange={settings.persistPopupCollapsed}
                 />
             )}
 

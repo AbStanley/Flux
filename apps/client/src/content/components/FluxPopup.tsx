@@ -25,7 +25,7 @@ interface FluxPopupProps {
     onMouseLeave: () => void;
     onPinChange?: (pinned: boolean) => void;
     onAutoPlay?: () => void;
-    onSave?: (text: string) => void;
+    onSave?: (text: string, definition?: string) => void;
     autoSave: boolean;
     onAutoSaveChange: (enabled: boolean) => void;
     isSaving?: boolean;
@@ -100,11 +100,11 @@ export function FluxPopup({
 
     const handleInternalSave = useCallback(() => {
         if (onSave) {
-            onSave(selection.text);
+            onSave(selection.text, result || undefined);
         } else {
             selectAndOpen(selection.text);
         }
-    }, [onSave, selection.text, selectAndOpen]);
+    }, [onSave, selection.text, result, selectAndOpen]);
 
     // Collapsed = compact translation chip (not draggable, follows selection)
     if (isCollapsed) {
@@ -125,44 +125,51 @@ export function FluxPopup({
                     style={{
                         backgroundColor: theme.bgSolid,
                         color: theme.text,
-                        padding: '10px 14px',
                         borderRadius: '12px',
                         boxShadow: `0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px ${theme.border}`,
                         fontSize: '14px',
                         lineHeight: '1.5',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '10px',
                         maxWidth: '360px',
                         backdropFilter: 'blur(12px)',
                         border: `1px solid ${theme.border}`,
+                        overflow: 'hidden',
                     }}
                 >
-                    <span style={{ flex: 1, fontWeight: 500, maxHeight: '200px', overflowY: 'auto' }}>
+                    {/* Translation text */}
+                    <div style={{ padding: '10px 14px', maxHeight: '200px', overflowY: 'auto', fontWeight: 500 }}>
                         {loading ? '...' : error ? 'Error' : result || '—'}
-                    </span>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setIsPinned(false); onPinChange?.(false); setIsCollapsed(false); }}
-                        style={{
-                            background: 'none', border: 'none', color: theme.textSecondary,
-                            cursor: 'pointer', padding: '2px', display: 'flex', flexShrink: 0,
-                        }}
-                        title="Expand"
-                    >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                        </svg>
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onClose(); }}
-                        style={{
-                            background: 'none', border: 'none', color: theme.textSecondary,
-                            cursor: 'pointer', padding: '2px', display: 'flex', fontSize: '12px', flexShrink: 0,
-                            opacity: 0.6,
-                        }}
-                    >
-                        ✕
-                    </button>
+                    </div>
+
+                    {/* Action bar */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                        gap: '2px', padding: '4px 8px',
+                        borderTop: `1px solid ${theme.border}`,
+                    }}>
+                        {[
+                            { title: 'Save to vocabulary', color: theme.accent, onClick: () => handleInternalSave(), icon: <><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /><line x1="12" y1="7" x2="12" y2="13" /><line x1="9" y1="10" x2="15" y2="10" /></> },
+                            { title: 'Expand', color: theme.textSecondary, onClick: () => { setIsPinned(false); onPinChange?.(false); setIsCollapsed(false); }, icon: <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /> },
+                            { title: 'Close', color: theme.textSecondary, onClick: () => onClose(), icon: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></> },
+                        ].map((btn) => (
+                            <button
+                                key={btn.title}
+                                onClick={(e) => { e.stopPropagation(); btn.onClick(); }}
+                                title={btn.title}
+                                style={{
+                                    background: 'none', border: 'none', color: btn.color,
+                                    cursor: 'pointer', padding: '4px', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center',
+                                    width: '24px', height: '24px', borderRadius: '6px',
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.surface)}
+                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                            >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    {btn.icon}
+                                </svg>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
