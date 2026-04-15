@@ -58,13 +58,25 @@ export class ReadingSessionsService {
     if (!resolvedUserId) throw new Error('User not found');
 
     const { chapters, ...rest } = data;
-    return this.prisma.readingSession.create({
-      data: {
-        ...rest,
-        ...(chapters !== undefined && { chapters: chapters as unknown as Prisma.InputJsonValue }),
-        userId: resolvedUserId,
-      },
-    });
+    try {
+      return await this.prisma.readingSession.create({
+        data: {
+          ...rest,
+          ...(chapters != null &&
+            chapters.length > 0 && {
+              chapters: chapters as unknown as Prisma.InputJsonValue,
+            }),
+          userId: resolvedUserId,
+        },
+      });
+    } catch (error) {
+      console.error(
+        '[ReadingSessions] Create failed:',
+        error instanceof Error ? error.message : error,
+        { title: data.title, fileType: data.fileType, textLength: data.text?.length, chaptersCount: chapters?.length },
+      );
+      throw error;
+    }
   }
 
   async update(

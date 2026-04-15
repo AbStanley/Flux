@@ -5,6 +5,7 @@ import { readingSessionsApi } from '@/infrastructure/api/reading-sessions';
 /**
  * Auto-saves reading sessions to the server.
  * - Creates a new session when text is loaded (if none exists).
+ * - Skips while generating (streaming) to avoid creating a session per token.
  * - Updates currentPage on page changes while reading (debounced).
  */
 export function useSessionAutoSave() {
@@ -12,40 +13,56 @@ export function useSessionAutoSave() {
     const currentPage = useReaderStore(s => s.currentPage);
     const tokens = useReaderStore(s => s.tokens);
     const PAGE_SIZE = useReaderStore(s => s.PAGE_SIZE);
-    const sourceLang = useReaderStore(s => s.sourceLang);
-    const targetLang = useReaderStore(s => s.targetLang);
     const sessionId = useReaderStore(s => s.sessionId);
     const isReading = useReaderStore(s => s.isReading);
+    const isGenerating = useReaderStore(s => s.isGenerating);
     const setSession = useReaderStore(s => s.setSession);
 
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const createDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const savingRef = useRef(false);
 
     // Auto-create session when text is loaded (with or without reading mode)
-    // Skip if sessionId is set (including placeholder '_importing' from file imports)
+    // Skip while generating (text changes every token) and if sessionId is already set
     useEffect(() => {
-        if (!text || sessionId || savingRef.current) return;
-        savingRef.current = true;
+        if (!text || sessionId || savingRef.current || isGenerating) return;
 
-        const totalPages = Math.ceil(tokens.length / PAGE_SIZE);
-        const title = text.slice(0, 60).replace(/\s+/g, ' ').trim() + (text.length > 60 ? '...' : '');
+        // Debounce creation to wait for text to stabilize
+        if (createDebounceRef.current) clearTimeout(createDebounceRef.current);
+        createDebounceRef.current = setTimeout(() => {
+            // Re-check conditions after debounce
+            const state = useReaderStore.getState();
+            if (!state.text || state.sessionId || state.isGenerating) return;
 
-        readingSessionsApi.create({
-            title,
-            text,
-            currentPage,
-            totalPages,
-            sourceLang,
-            targetLang,
-        }).then((session) => {
-            setSession(session.id, session.title);
-        }).catch(console.error)
-          .finally(() => { savingRef.current = false; });
-    }, [text, sessionId, tokens.length, PAGE_SIZE, currentPage, sourceLang, targetLang, setSession]);
+            savingRef.current = true;
+            const totalPages = Math.ceil(state.tokens.length / state.PAGE_SIZE);
+            const title = state.text
+                .replace(/^#{1,6}\s+/gm, '') // strip markdown headers like ### Title
+                .replace(/\s+/g, ' ')
+                .trim()
+                .slice(0, 60) + (state.text.length > 60 ? '...' : '');
+
+            readingSessionsApi.create({
+                title,
+                text: state.text,
+                currentPage: state.currentPage,
+                totalPages,
+                sourceLang: state.sourceLang,
+                targetLang: state.targetLang,
+            }).then((session) => {
+                useReaderStore.getState().setSession(session.id, session.title);
+            }).catch(console.error)
+              .finally(() => { savingRef.current = false; });
+        }, 2000);
+
+        return () => {
+            if (createDebounceRef.current) clearTimeout(createDebounceRef.current);
+        };
+    }, [text, sessionId, isGenerating, setSession]);
 
     // Auto-update page on changes (debounced)
     useEffect(() => {
-        if (!sessionId || !isReading) return;
+        if (!sessionId || sessionId === '_importing' || !isReading) return;
 
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
