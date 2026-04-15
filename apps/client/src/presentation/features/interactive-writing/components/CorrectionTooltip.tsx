@@ -9,8 +9,8 @@ interface CorrectionTooltipProps {
     style: React.CSSProperties;
     showAbove: boolean;
   };
+  onAccept: () => void;
   onDismiss: () => void;
-  onRevert: () => void;
   onMouseLeave: () => void;
   onMouseEnter: () => void;
 }
@@ -26,8 +26,8 @@ const mapTypeToColor = (type: string) => {
 export const CorrectionTooltip = ({
   correction,
   position,
+  onAccept,
   onDismiss,
-  onRevert,
   onMouseEnter,
   onMouseLeave,
 }: CorrectionTooltipProps) => {
@@ -75,7 +75,7 @@ export const CorrectionTooltip = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onDismiss();
+            onAccept();
           }}
           className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full text-xs font-bold transition-colors active:scale-95"
         >
@@ -86,10 +86,10 @@ export const CorrectionTooltip = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onRevert();
+            onDismiss();
           }}
           className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-          title="Revert to original text"
+          title="Dismiss suggestion"
         >
           <Trash2 className="w-4 h-4" />
         </button>

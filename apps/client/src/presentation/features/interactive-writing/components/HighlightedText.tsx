@@ -38,7 +38,7 @@ export function HighlightedText({
         if (corr.offset! < lastIndex) return;
 
         const actualText = text.slice(corr.offset!, corr.offset! + corr.length!);
-        const matches = actualText.toLowerCase() === corr.correctionText.toLowerCase();
+        const matches = actualText === corr.mistakeText;
 
         if (corr.offset! > lastIndex) {
             result.push(text.slice(lastIndex, corr.offset!));

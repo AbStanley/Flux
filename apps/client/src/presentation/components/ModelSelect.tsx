@@ -42,10 +42,7 @@ export function ModelSelect({
     onChange(v === WRITING_MODEL_SERVER_DEFAULT ? '' : v);
   };
 
-  const options = [
-    { label: 'Server default (first available tag)', value: WRITING_MODEL_SERVER_DEFAULT },
-    ...models.map((name) => ({ label: name, value: name })),
-  ];
+  const options = models.map((name) => ({ label: name, value: name }));
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>

@@ -25,7 +25,7 @@ interface WritingState {
   setIsAnalyzing: (isAnalyzing: boolean) => void;
   setError: (error: string | null) => void;
   clearAll: () => void;
-  revertCorrection: (correction: WritingCorrection) => void;
+  acceptCorrection: (correction: WritingCorrection) => void;
   dismissCorrection: (mistakeText: string) => void;
   checkText: (text: string, language: string) => Promise<void>;
   undo: () => void;
@@ -64,12 +64,10 @@ export const useWritingStore = create<WritingState>()(
 
       setEvaluationModel: (evaluationModel) => set({ evaluationModel }),
 
-      applyAnalysisResult: (newText, rawCorrections) => set((state) => {
-        const textToUse = newText || state.text;
-
+      applyAnalysisResult: (_newText, rawCorrections) => set((state) => {
         const safeCorrections = (Array.isArray(rawCorrections) ? rawCorrections : []) as WritingCorrection[];
 
-        // Server now returns pre-computed offsets from marker parsing
+        // Server returns offsets into the original text where mistakes are
         const finalCorrections = safeCorrections
           .filter((c): c is WritingCorrection =>
             c !== null &&
@@ -82,22 +80,22 @@ export const useWritingStore = create<WritingState>()(
             ...c,
             mistakeText: c.mistakeText.trim(),
             correctionText: c.correctionText.trim(),
-            offset: c.offset ?? c.startIndex ?? 0,
-            length: c.length ?? c.correctionText.trim().length,
+            offset: c.offset ?? 0,
+            length: c.length ?? c.mistakeText.trim().length,
           }))
+          .filter((c) => {
+            // Verify the mistake actually exists at the reported offset
+            const actual = state.text.slice(c.offset, c.offset! + c.length!);
+            return actual === c.mistakeText;
+          })
           .filter((c, _i, arr) => {
-            // Deduplicate overlapping offsets
             return arr.findIndex(other => other.offset === c.offset) === arr.indexOf(c);
           });
 
-        const newHistory = [...state.history, state.text].slice(-20);
-
         return {
-          text: textToUse,
           corrections: finalCorrections,
-          history: newHistory,
-          lastPolishedText: textToUse,
-          lastAppliedInfo: null
+          lastPolishedText: state.text,
+          lastAppliedInfo: null,
         };
       }),
 
@@ -114,26 +112,27 @@ export const useWritingStore = create<WritingState>()(
 
       setHighlightMode: (highlightMode) => set({ highlightMode }),
 
-      revertCorrection: (correction) => set((state) => {
+      acceptCorrection: (correction) => set((state) => {
         const { text, corrections } = state;
 
-        const finalOffset = correction.offset!;
-        const actualText = text.slice(finalOffset, finalOffset + correction.length!);
+        const offset = correction.offset!;
+        const actualText = text.slice(offset, offset + correction.length!);
 
-        if (actualText.toLowerCase() !== correction.correctionText.toLowerCase()) {
+        // Verify the mistake still exists at this offset
+        if (actualText !== correction.mistakeText) {
           return { corrections: corrections.filter(c => c !== correction) };
         }
 
         const newText =
-          text.slice(0, finalOffset) +
-          correction.mistakeText +
-          text.slice(finalOffset + correction.length!);
+          text.slice(0, offset) +
+          correction.correctionText +
+          text.slice(offset + correction.length!);
 
-        const diff = correction.mistakeText.length - correction.length!;
+        const diff = correction.correctionText.length - correction.length!;
         const newCorrections = corrections
           .filter(c => c !== correction)
           .map(c => {
-            if (c.offset! > finalOffset) {
+            if (c.offset! > offset) {
               return { ...c, offset: c.offset! + diff };
             }
             return c;
@@ -143,15 +142,15 @@ export const useWritingStore = create<WritingState>()(
           text: newText,
           corrections: newCorrections,
           history: [...state.history, text].slice(-20),
-          lastAppliedInfo: { 
-            offset: finalOffset, 
-            length: correction.mistakeText.length, 
-            timestamp: Date.now() 
+          lastAppliedInfo: {
+            offset,
+            length: correction.correctionText.length,
+            timestamp: Date.now(),
           },
           appliedSuggestions: [
-            ...state.appliedSuggestions, 
-            { original: correction.correctionText, suggestion: correction.mistakeText }
-          ].slice(-10)
+            ...state.appliedSuggestions,
+            { original: correction.mistakeText, suggestion: correction.correctionText },
+          ].slice(-10),
         };
       }),
 
@@ -191,10 +190,7 @@ export const useWritingStore = create<WritingState>()(
             ...(evaluationModel.trim() ? { model: evaluationModel.trim() } : {}),
           }, myController.signal);
 
-          // Use AI's text or fallback to original text if missing
-          const parsedResponseText = Array.isArray(response.text) ? response.text.join(' ') : response.text;
-          const finalNewText = parsedResponseText || text;
-          applyAnalysisResult(finalNewText, response.corrections || []);
+          applyAnalysisResult(text, response.corrections || []);
           useWritingStore.getState().setHighlightMode('full'); // Auto-toggle ON so user instantly sees highlights
           setError(null);
         } catch (err: unknown) {
