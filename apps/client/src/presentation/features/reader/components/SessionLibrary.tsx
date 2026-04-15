@@ -113,6 +113,12 @@ export function SessionLibrary() {
         setSessions(s => s.filter(sess => sess.id !== id));
     };
 
+    const handleDeleteAll = async () => {
+        if (!confirm('Delete all sessions? This cannot be undone.')) return;
+        await Promise.all(sessions.map(s => readingSessionsApi.remove(s.id).catch(console.error)));
+        setSessions([]);
+    };
+
     if (loading) {
         return (
             <div className="border rounded-lg p-4 bg-muted/20">
@@ -129,6 +135,13 @@ export function SessionLibrary() {
                 <BookOpen className="w-4 h-4 text-muted-foreground" />
                 <h3 className="text-sm font-semibold">My Library</h3>
                 <span className="text-xs text-muted-foreground ml-auto">{sessions.length} documents</span>
+                <button
+                    onClick={handleDeleteAll}
+                    className="text-xs text-muted-foreground hover:text-destructive transition-colors px-1.5 py-0.5 rounded hover:bg-destructive/10"
+                    title="Delete all sessions"
+                >
+                    Clear All
+                </button>
             </div>
 
             <div className="max-h-64 overflow-y-auto divide-y">
