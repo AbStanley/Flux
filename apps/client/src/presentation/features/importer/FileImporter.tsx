@@ -15,7 +15,6 @@ interface FileImporterProps {
 
 export function FileImporter({ open, onOpenChange }: FileImporterProps) {
     const [file, setFile] = useState<File | null>(null);
-    const { setText } = useReaderStore();
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles.length > 0) {
@@ -34,17 +33,30 @@ export function FileImporter({ open, onOpenChange }: FileImporterProps) {
     });
 
     const handleExtract = (text: string, chapters?: ChapterInfo[], fullText?: string) => {
-        const { sourceLang, targetLang, PAGE_SIZE } = useReaderStore.getState();
-        setText(text);
+        const store = useReaderStore.getState();
+        const { sourceLang, targetLang, PAGE_SIZE } = store;
 
         const fileName = file?.name?.replace(/\.(pdf|epub)$/i, '') || 'Untitled';
-        const fileType = file?.name?.endsWith('.epub') ? 'epub' : file?.type === 'application/pdf' ? 'pdf' : 'text';
-        // Store full text (all chapters) so user can switch chapters later
-        const textToStore = fullText || text;
+        const fileType = file?.name?.endsWith('.epub') ? 'epub' : 'pdf';
+
+        // For EPUBs, store fullText (all chapters) so user can switch chapters later.
+        // For PDFs, store only selected pages — full PDFs are too large for the DB.
+        const textToStore = fileType === 'epub' ? (fullText || text) : text;
         const storeTokens = textToStore.split(/(\s+)/);
         const totalPages = Math.ceil(storeTokens.length / PAGE_SIZE);
 
-        // Save to library in background
+        store.setSession('_importing', fileName);
+        store.loadText(text);
+
+        // For PDFs, generate page entries from markers in the stored text
+        const pdfChapters: ChapterInfo[] | undefined =
+            fileType === 'pdf'
+                ? [...textToStore.matchAll(/^--- Page (\d+) ---$/gm)].map(m => ({
+                    label: `Page ${m[1]}`,
+                    href: `page-${m[1]}`,
+                }))
+                : undefined;
+
         readingSessionsApi.create({
             title: fileName,
             text: textToStore,
@@ -53,10 +65,13 @@ export function FileImporter({ open, onOpenChange }: FileImporterProps) {
             sourceLang,
             targetLang,
             fileType,
-            chapters: chapters,
+            chapters: chapters || pdfChapters,
         }).then((session) => {
             useReaderStore.getState().setSession(session.id, session.title);
-        }).catch(console.error);
+        }).catch((err) => {
+            console.error('Failed to create session:', err);
+            useReaderStore.getState().setSession(null, null);
+        });
 
         setFile(null);
         onOpenChange(false);
@@ -72,7 +87,7 @@ export function FileImporter({ open, onOpenChange }: FileImporterProps) {
                 <div
                     {...getRootProps()}
                     className={`
-                    border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center text-center cursor-pointer transition-colors
+                    border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center text-center cursor-pointer transition-colors h-full
                     ${isDragActive ? 'border-primary bg-primary/10' : 'border-muted-foreground/25 hover:border-primary/50'}
                 `}
                 >

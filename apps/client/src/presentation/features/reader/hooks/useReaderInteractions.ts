@@ -20,6 +20,10 @@ interface UseReaderInteractionsProps {
 
 // --- Helper Functions ---
 
+/** Strip leading/trailing punctuation from text so lookups are clean */
+const stripPunctuation = (s: string): string =>
+    s.replace(/^[\s.,;:!?¡¿"""''«»()[\]{}\-–—…]+|[\s.,;:!?¡¿"""''«»()[\]{}\-–—…]+$/g, '');
+
 const resolveTarget = (
     globalIndex: number,
     groups: number[][],
@@ -31,13 +35,13 @@ const resolveTarget = (
         const start = group[0];
         const end = group[group.length - 1];
         return {
-            text: tokens.slice(start, end + 1).join(''),
+            text: stripPunctuation(tokens.slice(start, end + 1).join('')),
             isGroup: true,
             group
         };
     }
     return {
-        text: tokens[globalIndex],
+        text: stripPunctuation(tokens[globalIndex]),
         isGroup: false,
         group: undefined
     };

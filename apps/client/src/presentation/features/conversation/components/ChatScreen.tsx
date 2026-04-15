@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useConversationStore, type ChatMessage } from '../store/useConversationStore';
 import { Button } from '../../../components/ui/button';
-import { MessageCircle, Send, RotateCcw, Loader2 } from 'lucide-react';
+import { MessageCircle, Send, RotateCcw, Loader2, Mic, MicOff } from 'lucide-react';
 import { FormattedContent } from './FormattedContent';
+import { useSpeechToText } from '../hooks/useSpeechToText';
+import { LANGUAGE_CODES } from '../constants';
 
 function MessageBubble({ message, targetLanguage, nativeLanguage }: {
     message: ChatMessage;
@@ -40,6 +42,12 @@ export function ChatScreen() {
     const [input, setInput] = useState('');
     const bottomRef = useRef<HTMLDivElement>(null);
 
+    const onSpeechResult = useCallback((text: string) => {
+        setInput((prev) => (prev ? prev + ' ' + text : text));
+    }, []);
+    const speechLang = LANGUAGE_CODES[targetLanguage] || 'en-US';
+    const { isListening, toggle: toggleMic, supported: micSupported } = useSpeechToText(speechLang, onSpeechResult);
+
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -72,7 +80,7 @@ export function ChatScreen() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-                {visibleMessages.map((msg, i) => (
+                {visibleMessages.filter((msg) => msg.content).map((msg, i) => (
                     <MessageBubble
                         key={i}
                         message={msg}
@@ -82,9 +90,13 @@ export function ChatScreen() {
                 ))}
 
                 {isStreaming && visibleMessages[visibleMessages.length - 1]?.content === '' && (
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm pl-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Typing...
+                    <div className="flex justify-start">
+                        <div className="max-w-[85%] md:max-w-[75%] rounded-2xl rounded-bl-md bg-muted px-4 py-2.5 text-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Typing...
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -112,6 +124,18 @@ export function ChatScreen() {
                         className="flex-1 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                         autoFocus
                     />
+                    {micSupported && (
+                        <Button
+                            type="button"
+                            size="default"
+                            variant={isListening ? 'destructive' : 'outline'}
+                            onClick={toggleMic}
+                            disabled={isStreaming}
+                            className={isListening ? 'animate-pulse' : ''}
+                        >
+                            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                        </Button>
+                    )}
                     <Button type="submit" size="default" disabled={isStreaming || !input.trim()}>
                         <Send className="w-4 h-4" />
                     </Button>

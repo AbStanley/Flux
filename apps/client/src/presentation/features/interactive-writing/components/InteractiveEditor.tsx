@@ -14,10 +14,10 @@ import { useAvailableModels } from '../hooks/useAvailableModels';
 import { useCorrectionTooltip } from '../hooks/useCorrectionTooltip';
 
 const editorLayerStyles = cn(
-  'grid-area-1 w-full min-h-[min(28rem,55vh)] md:min-h-[32rem] text-lg leading-[1.85] whitespace-pre-wrap break-words border-none focus:ring-0 outline-none antialiased',
+  'grid-area-1 w-full text-lg leading-[1.85] whitespace-pre-wrap break-words border-none focus:ring-0 outline-none antialiased',
   'tracking-normal word-spacing-normal font-serif',
   'text-rendering-geometricPrecision font-medium',
-  '[font-variant-ligatures:none] [scrollbar-gutter:stable] overflow-y-scroll',
+  '[font-variant-ligatures:none] [scrollbar-gutter:stable] overflow-y-auto',
 );
 
 export const InteractiveEditor = () => {
@@ -27,6 +27,13 @@ export const InteractiveEditor = () => {
 
   const { availableModels, modelsLoadFailed } = useAvailableModels();
   const tooltip = useCorrectionTooltip();
+
+  // Auto-select first available model when none is set
+  useEffect(() => {
+    if (!store.evaluationModel && availableModels.length > 0) {
+      store.setEvaluationModel(availableModels[0]);
+    }
+  }, [availableModels, store]);
 
   const modelOptions =
     store.evaluationModel && !availableModels.includes(store.evaluationModel)
@@ -49,6 +56,14 @@ export const InteractiveEditor = () => {
       return () => clearTimeout(t);
     }
   }, [store]);
+
+  // Auto-resize textarea to fit content
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.max(el.scrollHeight, 160)}px`;
+  }, [store.text]);
 
   const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
     if (backdropRef.current) backdropRef.current.scrollTop = e.currentTarget.scrollTop;
@@ -80,7 +95,7 @@ export const InteractiveEditor = () => {
                   value={store.evaluationModel}
                   onChange={store.setEvaluationModel}
                   models={modelOptions}
-                  placeholder="Server default (first available tag)"
+                  placeholder="Select a model"
                   className="min-w-0 w-full sm:min-w-0 sm:max-w-md sm:flex-1 sm:basis-0"
                 />
                 <div className="flex min-w-0 w-full shrink-0 gap-2 sm:w-auto sm:max-w-full">
@@ -170,7 +185,7 @@ export const InteractiveEditor = () => {
                   spellCheck={false}
                   className={cn(
                     editorLayerStyles,
-                    'relative z-0 block resize-none bg-transparent p-0 text-foreground [grid-area:1/1]',
+                    'relative z-0 block min-h-[10rem] resize-none bg-transparent p-0 text-foreground [grid-area:1/1]',
                     'caret-primary placeholder:text-muted-foreground/55 selection:bg-primary/15 dark:selection:bg-primary/25',
                   )}
                   placeholder="Write here — calm surface, clear feedback. Use Polish when you want suggestions."
@@ -185,8 +200,9 @@ export const InteractiveEditor = () => {
                     corrections={store.corrections}
                     highlightMode={store.highlightMode}
                     hoveredId={tooltip.hoveredId}
-                    onCorrectionClick={(mistakeText) => {
-                      store.dismissCorrection(mistakeText);
+                    onCorrectionClick={(_mistakeText, index) => {
+                      const correction = store.corrections[index];
+                      if (correction) store.acceptCorrection(correction);
                       tooltip.clearTooltip();
                     }}
                     onCorrectionEnter={tooltip.onCorrectionEnter}
@@ -208,12 +224,12 @@ export const InteractiveEditor = () => {
               <CorrectionTooltip
                 correction={store.corrections[tooltip.hoveredId]}
                 position={{ style, showAbove }}
-                onDismiss={() => {
-                  store.dismissCorrection(store.corrections[tooltip.hoveredId!].mistakeText);
+                onAccept={() => {
+                  store.acceptCorrection(store.corrections[tooltip.hoveredId!]);
                   tooltip.clearTooltip();
                 }}
-                onRevert={() => {
-                  store.revertCorrection(store.corrections[tooltip.hoveredId!]);
+                onDismiss={() => {
+                  store.dismissCorrection(store.corrections[tooltip.hoveredId!].mistakeText);
                   tooltip.clearTooltip();
                 }}
                 onMouseEnter={tooltip.onTooltipEnter}

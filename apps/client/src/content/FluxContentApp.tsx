@@ -53,7 +53,7 @@ export function FluxContentApp() {
 
     // Universal Subtitle Logic (non-YouTube videos)
     const videoDetector = useVideoDetector();
-    const { selectedVideo, isPicking, scannedVideos, startPicking, selectVideo: pickVideo, cancelPicking } = videoDetector;
+    const { selectedVideo, isPicking, scannedVideos, selectVideo: pickVideo, cancelPicking } = videoDetector;
     const subtitleTracks = useSubtitleTracks();
     const videoSync = useVideoSync(selectedVideo, subtitleTracks.tracks);
     const { activeCues, currentTime: subCurrentTime } = videoSync;
@@ -69,11 +69,12 @@ export function FluxContentApp() {
         }
     }, [pauseVideo, playVideo, getIsPlaying]);
 
-    const handleSave = async (wordText: string) => {
+    const handleSave = async (wordText: string, definition?: string) => {
         setIsSaving(true);
         try {
             await wordsApi.create({
                 text: wordText,
+                definition: definition || undefined,
                 sourceLanguage: settings.sourceLang,
                 targetLanguage: settings.targetLang,
                 context: window.location.href,
@@ -122,11 +123,8 @@ export function FluxContentApp() {
         setSelection(newSelection);
         setView('POPUP');
 
-        const aiResult = await handleAction(newSelection.text, mode, settings.targetLang, settings.sourceLang);
-
-        if (aiResult?.detectedLang && settings.sourceLang === 'Auto') {
-            handleSourceLangChange(aiResult.detectedLang);
-        }
+        await handleAction(newSelection.text, mode, settings.targetLang, settings.sourceLang);
+        // Don't persist auto-detected language — keep 'Auto' so it works on any page
 
         if (settings.autoSave) {
             handleSave(newSelection.text);
@@ -167,10 +165,7 @@ export function FluxContentApp() {
 
     const onManualAction = async () => {
         if (selection) {
-            const aiResult = await handleAction(selection.text, mode, settings.targetLang, settings.sourceLang);
-            if (aiResult?.detectedLang && settings.sourceLang === 'Auto') {
-                handleSourceLangChange(aiResult.detectedLang);
-            }
+            await handleAction(selection.text, mode, settings.targetLang, settings.sourceLang);
         }
     };
 
@@ -246,6 +241,8 @@ export function FluxContentApp() {
                     model={settings.selectedModel}
                     availableModels={settings.availableModels}
                     onModelChange={settings.persistModel}
+                    collapsed={settings.popupCollapsed}
+                    onCollapsedChange={settings.persistPopupCollapsed}
                 />
             )}
 
@@ -273,37 +270,7 @@ export function FluxContentApp() {
                 />
             )}
 
-            {/* Floating scan button — non-YouTube, no video selected, not picking */}
-            {!isYouTube && !selectedVideo && !isPicking && settings.fluxEnabled && (
-                <button
-                    onClick={startPicking}
-                    title="Find video & add subtitles"
-                    style={{
-                        position: 'fixed',
-                        bottom: '24px',
-                        left: '24px',
-                        zIndex: 2147483640,
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '50%',
-                        border: 'none',
-                        backgroundColor: theme.bgSolid,
-                        color: theme.accent,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '20px',
-                        boxShadow: `0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px ${theme.border}`,
-                        transition: 'all 0.2s',
-                        backdropFilter: 'blur(8px)',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.backgroundColor = theme.accent; e.currentTarget.style.color = 'white'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.backgroundColor = theme.bgSolid; e.currentTarget.style.color = theme.accent; }}
-                >
-                    CC
-                </button>
-            )}
+            {/* CC scan button removed — video scanning is accessible via the extension popup */}
 
             <style>{`
                 @keyframes flux-fade-in {

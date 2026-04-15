@@ -3,62 +3,69 @@ import { OllamaClientService } from './ollama-client.service';
 import { WRITING_ANALYSIS_PROMPT } from '../prompts';
 import { WritingAnalysisResponse, WritingCorrection } from '../interfaces/ollama.interfaces';
 
-interface ParsedWriting {
-  cleanText: string;
-  corrections: WritingCorrection[];
+interface RawCorrection {
+  mistake: string;
+  correction: string;
+  type?: string;
+  explanation?: string;
 }
 
-function stripQuotes(s: string): string {
-  return s.replace(/^[""\u201C\u201D'"]+|[""\u201C\u201D'"]+$/g, '').trim();
+function extractJsonArray(raw: string): RawCorrection[] {
+  // Try direct parse first
+  const trimmed = raw.trim();
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) return parsed;
+  } catch { /* continue */ }
+
+  // Extract the first [...] block from the response
+  const start = trimmed.indexOf('[');
+  const end = trimmed.lastIndexOf(']');
+  if (start !== -1 && end > start) {
+    try {
+      const parsed = JSON.parse(trimmed.slice(start, end + 1));
+      if (Array.isArray(parsed)) return parsed;
+    } catch { /* continue */ }
+  }
+
+  return [];
 }
 
-function parseMarkerText(markerText: string, originalText: string): ParsedWriting {
+function buildCorrections(originalText: string, raw: RawCorrection[]): WritingCorrection[] {
   const corrections: WritingCorrection[] = [];
-  let cleanText = '';
+  let searchFrom = 0;
 
-  // Flexible regex: matches [fix: "wrong" → "correct" | ...anything... ]
-  // Handles: smart quotes, no quotes, →/->/->/-->, type: with slashes, missing type:
-  const regex = /\[fix:\s*[""\u201C]?(.+?)[""\u201D]?\s*(?:→|->|-->)\s*[""\u201C]?(.+?)[""\u201D]?\s*(?:\|\s*(?:type:\s*)?([\w/]+))?\s*(?:\|\s*(.+?))?\s*\]/g;
+  // Sort by order of appearance in the original text
+  const withOffsets = raw
+    .filter(r => r.mistake && r.correction && r.mistake !== r.correction)
+    .map(r => {
+      const idx = originalText.indexOf(r.mistake, searchFrom);
+      if (idx === -1) return null;
+      searchFrom = idx + r.mistake.length;
+      return { ...r, offset: idx };
+    })
+    .filter((r): r is RawCorrection & { offset: number } => r !== null)
+    .sort((a, b) => a.offset - b.offset);
 
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
+  // Remove overlapping corrections
+  let lastEnd = 0;
+  for (const r of withOffsets) {
+    if (r.offset < lastEnd) continue;
 
-  while ((match = regex.exec(markerText)) !== null) {
-    cleanText += markerText.slice(lastIndex, match.index);
-
-    const wrong = stripQuotes(match[1]);
-    const correct = stripQuotes(match[2]);
-    const type = (match[3] || 'Grammar').split('/')[0];
-    const explanation = stripQuotes(match[4] || '');
-
-    const offset = cleanText.length;
-    cleanText += correct;
-
+    const type = r.type || 'Grammar';
     corrections.push({
       type,
       shortDescription: type.toUpperCase(),
-      longDescription: explanation,
-      mistakeText: wrong,
-      correctionText: correct,
-      startIndex: offset,
-      endIndex: offset + correct.length,
-      offset,
-      length: correct.length,
+      longDescription: r.explanation || '',
+      mistakeText: r.mistake,
+      correctionText: r.correction,
+      offset: r.offset,
+      length: r.mistake.length,
     });
-
-    lastIndex = match.index + match[0].length;
+    lastEnd = r.offset + r.mistake.length;
   }
 
-  cleanText += markerText.slice(lastIndex);
-
-  // Second pass: strip any remaining [fix: ...] markers the regex missed
-  cleanText = cleanText.replace(/\[fix:\s*[^\]]*\]/g, '');
-
-  if (corrections.length === 0) {
-    return { cleanText: originalText, corrections: [] };
-  }
-
-  return { cleanText: cleanText.trim(), corrections };
+  return corrections;
 }
 
 @Injectable()
@@ -91,9 +98,10 @@ export class OllamaWritingService {
       );
 
       const rawText = response.response.trim();
-      const { cleanText, corrections } = parseMarkerText(rawText, params.text);
+      const rawCorrections = extractJsonArray(rawText);
+      const corrections = buildCorrections(params.text, rawCorrections);
 
-      return { text: cleanText, corrections };
+      return { text: params.text, corrections };
     } catch (error: unknown) {
       this.logger.error('Error analyzing writing', error);
       const errorMessage =

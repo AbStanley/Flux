@@ -19,9 +19,10 @@ interface RichInfoPanelProps {
     onCloseTab: (id: string) => void;
     onRegenerate: (id: string) => void;
     onClearAll: () => void;
+    forceOverlay?: boolean;
 }
 
-export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange, onCloseTab, onRegenerate, onClearAll }: RichInfoPanelProps) {
+export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange, onCloseTab, onRegenerate, onClearAll, forceOverlay }: RichInfoPanelProps) {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const { wordsState, phrasesState, addWord, updateWord } = useWordsStore();
 
@@ -57,7 +58,7 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
     };
 
     return (
-        <Card className="fixed bottom-0 right-0 z-50 h-[60vh] w-full border-t shadow-2xl flex flex-col rounded-t-xl glass bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-bottom duration-300 min-[1200px]:static min-[1200px]:h-full min-[1200px]:w-full min-[1200px]:border min-[1200px]:shadow-sm min-[1200px]:rounded-xl min-[1200px]:z-0 min-[1200px]:bg-transparent min-[1200px]:backdrop-blur-none min-[1200px]:mt-4">
+        <Card className={`fixed bottom-0 right-0 z-50 h-[60vh] w-full border-t shadow-2xl flex flex-col rounded-t-xl glass bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-bottom duration-300 ${forceOverlay ? '' : 'min-[1200px]:static min-[1200px]:h-full min-[1200px]:w-full min-[1200px]:border min-[1200px]:shadow-sm min-[1200px]:rounded-xl min-[1200px]:z-0 min-[1200px]:bg-transparent min-[1200px]:backdrop-blur-none min-[1200px]:mt-4'}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2 border-b gap-2">
                 <div className="flex-1 min-w-0 overflow-hidden">
                     {tabs.length > 0 && activeTabId ? (

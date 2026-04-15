@@ -41,12 +41,18 @@ export function parseContent(content: string): Token[] {
                 /[""\u201C]?(.+?)[""\u201D]?\s*(?:→|->|-->)+\s*[""\u201C]?(.+?)[""\u201D]?(?:\s*\|\s*(.+))?$/
             );
             if (arrowMatch) {
-                tokens.push({
-                    kind: 'correction',
-                    wrong: stripQuotes(arrowMatch[1].trim()),
-                    correct: stripQuotes(arrowMatch[2].trim()),
-                    explanation: stripQuotes(arrowMatch[3]?.trim() || ''),
-                });
+                const wrong = stripQuotes(arrowMatch[1].trim());
+                const correct = stripQuotes(arrowMatch[2].trim());
+                if (wrong.toLowerCase() === correct.toLowerCase()) {
+                    // Not a real correction — skip it
+                } else {
+                    tokens.push({
+                        kind: 'correction',
+                        wrong,
+                        correct,
+                        explanation: stripQuotes(arrowMatch[3]?.trim() || ''),
+                    });
+                }
             } else {
                 tokens.push({ kind: 'text', value: match[0] });
             }

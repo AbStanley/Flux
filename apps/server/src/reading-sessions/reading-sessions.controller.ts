@@ -38,7 +38,7 @@ export class ReadingSessionsController {
   }
 
   @Post()
-  create(
+  async create(
     @Body()
     body: {
       title: string;
@@ -52,7 +52,13 @@ export class ReadingSessionsController {
     },
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.service.create(body, req.user?.id ?? '');
+    try {
+      return await this.service.create(body, req.user?.id ?? '');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to create session';
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Patch(':id')

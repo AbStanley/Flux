@@ -1,13 +1,41 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/presentation/components/ui/button';
-import { readingSessionsApi, type ReadingSessionSummary, type ChapterInfo } from '@/infrastructure/api/reading-sessions';
+import { readingSessionsApi, type ReadingSessionSummary, type ReadingSession, type ChapterInfo } from '@/infrastructure/api/reading-sessions';
 import { useReaderStore } from '../store/useReaderStore';
 import { BookOpen, ChevronDown, ChevronRight, FileText, Trash2 } from 'lucide-react';
+
+/** Extract chapter previews from full session text */
+function getChapterPreviews(session: ReadingSession): Map<string, string> {
+    const previews = new Map<string, string>();
+    const isPdf = session.fileType === 'pdf';
+
+    if (isPdf) {
+        const pageHeaders = [...session.text.matchAll(/^--- Page (\d+) ---$/gm)];
+        const parts = session.text.split(/^--- Page \d+ ---$/m);
+        pageHeaders.forEach((match, i) => {
+            const content = (parts[i + 1] || '').trim();
+            previews.set(`Page ${match[1]}`, content.slice(0, 120).replace(/\s+/g, ' '));
+        });
+    } else {
+        const parts = session.text.split(/^### /m);
+        for (const part of parts) {
+            if (!part.trim()) continue;
+            const nl = part.indexOf('\n');
+            if (nl === -1) continue;
+            const label = part.slice(0, nl).trim();
+            const content = part.slice(nl).trim();
+            previews.set(label, content.slice(0, 120).replace(/\s+/g, ' '));
+        }
+    }
+    return previews;
+}
 
 export function SessionLibrary() {
     const [sessions, setSessions] = useState<ReadingSessionSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [expandedData, setExpandedData] = useState<ReadingSession | null>(null);
+    const [loadingChapters, setLoadingChapters] = useState(false);
 
     useEffect(() => {
         readingSessionsApi.getAll()
@@ -30,44 +58,46 @@ export function SessionLibrary() {
     };
 
     const handleLoadChapter = async (sessionId: string, chapterLabel: string) => {
-        console.log('[Library] handleLoadChapter called:', chapterLabel);
         const full = await readingSessionsApi.getOne(sessionId);
+        const isPdf = full.fileType === 'pdf';
 
-        // Split by ### headers and build a map of chapter label → content
         const chapterMap = new Map<string, string>();
-        const parts = full.text.split(/^### /m);
-        for (const part of parts) {
-            if (!part.trim()) continue;
-            const newlineIdx = part.indexOf('\n');
-            if (newlineIdx === -1) continue;
-            const label = part.slice(0, newlineIdx).trim();
-            const content = part.slice(newlineIdx).trim();
-            chapterMap.set(label, content);
-        }
 
-        console.log('[Library] Available chapters:', [...chapterMap.keys()]);
+        if (isPdf) {
+            // PDF: split by --- Page N --- markers
+            const parts = full.text.split(/^--- Page \d+ ---$/m);
+            const pageHeaders = [...full.text.matchAll(/^--- Page (\d+) ---$/gm)];
+            pageHeaders.forEach((match, i) => {
+                const content = (parts[i + 1] || '').trim();
+                if (content) chapterMap.set(`Page ${match[1]}`, content);
+            });
+        } else {
+            // EPUB: split by ### headers
+            const parts = full.text.split(/^### /m);
+            for (const part of parts) {
+                if (!part.trim()) continue;
+                const newlineIdx = part.indexOf('\n');
+                if (newlineIdx === -1) continue;
+                const label = part.slice(0, newlineIdx).trim();
+                const content = part.slice(newlineIdx).trim();
+                chapterMap.set(label, content);
+            }
+        }
 
         // Find chapter: exact match, then case-insensitive, then partial match
-        let chapterText = chapterMap.get(chapterLabel.trim()) || '';
+        const target = chapterLabel.trim();
+        let chapterText = chapterMap.get(target) || '';
         if (!chapterText) {
             for (const [key, value] of chapterMap) {
-                if (key.toLowerCase() === chapterLabel.trim().toLowerCase()) {
-                    chapterText = value;
-                    break;
-                }
+                if (key.toLowerCase() === target.toLowerCase()) { chapterText = value; break; }
             }
         }
         if (!chapterText) {
             for (const [key, value] of chapterMap) {
-                if (key.toLowerCase().includes(chapterLabel.trim().toLowerCase()) ||
-                    chapterLabel.trim().toLowerCase().includes(key.toLowerCase())) {
-                    chapterText = value;
-                    break;
-                }
+                if (key.toLowerCase().includes(target.toLowerCase()) ||
+                    target.toLowerCase().includes(key.toLowerCase())) { chapterText = value; break; }
             }
         }
-
-        console.log('[Library] Chapter text found:', chapterText.length, 'chars');
 
         const store = useReaderStore.getState();
         store.setSession(full.id, `${full.title} - ${chapterLabel}`);
@@ -81,6 +111,12 @@ export function SessionLibrary() {
         e.stopPropagation();
         await readingSessionsApi.remove(id);
         setSessions(s => s.filter(sess => sess.id !== id));
+    };
+
+    const handleDeleteAll = async () => {
+        if (!confirm('Delete all sessions? This cannot be undone.')) return;
+        await Promise.all(sessions.map(s => readingSessionsApi.remove(s.id).catch(console.error)));
+        setSessions([]);
     };
 
     if (loading) {
@@ -99,6 +135,13 @@ export function SessionLibrary() {
                 <BookOpen className="w-4 h-4 text-muted-foreground" />
                 <h3 className="text-sm font-semibold">My Library</h3>
                 <span className="text-xs text-muted-foreground ml-auto">{sessions.length} documents</span>
+                <button
+                    onClick={handleDeleteAll}
+                    className="text-xs text-muted-foreground hover:text-destructive transition-colors px-1.5 py-0.5 rounded hover:bg-destructive/10"
+                    title="Delete all sessions"
+                >
+                    Clear All
+                </button>
             </div>
 
             <div className="max-h-64 overflow-y-auto divide-y">
@@ -119,7 +162,17 @@ export function SessionLibrary() {
                                 className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/40 transition-colors group"
                                 onClick={() => {
                                     if (hasChapters) {
-                                        setExpandedId(isExpanded ? null : session.id);
+                                        if (isExpanded) {
+                                            setExpandedId(null);
+                                            setExpandedData(null);
+                                        } else {
+                                            setExpandedId(session.id);
+                                            setLoadingChapters(true);
+                                            readingSessionsApi.getOne(session.id)
+                                                .then(setExpandedData)
+                                                .catch(console.error)
+                                                .finally(() => setLoadingChapters(false));
+                                        }
                                     } else {
                                         handleResume(session);
                                     }
@@ -168,15 +221,20 @@ export function SessionLibrary() {
                                 </Button>
                             </div>
 
-                            {/* Chapter list with nested subitems */}
+                            {/* Chapter list with previews */}
                             {isExpanded && hasChapters && (
-                                <div className="bg-background/50 border-t max-h-48 overflow-y-auto">
-                                    <RenderChapters
-                                        chapters={session.chapters as ChapterInfo[]}
-                                        sessionId={session.id}
-                                        onSelect={handleLoadChapter}
-                                        depth={0}
-                                    />
+                                <div className="bg-background/50 border-t max-h-72 overflow-y-auto">
+                                    {loadingChapters ? (
+                                        <p className="text-xs text-muted-foreground text-center py-4">Loading chapters...</p>
+                                    ) : (
+                                        <RenderChapters
+                                            chapters={session.chapters as ChapterInfo[]}
+                                            sessionId={session.id}
+                                            onSelect={handleLoadChapter}
+                                            previews={expandedData ? getChapterPreviews(expandedData) : new Map()}
+                                            depth={0}
+                                        />
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -187,38 +245,47 @@ export function SessionLibrary() {
     );
 }
 
-function RenderChapters({ chapters, sessionId, onSelect, depth }: {
+function RenderChapters({ chapters, sessionId, onSelect, previews, depth }: {
     chapters: ChapterInfo[];
     sessionId: string;
     onSelect: (sessionId: string, label: string) => void;
+    previews: Map<string, string>;
     depth: number;
 }) {
     return (
-        <>
-            {chapters.map((ch, i) => (
-                <div key={`${ch.href}-${i}`}>
-                    <button
-                        className="w-full text-left py-1.5 text-sm hover:bg-primary/10 transition-colors flex items-center gap-2"
-                        style={{ paddingLeft: `${16 + depth * 16}px` }}
-                        onClick={() => {
-                            console.log('[Library] Chapter clicked:', ch.label);
-                            onSelect(sessionId, ch.label);
-                        }}
-                    >
-                        <span className="w-1 h-1 rounded-full bg-muted-foreground/40 shrink-0" />
-                        <span className="truncate">{ch.label}</span>
-                    </button>
-                    {ch.subitems && ch.subitems.length > 0 && (
-                        <RenderChapters
-                            chapters={ch.subitems}
-                            sessionId={sessionId}
-                            onSelect={onSelect}
-                            depth={depth + 1}
-                        />
-                    )}
-                </div>
-            ))}
-        </>
+        <div className={depth === 0 ? 'p-1.5 grid gap-1' : 'grid gap-1'}>
+            {chapters.map((ch, i) => {
+                const preview = previews.get(ch.label);
+                return (
+                    <div key={`${ch.href}-${i}`}>
+                        <button
+                            className="w-full text-left rounded-lg px-3 py-2 hover:bg-primary/10 transition-colors group/ch"
+                            style={{ marginLeft: `${depth * 12}px` }}
+                            onClick={() => onSelect(sessionId, ch.label)}
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0 group-hover/ch:bg-primary" />
+                                <span className="text-sm font-medium truncate">{ch.label}</span>
+                            </div>
+                            {preview && (
+                                <p className="text-[11px] text-muted-foreground/70 line-clamp-2 mt-0.5 ml-[22px]">
+                                    {preview}...
+                                </p>
+                            )}
+                        </button>
+                        {ch.subitems && ch.subitems.length > 0 && (
+                            <RenderChapters
+                                chapters={ch.subitems}
+                                sessionId={sessionId}
+                                onSelect={onSelect}
+                                previews={previews}
+                                depth={depth + 1}
+                            />
+                        )}
+                    </div>
+                );
+            })}
+        </div>
     );
 }
 
