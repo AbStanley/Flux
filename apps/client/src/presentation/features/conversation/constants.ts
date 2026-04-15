@@ -4,6 +4,21 @@ export const LANGUAGES = [
     'Dutch', 'Swedish', 'Polish', 'Turkish', 'Greek', 'Hebrew',
 ];
 
+export const LEVELS = [
+    { value: 'beginner', label: 'Beginner', description: 'Simple words, short sentences' },
+    { value: 'intermediate', label: 'Intermediate', description: 'Everyday conversations' },
+    { value: 'advanced', label: 'Advanced', description: 'Natural speech, complex grammar' },
+];
+
+/** Map language names to BCP-47 codes for Speech Recognition */
+export const LANGUAGE_CODES: Record<string, string> = {
+    Spanish: 'es-ES', English: 'en-US', French: 'fr-FR', German: 'de-DE',
+    Italian: 'it-IT', Portuguese: 'pt-BR', Russian: 'ru-RU', Chinese: 'zh-CN',
+    Japanese: 'ja-JP', Korean: 'ko-KR', Arabic: 'ar-SA', Hindi: 'hi-IN',
+    Dutch: 'nl-NL', Swedish: 'sv-SE', Polish: 'pl-PL', Turkish: 'tr-TR',
+    Greek: 'el-GR', Hebrew: 'he-IL',
+};
+
 export const TOPICS = [
     { value: '', label: 'Free conversation' },
     { value: 'ordering food at a restaurant', label: 'Ordering food' },

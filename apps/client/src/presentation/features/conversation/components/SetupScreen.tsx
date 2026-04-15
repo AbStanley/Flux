@@ -3,10 +3,10 @@ import { useConversationStore } from '../store/useConversationStore';
 import { useServices } from '../../../contexts/ServiceContext';
 import { Button } from '../../../components/ui/button';
 import { MessageCircle } from 'lucide-react';
-import { LANGUAGES, TOPICS } from '../constants';
+import { LANGUAGES, LEVELS, TOPICS } from '../constants';
 
 export function SetupScreen() {
-    const { targetLanguage, nativeLanguage, topic, model, setConfig, startConversation } =
+    const { targetLanguage, nativeLanguage, topic, model, level, setConfig, startConversation } =
         useConversationStore();
     const { aiService } = useServices();
     const [models, setModels] = useState<string[]>([]);
@@ -54,6 +54,27 @@ export function SetupScreen() {
                             ))}
                         </select>
                     </label>
+                </div>
+
+                <div className="space-y-1.5">
+                    <span className="text-sm font-medium text-foreground">Level</span>
+                    <div className="grid grid-cols-3 gap-2">
+                        {LEVELS.map((l) => (
+                            <button
+                                key={l.value}
+                                type="button"
+                                onClick={() => setConfig({ level: l.value })}
+                                className={`rounded-md border px-3 py-2.5 text-center transition-colors
+                                    ${level === l.value
+                                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
+                                        : 'border-border bg-background text-foreground hover:bg-muted'
+                                    }`}
+                            >
+                                <span className="block text-sm font-medium">{l.label}</span>
+                                <span className="block text-[11px] text-muted-foreground mt-0.5">{l.description}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 <label className="space-y-1.5 block">
