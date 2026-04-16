@@ -29,8 +29,8 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
     const handlePractice = (word: Word) => {
         const gameStore = useGameStore.getState();
         gameStore.updateConfig({
-            sourceLanguage: word.sourceLanguage || 'Spanish',
-            targetLanguage: word.targetLanguage || 'English',
+            sourceLang: word.sourceLanguage || 'Spanish',
+            targetLang: word.targetLanguage || 'English',
         });
         gameStore.startGame();
         useViewStore.getState().setView(AppView.LearningMode);
