@@ -13,7 +13,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
-  canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext) {
     // Check for @Public() decorator
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -24,7 +24,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // WebSocket auth is handled by Socket.IO middleware at connection time
     if (context.getType() === 'ws') return true;
 
-    // Allow localhost requests without auth (Extension compatibility)
+    // Try JWT auth first
+    try {
+      const result = await (super.canActivate(context) as Promise<boolean>);
+      if (result) return true;
+    } catch {
+      // JWT failed — check if localhost (dev mode fallback)
+    }
+
+    // Allow localhost in development as fallback when JWT fails
     const request = context.switchToHttp().getRequest<{
       ip?: string;
       connection?: { remoteAddress?: string };
@@ -37,7 +45,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     if (isLocalhost) return true;
 
-    return super.canActivate(context);
+    throw new UnauthorizedException('Authentication required');
   }
 
   handleRequest<TUser>(err: Error | null, user: TUser | false): TUser {

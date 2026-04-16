@@ -14,6 +14,7 @@ interface FluxMinimalPopupProps {
     onSwapLanguages?: () => void;
     onSave?: () => void;
     isSaved?: boolean;
+    saveError?: string | null;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
     theme?: FluxTheme;
@@ -30,6 +31,7 @@ export function FluxMinimalPopup({
     onSwapLanguages,
     onSave,
     isSaved,
+    saveError,
     onMouseEnter,
     onMouseLeave,
     theme,
@@ -165,6 +167,12 @@ export function FluxMinimalPopup({
                     )}
                 </FluxIconButton>
             </div>
+
+            {saveError && (
+                <div style={{ fontSize: '11px', color: errColor, textAlign: 'center', padding: '0 4px 4px' }}>
+                    {saveError}
+                </div>
+            )}
 
             {/* Pointer Arrow */}
             <div style={{

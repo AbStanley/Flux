@@ -87,14 +87,16 @@ export function LoginPage() {
                                             </span>
                                         )}
                                     </div>
-                                    <button
-                                        type="button"
+                                    <span
+                                        role="button"
+                                        tabIndex={0}
                                         onClick={(e) => { e.stopPropagation(); forgetUser(userEmail); }}
-                                        className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); forgetUser(userEmail); } }}
+                                        className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 cursor-pointer"
                                         title="Remove"
                                     >
                                         <X className="w-3.5 h-3.5" />
-                                    </button>
+                                    </span>
                                 </button>
                             ))}
                         </div>

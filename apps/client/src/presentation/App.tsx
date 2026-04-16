@@ -8,6 +8,7 @@ import { FocusLayout } from './layouts/FocusLayout';
 import { useFocusMode } from './features/reader/hooks/useFocusMode';
 import { useGameStore } from './features/learning-mode/store/useGameStore';
 import { useAuthStore } from './features/auth/store/useAuthStore';
+import { authApi } from '@/infrastructure/api/auth';
 import { LoginPage } from './features/auth/LoginPage';
 
 /**
@@ -31,42 +32,36 @@ function App() {
   const isExtension = typeof window !== 'undefined'
     && window.location.protocol === 'chrome-extension:';
 
-  // Initialize auth — in extension context, sync from chrome.storage first
+  // Initialize auth (handles both web and extension contexts)
   useEffect(() => {
-    if (isExtension && window.chrome?.storage?.local) {
-      window.chrome.storage.local.get(['flux_auth_token', 'flux_user'], (result: Record<string, unknown>) => {
-        if (result.flux_auth_token) {
-          localStorage.setItem('flux_auth_token', result.flux_auth_token as string);
-          if (result.flux_user) localStorage.setItem('flux_auth_user', JSON.stringify(result.flux_user));
-        }
-        initialize();
-      });
-    } else {
-      initialize();
-    }
+    initialize();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync auth state from extension popup → side panel
+  // In extension: listen for auth changes from popup/other contexts
   useEffect(() => {
-    if (!isExtension || !window.chrome?.storage?.onChanged) return;
-    const handleAuthChange = (changes: Record<string, { newValue?: unknown }>) => {
-      // Popup logged out — token was removed
-      if ('flux_auth_token' in changes && !changes.flux_auth_token.newValue) {
-        useAuthStore.getState().logout();
-      }
-      // Popup logged in — token was set
-      if ('flux_auth_token' in changes && changes.flux_auth_token.newValue) {
-        // Sync token + user to localStorage so the web app picks it up
-        const token = changes.flux_auth_token.newValue as string;
-        localStorage.setItem('flux_auth_token', token);
-        if ('flux_user' in changes && changes.flux_user.newValue) {
-          localStorage.setItem('flux_auth_user', JSON.stringify(changes.flux_user.newValue));
-        }
-        initialize();
+    if (!isExtension) return;
+
+    // Listen for storage changes (popup login/logout)
+    const handleStorageChange = (changes: Record<string, { newValue?: unknown }>) => {
+      if ('flux_auth_token' in changes) {
+        initialize(); // Re-initialize from chrome storage
       }
     };
-    window.chrome.storage.onChanged.addListener(handleAuthChange);
-    return () => window.chrome.storage.onChanged.removeListener(handleAuthChange);
+
+    // Listen for explicit logout messages
+    const handleMessage = (message: { type: string }) => {
+      if (message.type === 'AUTH_LOGOUT') {
+        authApi.clearStoredToken();
+        useAuthStore.getState().logout();
+      }
+    };
+
+    window.chrome?.storage?.onChanged?.addListener(handleStorageChange);
+    window.chrome?.runtime?.onMessage?.addListener(handleMessage);
+    return () => {
+      window.chrome?.storage?.onChanged?.removeListener(handleStorageChange);
+      window.chrome?.runtime?.onMessage?.removeListener(handleMessage);
+    };
   }, [isExtension, initialize]);
 
   useEffect(() => {
@@ -112,11 +107,13 @@ function App() {
           setIsReading(true);
         }
         if (message.type === 'WORD_SAVED') {
-          // Refresh word list in side panel
           import('@/presentation/features/word-manager/store/useWordsStore').then(({ useWordsStore }) => {
             useWordsStore.getState().fetchWords('word');
             useWordsStore.getState().fetchWords('phrase');
           });
+        }
+        if (message.type === 'AUTH_LOGOUT') {
+          useAuthStore.getState().logout();
         }
       };
       w.chrome.runtime.onMessage.addListener(handleMessage);
@@ -135,11 +132,11 @@ function App() {
     }
   }, [setText, setIsReading]);
 
-  // Auth gate: show login for web app users who aren't authenticated
-  if (!isExtension && authLoading) {
-    return null; // Brief loading state while checking token
+  // Auth gate: show login for unauthenticated users (both web app and side panel)
+  if (authLoading) {
+    return null;
   }
-  if (!isExtension && !isAuthenticated) {
+  if (!isAuthenticated) {
     return <LoginPage />;
   }
 

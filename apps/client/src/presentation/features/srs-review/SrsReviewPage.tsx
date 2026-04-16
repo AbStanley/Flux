@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSrsStore } from './store/useSrsStore';
 import { wordsApi } from '../../../infrastructure/api/words';
 import { Button } from '../../components/ui/button';
-import { RotateCcw, Brain, CheckCircle2, Flame, Clock, BookOpen } from 'lucide-react';
+import { RotateCcw, Brain, CheckCircle2, Flame, Clock, BookOpen, Volume2, VolumeX, RefreshCw } from 'lucide-react';
+import { getLanguageCode } from '../../features/word-manager/utils/languageUtils';
 
 export function SrsReviewPage() {
     const {
@@ -13,6 +14,24 @@ export function SrsReviewPage() {
     } = useSrsStore();
 
     const [languages, setLanguages] = useState<{ sourceLanguage: string; targetLanguage: string }[]>([]);
+    const [audioEnabled, setAudioEnabled] = useState(true);
+
+    const pronounce = useCallback((text: string, lang?: string) => {
+        if (!audioEnabled) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = getLanguageCode(lang);
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+    }, [audioEnabled]);
+
+    // Auto-pronounce when new card appears
+    const currentWord = words[currentIndex];
+    useEffect(() => {
+        if (currentWord && status === 'reviewing') {
+            pronounce(currentWord.text, currentWord.sourceLanguage);
+        }
+    }, [currentIndex, currentWord, status, pronounce]);
 
     useEffect(() => {
         loadStats();
@@ -148,6 +167,27 @@ export function SrsReviewPage() {
                         : 'bg-muted/30 border-border hover:border-primary/20 hover:shadow-lg'
                     }`}
             >
+                {/* Audio controls — top right */}
+                <div className="absolute top-3 right-3 flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => pronounce(word.text, word.sourceLanguage)}
+                        title="Pronounce"
+                    >
+                        <RefreshCw className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-8 w-8 rounded-full ${!audioEnabled ? 'text-muted-foreground/40' : ''}`}
+                        onClick={() => setAudioEnabled(!audioEnabled)}
+                        title={audioEnabled ? 'Mute audio' : 'Enable audio'}
+                    >
+                        {audioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                    </Button>
+                </div>
                 {!isFlipped ? (
                     // Front: show word text
                     <div className="space-y-4 animate-in fade-in">

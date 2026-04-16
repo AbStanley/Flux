@@ -84,6 +84,8 @@ export const useExtensionAuthStore = create<ExtensionAuthStore>((set) => ({
             await new Promise<void>((resolve) => {
                 chrome.storage.local.remove(['flux_auth_token', 'flux_user'], () => resolve());
             });
+            // Broadcast logout to side panel and content scripts
+            chrome.runtime?.sendMessage?.({ type: 'AUTH_LOGOUT' });
         }
         set({ token: null, user: null, isAuthenticated: false, isLoading: false });
     }

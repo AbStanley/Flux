@@ -9,8 +9,18 @@ interface UseSaveWordParams {
 
 export function useSaveWord({ sourceLang, targetLang, context }: UseSaveWordParams) {
     const [isSaved, setIsSaved] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     const handleSaveWord = useCallback(async (text: string, definition?: string) => {
+        setSaveError(null);
+        // Check if logged in
+        const { getAuthToken } = await import('../../infrastructure/api/api-client');
+        const token = await getAuthToken();
+        if (!token) {
+            setSaveError('Log in via the extension popup to save words.');
+            setTimeout(() => setSaveError(null), 4000);
+            return;
+        }
         try {
             await wordsApi.create({
                 text,
@@ -21,15 +31,17 @@ export function useSaveWord({ sourceLang, targetLang, context }: UseSaveWordPara
             });
             setIsSaved(true);
             setTimeout(() => setIsSaved(false), 2000);
-            // Notify side panel to refresh word list
             if (typeof window !== 'undefined') {
                 (window as unknown as { chrome?: { runtime?: { sendMessage?: (msg: unknown) => void } } })
                     .chrome?.runtime?.sendMessage?.({ type: 'WORD_SAVED' });
             }
         } catch (err) {
-            console.error('[Flux YouTube] Failed to save word:', err);
+            console.error('[Flux] Failed to save word:', err);
+            const msg = err instanceof Error ? err.message : 'Save failed';
+            setSaveError(msg);
+            setTimeout(() => setSaveError(null), 4000);
         }
     }, [sourceLang, targetLang, context]);
 
-    return { isSaved, handleSaveWord };
+    return { isSaved, saveError, handleSaveWord };
 }

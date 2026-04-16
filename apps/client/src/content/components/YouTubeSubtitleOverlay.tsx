@@ -47,7 +47,7 @@ export const YouTubeSubtitleOverlay = ({
     const isSentenceMode = selectionMode === SelectionMode.Sentence;
 
     const hover = useSubtitleHover({ isSentenceMode, cue, mode, targetLang, sourceLang, handleAction, setResult });
-    const { isSaved, handleSaveWord } = useSaveWord({ sourceLang, targetLang, context: cue?.text });
+    const { isSaved, saveError, handleSaveWord } = useSaveWord({ sourceLang, targetLang, context: cue?.text });
     const { clearLastTranslatedText } = useLanguageSync({
         targetLang, sourceLang, cue, isOverlayHovered,
         hoveredWord: hover.hoveredWord, fullResult,
@@ -216,7 +216,7 @@ export const YouTubeSubtitleOverlay = ({
                         sourceLang={sourceLang} onSourceLangChange={onSourceLangChange}
                         onSwapLanguages={handleSwapLanguages}
                         onSave={() => { if (hover.hoveredWord) handleSaveWord(hover.hoveredWord.text, result || undefined); }}
-                        isSaved={isSaved} theme={theme}
+                        isSaved={isSaved} saveError={saveError} theme={theme}
                         onMouseEnter={() => { hover.setIsPopupHovered(true); if (hover.timerRef.current) clearTimeout(hover.timerRef.current); }}
                         onMouseLeave={() => { hover.setIsPopupHovered(false); hover.onWordLeave(); }}
                     />

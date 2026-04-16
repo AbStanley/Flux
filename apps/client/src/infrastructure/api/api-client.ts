@@ -2,7 +2,12 @@ import { getApiBaseUrl } from "./base-url";
 import { getStoredApiUrl } from "../settings/settings.store";
 
 export async function getAuthToken(): Promise<string | null> {
-  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+  // In extension context, read from chrome.storage.local
+  const isExtension =
+    typeof chrome !== "undefined" &&
+    chrome?.runtime?.id &&
+    chrome?.storage?.local;
+  if (isExtension) {
     return new Promise((resolve) => {
       chrome.storage.local.get(["flux_auth_token"], (result) => {
         const data = result as { flux_auth_token?: string };
@@ -10,6 +15,7 @@ export async function getAuthToken(): Promise<string | null> {
       });
     });
   }
+  // Web app: read from localStorage
   return localStorage.getItem("flux_auth_token");
 }
 
@@ -122,9 +128,14 @@ export class ApiClient {
     const response = await fetch(url, config);
 
     if (!response.ok) {
-      if (response.status === 401) {
+      if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/register')) {
+        const hadToken = !!localStorage.getItem("flux_auth_token");
         localStorage.removeItem("flux_auth_token");
-        throw new Error("Session expired. Please log in again.");
+        throw new Error(
+          hadToken
+            ? "Session expired. Please log in again."
+            : "Login required. Please sign in first.",
+        );
       }
       const text = await response.text();
       throw new Error(

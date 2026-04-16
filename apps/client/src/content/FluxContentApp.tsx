@@ -70,6 +70,12 @@ export function FluxContentApp() {
     }, [pauseVideo, playVideo, getIsPlaying]);
 
     const handleSave = async (wordText: string, definition?: string) => {
+        // Check if logged in before saving
+        const token = await import('../infrastructure/api/api-client').then(m => m.getAuthToken());
+        if (!token) {
+            showNotification('Please log in via the extension popup to save words.', 'error', 5000);
+            return;
+        }
         setIsSaving(true);
         try {
             await wordsApi.create({

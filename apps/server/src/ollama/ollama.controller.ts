@@ -9,7 +9,9 @@ import {
   Message,
 } from './interfaces/ollama.interfaces';
 import { GenerateContentDto } from './dto/generate-content.dto';
+import { Public } from '../auth/decorators/public.decorator';
 
+@Public()
 @Controller('api')
 export class OllamaController {
   constructor(

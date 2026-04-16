@@ -63,7 +63,7 @@ export function ChatScreen() {
     const visibleMessages = messages.filter((m) => m.role !== 'system');
 
     return (
-        <div className="flex flex-col h-[calc(100dvh-65px)]">
+        <div className="flex flex-col h-[min(calc(100dvh-65px),700px)]">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b">
                 <div className="flex items-center gap-2">

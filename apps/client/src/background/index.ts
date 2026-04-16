@@ -99,6 +99,9 @@ async function handleProxyRequest(config: ProxyConfig): Promise<unknown> {
         console.log('[Background] Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
 
         if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('Login required. Please sign in via the extension popup.');
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 

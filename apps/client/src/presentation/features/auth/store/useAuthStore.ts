@@ -72,7 +72,7 @@ interface AuthState {
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, password: string) => Promise<void>;
     logout: () => void;
-    initialize: () => void;
+    initialize: () => Promise<void>;
     forgetUser: (email: string) => void;
 }
 
@@ -84,7 +84,25 @@ export const useAuthStore = create<AuthState>((set) => ({
     error: null,
     rememberedUsers: getRememberedUsers(),
 
-    initialize: () => {
+    initialize: async () => {
+        // In extension context, sync from chrome.storage.local first
+        if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
+            try {
+                const result = await new Promise<Record<string, unknown>>((resolve) => {
+                    chrome.storage.local.get(['flux_auth_token', 'flux_user'], (r) => resolve(r));
+                });
+                if (result.flux_auth_token) {
+                    const token = result.flux_auth_token as string;
+                    const user = (result.flux_user as AuthUser) || null;
+                    // Sync to localStorage so the rest of the app works
+                    authApi.setStoredToken(token);
+                    if (user) setStoredUser(user);
+                    set({ token, user, isAuthenticated: true, isLoading: false, rememberedUsers: getRememberedUsers() });
+                    return;
+                }
+            } catch { /* fall through to localStorage */ }
+        }
+
         const token = authApi.getStoredToken();
         const user = getStoredUser();
         if (token) {
@@ -98,9 +116,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ error: null, isLoading: true });
         try {
             const response = await authApi.login(email, password);
+            // Store token in BOTH localStorage and chrome storage before updating state.
+            // This ensures getAuthToken() can find it when components fire API calls on mount.
             authApi.setStoredToken(response.accessToken);
             setStoredUser(response.user);
             addRememberedUser(email);
+            if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
+                await new Promise<void>((resolve) => {
+                    chrome.storage.local.set({ flux_auth_token: response.accessToken, flux_user: response.user }, () => resolve());
+                });
+            }
             set({
                 token: response.accessToken,
                 user: response.user,
@@ -108,7 +133,6 @@ export const useAuthStore = create<AuthState>((set) => ({
                 isLoading: false,
                 rememberedUsers: getRememberedUsers(),
             });
-            // Cache word count for login screen
             wordsApi.getAll({ limit: 1 }).then(r => setUserStats(email, { wordCount: r.total })).catch(() => {});
         } catch (err) {
             const message =
@@ -124,6 +148,11 @@ export const useAuthStore = create<AuthState>((set) => ({
             authApi.setStoredToken(response.accessToken);
             setStoredUser(response.user);
             addRememberedUser(email);
+            if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
+                await new Promise<void>((resolve) => {
+                    chrome.storage.local.set({ flux_auth_token: response.accessToken, flux_user: response.user }, () => resolve());
+                });
+            }
             set({
                 token: response.accessToken,
                 user: response.user,
@@ -142,6 +171,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     logout: () => {
         authApi.clearStoredToken();
         setStoredUser(null);
+        // Also clear chrome storage and notify other extension contexts
+        if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
+            chrome.storage.local.remove(['flux_auth_token', 'flux_user']);
+            chrome.runtime?.sendMessage?.({ type: 'AUTH_LOGOUT' });
+        }
         set({
             token: null,
             user: null,
