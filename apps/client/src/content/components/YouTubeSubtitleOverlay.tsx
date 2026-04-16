@@ -20,8 +20,6 @@ interface Props {
     onTargetLangChange: (lang: string) => void;
     sourceLang: string;
     onSourceLangChange: (lang: string) => void;
-    autoSave: boolean;
-    onAutoSaveChange: (enabled: boolean) => void;
     onPrev?: () => void;
     onNext?: () => void;
     hasPrev?: boolean;
@@ -33,7 +31,6 @@ interface Props {
 export const YouTubeSubtitleOverlay = ({
     cue, onHover, onPopupStateChange,
     targetLang, onTargetLangChange, sourceLang, onSourceLangChange,
-    autoSave, onAutoSaveChange,
     onPrev, onNext, hasPrev, hasNext, fluxEnabled, theme,
 }: Props) => {
     const [mode] = useState<'TRANSLATE'>('TRANSLATE');
@@ -219,7 +216,7 @@ export const YouTubeSubtitleOverlay = ({
                         targetLang={targetLang} onLangChange={onTargetLangChange}
                         sourceLang={sourceLang} onSourceLangChange={onSourceLangChange}
                         onSwapLanguages={handleSwapLanguages}
-                        autoSave={autoSave} onAutoSaveChange={onAutoSaveChange}
+                        onSave={() => { if (hover.hoveredWord) handleSaveWord(hover.hoveredWord.text, result || undefined); }}
                         isSaved={isSaved} theme={theme}
                         onMouseEnter={() => { hover.setIsPopupHovered(true); if (hover.timerRef.current) clearTimeout(hover.timerRef.current); }}
                         onMouseLeave={() => { hover.setIsPopupHovered(false); hover.onWordLeave(); }}

@@ -37,7 +37,7 @@ function buildCorrections(originalText: string, raw: RawCorrection[]): WritingCo
 
   // Sort by order of appearance in the original text
   const withOffsets = raw
-    .filter(r => r.mistake && r.correction && r.mistake !== r.correction)
+    .filter(r => r.mistake && r.correction && r.mistake.trim().toLowerCase() !== r.correction.trim().toLowerCase())
     .map(r => {
       const idx = originalText.indexOf(r.mistake, searchFrom);
       if (idx === -1) return null;

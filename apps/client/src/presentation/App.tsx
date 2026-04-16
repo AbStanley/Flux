@@ -75,6 +75,13 @@ function App() {
           setText(message.text);
           setIsReading(true);
         }
+        if (message.type === 'WORD_SAVED') {
+          // Refresh word list in side panel
+          import('@/presentation/features/word-manager/store/useWordsStore').then(({ useWordsStore }) => {
+            useWordsStore.getState().fetchWords('word');
+            useWordsStore.getState().fetchWords('phrase');
+          });
+        }
       };
       w.chrome.runtime.onMessage.addListener(handleMessage);
 

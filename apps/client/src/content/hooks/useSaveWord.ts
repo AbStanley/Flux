@@ -21,6 +21,11 @@ export function useSaveWord({ sourceLang, targetLang, context }: UseSaveWordPara
             });
             setIsSaved(true);
             setTimeout(() => setIsSaved(false), 2000);
+            // Notify side panel to refresh word list
+            if (typeof window !== 'undefined') {
+                (window as unknown as { chrome?: { runtime?: { sendMessage?: (msg: unknown) => void } } })
+                    .chrome?.runtime?.sendMessage?.({ type: 'WORD_SAVED' });
+            }
         } catch (err) {
             console.error('[Flux YouTube] Failed to save word:', err);
         }

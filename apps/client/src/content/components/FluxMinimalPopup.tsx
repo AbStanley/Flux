@@ -12,8 +12,7 @@ interface FluxMinimalPopupProps {
     sourceLang: string;
     onSourceLangChange: (lang: string) => void;
     onSwapLanguages?: () => void;
-    autoSave: boolean;
-    onAutoSaveChange: (enabled: boolean) => void;
+    onSave?: () => void;
     isSaved?: boolean;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
@@ -29,8 +28,7 @@ export function FluxMinimalPopup({
     sourceLang,
     onSourceLangChange,
     onSwapLanguages,
-    autoSave,
-    onAutoSaveChange,
+    onSave,
     isSaved,
     onMouseEnter,
     onMouseLeave,
@@ -42,7 +40,6 @@ export function FluxMinimalPopup({
     const text = theme?.text ?? '#f8fafc';
     const textSec = theme?.textSecondary ?? '#cbd5e1';
     const accent = theme?.accent ?? '#3b82f6';
-    const accentGlow = theme?.accentGlow ?? 'rgba(59, 130, 246, 0.2)';
     const border = theme?.border ?? 'rgba(255, 255, 255, 0.1)';
     const errColor = theme?.error ?? '#ef4444';
     const successColor = theme?.success ?? '#4ade80';
@@ -55,7 +52,7 @@ export function FluxMinimalPopup({
             onMouseLeave={onMouseLeave}
             style={{
                 position: 'absolute',
-                bottom: '12px',
+                bottom: '0px',
                 left: '50%',
                 transform: 'translateX(-50%)',
                 backgroundColor: bg,
@@ -64,8 +61,9 @@ export function FluxMinimalPopup({
                 borderRadius: '12px',
                 boxShadow: `0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 0 0 1px ${border}`,
                 zIndex: 2147483647,
-                minWidth: '240px',
-                maxWidth: '320px',
+                width: 'max-content',
+                minWidth: '200px',
+                maxWidth: 'min(600px, 90vw)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
@@ -141,14 +139,14 @@ export function FluxMinimalPopup({
                 </div>
 
                 <FluxIconButton
-                    onClick={() => onAutoSaveChange(!autoSave)}
-                    title={autoSave ? "Auto-Save On" : "Auto-Save Off"}
+                    onClick={() => onSave?.()}
+                    title="Save to vocabulary"
                     theme={theme}
                     style={{
                         padding: '4px',
                         borderRadius: '6px',
-                        backgroundColor: autoSave ? accentGlow : 'transparent',
-                        color: autoSave ? accent : textSec
+                        backgroundColor: isSaved ? 'transparent' : 'transparent',
+                        color: isSaved ? successColor : accent,
                     }}
                 >
                     {isSaved ? (
@@ -158,15 +156,11 @@ export function FluxMinimalPopup({
                             </svg>
                             <span style={{ fontSize: '12px', fontWeight: 600 }}>Saved</span>
                         </div>
-                    ) : autoSave ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
                     ) : (
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                            <polyline points="7 3 7 8 15 8"></polyline>
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                            <line x1="12" y1="7" x2="12" y2="13" />
+                            <line x1="9" y1="10" x2="15" y2="10" />
                         </svg>
                     )}
                 </FluxIconButton>

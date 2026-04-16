@@ -121,6 +121,7 @@ export function SubtitleTrackLine({
                     position: 'fixed',
                     top: hoveredWord.y,
                     left: hoveredWord.x,
+                    width: 0, height: 0, overflow: 'visible',
                     zIndex: 2147483647,
                 }}>
                     <FluxMinimalPopup
@@ -131,8 +132,6 @@ export function SubtitleTrackLine({
                         onLangChange={onTargetLangChange}
                         sourceLang={sourceLang}
                         onSourceLangChange={onSourceLangChange}
-                        autoSave={false}
-                        onAutoSaveChange={() => {}}
                         theme={theme}
                         onMouseEnter={() => { setIsPopupHovered(true); if (leaveTimer.current) clearTimeout(leaveTimer.current); }}
                         onMouseLeave={() => { setIsPopupHovered(false); onLeave(); }}

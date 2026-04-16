@@ -48,7 +48,7 @@ export const useAIHandler = () => {
             }
             if (requestId !== lastRequestId.current) return;
             setResult(response);
-            return { detectedLang };
+            return { detectedLang, response };
         } catch (err: unknown) {
             if (requestId !== lastRequestId.current) return;
             console.error('AI Error:', err);

@@ -81,6 +81,8 @@ export function FluxContentApp() {
                 sourceTitle: document.title,
             });
             showNotification('Saved successfully!', 'success', 3000);
+            // Notify side panel to refresh word list
+            window.chrome?.runtime?.sendMessage?.({ type: 'WORD_SAVED' });
         } catch (err) {
             console.error('[Flux] Failed to save word:', err);
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -123,11 +125,11 @@ export function FluxContentApp() {
         setSelection(newSelection);
         setView('POPUP');
 
-        await handleAction(newSelection.text, mode, settings.targetLang, settings.sourceLang);
+        const aiResult = await handleAction(newSelection.text, mode, settings.targetLang, settings.sourceLang);
         // Don't persist auto-detected language — keep 'Auto' so it works on any page
 
         if (settings.autoSave) {
-            handleSave(newSelection.text);
+            handleSave(newSelection.text, aiResult?.response);
 
             if (window.chrome?.storage.local) {
                 window.chrome.storage.local.set({ pendingText: newSelection.text }, () => {
@@ -180,8 +182,6 @@ export function FluxContentApp() {
                     onTargetLangChange={handleTargetLangChange}
                     sourceLang={settings.sourceLang}
                     onSourceLangChange={handleSourceLangChange}
-                    autoSave={settings.autoSave}
-                    onAutoSaveChange={settings.persistAutoSave}
                     onPrev={seekPrev}
                     onNext={seekNext}
                     hasPrev={hasPrev}
