@@ -121,6 +121,24 @@ export default function FluxExtensionPopup() {
                 Welcome, {user?.email}
             </p>
 
+            <button
+                onClick={openSidePanel}
+                style={{
+                    marginTop: '8px', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: 'white',
+                    borderRadius: '12px', border: 'none', width: '100%', fontWeight: 600,
+                    cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <line x1="15" y1="3" x2="15" y2="21" />
+                </svg>
+                Open Side Panel
+            </button>
+
             {/* Enable toggle */}
             <div style={{
                 display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px',
@@ -209,24 +227,6 @@ export default function FluxExtensionPopup() {
                     <path d="M6 14h2M10 14h8" />
                 </svg>
                 Scan Videos for Subtitles
-            </button>
-
-            <button
-                onClick={openSidePanel}
-                style={{
-                    marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: 'white',
-                    borderRadius: '12px', border: 'none', width: '100%', fontWeight: 600,
-                    cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-            >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <line x1="15" y1="3" x2="15" y2="21" />
-                </svg>
-                Open Side Panel
             </button>
 
             <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>

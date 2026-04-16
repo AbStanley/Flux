@@ -100,7 +100,7 @@ export const YouTubeSubtitleOverlay = ({
         padding: '24px 72px 24px', borderRadius: '24px',
         fontSize: '32px', fontWeight: 600, zIndex: 2147483646,
         textAlign: 'center', display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', gap: '16px',
+        alignItems: 'center', justifyContent: 'flex-start', gap: '0px',
         cursor: isDragging ? 'grabbing' : 'grab',
         boxShadow: isDragging
             ? `0 30px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px ${theme.border}`
@@ -121,59 +121,58 @@ export const YouTubeSubtitleOverlay = ({
             >
                 {hasPrev && <SubtitleNavigationButton direction="prev" onClick={onPrev} theme={theme} />}
 
-                {/* Subtitle Tokens */}
-                <div
-                    style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '90%' }}
-                    onMouseOver={(e) => {
-                        const el = (e.target as HTMLElement).closest('[data-flux-token]') as HTMLElement | null;
-                        if (el?.dataset.fluxToken) hover.onWordHover(e as unknown as React.MouseEvent, el.dataset.fluxToken);
-                    }}
-                    onMouseLeave={hover.onWordLeave}
-                >
-                    {tokens.map((token, i) => {
-                        const clean = token.trim().replace(/[.,!?;:]/g, '');
-                        return (
-                            <span
-                                key={`token-${i}`}
-                                data-flux-token={clean || undefined}
-                                onClick={() => {
-                                    if (cue && clean.length > 0) {
-                                        const isMatchingHover = hover.hoveredWord?.text === clean;
-                                        handleSaveWord(clean, isMatchingHover ? result : undefined);
-                                    }
-                                }}
-                                style={{
-                                    cursor: clean ? 'pointer' : 'default',
-                                    display: 'inline-block', transition: 'all 0.2s ease', margin: '0 4px',
-                                    color: (isSentenceMode && hover.hoveredWord) ? theme.accent : undefined,
-                                    transform: (isSentenceMode && hover.hoveredWord) ? 'scale(1.05)' : undefined,
-                                }}
-                            >
-                                {token}
-                            </span>
-                        );
-                    })}
+                {/* Subtitle Tokens — vertically centered in upper area */}
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                    <div
+                        style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: '90%' }}
+                        onMouseOver={(e) => {
+                            const el = (e.target as HTMLElement).closest('[data-flux-token]') as HTMLElement | null;
+                            if (el?.dataset.fluxToken) hover.onWordHover(e as unknown as React.MouseEvent, el.dataset.fluxToken);
+                        }}
+                        onMouseLeave={hover.onWordLeave}
+                    >
+                        {tokens.map((token, i) => {
+                            const clean = token.trim().replace(/[.,!?;:]/g, '');
+                            return (
+                                <span
+                                    key={`token-${i}`}
+                                    data-flux-token={clean || undefined}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                        cursor: clean ? 'pointer' : 'default',
+                                        display: 'inline-block', transition: 'all 0.2s ease', margin: '0 4px',
+                                        color: (isSentenceMode && hover.hoveredWord) ? theme.accent : undefined,
+                                        transform: (isSentenceMode && hover.hoveredWord) ? 'scale(1.05)' : undefined,
+                                    }}
+                                >
+                                    {token}
+                                </span>
+                            );
+                        })}
+                    </div>
                 </div>
 
-                {/* Full Translation Display */}
-                {(fullResult || fullLoading || fullError) && (
-                    <div style={{
-                        fontSize: '20px', color: fullError ? theme.error : theme.textSecondary,
-                        fontWeight: 500, fontStyle: 'normal', padding: '12px 24px', textAlign: 'center',
-                        width: '100%', maxWidth: '85%', borderTop: `1px solid ${theme.border}`,
-                        marginTop: '8px', animation: 'fadeIn 0.3s ease-in-out',
-                    }}>
-                        {fullLoading ? (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
-                                <span className="animate-spin">⟳</span> Translating...
-                            </span>
-                        ) : fullError ? (
-                            <span style={{ animation: 'flux-fade-in 0.2s ease-out' }}>⚠️ {fullError}</span>
-                        ) : (
-                            <span style={{ animation: 'flux-fade-in 0.2s ease-out' }}>{fullResult}</span>
-                        )}
-                    </div>
-                )}
+                {/* Full Translation — always reserved space, content fades in/out */}
+                <div style={{
+                    fontSize: '20px', color: fullError ? theme.error : theme.textSecondary,
+                    fontWeight: 500, padding: '8px 24px', textAlign: 'center',
+                    width: '100%', maxWidth: '85%', borderTop: `1px solid ${theme.border}`,
+                    minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: (fullResult || fullLoading || fullError) ? 1 : 0,
+                    transition: 'opacity 0.2s ease',
+                }}>
+                    {fullLoading ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
+                            <span className="animate-spin">⟳</span> Translating...
+                        </span>
+                    ) : fullError ? (
+                        <span>⚠️ {fullError}</span>
+                    ) : fullResult ? (
+                        <span>{fullResult}</span>
+                    ) : (
+                        <span>&nbsp;</span>
+                    )}
+                </div>
 
                 {hasNext && <SubtitleNavigationButton direction="next" onClick={onNext} theme={theme} />}
 
