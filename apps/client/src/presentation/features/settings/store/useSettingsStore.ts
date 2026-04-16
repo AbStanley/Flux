@@ -50,12 +50,14 @@ interface SettingsState {
     llmModel: string;
     contentType: ContentType;
     proficiencyLevel: ProficiencyLevel;
+    speakOnHover: boolean;
 
     setFont: (font: ReaderFont) => void;
     setFontSize: (size: FontSize) => void;
     setLlmModel: (model: string) => void;
     setContentType: (type: ContentType) => void;
     setProficiencyLevel: (level: ProficiencyLevel) => void;
+    setSpeakOnHover: (enabled: boolean) => void;
 
     addCustomTheme: (theme: CustomTheme) => void;
     removeCustomTheme: (id: string) => void;
@@ -89,12 +91,14 @@ export const useSettingsStore = create<SettingsState>()(
             llmModel: '',  // Default to empty to let backend pick available model
             contentType: 'Story',
             proficiencyLevel: 'B1',
+            speakOnHover: false,
 
             setFont: (font) => set({ font }),
             setFontSize: (fontSize) => set({ fontSize }),
             setLlmModel: (llmModel) => set({ llmModel }),
             setContentType: (contentType) => set({ contentType }),
             setProficiencyLevel: (proficiencyLevel) => set({ proficiencyLevel }),
+            setSpeakOnHover: (speakOnHover) => set({ speakOnHover }),
 
             addCustomTheme: (theme) => set((state) => ({ customThemes: [...state.customThemes, theme] })),
             removeCustomTheme: (id) => set((state) => ({ customThemes: state.customThemes.filter((t) => t.id !== id) })),

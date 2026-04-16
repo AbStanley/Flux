@@ -2,6 +2,8 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useServices } from '../../../contexts/ServiceContext';
 import { useTranslationStore } from '../store/useTranslationStore';
 import { useReaderStore } from '../store/useReaderStore';
+import { useAudioStore } from '../store/useAudioStore';
+import { useSettingsStore } from '../../settings/store/useSettingsStore';
 
 export const useTranslation = (enableAutoFetch = false) => {
     const { aiService } = useServices();
@@ -90,7 +92,14 @@ export const useTranslation = (enableAutoFetch = false) => {
         // 4. Schedule the new hover action (Debounce fetch/state update)
         hoverTimeoutRef.current = setTimeout(() => {
             handleHoverAction(index, source, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
-        }, 150); // Reduced delay for better responsiveness while still debouncing
+
+            // Auto-pronounce on hover if enabled
+            if (source === 'token' && useSettingsStore.getState().speakOnHover) {
+                const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
+                const word = tokens[globalIndex]?.trim();
+                if (word) useAudioStore.getState().playSingle(word);
+            }
+        }, 150);
     }, [tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService, handleHoverAction]);
 
     const handleClearHover = useCallback(() => {

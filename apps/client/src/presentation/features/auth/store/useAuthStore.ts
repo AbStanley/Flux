@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { authApi } from '@/infrastructure/api/auth';
+import { wordsApi } from '@/infrastructure/api/words';
 
 const USER_KEY = 'flux_auth_user';
 const REMEMBERED_KEY = 'flux_remembered_users';
@@ -40,6 +41,25 @@ function addRememberedUser(email: string) {
 function removeRememberedUser(email: string) {
     const users = getRememberedUsers().filter(e => e !== email);
     localStorage.setItem(REMEMBERED_KEY, JSON.stringify(users));
+}
+
+const STATS_KEY = 'flux_user_stats';
+
+export function getUserStats(email: string): { wordCount: number } | null {
+    try {
+        const raw = localStorage.getItem(STATS_KEY);
+        const all = raw ? JSON.parse(raw) : {};
+        return all[email] || null;
+    } catch { return null; }
+}
+
+export function setUserStats(email: string, stats: { wordCount: number }) {
+    try {
+        const raw = localStorage.getItem(STATS_KEY);
+        const all = raw ? JSON.parse(raw) : {};
+        all[email] = stats;
+        localStorage.setItem(STATS_KEY, JSON.stringify(all));
+    } catch { /* ignore */ }
 }
 
 interface AuthState {
@@ -88,6 +108,8 @@ export const useAuthStore = create<AuthState>((set) => ({
                 isLoading: false,
                 rememberedUsers: getRememberedUsers(),
             });
+            // Cache word count for login screen
+            wordsApi.getAll({ limit: 1 }).then(r => setUserStats(email, { wordCount: r.total })).catch(() => {});
         } catch (err) {
             const message =
                 err instanceof Error ? err.message : 'Login failed';
@@ -109,6 +131,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 isLoading: false,
                 rememberedUsers: getRememberedUsers(),
             });
+            setUserStats(email, { wordCount: 0 });
         } catch (err) {
             const message =
                 err instanceof Error ? err.message : 'Registration failed';

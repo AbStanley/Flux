@@ -8,9 +8,12 @@ import {
     TableRow,
 } from '../../../components/ui/table';
 import { Button } from '../../../components/ui/button';
-import { Edit, Trash2, BookOpen, Globe, Quote, Volume2, ArrowRight, Clock } from 'lucide-react';
+import { Edit, Trash2, BookOpen, Globe, Quote, Volume2, ArrowRight, Clock, Gamepad2 } from 'lucide-react';
 import { getLanguageCode } from '../utils/languageUtils';
 import { ScrollArea } from '../../../components/ui/scroll-area';
+import { useGameStore } from '../../learning-mode/store/useGameStore';
+import { useViewStore } from '../../navigation/store/useViewStore';
+import { AppView } from '../../navigation/types';
 
 interface WordListProps {
     words: Word[];
@@ -23,6 +26,16 @@ interface WordListProps {
 }
 
 export function WordList({ words, onEdit, onDelete, emptyMessage = "No items found.", hasMore, isLoading, onLoadMore }: WordListProps) {
+    const handlePractice = (word: Word) => {
+        const gameStore = useGameStore.getState();
+        gameStore.updateConfig({
+            sourceLanguage: word.sourceLanguage || 'Spanish',
+            targetLanguage: word.targetLanguage || 'English',
+        });
+        gameStore.startGame();
+        useViewStore.getState().setView(AppView.LearningMode);
+    };
+
     const handlePlayAudio = (e: React.MouseEvent, text: string, language?: string) => {
         e.stopPropagation();
 
@@ -178,6 +191,15 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
+                                                className="h-8 w-8 hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400"
+                                                onClick={() => handlePractice(word)}
+                                                title="Practice this word"
+                                            >
+                                                <Gamepad2 className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 className="h-8 w-8 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
                                                 onClick={() => onEdit(word)}
                                             >
@@ -289,6 +311,15 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                             )}
 
                             <div className="pt-2 flex justify-end gap-2 border-t border-border/50">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 px-3 text-green-600 hover:text-green-700 hover:bg-green-100 dark:hover:bg-green-900/30"
+                                    onClick={() => handlePractice(word)}
+                                >
+                                    <Gamepad2 className="mr-1.5 h-3.5 w-3.5" />
+                                    Practice
+                                </Button>
                                 <Button
                                     variant="ghost"
                                     size="sm"

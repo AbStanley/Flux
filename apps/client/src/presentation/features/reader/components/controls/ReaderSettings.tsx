@@ -1,8 +1,9 @@
 import { Button } from '@/presentation/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/presentation/components/ui/select';
-import { Eye, EyeOff, Eraser, BookA } from "lucide-react";
+import { Eye, EyeOff, Eraser, BookA, Volume2 } from "lucide-react";
 import { SelectionMode } from '../../../../../core/types';
 import { Toggle } from '@/presentation/components/ui/toggle';
+import { useSettingsStore } from '../../../settings/store/useSettingsStore';
 
 
 
@@ -71,6 +72,7 @@ export function TranslationSettings({
             >
                 <Eraser className="h-4 w-4 text-muted-foreground" />
             </Button>
+            <SpeakOnHoverToggle />
         </div>
     );
 };
@@ -78,6 +80,22 @@ export function TranslationSettings({
 interface GrammarModeToggleProps {
     isGrammarMode: boolean;
     onToggle: () => void;
+}
+
+function SpeakOnHoverToggle() {
+    const speakOnHover = useSettingsStore(s => s.speakOnHover);
+    const setSpeakOnHover = useSettingsStore(s => s.setSpeakOnHover);
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            className={`h-8 w-8 ${speakOnHover ? 'text-primary bg-primary/10' : ''}`}
+            onClick={() => setSpeakOnHover(!speakOnHover)}
+            title={speakOnHover ? "Auto-pronounce: ON" : "Auto-pronounce: OFF"}
+        >
+            <Volume2 className="h-4 w-4" />
+        </Button>
+    );
 }
 
 export function GrammarModeToggle({ isGrammarMode, onToggle, forceCollapsed = false }: GrammarModeToggleProps & { forceCollapsed?: boolean }) {

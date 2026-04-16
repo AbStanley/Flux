@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Mode } from '../hooks/useAIHandler';
 import { FluxHeader } from './FluxHeader';
 import { FluxControls } from './FluxControls';
@@ -105,6 +105,18 @@ export function FluxPopup({
             selectAndOpen(selection.text);
         }
     }, [onSave, selection.text, result, selectAndOpen]);
+
+    // Keyboard shortcuts: Esc=close, S=save, E=expand/collapse
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+            if (e.key === 'Escape') { onClose(); }
+            else if (e.key === 's' || e.key === 'S') { e.preventDefault(); handleInternalSave(); }
+            else if (e.key === 'e' || e.key === 'E') { e.preventDefault(); setIsCollapsed(!isCollapsed); }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [onClose, handleInternalSave, isCollapsed, setIsCollapsed]);
 
     // When not pinned, use absolute positioning (scrolls with page).
     // When pinned (dragged), use fixed positioning (stays in viewport).

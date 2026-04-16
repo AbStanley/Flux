@@ -37,6 +37,10 @@ export const useWordsStore = create<WordsState>((set, get) => ({
     fetchWords: async (type, page = 1) => {
         const stateKey = type === 'word' ? 'wordsState' : 'phrasesState';
 
+        // Prevent concurrent fetches for the same type
+        const current = get()[stateKey];
+        if (current.isLoading) return;
+
         set(state => ({
             [stateKey]: { ...state[stateKey], isLoading: true },
             error: null

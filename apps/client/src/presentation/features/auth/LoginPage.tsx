@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useAuthStore } from './store/useAuthStore';
+import { useAuthStore, getUserStats } from './store/useAuthStore';
 import { X, ArrowLeft, Loader2 } from 'lucide-react';
 
 function getInitials(email: string): string {
@@ -77,9 +77,16 @@ export function LoginPage() {
                                     <div className={`w-10 h-10 rounded-full ${getColor(userEmail)} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
                                         {getInitials(userEmail)}
                                     </div>
-                                    <span className="text-sm font-medium text-foreground truncate flex-1">
-                                        {userEmail}
-                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-sm font-medium text-foreground truncate block">
+                                            {userEmail}
+                                        </span>
+                                        {getUserStats(userEmail) && (
+                                            <span className="text-[11px] text-muted-foreground">
+                                                {getUserStats(userEmail)!.wordCount} words saved
+                                            </span>
+                                        )}
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); forgetUser(userEmail); }}

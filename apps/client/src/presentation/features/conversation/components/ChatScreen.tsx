@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useConversationStore, type ChatMessage } from '../store/useConversationStore';
 import { Button } from '../../../components/ui/button';
-import { MessageCircle, Send, RotateCcw, Loader2, Mic, MicOff } from 'lucide-react';
+import { MessageCircle, Send, RotateCcw, Loader2, Mic, MicOff, Sun, Moon } from 'lucide-react';
 import { FormattedContent } from './FormattedContent';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 import { LANGUAGE_CODES } from '../constants';
+import { useTheme } from '../../../providers/useTheme';
 
 function MessageBubble({ message, targetLanguage, nativeLanguage }: {
     message: ChatMessage;
@@ -72,10 +73,13 @@ export function ChatScreen() {
                         {targetLanguage}
                     </span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5">
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    New
-                </Button>
+                <div className="flex items-center gap-1">
+                    <ThemeToggle />
+                    <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5">
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        New
+                    </Button>
+                </div>
             </div>
 
             {/* Messages */}
@@ -142,5 +146,21 @@ export function ChatScreen() {
                 </form>
             </div>
         </div>
+    );
+}
+
+function ThemeToggle() {
+    const { theme, setTheme } = useTheme();
+    const isDark = theme === 'dark' || theme === 'system';
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            title={isDark ? 'Light mode' : 'Dark mode'}
+        >
+            {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+        </Button>
     );
 }
