@@ -15,15 +15,52 @@ export type ThemeProviderState = {
     setTheme: (theme: Theme) => void
 }
 
+/** Map extension theme IDs to web app theme names */
+const EXTENSION_TO_WEBAPP_THEME: Record<string, Theme> = {
+    dark: "dark",
+    ivory: "cream",
+    nordic: "nordic",
+    sunset: "sunset",
+}
+
 export function ThemeProvider({
     children,
     defaultTheme = "system",
     storageKey = "reader-ui-theme",
 }: ThemeProviderProps) {
-    const [theme, setTheme] = useState<Theme>(
+    const [theme, setThemeState] = useState<Theme>(
         () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
     )
     const customThemes = useSettingsStore(state => state.customThemes);
+
+    // Sync theme from extension popup → side panel
+    useEffect(() => {
+        const isExtension = window.location.protocol === 'chrome-extension:';
+        if (!isExtension || !window.chrome?.storage?.onChanged) return;
+
+        // Load initial theme from extension storage
+        window.chrome.storage.local.get(['fluxTheme'], (result: Record<string, unknown>) => {
+            const extTheme = result.fluxTheme as string | undefined;
+            if (extTheme && EXTENSION_TO_WEBAPP_THEME[extTheme]) {
+                const mapped = EXTENSION_TO_WEBAPP_THEME[extTheme];
+                localStorage.setItem(storageKey, mapped);
+                setThemeState(mapped);
+            }
+        });
+
+        // Listen for theme changes from extension popup
+        const handleChange = (changes: Record<string, { newValue?: unknown }>) => {
+            if (changes.fluxTheme?.newValue) {
+                const mapped = EXTENSION_TO_WEBAPP_THEME[changes.fluxTheme.newValue as string];
+                if (mapped) {
+                    localStorage.setItem(storageKey, mapped);
+                    setThemeState(mapped);
+                }
+            }
+        };
+        window.chrome.storage.onChanged.addListener(handleChange);
+        return () => window.chrome.storage.onChanged.removeListener(handleChange);
+    }, [storageKey]);
 
     useEffect(() => {
         const root = window.document.documentElement
@@ -67,9 +104,9 @@ export function ThemeProvider({
 
     const value = {
         theme,
-        setTheme: (theme: Theme) => {
-            localStorage.setItem(storageKey, theme)
-            setTheme(theme)
+        setTheme: (newTheme: Theme) => {
+            localStorage.setItem(storageKey, newTheme)
+            setThemeState(newTheme)
         },
     }
 
