@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-
 import { WebSpeechAudioService } from '../../../../infrastructure/audio/WebSpeechAudioService';
+import { useReaderStore } from './useReaderStore';
 
 
 interface AudioState {
@@ -109,21 +109,24 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     },
 
     play: () => {
-        // Resume from current spot if available, else start (token 0)
-        // If we are "paused" (stopped for single word), currentWordIndex should be valid.
+        // Resume from current spot if available, else start from current page
         const { currentWordIndex, tokens } = get();
-        if (currentWordIndex !== null && currentWordIndex < tokens.length) {
+        if (currentWordIndex !== null && currentWordIndex > 0 && currentWordIndex < tokens.length) {
             get().seek(currentWordIndex);
         } else {
-            get().seek(0);
+            // Start from the current page's first token
+            const { currentPage, PAGE_SIZE } = useReaderStore.getState();
+            const pageStart = (currentPage - 1) * PAGE_SIZE;
+            const startIndex = Math.max(0, Math.min(pageStart, tokens.length - 1));
+            get().seek(startIndex);
         }
     },
 
     seek: (tokenIndex: number) => {
         const { selectedVoice, playbackRate, tokenOffsets, tokens } = get();
 
-        // Validate index
-        if (tokenIndex < 0 || tokenIndex >= tokens.length) return;
+        // Validate index — need at least one token
+        if (tokens.length === 0 || tokenIndex < 0 || tokenIndex >= tokens.length) return;
 
         // Stop any current playback
         audioService.stop();

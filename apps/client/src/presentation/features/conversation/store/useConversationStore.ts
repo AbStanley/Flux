@@ -282,6 +282,8 @@ export const useConversationStore = create<ConversationState>()(
         topic: state.topic,
         model: state.model,
         level: state.level,
+        status: state.status,
+        messages: state.messages,
       }),
     },
   ),

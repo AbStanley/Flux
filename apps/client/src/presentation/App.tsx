@@ -31,7 +31,43 @@ function App() {
   const isExtension = typeof window !== 'undefined'
     && window.location.protocol === 'chrome-extension:';
 
-  useEffect(() => { initialize(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Initialize auth — in extension context, sync from chrome.storage first
+  useEffect(() => {
+    if (isExtension && window.chrome?.storage?.local) {
+      window.chrome.storage.local.get(['flux_auth_token', 'flux_user'], (result: Record<string, unknown>) => {
+        if (result.flux_auth_token) {
+          localStorage.setItem('flux_auth_token', result.flux_auth_token as string);
+          if (result.flux_user) localStorage.setItem('flux_auth_user', JSON.stringify(result.flux_user));
+        }
+        initialize();
+      });
+    } else {
+      initialize();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync auth state from extension popup → side panel
+  useEffect(() => {
+    if (!isExtension || !window.chrome?.storage?.onChanged) return;
+    const handleAuthChange = (changes: Record<string, { newValue?: unknown }>) => {
+      // Popup logged out — token was removed
+      if ('flux_auth_token' in changes && !changes.flux_auth_token.newValue) {
+        useAuthStore.getState().logout();
+      }
+      // Popup logged in — token was set
+      if ('flux_auth_token' in changes && changes.flux_auth_token.newValue) {
+        // Sync token + user to localStorage so the web app picks it up
+        const token = changes.flux_auth_token.newValue as string;
+        localStorage.setItem('flux_auth_token', token);
+        if ('flux_user' in changes && changes.flux_user.newValue) {
+          localStorage.setItem('flux_auth_user', JSON.stringify(changes.flux_user.newValue));
+        }
+        initialize();
+      }
+    };
+    window.chrome.storage.onChanged.addListener(handleAuthChange);
+    return () => window.chrome.storage.onChanged.removeListener(handleAuthChange);
+  }, [isExtension, initialize]);
 
   useEffect(() => {
     import('@/infrastructure/api/base-url').then(({ getApiBaseUrl }) => {
