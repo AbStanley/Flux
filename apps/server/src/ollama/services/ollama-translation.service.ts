@@ -4,10 +4,35 @@ import {
   getTranslatePrompt,
   getExplainPrompt,
   getRichTranslationPrompt,
-  getConjugationsPrompt,
+  getSingleTensePrompt,
 } from '../prompts';
 import { cleanResponse, cleanAndParseJson } from '../utils/ollama-utils';
 import { RichTranslation } from '../interfaces/ollama.interfaces';
+
+type RichObj = Record<string, unknown> & {
+  isVerb?: boolean;
+  segment?: string;
+  translation?: string;
+  grammar?: Record<string, unknown> & {
+    infinitive?: string;
+    tense?: string;
+  };
+  conjugations?: Record<string, unknown>;
+};
+
+/**
+ * Tense names to request per source language for the conjugation refill flow.
+ * Keys are lowercase language names (matched case-insensitively).
+ */
+const CORE_TENSES: Readonly<Record<string, readonly string[]>> = {
+  english: ['Present', 'Past', 'Future', 'Present Perfect'],
+  spanish: ['Presente', 'Pretérito', 'Imperfecto', 'Futuro'],
+  italian: ['Presente', 'Passato prossimo', 'Imperfetto', 'Futuro'],
+  portuguese: ['Presente', 'Pretérito perfeito', 'Imperfeito', 'Futuro'],
+  french: ['Présent', 'Passé composé', 'Imparfait', 'Futur'],
+  german: ['Präsens', 'Präteritum', 'Perfekt', 'Futur'],
+  russian: ['Настоящее', 'Прошедшее', 'Будущее'],
+};
 
 @Injectable()
 export class OllamaTranslationService {
@@ -29,12 +54,9 @@ export class OllamaTranslationService {
       params.context,
       params.sourceLanguage,
     );
-
     const isAuto = !params.sourceLanguage || params.sourceLanguage === 'Auto';
-    // A single-word lookup is ≤ 10 tokens; a full-sentence translation is
-    // rarely more than a few hundred. 256 caps runaway generation without
-    // truncating real output. temperature=0 removes sampling overhead.
-    const response = await this.ollamaClient.generate(
+
+    const { response } = await this.ollamaClient.generate(
       model,
       prompt,
       false,
@@ -42,24 +64,21 @@ export class OllamaTranslationService {
       { num_predict: 256, temperature: 0 },
     );
 
-    if (isAuto) {
-      try {
-        const parsed = cleanAndParseJson<{
-          detectedLanguage: string;
-          translation: string;
-        }>(response.response);
-        return {
-          response: parsed.translation,
-          sourceLanguage: parsed.detectedLanguage,
-        };
-      } catch (e) {
-        this.logger.error('Failed to parse auto-translation JSON:', e);
-        // Fallback to simple cleaning if JSON parse fails
-        return { response: cleanResponse(response.response) };
-      }
-    }
+    if (!isAuto) return { response: cleanResponse(response) };
 
-    return { response: cleanResponse(response.response) };
+    try {
+      const parsed = cleanAndParseJson<{
+        detectedLanguage: string;
+        translation: string;
+      }>(response);
+      return {
+        response: parsed.translation,
+        sourceLanguage: parsed.detectedLanguage,
+      };
+    } catch (e) {
+      this.logger.error('Failed to parse auto-translation JSON:', e);
+      return { response: cleanResponse(response) };
+    }
   }
 
   async explainText(params: {
@@ -74,9 +93,8 @@ export class OllamaTranslationService {
       params.targetLanguage,
       params.context,
     );
-
-    const response = await this.ollamaClient.generate(model, prompt, false);
-    return cleanResponse(response.response);
+    const { response } = await this.ollamaClient.generate(model, prompt, false);
+    return cleanResponse(response);
   }
 
   async getRichTranslation(params: {
@@ -87,159 +105,133 @@ export class OllamaTranslationService {
     model?: string;
   }): Promise<RichTranslation> {
     const model = await this.ollamaClient.ensureModel(params.model);
+    const rich = await this.fetchRichTranslation(params, model);
+
+    this.trimRunawayTranslation(rich, params.text);
+    this.enforceVerbShape(rich);
+
+    if (this.needsConjugationRefill(rich)) {
+      await this.refillConjugations(rich, model, params.sourceLanguage);
+    }
+
+    return rich as unknown as RichTranslation;
+  }
+
+  private async fetchRichTranslation(
+    params: {
+      text: string;
+      targetLanguage: string;
+      context?: string;
+      sourceLanguage?: string;
+    },
+    model: string,
+  ): Promise<RichObj> {
     const prompt = getRichTranslationPrompt(
       params.text,
       params.targetLanguage,
       params.context,
       params.sourceLanguage,
     );
-
-    // `format: 'json'` keeps Ollama's JSON-mode stopping behavior (closes
-    // cleanly after the object) without the grammar-constrained schema that
-    // was fighting the model on non-Latin scripts. The prompt is the single
-    // source of shape; the server validator is the safety net.
-    const response = await this.ollamaClient.generate(
+    const { response } = await this.ollamaClient.generate(
       model,
       prompt,
       false,
       'json',
       { num_predict: 1024, temperature: 0 },
     );
-
-    this.logger.log(
-      `[RichTranslation] Raw Response (Length ${response.response.length}):\n${response.response.substring(0, 200)}...`,
-    );
-
-    const result = cleanAndParseJson<RichTranslation>(response.response);
-
-    // Guard: if input is a single word but LLM returned a full sentence as translation,
-    // truncate to just the first clause/phrase to avoid displaying a whole paragraph.
-    const isSingleWord = !params.text.trim().includes(' ');
-    const obj = result as unknown as Record<string, unknown>;
-    if (
-      isSingleWord &&
-      typeof obj.translation === 'string' &&
-      obj.translation.split(' ').length > 6
-    ) {
-      const short = obj.translation.split(/[,.\n]/)[0].trim();
-      if (short) obj.translation = short;
-    }
-
-    this.applyVerbDiscriminator(result, params.text);
-
-    // Gemma sometimes emits a valid JSON without the conjugations block even
-    // for verbs it clearly knows how to conjugate. Fire a focused follow-up
-    // call that asks for conjugations alone — less context, simpler shape,
-    // much more likely to complete.
-    await this.fillMissingConjugations(result, model, params.sourceLanguage);
-
-    return result;
-  }
-
-  private async fillMissingConjugations(
-    result: RichTranslation,
-    model: string,
-    sourceLanguage?: string,
-  ): Promise<void> {
-    const obj = result as unknown as Record<string, unknown>;
-    if (obj.isVerb !== true) return;
-    const existing = obj.conjugations as Record<string, unknown> | undefined;
-    if (existing && Object.keys(existing).length > 0) return;
-
-    const grammar = obj.grammar as Record<string, unknown> | undefined;
-    const infinitive =
-      typeof grammar?.infinitive === 'string' ? grammar.infinitive.trim() : '';
-    const segment = typeof obj.segment === 'string' ? obj.segment.trim() : '';
-    const verb = infinitive || segment;
-    if (!verb) return;
-
-    const srcLang =
-      sourceLanguage && sourceLanguage !== 'Auto'
-        ? sourceLanguage
-        : `the language of "${verb}"`;
-    const prompt = getConjugationsPrompt(verb, srcLang);
-
-    try {
-      const response = await this.ollamaClient.generate(
-        model,
-        prompt,
-        false,
-        'json',
-        { num_predict: 512, temperature: 0 },
-      );
-      const table = cleanAndParseJson<Record<string, unknown>>(
-        response.response,
-      );
-      if (table && typeof table === 'object' && Object.keys(table).length > 0) {
-        obj.conjugations = table;
-      }
-    } catch (e) {
-      this.logger.warn(
-        `[RichTranslation] conjugation fallback failed: ${String(e)}`,
-      );
-    }
+    return cleanAndParseJson<RichObj>(response);
   }
 
   /**
-   * The prompt + JSON schema ask the LLM to set "isVerb" first and always
-   * emit "conjugations". We trust that boolean and then apply one semantic
-   * check against the forms:
-   *   - isVerb=false → strip "conjugations" and the verb-only grammar fields.
-   *   - isVerb=true  → keep the block unless no form shares a single letter
-   *     with the source word. Zero character overlap means the forms are in
-   *     a different script entirely (e.g. Cyrillic source, Latin conjugated
-   *     forms) — a clear wrong-language leak. Any real paradigm, even an
-   *     irregular one, will share at least one letter across all forms.
+   * Single-word lookups occasionally come back with a full-sentence
+   * translation. Keep only the first clause so the UI shows a headword.
    */
-  private applyVerbDiscriminator(
-    result: RichTranslation,
-    lookupText: string,
-  ): void {
-    const obj = result as unknown as Record<string, unknown>;
-    const grammar = obj.grammar as Record<string, unknown> | undefined;
+  private trimRunawayTranslation(rich: RichObj, input: string): void {
+    const isSingleWord = !input.trim().includes(' ');
+    const { translation } = rich;
+    if (!isSingleWord || typeof translation !== 'string') return;
+    if (translation.split(' ').length <= 6) return;
+    const short = translation.split(/[,.\n]/)[0].trim();
+    if (short) rich.translation = short;
+  }
 
-    if (obj.isVerb !== true) {
-      delete obj.conjugations;
-      if (grammar) {
-        delete grammar.infinitive;
-        delete grammar.tense;
-      }
-      return;
+  /**
+   * `isVerb` is the source of truth. For non-verbs, drop the verb-only
+   * fields the prompt may still have emitted.
+   */
+  private enforceVerbShape(rich: RichObj): void {
+    if (rich.isVerb === true) return;
+    delete rich.conjugations;
+    if (rich.grammar) {
+      delete rich.grammar.infinitive;
+      delete rich.grammar.tense;
     }
+  }
 
-    const conjugations = obj.conjugations as
-      | Record<string, Array<{ conjugation?: unknown }>>
-      | undefined;
-    if (!conjugations || typeof conjugations !== 'object') return;
+  /** A verb needs a refill when the primary call returned fewer than 2 tenses. */
+  private needsConjugationRefill(rich: RichObj): boolean {
+    if (rich.isVerb !== true) return false;
+    const conj = rich.conjugations;
+    if (!conj || typeof conj !== 'object') return true;
+    return Object.keys(conj).length < 2;
+  }
 
-    const allForms: string[] = [];
-    for (const tense of Object.values(conjugations)) {
-      if (!Array.isArray(tense)) continue;
-      for (const row of tense) {
-        if (typeof row?.conjugation === 'string' && row.conjugation.trim()) {
-          allForms.push(row.conjugation.toLowerCase());
-        }
-      }
-    }
-    if (allForms.length === 0) {
-      delete obj.conjugations;
-      return;
-    }
+  /**
+   * Fetch each core tense in parallel with its own focused prompt. A small
+   * model that drops 3-of-4 tenses in a one-shot table reliably completes a
+   * single-tense request. Successful tenses overwrite/extend whatever the
+   * primary call returned; failures are silently dropped.
+   */
+  private async refillConjugations(
+    rich: RichObj,
+    model: string,
+    sourceLanguage?: string,
+  ): Promise<void> {
+    const verb = (rich.grammar?.infinitive || rich.segment || '').trim();
+    if (!verb || !sourceLanguage) return;
 
-    const infinitive =
-      typeof grammar?.infinitive === 'string' ? grammar.infinitive : '';
-    const source = (infinitive || lookupText || '').toLowerCase();
-    const sourceLetters = new Set(source.match(/\p{L}/gu) ?? []);
-    if (sourceLetters.size === 0) return;
+    const tenses = CORE_TENSES[sourceLanguage.toLowerCase()];
+    if (!tenses?.length) return;
 
-    // If NO form shares a single letter with the source word, the model
-    // emitted the conjugations in a different script (e.g. Russian lookup
-    // answered with Spanish verbs). That's a wrong-language leak; drop.
-    const anyFormShares = allForms.some((form) =>
-      (form.match(/\p{L}/gu) ?? []).some((ch) => sourceLetters.has(ch)),
+    const results = await Promise.all(
+      tenses.map((tense) =>
+        this.fetchTenseRows(verb, sourceLanguage, tense, model),
+      ),
     );
-    if (!anyFormShares) {
-      delete obj.conjugations;
+
+    const filled: Record<string, unknown[]> = {};
+    tenses.forEach((tense, i) => {
+      const rows = results[i];
+      if (rows) filled[tense] = rows;
+    });
+
+    if (Object.keys(filled).length === 0) return;
+    rich.conjugations = { ...(rich.conjugations ?? {}), ...filled };
+  }
+
+  /** Returns the rows array for one tense, or null on failure / bad shape. */
+  private async fetchTenseRows(
+    verb: string,
+    sourceLanguage: string,
+    tense: string,
+    model: string,
+  ): Promise<unknown[] | null> {
+    try {
+      const { response } = await this.ollamaClient.generate(
+        model,
+        getSingleTensePrompt(verb, sourceLanguage, tense),
+        false,
+        'json',
+        { num_predict: 256, temperature: 0 },
+      );
+      const parsed = cleanAndParseJson<{ rows?: unknown }>(response);
+      const rows = parsed?.rows;
+      return Array.isArray(rows) && rows.length > 0 ? rows : null;
+    } catch (e) {
+      this.logger.warn(
+        `[RichTranslation] tense "${tense}" fetch failed: ${String(e)}`,
+      );
+      return null;
     }
   }
 }

@@ -137,34 +137,26 @@ Output JSON only. No markdown, no preamble.`;
 };
 
 /**
- * Focused fallback call for when the main rich-translation response comes
- * back without a conjugations block. Strips away all the other context so
- * the model only has to do one thing.
+ * Focused fallback that asks for a SINGLE tense at a time. Wrapping the
+ * rows in an object plays nicer with Ollama's JSON mode (which prefers
+ * top-level objects) than a bare array.
  */
-export const getConjugationsPrompt = (
+export const getSingleTensePrompt = (
   infinitive: string,
   sourceLanguage: string,
+  tense: string,
 ): string => {
-  return `Conjugate the ${sourceLanguage} verb "${infinitive}". Reply JSON only.
+  return `Give the ${tense} tense conjugation of the ${sourceLanguage} verb "${infinitive}".
 
+Reply with this exact JSON shape — no commentary, no markdown:
 {
-  "<tense name for ${sourceLanguage}>": [
-    {"pronoun": "<${sourceLanguage} pronoun or feature>", "conjugation": "<fully inflected form of '${infinitive}' in ${sourceLanguage}>"},
-    … one row per person/gender/number the paradigm uses
-  ],
-  … one key per tense the verb has (use only the tenses applicable to this verb)
+  "rows": [
+    {"pronoun": "<${sourceLanguage} pronoun>", "conjugation": "<inflected form of '${infinitive}'>"},
+    …
+  ]
 }
 
-Tense keys for the most common source languages:
-  - English: Present, Past, Future, Present Perfect
-  - Spanish / Italian / Portuguese: Presente, Pretérito, Imperfecto, Futuro
-  - French: Présent, Passé composé, Imparfait, Futur
-  - German: Präsens, Präteritum, Perfekt, Futur
-  - Russian: Настоящее, Прошедшее, Будущее (perfective verbs skip Настоящее)
-
-Row count follows the paradigm: 6 rows for most six-person languages, 4 rows for Russian past (он/она/оно/они), whatever the language naturally uses.
-
-Every "conjugation" value is the fully inflected form in ${sourceLanguage}, not a placeholder, not a translation. Include at least 2 tenses. Output JSON only.`;
+Use one row per person/gender/number the paradigm has — typically 6 rows by person; Russian past is 4 rows with pronouns "он", "она", "оно", "они". Every row is filled with a real ${sourceLanguage} form.`;
 };
 
 export const getExplainPrompt = (
