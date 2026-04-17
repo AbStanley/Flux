@@ -30,9 +30,9 @@ export const getStoryPrompt = (params: {
 
   if (isLearningMode) {
     const topicPhrase = topic
-      ? ` about "${topic}"`
-      : ' about a random interesting topic';
-    return `Write ${contentDescription} about ${topicPhrase} in ${sourceLang} suitable for a ${proficiencyLevel} proficiency level learner. The vocabulary and grammar should be appropriate for ${proficiencyLevel}. Include a title starting with '## '. Output ONLY the title and the text. Do not include any introductory or concluding remarks. Do NOT include translations.`;
+      ? `about "${topic}"`
+      : 'about a random interesting topic';
+    return `Write ${contentDescription} ${topicPhrase} in ${sourceLang}. The ENTIRE output (title and body) MUST be written in ${sourceLang}. The vocabulary and grammar should be appropriate for a ${proficiencyLevel} proficiency level learner. Include a title starting with '## '. Output ONLY the title and the text. Do not include any introductory or concluding remarks. Do NOT include translations or English text.`;
   } else {
     return `Write ${contentDescription} in ${sourceLang} about a robot learning to paint. Include a title starting with '## '. Output ONLY the title and the text. Do not include any introductory or concluding remarks. Do NOT include translations.`;
   }
