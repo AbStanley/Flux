@@ -144,7 +144,7 @@ export function SessionLibrary() {
                 </button>
             </div>
 
-            <div className="max-h-64 overflow-y-auto divide-y">
+            <div className={`divide-y ${sessions.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
                 {sessions.map((session) => {
                     const isExpanded = expandedId === session.id;
                     const hasChapters = session.chapters && Array.isArray(session.chapters) && session.chapters.length > 0;
