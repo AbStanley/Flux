@@ -142,7 +142,11 @@ CRITICAL RULES for "translation"
 =========================================
 - MUST be written in ${targetLanguage}. Never in ${srcLang}.
 - If "translation" comes out identical to "${text}" AND ${srcLang} !== ${targetLanguage}, you did it wrong — re-translate.
-- If type is "word": output ONLY the minimal ${targetLanguage} equivalent of "${text}" (a single word or short lemma). NEVER translate the surrounding context. Example (Spanish→French): "llegado" → "arrivé", NOT "I have arrived".
+- If type is "word": output ONLY the minimal ${targetLanguage} equivalent of "${text}" — a single word or a short lemma. The output MUST contain at most 3 words and MUST NOT contain articles or prepositions from the surrounding sentence. The "Context" field above is for DISAMBIGUATING the meaning of "${text}", NOT for translating. Treat this like a dictionary entry, not a sentence translation.
+  • Spanish→French: "llegado" → "arrivé". WRONG: "je suis arrivé".
+  • German→Spanish: "Pflanzen" → "plantas". WRONG: "una historia de plantas".
+  • English→German: "running" → "laufend" or "rennend". WRONG: "ich laufe".
+  If you find yourself writing more than 3 words, STOP and output only the headword.
 - If type is "sentence": translate the full phrase into ${targetLanguage}.
 
 =========================================

@@ -2,6 +2,48 @@
 import type { StateCreator } from 'zustand';
 import type { IAIService, RichTranslationResult } from '../../../../../core/interfaces/IAIService';
 
+/**
+ * The rich-translation prompt asks the LLM to use surrounding context for
+ * disambiguation, but smaller models routinely over-reach and translate the
+ * whole phrase into the "translation" field. For single-token lookups we run
+ * the simple translate call in parallel and trust its output as the canonical
+ * word translation, since that prompt is constrained to one word.
+ */
+const isSingleToken = (text: string) => !text.trim().includes(' ');
+
+const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+
+async function fetchSimpleTranslation(
+    aiService: IAIService,
+    text: string,
+    targetLang: string,
+    context: string,
+    sourceLang: string,
+): Promise<string | null> {
+    try {
+        const raw = await aiService.translateText(text, targetLang, context, sourceLang);
+        const value = typeof raw === 'string' ? raw : raw?.response;
+        return value?.trim() || null;
+    } catch {
+        return null;
+    }
+}
+
+function reconcileTranslation(
+    rich: RichTranslationResult,
+    simple: string | null,
+    text: string,
+): RichTranslationResult {
+    if (!simple) return rich;
+    if (!isSingleToken(text)) return rich;
+    // Prefer the simple translation whenever it's plausibly word-sized,
+    // since the rich prompt is the one that tends to leak the full phrase.
+    if (wordCount(simple) <= 3 && wordCount(rich.translation) > wordCount(simple)) {
+        return { ...rich, translation: simple };
+    }
+    return rich;
+}
+
 export interface RichDetailsTab {
     id: string; // usually the 'text' being translated
     text: string;
@@ -34,10 +76,13 @@ const syncRichIntoHoverCache = (
     });
 };
 
+export type RichSnapState = 'peek' | 'half' | 'full';
+
 export interface RichDetailsSlice {
     richDetailsTabs: RichDetailsTab[];
     activeTabId: string | null;
     isRichInfoOpen: boolean;
+    snapState: RichSnapState;
 
     fetchRichTranslation: (
         text: string,
@@ -49,6 +94,7 @@ export interface RichDetailsSlice {
 
     closeRichInfo: () => void;
     toggleRichInfo: () => void;
+    setSnapState: (state: RichSnapState) => void;
 
     closeTab: (id: string) => void;
     closeAllTabs: () => void;
@@ -60,12 +106,22 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (set, get)
     richDetailsTabs: [],
     activeTabId: null,
     isRichInfoOpen: false,
+    snapState: 'half',
 
     fetchRichTranslation: async (text, context, sourceLang, targetLang, aiService) => {
-        const { richDetailsTabs } = get();
+        const { richDetailsTabs, isRichInfoOpen, snapState } = get();
         const existingTab = richDetailsTabs.find(t => t.id === text);
 
-        set({ isRichInfoOpen: true });
+        // Auto-peek when opening a NEW selection while the panel is already
+        // visible — keeps reading area unobstructed for the next selection.
+        // Default to 'half' on a fresh open so the user immediately sees content.
+        const nextSnap: RichSnapState = !isRichInfoOpen
+            ? 'half'
+            : existingTab
+                ? snapState
+                : 'peek';
+
+        set({ isRichInfoOpen: true, snapState: nextSnap });
 
         if (existingTab) {
             set({ activeTabId: existingTab.id });
@@ -89,7 +145,13 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (set, get)
         });
 
         try {
-            const result = await aiService.getRichTranslation(text, targetLang, context, sourceLang);
+            const richPromise = aiService.getRichTranslation(text, targetLang, context, sourceLang);
+            const simplePromise = isSingleToken(text)
+                ? fetchSimpleTranslation(aiService, text, targetLang, context, sourceLang)
+                : Promise.resolve(null);
+
+            const [richResult, simpleResult] = await Promise.all([richPromise, simplePromise]);
+            const result = reconcileTranslation(richResult, simpleResult, text);
 
             set(state => ({
                 richDetailsTabs: state.richDetailsTabs.map(tab =>
@@ -157,7 +219,14 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (set, get)
         }));
 
         try {
-            const result = await aiService.getRichTranslation(tab.text, tab.targetLang, tab.context, tab.sourceLang);
+            const richPromise = aiService.getRichTranslation(tab.text, tab.targetLang, tab.context, tab.sourceLang);
+            const simplePromise = isSingleToken(tab.text)
+                ? fetchSimpleTranslation(aiService, tab.text, tab.targetLang, tab.context, tab.sourceLang)
+                : Promise.resolve(null);
+
+            const [richResult, simpleResult] = await Promise.all([richPromise, simplePromise]);
+            const result = reconcileTranslation(richResult, simpleResult, tab.text);
+
             set(state => ({
                 richDetailsTabs: state.richDetailsTabs.map(t =>
                     t.id === id ? { ...t, data: result, isLoading: false } : t
@@ -179,4 +248,5 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (set, get)
 
     closeRichInfo: () => set({ isRichInfoOpen: false }),
     toggleRichInfo: () => set(state => ({ isRichInfoOpen: !state.isRichInfoOpen })),
+    setSnapState: (snapState) => set({ snapState }),
 });

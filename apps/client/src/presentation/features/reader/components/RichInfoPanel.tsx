@@ -5,10 +5,12 @@ import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { X, Trash2, Edit } from "lucide-react";
 import type { RichDetailsTab } from '../store/useTranslationStore';
-import { useState } from 'react';
+import { useState, useRef, type CSSProperties } from 'react';
 import { EditWordDialog } from '../../word-manager/components/EditWordDialog';
 import { useWordsStore } from '../../word-manager/store/useWordsStore';
 import { type CreateWordRequest } from '../../../../infrastructure/api/words';
+import { useTranslationStore } from '../store/useTranslationStore';
+import type { RichSnapState } from '../store/slices/richDetailsSlice';
 
 interface RichInfoPanelProps {
     isOpen: boolean;
@@ -22,14 +24,95 @@ interface RichInfoPanelProps {
     forceOverlay?: boolean;
 }
 
+const PEEK_PX = 84;
+const HALF_VH = 0.4;
+const FULL_VH = 0.78;
+const MIN_DRAG_PX = 56;
+
+const snapToHeightCss = (snap: RichSnapState): string => {
+    if (snap === 'peek') return `${PEEK_PX}px`;
+    if (snap === 'half') return `${HALF_VH * 100}vh`;
+    return `${FULL_VH * 100}vh`;
+};
+
+const nextSnap = (snap: RichSnapState): RichSnapState => {
+    if (snap === 'peek') return 'half';
+    if (snap === 'half') return 'full';
+    return 'peek';
+};
+
 export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange, onCloseTab, onRegenerate, onClearAll, forceOverlay }: RichInfoPanelProps) {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const { wordsState, phrasesState, addWord, updateWord } = useWordsStore();
+    const snapState = useTranslationStore(s => s.snapState);
+    const setSnapState = useTranslationStore(s => s.setSnapState);
+
+    const cardRef = useRef<HTMLDivElement>(null);
+    const dragStartY = useRef(0);
+    const dragStartHeight = useRef(0);
+    const [dragHeight, setDragHeight] = useState<number | null>(null);
 
     if (!isOpen) return null;
 
     const activeTab = tabs.find(t => t.id === activeTabId);
     const existingWord = activeTab ? [...wordsState.items, ...phrasesState.items].find(w => w.text.toLowerCase() === activeTab.text.toLowerCase()) : undefined;
+    const peekTranslation = activeTab?.data?.translation?.trim() || (activeTab?.isLoading ? 'Loading…' : '');
+
+    const cardHeightCss = dragHeight !== null
+        ? `${dragHeight}px`
+        : snapToHeightCss(snapState);
+    // The bottom-sheet behavior applies whenever the panel is rendered as an
+    // overlay: always when forceOverlay is true, and on mobile (< 1200px) when
+    // it's false. Use Tailwind hide-utilities to handle the responsive case.
+    const overlayOnlyFlex = forceOverlay ? 'flex' : 'flex min-[1200px]:hidden';
+
+    const handleDragPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        // Snap behavior is only meaningful when the panel renders as an overlay.
+        if (!forceOverlay && window.innerWidth >= 1200) return;
+        e.preventDefault();
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        dragStartY.current = e.clientY;
+        dragStartHeight.current = cardRef.current?.getBoundingClientRect().height ?? PEEK_PX;
+        setDragHeight(dragStartHeight.current);
+    };
+
+    const handleDragPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (dragHeight === null) return;
+        const delta = dragStartY.current - e.clientY;
+        const next = Math.max(MIN_DRAG_PX, Math.min(window.innerHeight * 0.92, dragStartHeight.current + delta));
+        setDragHeight(next);
+    };
+
+    const handleDragPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (dragHeight === null) return;
+        try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* noop */ }
+
+        const vh = window.innerHeight;
+        const peekPx = PEEK_PX;
+        const halfPx = vh * HALF_VH;
+        const fullPx = vh * FULL_VH;
+
+        // Drag well below peek closes the panel
+        if (dragHeight < peekPx * 0.6) {
+            setDragHeight(null);
+            onClose();
+            return;
+        }
+
+        const targets: Array<[RichSnapState, number]> = [
+            ['peek', peekPx],
+            ['half', halfPx],
+            ['full', fullPx],
+        ];
+        const nearest = targets.reduce((best, curr) =>
+            Math.abs(dragHeight - curr[1]) < Math.abs(dragHeight - best[1]) ? curr : best
+        )[0];
+
+        // If the user barely moved, treat as a tap → cycle to next snap
+        const moved = Math.abs(dragHeight - dragStartHeight.current) > 6;
+        setSnapState(moved ? nearest : nextSnap(snapState));
+        setDragHeight(null);
+    };
 
     const handleSave = async (data: CreateWordRequest) => {
         if (existingWord) {
@@ -57,9 +140,60 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
         };
     };
 
+    const desktopOverrides = forceOverlay
+        ? ''
+        : 'min-[1200px]:static min-[1200px]:!h-full min-[1200px]:w-full min-[1200px]:border min-[1200px]:shadow-sm min-[1200px]:rounded-xl min-[1200px]:z-0 min-[1200px]:bg-transparent min-[1200px]:backdrop-blur-none min-[1200px]:mt-4';
+
+    // Always set inline height — desktop sidebar mode overrides this via
+    // `min-[1200px]:!h-full` in `desktopOverrides` when the panel is sidebar-mounted.
+    const cardStyle: CSSProperties = {
+        height: cardHeightCss,
+        transition: dragHeight !== null ? 'none' : 'height 250ms ease',
+    };
+
+    const isPeek = snapState === 'peek' && dragHeight === null;
+
     return (
-        <Card className={`fixed bottom-0 right-0 z-50 h-[60vh] w-full border-t shadow-2xl flex flex-col rounded-t-xl glass bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-bottom duration-300 ${forceOverlay ? '' : 'min-[1200px]:static min-[1200px]:h-full min-[1200px]:w-full min-[1200px]:border min-[1200px]:shadow-sm min-[1200px]:rounded-xl min-[1200px]:z-0 min-[1200px]:bg-transparent min-[1200px]:backdrop-blur-none min-[1200px]:mt-4'}`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2 border-b gap-2">
+        <Card
+            ref={cardRef}
+            style={cardStyle}
+            className={`fixed bottom-0 right-0 z-50 w-full border-t shadow-2xl flex flex-col rounded-t-xl glass bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-bottom duration-300 ${desktopOverrides}`}
+        >
+            {/* Drag handle — visible whenever the panel is rendered as a bottom-sheet overlay */}
+            <div
+                className={`${overlayOnlyFlex} items-center justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing select-none touch-none`}
+                onPointerDown={handleDragPointerDown}
+                onPointerMove={handleDragPointerMove}
+                onPointerUp={handleDragPointerUp}
+                onPointerCancel={handleDragPointerUp}
+                role="button"
+                aria-label="Drag to resize"
+                title="Drag to resize, tap to cycle"
+            >
+                <span className="block w-10 h-1.5 rounded-full bg-muted-foreground/30" />
+            </div>
+
+            {/* Peek summary line — only shows when collapsed */}
+            {isPeek && (
+                <div
+                    className={`${overlayOnlyFlex} items-center justify-between gap-2 px-4 pb-2 cursor-pointer`}
+                    onClick={() => setSnapState('half')}
+                    role="button"
+                    aria-label="Expand details"
+                >
+                    <div className="flex-1 min-w-0 flex items-baseline gap-2 overflow-hidden">
+                        <span className="font-semibold text-sm truncate text-primary">{activeTab?.text ?? 'Details'}</span>
+                        {peekTranslation && (
+                            <span className="text-xs text-muted-foreground truncate">— {peekTranslation}</span>
+                        )}
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onClose(); }} className="h-7 w-7 shrink-0">
+                        <X className="h-3.5 w-3.5" />
+                    </Button>
+                </div>
+            )}
+
+            <CardHeader className={`${isPeek ? (forceOverlay ? 'hidden' : 'hidden min-[1200px]:flex') : 'flex'} flex-row items-center justify-between space-y-0 p-2 border-b gap-2`}>
                 <div className="flex-1 min-w-0 overflow-hidden">
                     {tabs.length > 0 && activeTabId ? (
                         <div className="flex items-center gap-2 w-full">
@@ -129,7 +263,7 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
                     <X className="h-4 w-4" />
                 </Button>
             </CardHeader>
-            <CardContent className="flex-1 p-0 overflow-hidden">
+            <CardContent className={`${isPeek ? (forceOverlay ? 'hidden' : 'hidden min-[1200px]:block') : 'block'} flex-1 p-0 overflow-hidden`}>
                 <ScrollArea className="h-full px-6 pb-6 pt-4">
                     {tabs.length === 0 ? (
                         <div className="text-center text-muted-foreground py-10">
