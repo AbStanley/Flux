@@ -104,8 +104,8 @@ Each placeholder names the language to write in. Omit any key whose condition is
     "explanation":  "<${targetLanguage}, one sentence>"
   },
   "conjugations": {
-    "<tense name for ${srcLang}>": [ {"pronoun":"<${srcLang}>","conjugation":"<${srcLang}>"}, … 6 rows ],
-    … 3-4 core tenses of ${srcLang}
+    "<tense name for ${srcLang}>": [ {"pronoun":"<${srcLang}>","conjugation":"<${srcLang}>"}, … rows ],
+    … every tense of ${srcLang} applicable to this verb
   },
   "examples":     [ {"sentence":"<${srcLang}>","translation":"<${targetLanguage}>"}, 2-3 entries ],
   "alternatives": [ "<${targetLanguage}>", 1-2 entries ]
@@ -114,14 +114,20 @@ Each placeholder names the language to write in. Omit any key whose condition is
 For multi-word input: type="sentence", isVerb=false, omit "conjugations", add "syntaxAnalysis" (${targetLanguage} string) and "grammarRules" (${targetLanguage} string[]).
 Conjugation forms inflect the ${srcLang} infinitive — the forms always share the infinitive's stem.
 
-When isVerb=true, "conjugations" MUST contain the core tenses of ${srcLang} — exactly these keys, in this order, each with 6 rows:
+When isVerb=true, "conjugations" MUST contain every tense of ${srcLang} that this specific verb actually has, drawn from this set (omit tenses that don't apply to the verb):
   - English:  Present, Past, Future, Present Perfect
   - Spanish / Italian / Portuguese:  Presente, Pretérito, Imperfecto, Futuro
   - French:   Présent, Passé composé, Imparfait, Futur
   - German:   Präsens, Präteritum, Perfekt, Futur
-  - Russian:  Настоящее, Прошедшее, Будущее
-  - Other:    3-4 core tenses of ${srcLang}
-A conjugations block with fewer than 3 tense keys is incomplete and must not be returned.
+  - Russian:  Настоящее, Прошедшее, Будущее  (perfective verbs have no Настоящее — include only Прошедшее and Будущее)
+  - Other:    the core tenses of ${srcLang}
+
+Row count matches the natural paradigm of each tense — NOT a fixed 6:
+  - Six-person languages (English, Spanish, French, German, Russian present/future, …): 6 rows by person/number, "pronoun" is the pronoun.
+  - Russian past tense: 4 rows by gender/number — "pronoun" is "он" (masc sg), "она" (fem sg), "оно" (neut sg), "они" (pl) — because Russian past inflects for gender, not person.
+  - Any other tense whose paradigm has a different row count: use whatever row count the paradigm has; "pronoun" names the relevant feature (person, gender, number, aspect, …) in ${srcLang}.
+
+Minimum 2 tense keys. Never skip the entire "conjugations" block for a verb — return the tenses that exist for it, with the rows that exist for each tense.
 
 Every string value must be in the language the schema assigns to that slot. Do not copy vocabulary, pronouns, or example sentences from any language other than ${srcLang} or ${targetLanguage} — they do not belong here. In particular, every "<${srcLang}>" slot must contain actual ${srcLang} output for "${text}", not placeholder text from some other language.
 
