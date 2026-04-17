@@ -11,17 +11,22 @@ import { PopupSettingsView } from './components/PopupSettingsView';
 export default function FluxExtensionPopup() {
     const [showSettings, setShowSettings] = useState(false);
     const [password, setPassword] = useState('');
-    const [tempUrl, setTempUrl] = useState('');
 
     const { apiUrl, setApiUrl, loadSettings } = useSettingsStore();
     const { isAuthenticated, login, logout, loadAuth, user, error: authError, isLoading: authLoading } = useExtensionAuthStore();
+
+    const [tempUrl, setTempUrl] = useState(apiUrl);
+    const [prevApiUrl, setPrevApiUrl] = useState(apiUrl);
+    if (prevApiUrl !== apiUrl) {
+        setPrevApiUrl(apiUrl);
+        setTempUrl(apiUrl);
+    }
 
     const storage = useChromeStorage(DEFAULT_THEME);
     const { testStatus, testMessage, handleTestConnection } = useConnectionTest();
     const { availableModels } = useAvailableModels(apiUrl);
 
     useEffect(() => { loadSettings(); loadAuth(); }, [loadSettings, loadAuth]);
-    useEffect(() => { setTempUrl(apiUrl); }, [apiUrl]);
 
     const theme = THEMES[storage.themeId] || THEMES[DEFAULT_THEME];
 

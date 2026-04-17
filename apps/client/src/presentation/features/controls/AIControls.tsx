@@ -45,10 +45,31 @@ export const AIControls = ({ isGenerating }: AIControlsProps) => {
     }, [aiService, setServiceType]);
 
     useEffect(() => {
-        if (currentServiceType === 'ollama') {
-            refreshModels();
-        }
-    }, [currentServiceType, refreshModels]);
+        if (currentServiceType !== 'ollama') return;
+        let cancelled = false;
+        aiService.getAvailableModels()
+            .then((models) => {
+                if (cancelled) return;
+                if (models.length > 0) {
+                    setAvailableModels(models);
+                    const currentModel = aiService.getModel();
+                    if (!currentModel || !models.includes(currentModel)) {
+                        setServiceType('ollama', { model: models[0] });
+                    }
+                } else {
+                    setAvailableModels([]);
+                    setModelError(true);
+                }
+            })
+            .catch((error) => {
+                if (cancelled) return;
+                console.error("Failed to fetch models:", error);
+                setAvailableModels([]);
+                setModelError(true);
+            })
+            .finally(() => { if (!cancelled) setIsLoadingModels(false); });
+        return () => { cancelled = true; };
+    }, [currentServiceType, aiService, setServiceType]);
 
     return (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-1 gap-2">

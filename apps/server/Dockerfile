@@ -1,27 +1,32 @@
-FROM node:20 AS builder
+# ---- Build stage ----
+FROM node:25-alpine3.23 AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-# Run npm install first to leverage cache
+COPY package.json ./
 RUN npm install
 
-# Copy source
 COPY . .
 
-# Generate Prisma Client (uses schema from copied source)
 RUN npx prisma generate
 RUN npm run build
 
-FROM node:20
+# ---- Production stage ----
+FROM node:25-alpine3.22
+
+# Patch any known Alpine vulnerabilities at build time
+RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
-# Copy prisma folder for migrations in runtime
+COPY --from=builder /app/package.json /app/package-lock.json ./
 COPY --from=builder /app/prisma ./prisma
+
+# Install production dependencies only + generate Prisma client for this platform
+RUN npm ci --omit=dev && npx prisma generate && npm cache clean --force
+
+# Copy compiled output (only .js files, skip .d.ts and .map)
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 

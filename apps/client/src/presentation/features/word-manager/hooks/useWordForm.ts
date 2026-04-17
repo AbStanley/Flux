@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { type CreateWordRequest, type Word } from '../../../../infrastructure/api/words';
 import { ollamaApi } from '../../../../infrastructure/api/ollama';
 import { useReaderStore } from '../../reader/store/useReaderStore';
@@ -31,7 +31,9 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
     const [showLimitWarning, setShowLimitWarning] = useState(false);
     const aiModel = useReaderStore((s) => s.aiModel);
 
-    useEffect(() => {
+    const [wasOpen, setWasOpen] = useState(false);
+    if (isOpen !== wasOpen) {
+        setWasOpen(isOpen);
         if (isOpen) {
             if (initialData) {
                 // Map existing word to form DTO
@@ -57,7 +59,7 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
                 setFormData({ ...DEFAULT_FORM_STATE, type: defaultType });
             }
         }
-    }, [isOpen, initialData, defaultValues, defaultType]);
+    }
 
     const handleChange = (field: keyof CreateWordRequest, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));

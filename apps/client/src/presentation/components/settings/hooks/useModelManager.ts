@@ -25,7 +25,14 @@ export function useModelManager() {
             .finally(() => setLoading(false));
     };
 
-    useEffect(() => { fetchModels(); }, []);
+    useEffect(() => {
+        let cancelled = false;
+        defaultClient.get<{ models: OllamaModel[] }>('/api/tags')
+            .then((data) => { if (!cancelled) setModels(data?.models || []); })
+            .catch(() => { if (!cancelled) setModels([]); })
+            .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+    }, []);
 
     const handlePull = async () => {
         const name = pullName.trim();

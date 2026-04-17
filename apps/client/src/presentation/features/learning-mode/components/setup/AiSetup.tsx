@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 export const AiSetup = () => {
     const { config, updateConfig } = useGameStore();
     const [models, setModels] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isManualInput, setIsManualInput] = useState(false);
 
@@ -20,7 +20,7 @@ export const AiSetup = () => {
     const isExtension = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
 
     const fetchModels = useCallback(async () => {
-        // If config.aiHost is empty/undefined, we still want to set it (to empty string) 
+        // If config.aiHost is empty/undefined, we still want to set it (to empty string)
         // to reset any previous manual configuration.
         const urlToSet = config.aiHost || '';
 
@@ -55,8 +55,31 @@ export const AiSetup = () => {
 
     // Re-fetch models when component mounts or when aiHost changes
     useEffect(() => {
-        fetchModels();
-    }, [fetchModels, config.aiHost]);
+        const urlToSet = config.aiHost || '';
+        setApiClientBaseUrl(urlToSet);
+
+        let cancelled = false;
+        serverAIService.getAvailableModels()
+            .then((available) => {
+                if (cancelled) return;
+                const unique = Array.from(new Set(available));
+                setModels(unique);
+                setError(null);
+                if (unique.length > 0 && !config.aiModel) {
+                    updateConfig({ aiModel: unique[0] });
+                }
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                console.error(err);
+                setError("Could not auto-fetch models. You can enter one manually.");
+                if (!config.aiModel) {
+                    setIsManualInput(true);
+                }
+            })
+            .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+    }, [config.aiHost, config.aiModel, updateConfig]);
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
