@@ -85,8 +85,16 @@ export function ClozeGame() {
         [items]
     );
 
-    const activeItem = clozeItems[currentIndex % clozeItems.length] ?? null;
+    // Use the current item from the store directly so submitAnswer records
+    // history against the correct item id. Auto-skip items that can't be clozed.
+    const activeItem = items[currentIndex] ?? null;
     const cloze = activeItem ? buildClozeData(activeItem) : null;
+
+    useEffect(() => {
+        if (items.length > 0 && clozeItems.length > 0 && activeItem && !cloze) {
+            nextItem();
+        }
+    }, [currentIndex, cloze, activeItem, items.length, clozeItems.length, nextItem]);
 
     // Progressive hints
     const answerHint = (() => {
