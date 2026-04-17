@@ -5,7 +5,7 @@ import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { X, Trash2, Edit } from "lucide-react";
 import type { RichDetailsTab } from '../store/useTranslationStore';
-import { useState, useRef, type CSSProperties } from 'react';
+import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { EditWordDialog } from '../../word-manager/components/EditWordDialog';
 import { useWordsStore } from '../../word-manager/store/useWordsStore';
 import { type CreateWordRequest } from '../../../../infrastructure/api/words';
@@ -48,9 +48,21 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
     const setSnapState = useTranslationStore(s => s.setSnapState);
 
     const cardRef = useRef<HTMLDivElement>(null);
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
     const dragStartY = useRef(0);
     const dragStartHeight = useRef(0);
     const [dragHeight, setDragHeight] = useState<number | null>(null);
+
+    // Reset scroll position whenever the user switches tabs so they always
+    // start reading from the top of the new word's details.
+    useEffect(() => {
+        const root = scrollAreaRef.current;
+        if (!root) return;
+        const viewport = root.querySelector<HTMLElement>(
+            '[data-radix-scroll-area-viewport]',
+        );
+        (viewport ?? root).scrollTop = 0;
+    }, [activeTabId]);
 
     if (!isOpen) return null;
 
@@ -264,7 +276,7 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
                 </Button>
             </CardHeader>
             <CardContent className={`${isPeek ? (forceOverlay ? 'hidden' : 'hidden min-[1200px]:block') : 'block'} flex-1 p-0 overflow-hidden`}>
-                <ScrollArea className="h-full px-6 pb-6 pt-4">
+                <ScrollArea ref={scrollAreaRef} className="h-full px-6 pb-6 pt-4">
                     {tabs.length === 0 ? (
                         <div className="text-center text-muted-foreground py-10">
                             Select a word and click "More Info" to see details.

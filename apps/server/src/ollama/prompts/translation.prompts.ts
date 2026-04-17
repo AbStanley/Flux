@@ -75,101 +75,54 @@ export const getRichTranslationPrompt = (
   context?: string,
   sourceLanguage?: string,
 ): string => {
-  const fromLang =
+  const srcLang =
     sourceLanguage && sourceLanguage !== 'Auto'
-      ? `from ${sourceLanguage} `
-      : '';
-  const srcLang = sourceLanguage || 'the source language';
+      ? sourceLanguage
+      : 'source language';
 
-  return `Translate and analyze "${text}" ${fromLang}into ${targetLanguage}.
-Context: "${context || 'None'}"
+  return `You are a bilingual dictionary. Look up "${text}" (${srcLang}) for a ${targetLanguage}-speaking learner.
+Context (use only to disambiguate; never translate it): "${context || 'none'}"
 
-Return JSON ONLY — no markdown, no commentary.
+Reply with ONE JSON object in the shape below. Decide "isVerb" FIRST and let it drive the rest of the JSON.
 
-Determine if "${text}" is a SINGLE WORD or a SENTENCE/PHRASE:
-- A single lexical unit (no spaces, or a conjugated verb like "llegado", "running") = WORD.
-- Multiple words forming a clause = SENTENCE.
+Definitions:
+- isVerb=true  → "${text}" is a verb in ${srcLang} (infinitive, conjugated form, participle, gerund, zu-infinitive, etc.). Include "conjugations" and the verb-only grammar fields.
+- isVerb=false → "${text}" is anything else (noun, adjective, adverb, pronoun, particle, sentence, …). Do NOT include "conjugations". Do NOT include "infinitive" or "tense".
 
-=========================================
-PER-FIELD LANGUAGE MAP — READ CAREFULLY
-=========================================
-Each field below is locked to EXACTLY ONE language. Do NOT mix.
-  • "segment"                → ${srcLang} (copy "${text}" verbatim)
-  • "translation"            → ${targetLanguage} ONLY
-  • "grammar.partOfSpeech"   → ${targetLanguage}
-  • "grammar.infinitive"     → ${srcLang} ONLY
-  • "grammar.tense"          → ${targetLanguage}
-  • "grammar.gender"         → ${targetLanguage}
-  • "grammar.explanation"    → ${targetLanguage} ONLY
-  • "conjugations.*.pronoun" → ${srcLang} ONLY
-  • "conjugations.*.conjugation" → ${srcLang} ONLY
-  • "examples[].sentence"    → ${srcLang} ONLY
-  • "examples[].translation" → ${targetLanguage} ONLY
-  • "alternatives[]"         → ${targetLanguage} ONLY (alternative renderings of "${text}" in ${targetLanguage})
-  • "syntaxAnalysis"         → ${targetLanguage}
-  • "grammarRules[]"         → ${targetLanguage}
+Each placeholder names the language to write in. Omit any key whose condition is false — never write a literal string like "n/a" or "omitido" as a value.
 
-If ${srcLang} === ${targetLanguage}, still keep each field in its assigned language (they will just match).
-
-=========================================
-JSON SHAPE
-=========================================
 {
-  "type": "word" or "sentence",
-  "translation": "...",
+  "type": "word" | "sentence",
+  "isVerb": true | false,
   "segment": "${text}",
+  "translation": "<${targetLanguage}: dictionary headword(s); ≤3 ${targetLanguage} words for single-word input>",
   "grammar": {
-    "partOfSpeech": "...",
-    "infinitive": "...",
-    "tense": "...",
-    "gender": "...",
-    "explanation": "..."
+    "partOfSpeech": "<${targetLanguage}>",
+    "infinitive":   "<${srcLang}; ONLY if isVerb=true>",
+    "tense":        "<${targetLanguage}; ONLY if isVerb=true>",
+    "gender":       "<${targetLanguage}; ONLY when grammatically gendered>",
+    "explanation":  "<${targetLanguage}, one sentence>"
   },
   "conjugations": {
-    "Present":    [{"pronoun": "...", "conjugation": "..."}],
-    "Preterite":  [{"pronoun": "...", "conjugation": "..."}],
-    "Imperfect":  [{"pronoun": "...", "conjugation": "..."}],
-    "Future":     [{"pronoun": "...", "conjugation": "..."}]
+    "Present":   [ {"pronoun":"<${srcLang}>","conjugation":"<${srcLang}>"}, … 6 rows ],
+    "Preterite": [ … 6 rows ],
+    "Imperfect": [ … 6 rows ],
+    "Future":    [ … 6 rows ]
   },
-  "examples": [
-    {"sentence": "...", "translation": "..."}
-  ],
-  "alternatives": ["...", "..."]
+  "examples":     [ {"sentence":"<${srcLang}>","translation":"<${targetLanguage}>"}, 2-3 entries ],
+  "alternatives": [ "<${targetLanguage}>", 1-2 entries ]
 }
 
-=========================================
-CRITICAL RULES for "translation"
-=========================================
-- MUST be written in ${targetLanguage}. Never in ${srcLang}.
-- If "translation" comes out identical to "${text}" AND ${srcLang} !== ${targetLanguage}, you did it wrong — re-translate.
-- If type is "word": output ONLY the minimal ${targetLanguage} equivalent of "${text}" — a single word or a short lemma. The output MUST contain at most 3 words and MUST NOT contain articles or prepositions from the surrounding sentence. The "Context" field above is for DISAMBIGUATING the meaning of "${text}", NOT for translating. Treat this like a dictionary entry, not a sentence translation.
-  • Spanish→French: "llegado" → "arrivé". WRONG: "je suis arrivé".
-  • German→Spanish: "Pflanzen" → "plantas". WRONG: "una historia de plantas".
-  • English→German: "running" → "laufend" or "rennend". WRONG: "ich laufe".
-  If you find yourself writing more than 3 words, STOP and output only the headword.
-- If type is "sentence": translate the full phrase into ${targetLanguage}.
+For multi-word input: type="sentence", isVerb=false, omit "conjugations", add "syntaxAnalysis" (${targetLanguage} string) and "grammarRules" (${targetLanguage} string[]).
+Conjugation forms inflect the ${srcLang} infinitive — the forms always share the infinitive's stem.
 
-=========================================
-CRITICAL RULES for "conjugations"
-=========================================
-- Include ONLY if the word is a verb. Omit entirely for non-verbs.
-- BOTH "pronoun" AND "conjugation" MUST be in ${srcLang}. NEVER use ${targetLanguage} pronouns or verb forms.
-- Use the standard pronouns of ${srcLang}. For example in Spanish: Yo, Tú, Él/Ella, Nosotros, Vosotros, Ellos/Ellas. In French: Je, Tu, Il/Elle, Nous, Vous, Ils/Elles. In German: Ich, Du, Er/Sie, Wir, Ihr, Sie.
-- Do NOT mix pronouns or verb forms from different languages. Every value must be 100% ${srcLang}.
-- Include all 6 persons (1st/2nd/3rd singular + 1st/2nd/3rd plural).
-- For Romance languages include Preterite, Imperfect, AND Future.
+Reference — verb input "anzubauen" (German → Spanish):
+{"type":"word","isVerb":true,"segment":"anzubauen","translation":"cultivar","grammar":{"partOfSpeech":"verbo","infinitive":"anbauen","tense":"infinitivo con zu","explanation":"Forma de infinitivo con 'zu', usada tras construcciones como 'um … zu'."},"conjugations":{"Present":[{"pronoun":"Ich","conjugation":"baue an"},{"pronoun":"Du","conjugation":"baust an"},{"pronoun":"Er/Sie/Es","conjugation":"baut an"},{"pronoun":"Wir","conjugation":"bauen an"},{"pronoun":"Ihr","conjugation":"baut an"},{"pronoun":"Sie","conjugation":"bauen an"}]},"examples":[{"sentence":"Wir möchten Gemüse anbauen.","translation":"Queremos cultivar verduras."}],"alternatives":["sembrar","plantar"]}
 
-=========================================
-CRITICAL RULES for "alternatives"
-=========================================
-- Each alternative is a different ${targetLanguage} rendering of "${text}" (synonyms or alternate translations).
-- Do NOT include the ${srcLang} word in this array. Do NOT use the "word (translation)" format.
-- Plain ${targetLanguage} strings only.
+Reference — noun input "Pflanzen" (German → Spanish):
+{"type":"word","isVerb":false,"segment":"Pflanzen","translation":"plantas","grammar":{"partOfSpeech":"sustantivo","gender":"femenino","explanation":"Plural de 'Pflanze'; seres vivos del reino vegetal."},"examples":[{"sentence":"Die Pflanzen gedeihen gut.","translation":"Las plantas prosperan."}],"alternatives":["vegetales","flora"]}
 
-Other rules:
-- For sentences: omit "conjugations", add "syntaxAnalysis" and "grammarRules" instead.
-- Provide 2-3 examples and 1-2 alternatives.
-- Before returning, silently verify each field matches the PER-FIELD LANGUAGE MAP. Fix any field whose language is wrong.`;
+Output JSON only. No markdown, no preamble.`;
 };
 
 export const getExplainPrompt = (
