@@ -30,7 +30,16 @@ export class OllamaTranslationService {
     );
 
     const isAuto = !params.sourceLanguage || params.sourceLanguage === 'Auto';
-    const response = await this.ollamaClient.generate(model, prompt, false);
+    // A single-word lookup is ≤ 10 tokens; a full-sentence translation is
+    // rarely more than a few hundred. 256 caps runaway generation without
+    // truncating real output. temperature=0 removes sampling overhead.
+    const response = await this.ollamaClient.generate(
+      model,
+      prompt,
+      false,
+      isAuto ? 'json' : undefined,
+      { num_predict: 256, temperature: 0 },
+    );
 
     if (isAuto) {
       try {
@@ -84,12 +93,17 @@ export class OllamaTranslationService {
       params.sourceLanguage,
     );
 
+    // `format: 'json'` enables Ollama's grammar-constrained sampling — the
+    // model stops the moment the JSON object is closed instead of running up
+    // to num_predict. `num_predict: 1024` is a safety cap (a full rich entry
+    // is ~400-700 tokens). `temperature: 0` removes sampling overhead and
+    // makes JSON shape stable. Together these cut a 60s call to a few seconds.
     const response = await this.ollamaClient.generate(
       model,
       prompt,
       false,
-      undefined,
-      { num_predict: 4096 },
+      'json',
+      { num_predict: 1024, temperature: 0 },
     );
 
     this.logger.log(
@@ -167,20 +181,20 @@ export class OllamaTranslationService {
       .replace(/[^\p{L}]/gu, '');
     if (stemSource.length < 3) return;
 
-    // Try every 3-letter window of the infinitive as a candidate stem, not
-    // just the prefix. This survives separable verbs where the prefix moves
-    // ("anbauen" → "baue an") and irregular verbs where the prefix changes.
-    // If any window appears in at least half of the forms, the paradigm is
-    // legitimately inflecting the source word.
-    const windows = new Set<string>();
+    // Window the infinitive into 3-letter substrings; a real paradigm (even
+    // an irregular one like German "sein" → "bin, bist, ist, sind, seid")
+    // will overlap one of these windows in at least one form. Only when the
+    // entire form set shares NO window with the infinitive is this clearly
+    // the target language — drop in that case. This rule is intentionally
+    // permissive so irregular verbs are preserved.
+    const windows: string[] = [];
     for (let i = 0; i <= stemSource.length - 3; i++) {
-      windows.add(stemSource.slice(i, i + 3));
+      windows.push(stemSource.slice(i, i + 3));
     }
-    const threshold = allForms.length / 2;
-    const sharesStem = [...windows].some(
-      (stem) => allForms.filter((f) => f.includes(stem)).length >= threshold,
+    const anyFormShares = allForms.some((form) =>
+      windows.some((w) => form.includes(w)),
     );
-    if (!sharesStem) {
+    if (!anyFormShares) {
       delete obj.conjugations;
     }
   }
