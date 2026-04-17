@@ -37,11 +37,14 @@ function MessageBubble({ message, targetLanguage, nativeLanguage }: {
     );
 }
 
+const MAX_INPUT_HEIGHT = 160;
+
 export function ChatScreen() {
     const { messages, isStreaming, error, sendMessage, reset, targetLanguage, nativeLanguage } =
         useConversationStore();
     const [input, setInput] = useState('');
     const bottomRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const onSpeechResult = useCallback((text: string) => {
         setInput((prev) => (prev ? prev + ' ' + text : text));
@@ -53,11 +56,27 @@ export function ChatScreen() {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    useEffect(() => {
+        const el = inputRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        const next = Math.min(el.scrollHeight, MAX_INPUT_HEIGHT);
+        el.style.height = `${next}px`;
+        el.style.overflowY = el.scrollHeight > MAX_INPUT_HEIGHT ? 'auto' : 'hidden';
+    }, [input]);
+
     const handleSend = () => {
         const text = input.trim();
         if (!text || isStreaming) return;
         setInput('');
         sendMessage(text);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
     };
 
     const visibleMessages = messages.filter((m) => m.role !== 'system');
@@ -117,15 +136,17 @@ export function ChatScreen() {
             <div className="border-t px-4 py-3">
                 <form
                     onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                    className="flex gap-2"
+                    className="flex gap-2 items-end"
                 >
-                    <input
-                        type="text"
+                    <textarea
+                        ref={inputRef}
+                        rows={1}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         placeholder="Type your message..."
                         disabled={isStreaming}
-                        className="flex-1 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                        className="flex-1 resize-none rounded-md border bg-background px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                         autoFocus
                     />
                     {micSupported && (

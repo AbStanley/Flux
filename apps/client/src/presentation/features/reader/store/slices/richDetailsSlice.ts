@@ -13,6 +13,27 @@ export interface RichDetailsTab {
     targetLang: string;
 }
 
+/**
+ * Rich translation is authoritative once fetched. Writing it into the shared
+ * hover cache keeps the inline popup (on hover/click) consistent with the
+ * side panel instead of showing a stale or divergent simple-translate result.
+ */
+const syncRichIntoHoverCache = (
+    set: Parameters<StateCreator<RichDetailsSlice>>[0],
+    text: string,
+    targetLang: string,
+    translation: string,
+) => {
+    if (!translation) return;
+    const cacheKey = `${text.trim()}_${targetLang}`;
+    set((state) => {
+        const s = state as unknown as { translationCache?: Map<string, string> };
+        const nextCache = new Map(s.translationCache ?? new Map());
+        nextCache.set(cacheKey, translation);
+        return { translationCache: nextCache } as unknown as RichDetailsSlice;
+    });
+};
+
 export interface RichDetailsSlice {
     richDetailsTabs: RichDetailsTab[];
     activeTabId: string | null;
@@ -77,6 +98,10 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (set, get)
                         : tab
                 )
             }));
+
+            if (result?.translation) {
+                syncRichIntoHoverCache(set, text, targetLang, result.translation);
+            }
         } catch (error: unknown) {
             console.error(error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to load';
@@ -138,6 +163,10 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (set, get)
                     t.id === id ? { ...t, data: result, isLoading: false } : t
                 )
             }));
+
+            if (result?.translation) {
+                syncRichIntoHoverCache(set, tab.text, tab.targetLang, result.translation);
+            }
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Regeneration failed';
             set(state => ({

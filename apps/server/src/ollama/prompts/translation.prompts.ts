@@ -90,45 +90,82 @@ Determine if "${text}" is a SINGLE WORD or a SENTENCE/PHRASE:
 - A single lexical unit (no spaces, or a conjugated verb like "llegado", "running") = WORD.
 - Multiple words forming a clause = SENTENCE.
 
+=========================================
+PER-FIELD LANGUAGE MAP — READ CAREFULLY
+=========================================
+Each field below is locked to EXACTLY ONE language. Do NOT mix.
+  • "segment"                → ${srcLang} (copy "${text}" verbatim)
+  • "translation"            → ${targetLanguage} ONLY
+  • "grammar.partOfSpeech"   → ${targetLanguage}
+  • "grammar.infinitive"     → ${srcLang} ONLY
+  • "grammar.tense"          → ${targetLanguage}
+  • "grammar.gender"         → ${targetLanguage}
+  • "grammar.explanation"    → ${targetLanguage} ONLY
+  • "conjugations.*.pronoun" → ${srcLang} ONLY
+  • "conjugations.*.conjugation" → ${srcLang} ONLY
+  • "examples[].sentence"    → ${srcLang} ONLY
+  • "examples[].translation" → ${targetLanguage} ONLY
+  • "alternatives[]"         → ${targetLanguage} ONLY (alternative renderings of "${text}" in ${targetLanguage})
+  • "syntaxAnalysis"         → ${targetLanguage}
+  • "grammarRules[]"         → ${targetLanguage}
+
+If ${srcLang} === ${targetLanguage}, still keep each field in its assigned language (they will just match).
+
+=========================================
+JSON SHAPE
+=========================================
 {
   "type": "word" or "sentence",
   "translation": "...",
   "segment": "${text}",
   "grammar": {
     "partOfSpeech": "...",
-    "infinitive": "... (if verb, in ${srcLang})",
-    "tense": "... (if verb)",
-    "gender": "... (if applicable)",
-    "explanation": "brief grammar note in ${targetLanguage}"
+    "infinitive": "...",
+    "tense": "...",
+    "gender": "...",
+    "explanation": "..."
   },
   "conjugations": {
-    "Present": [{"pronoun": "...", "conjugation": "..."}],
-    "Preterite": [{"pronoun": "...", "conjugation": "..."}],
-    "Imperfect": [{"pronoun": "...", "conjugation": "..."}],
-    "Future": [{"pronoun": "...", "conjugation": "..."}]
+    "Present":    [{"pronoun": "...", "conjugation": "..."}],
+    "Preterite":  [{"pronoun": "...", "conjugation": "..."}],
+    "Imperfect":  [{"pronoun": "...", "conjugation": "..."}],
+    "Future":     [{"pronoun": "...", "conjugation": "..."}]
   },
   "examples": [
-    {"sentence": "${srcLang} example", "translation": "${targetLanguage} translation"}
+    {"sentence": "...", "translation": "..."}
   ],
-  "alternatives": ["alt1 (translation)", "alt2 (translation)"]
+  "alternatives": ["...", "..."]
 }
 
-CRITICAL RULES for "translation" field:
-- If type is "word": translate ONLY the word "${text}" — output a single word or minimal equivalent in ${targetLanguage}. NEVER translate the surrounding context. Example: "llegado" → "arrivé", NOT a full sentence.
+=========================================
+CRITICAL RULES for "translation"
+=========================================
+- MUST be written in ${targetLanguage}. Never in ${srcLang}.
+- If "translation" comes out identical to "${text}" AND ${srcLang} !== ${targetLanguage}, you did it wrong — re-translate.
+- If type is "word": output ONLY the minimal ${targetLanguage} equivalent of "${text}" (a single word or short lemma). NEVER translate the surrounding context. Example (Spanish→French): "llegado" → "arrivé", NOT "I have arrived".
 - If type is "sentence": translate the full phrase into ${targetLanguage}.
 
-CRITICAL RULES for "conjugations":
+=========================================
+CRITICAL RULES for "conjugations"
+=========================================
 - Include ONLY if the word is a verb. Omit entirely for non-verbs.
-- BOTH "pronoun" AND "conjugation" values MUST be in ${srcLang}. NEVER use ${targetLanguage} pronouns or verb forms.
+- BOTH "pronoun" AND "conjugation" MUST be in ${srcLang}. NEVER use ${targetLanguage} pronouns or verb forms.
 - Use the standard pronouns of ${srcLang}. For example in Spanish: Yo, Tú, Él/Ella, Nosotros, Vosotros, Ellos/Ellas. In French: Je, Tu, Il/Elle, Nous, Vous, Ils/Elles. In German: Ich, Du, Er/Sie, Wir, Ihr, Sie.
 - Do NOT mix pronouns or verb forms from different languages. Every value must be 100% ${srcLang}.
 - Include all 6 persons (1st/2nd/3rd singular + 1st/2nd/3rd plural).
 - For Romance languages include Preterite, Imperfect, AND Future.
 
+=========================================
+CRITICAL RULES for "alternatives"
+=========================================
+- Each alternative is a different ${targetLanguage} rendering of "${text}" (synonyms or alternate translations).
+- Do NOT include the ${srcLang} word in this array. Do NOT use the "word (translation)" format.
+- Plain ${targetLanguage} strings only.
+
 Other rules:
-- "explanation" must be written in ${targetLanguage}.
 - For sentences: omit "conjugations", add "syntaxAnalysis" and "grammarRules" instead.
-- Provide 2-3 examples and 1-2 alternatives.`;
+- Provide 2-3 examples and 1-2 alternatives.
+- Before returning, silently verify each field matches the PER-FIELD LANGUAGE MAP. Fix any field whose language is wrong.`;
 };
 
 export const getExplainPrompt = (
