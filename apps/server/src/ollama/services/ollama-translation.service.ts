@@ -4,6 +4,7 @@ import {
   getTranslatePrompt,
   getExplainPrompt,
   getRichTranslationPrompt,
+  getConjugationsPrompt,
 } from '../prompts';
 import { cleanResponse, cleanAndParseJson } from '../utils/ollama-utils';
 import { RichTranslation } from '../interfaces/ollama.interfaces';
@@ -93,11 +94,10 @@ export class OllamaTranslationService {
       params.sourceLanguage,
     );
 
-    // `format: 'json'` enables Ollama's grammar-constrained sampling — the
-    // model stops the moment the JSON object is closed instead of running up
-    // to num_predict. `num_predict: 1024` is a safety cap (a full rich entry
-    // is ~400-700 tokens). `temperature: 0` removes sampling overhead and
-    // makes JSON shape stable. Together these cut a 60s call to a few seconds.
+    // `format: 'json'` keeps Ollama's JSON-mode stopping behavior (closes
+    // cleanly after the object) without the grammar-constrained schema that
+    // was fighting the model on non-Latin scripts. The prompt is the single
+    // source of shape; the server validator is the safety net.
     const response = await this.ollamaClient.generate(
       model,
       prompt,
@@ -127,17 +127,69 @@ export class OllamaTranslationService {
 
     this.applyVerbDiscriminator(result, params.text);
 
+    // Gemma sometimes emits a valid JSON without the conjugations block even
+    // for verbs it clearly knows how to conjugate. Fire a focused follow-up
+    // call that asks for conjugations alone — less context, simpler shape,
+    // much more likely to complete.
+    await this.fillMissingConjugations(result, model, params.sourceLanguage);
+
     return result;
   }
 
+  private async fillMissingConjugations(
+    result: RichTranslation,
+    model: string,
+    sourceLanguage?: string,
+  ): Promise<void> {
+    const obj = result as unknown as Record<string, unknown>;
+    if (obj.isVerb !== true) return;
+    const existing = obj.conjugations as Record<string, unknown> | undefined;
+    if (existing && Object.keys(existing).length > 0) return;
+
+    const grammar = obj.grammar as Record<string, unknown> | undefined;
+    const infinitive =
+      typeof grammar?.infinitive === 'string' ? grammar.infinitive.trim() : '';
+    const segment = typeof obj.segment === 'string' ? obj.segment.trim() : '';
+    const verb = infinitive || segment;
+    if (!verb) return;
+
+    const srcLang =
+      sourceLanguage && sourceLanguage !== 'Auto'
+        ? sourceLanguage
+        : `the language of "${verb}"`;
+    const prompt = getConjugationsPrompt(verb, srcLang);
+
+    try {
+      const response = await this.ollamaClient.generate(
+        model,
+        prompt,
+        false,
+        'json',
+        { num_predict: 512, temperature: 0 },
+      );
+      const table = cleanAndParseJson<Record<string, unknown>>(
+        response.response,
+      );
+      if (table && typeof table === 'object' && Object.keys(table).length > 0) {
+        obj.conjugations = table;
+      }
+    } catch (e) {
+      this.logger.warn(
+        `[RichTranslation] conjugation fallback failed: ${String(e)}`,
+      );
+    }
+  }
+
   /**
-   * The prompt asks the LLM to set "isVerb" first and let it drive everything
-   * verb-related. We trust that single boolean as the source of truth:
-   *   - isVerb=false → strip "conjugations" and the verb-only grammar fields,
-   *     no matter what the model wrote there.
-   *   - isVerb=true  → keep "conjugations" only if it actually inflects the
-   *     source word (stem invariant). A real paradigm shares the infinitive's
-   *     stem; if it doesn't, the model conjugated the wrong language.
+   * The prompt + JSON schema ask the LLM to set "isVerb" first and always
+   * emit "conjugations". We trust that boolean and then apply one semantic
+   * check against the forms:
+   *   - isVerb=false → strip "conjugations" and the verb-only grammar fields.
+   *   - isVerb=true  → keep the block unless no form shares a single letter
+   *     with the source word. Zero character overlap means the forms are in
+   *     a different script entirely (e.g. Cyrillic source, Latin conjugated
+   *     forms) — a clear wrong-language leak. Any real paradigm, even an
+   *     irregular one, will share at least one letter across all forms.
    */
   private applyVerbDiscriminator(
     result: RichTranslation,
@@ -165,7 +217,7 @@ export class OllamaTranslationService {
       if (!Array.isArray(tense)) continue;
       for (const row of tense) {
         if (typeof row?.conjugation === 'string' && row.conjugation.trim()) {
-          allForms.push(row.conjugation.trim().toLowerCase());
+          allForms.push(row.conjugation.toLowerCase());
         }
       }
     }
@@ -176,27 +228,15 @@ export class OllamaTranslationService {
 
     const infinitive =
       typeof grammar?.infinitive === 'string' ? grammar.infinitive : '';
-    const stemSource = (infinitive || lookupText || '')
-      .toLowerCase()
-      .replace(/[^\p{L}]/gu, '');
-    // Short infinitives (to be, sein, ser, быть, être, …) are the most
-    // irregular verbs in every language — their forms share almost nothing
-    // with the infinitive. The stem heuristic cannot distinguish a correct
-    // irregular paradigm from a wrong-language one at this size, so skip it
-    // and trust the isVerb discriminator.
-    if (stemSource.length < 5) return;
+    const source = (infinitive || lookupText || '').toLowerCase();
+    const sourceLetters = new Set(source.match(/\p{L}/gu) ?? []);
+    if (sourceLetters.size === 0) return;
 
-    // Window the infinitive into 3-letter substrings. A real paradigm (even
-    // a moderately irregular one) will overlap one of these windows in at
-    // least one form; only a paradigm sharing NO window at all is conjugated
-    // in the wrong language. This rule is intentionally permissive so real
-    // irregulars are preserved.
-    const windows: string[] = [];
-    for (let i = 0; i <= stemSource.length - 3; i++) {
-      windows.push(stemSource.slice(i, i + 3));
-    }
+    // If NO form shares a single letter with the source word, the model
+    // emitted the conjugations in a different script (e.g. Russian lookup
+    // answered with Spanish verbs). That's a wrong-language leak; drop.
     const anyFormShares = allForms.some((form) =>
-      windows.some((w) => form.includes(w)),
+      (form.match(/\p{L}/gu) ?? []).some((ch) => sourceLetters.has(ch)),
     );
     if (!anyFormShares) {
       delete obj.conjugations;

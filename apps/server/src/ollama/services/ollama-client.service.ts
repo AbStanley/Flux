@@ -41,7 +41,7 @@ export class OllamaClientService {
     model: string,
     prompt: string,
     stream?: S,
-    format?: 'json',
+    format?: 'json' | Record<string, unknown>,
     options?: {
       num_ctx?: number;
       num_predict?: number;
