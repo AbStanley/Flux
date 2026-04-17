@@ -5,6 +5,12 @@ export interface CorrectionToken {
     explanation: string;
 }
 
+export interface ConfirmationToken {
+    kind: 'confirmation';
+    text: string;
+    explanation: string;
+}
+
 export interface VocabToken {
     kind: 'vocab';
     term: string;
@@ -16,7 +22,7 @@ export interface TextToken {
     value: string;
 }
 
-export type Token = CorrectionToken | VocabToken | TextToken;
+export type Token = CorrectionToken | ConfirmationToken | VocabToken | TextToken;
 
 function stripQuotes(s: string): string {
     return s.replace(/^[""\u201C\u201D'"]+|[""\u201C\u201D'"]+$/g, '');
@@ -43,14 +49,18 @@ export function parseContent(content: string): Token[] {
             if (arrowMatch) {
                 const wrong = stripQuotes(arrowMatch[1].trim());
                 const correct = stripQuotes(arrowMatch[2].trim());
+                const explanation = stripQuotes(arrowMatch[3]?.trim() || '');
                 if (wrong.toLowerCase() === correct.toLowerCase()) {
-                    // Not a real correction — skip it
+                    // No-op correction (the LLM verified the user's text was fine).
+                    // Always surface a small "Looks good" chip so the user gets
+                    // visible acknowledgment instead of a missing tag.
+                    tokens.push({ kind: 'confirmation', text: wrong, explanation });
                 } else {
                     tokens.push({
                         kind: 'correction',
                         wrong,
                         correct,
-                        explanation: stripQuotes(arrowMatch[3]?.trim() || ''),
+                        explanation,
                     });
                 }
             } else {

@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { BookmarkPlus, Check, Loader2 } from 'lucide-react';
-import { parseContent, type CorrectionToken, type VocabToken } from '../utils/contentParser';
+import { BookmarkPlus, Check, Loader2, CheckCircle2 } from 'lucide-react';
+import { parseContent, type CorrectionToken, type VocabToken, type ConfirmationToken } from '../utils/contentParser';
 import { useSaveVocabulary } from '../hooks/useSaveVocabulary';
 import { useCloseOnOutsideClick } from '../hooks/useCloseOnOutsideClick';
 
@@ -63,10 +63,10 @@ function CorrectionChip({ token, targetLanguage, nativeLanguage }: {
     useCloseOnOutsideClick(ref, () => setShowPopover(false));
 
     return (
-        <span ref={ref} className="relative inline-block">
+        <span ref={ref} className="relative inline-block align-middle">
             <span
                 onClick={() => setShowPopover(!showPopover)}
-                className="inline-flex items-center gap-1 bg-destructive/15 text-destructive
+                className="inline-flex items-center gap-1 whitespace-nowrap bg-destructive/15 text-destructive
                     px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer
                     hover:bg-destructive/25 transition-colors border border-destructive/20 mx-0.5"
             >
@@ -112,6 +112,38 @@ function CorrectionChip({ token, targetLanguage, nativeLanguage }: {
     );
 }
 
+function ConfirmationChip({ token }: { token: ConfirmationToken }) {
+    const [showPopover, setShowPopover] = useState(false);
+    const ref = useRef<HTMLSpanElement>(null);
+    const hasExplanation = !!token.explanation.trim();
+
+    useCloseOnOutsideClick(ref, () => setShowPopover(false));
+
+    return (
+        <span ref={ref} className="relative inline-block align-middle">
+            <span
+                onClick={() => hasExplanation && setShowPopover(!showPopover)}
+                className={`inline-flex items-center gap-1 whitespace-nowrap bg-green-500/15
+                    text-green-600 dark:text-green-400 px-2 py-0.5 rounded-md text-xs font-medium
+                    transition-colors border border-green-500/20 mx-0.5
+                    ${hasExplanation ? 'cursor-pointer hover:bg-green-500/25' : ''}`}
+                title={hasExplanation ? token.explanation : `"${token.text}" — looks good`}
+            >
+                <CheckCircle2 className="w-3 h-3" />
+                <span>Looks good</span>
+            </span>
+
+            {showPopover && hasExplanation && (
+                <div className="absolute z-50 bottom-full left-0 mb-2 w-56 rounded-lg border bg-popover p-3 shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    <p className="text-xs text-muted-foreground mb-1">Tutor note</p>
+                    <p className="text-sm italic">"{token.text}"</p>
+                    <p className="text-xs text-muted-foreground mt-1 border-t pt-1">{token.explanation}</p>
+                </div>
+            )}
+        </span>
+    );
+}
+
 function VocabChip({ token, targetLanguage, nativeLanguage }: {
     token: VocabToken;
     targetLanguage: string;
@@ -124,10 +156,10 @@ function VocabChip({ token, targetLanguage, nativeLanguage }: {
     useCloseOnOutsideClick(ref, () => setShowPopover(false));
 
     return (
-        <span ref={ref} className="relative inline-block">
+        <span ref={ref} className="relative inline-block align-middle">
             <span
                 onClick={() => setShowPopover(!showPopover)}
-                className="inline-flex items-center gap-1 bg-primary/15 text-primary
+                className="inline-flex items-center gap-1 whitespace-nowrap bg-primary/15 text-primary
                     px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer
                     hover:bg-primary/25 transition-colors border border-primary/20 mx-0.5"
             >
@@ -177,6 +209,9 @@ export function FormattedContent({ content, targetLanguage, nativeLanguage }: {
                 }
                 if (token.kind === 'vocab') {
                     return <VocabChip key={i} token={token} targetLanguage={targetLanguage} nativeLanguage={nativeLanguage} />;
+                }
+                if (token.kind === 'confirmation') {
+                    return <ConfirmationChip key={i} token={token} />;
                 }
                 return <MarkdownBlock key={i} text={token.value} />;
             })}
