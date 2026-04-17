@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM node:25-alpine3.23 AS builder
+FROM node:22-alpine3.20 AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # ---- Production stage ----
-FROM node:25-alpine3.22
+FROM node:22-alpine3.20
 
 # Patch any known Alpine vulnerabilities at build time
 RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
@@ -25,7 +25,7 @@ COPY --from=builder /app/prisma ./prisma
 # Install production dependencies only + generate Prisma client for this platform
 RUN npm ci --omit=dev && npx prisma generate && npm cache clean --force
 
-# Copy compiled output (only .js files, skip .d.ts and .map)
+# Copy compiled output
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
