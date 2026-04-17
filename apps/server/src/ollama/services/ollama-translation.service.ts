@@ -179,14 +179,18 @@ export class OllamaTranslationService {
     const stemSource = (infinitive || lookupText || '')
       .toLowerCase()
       .replace(/[^\p{L}]/gu, '');
-    if (stemSource.length < 3) return;
+    // Short infinitives (to be, sein, ser, быть, être, …) are the most
+    // irregular verbs in every language — their forms share almost nothing
+    // with the infinitive. The stem heuristic cannot distinguish a correct
+    // irregular paradigm from a wrong-language one at this size, so skip it
+    // and trust the isVerb discriminator.
+    if (stemSource.length < 5) return;
 
-    // Window the infinitive into 3-letter substrings; a real paradigm (even
-    // an irregular one like German "sein" → "bin, bist, ist, sind, seid")
-    // will overlap one of these windows in at least one form. Only when the
-    // entire form set shares NO window with the infinitive is this clearly
-    // the target language — drop in that case. This rule is intentionally
-    // permissive so irregular verbs are preserved.
+    // Window the infinitive into 3-letter substrings. A real paradigm (even
+    // a moderately irregular one) will overlap one of these windows in at
+    // least one form; only a paradigm sharing NO window at all is conjugated
+    // in the wrong language. This rule is intentionally permissive so real
+    // irregulars are preserved.
     const windows: string[] = [];
     for (let i = 0; i <= stemSource.length - 3; i++) {
       windows.push(stemSource.slice(i, i + 3));
