@@ -50,7 +50,7 @@ export function ChatScreen() {
         setInput((prev) => (prev ? prev + ' ' + text : text));
     }, []);
     const speechLang = LANGUAGE_CODES[targetLanguage] || 'en-US';
-    const { isListening, toggle: toggleMic, supported: micSupported } = useSpeechToText(speechLang, onSpeechResult);
+    const { isListening, toggle: toggleMic, supported: micSupported, error: micError } = useSpeechToText(speechLang, onSpeechResult);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -134,6 +134,9 @@ export function ChatScreen() {
 
             {/* Input */}
             <div className="border-t px-4 py-3">
+                {micError && (
+                    <div className="text-xs text-destructive mb-2">{micError}</div>
+                )}
                 <form
                     onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                     className="flex gap-2 items-end"

@@ -26,10 +26,7 @@ export class ReadingSessionsController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-    @Request() req: AuthenticatedRequest,
-  ) {
+  async findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const session = await this.service.findOne(id, req.user?.id ?? '');
     if (!session) {
       throw new HttpException('Session not found', HttpStatus.NOT_FOUND);
@@ -75,10 +72,7 @@ export class ReadingSessionsController {
   }
 
   @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-    @Request() req: AuthenticatedRequest,
-  ) {
+  async remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const result = await this.service.remove(id, req.user?.id ?? '');
     if (!result) {
       throw new HttpException('Session not found', HttpStatus.NOT_FOUND);

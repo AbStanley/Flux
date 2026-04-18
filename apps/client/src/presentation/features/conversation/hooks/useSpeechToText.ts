@@ -28,8 +28,18 @@ function getRecognitionClass(): SpeechRecognitionConstructor | null {
     return (w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null) as SpeechRecognitionConstructor | null;
 }
 
+const ERROR_MESSAGES: Record<string, string> = {
+    'not-allowed': 'Microphone access denied. Enable it in your browser settings.',
+    'service-not-allowed': 'Speech recognition service is not available.',
+    'audio-capture': 'No microphone detected.',
+    'no-speech': 'No speech detected. Try again.',
+    'network': 'Network error — speech recognition requires an internet connection.',
+    'aborted': '',
+};
+
 export function useSpeechToText(lang: string, onResult: (text: string) => void) {
     const [isListening, setIsListening] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
     const supported = !!getRecognitionClass();
 
@@ -41,7 +51,12 @@ export function useSpeechToText(lang: string, onResult: (text: string) => void) 
 
     const start = useCallback(() => {
         const Ctor = getRecognitionClass();
-        if (!Ctor) return;
+        if (!Ctor) {
+            setError('Speech recognition is not supported in this browser.');
+            return;
+        }
+
+        setError(null);
 
         // Stop any existing session
         if (recognitionRef.current) {
@@ -56,12 +71,16 @@ export function useSpeechToText(lang: string, onResult: (text: string) => void) 
 
         recognition.onresult = (e: SpeechRecognitionEvent) => {
             const last = e.results[e.results.length - 1];
-            if (last?.[0]) {
+            if (last?.isFinal && last?.[0]) {
                 onResult(last[0].transcript);
             }
         };
 
-        recognition.onerror = () => {
+        recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
+            const code = e.error;
+            console.warn('[SpeechRecognition] error:', code);
+            const message = ERROR_MESSAGES[code] ?? `Speech recognition error: ${code}`;
+            if (message) setError(message);
             setIsListening(false);
             recognitionRef.current = null;
         };
@@ -71,9 +90,16 @@ export function useSpeechToText(lang: string, onResult: (text: string) => void) 
             recognitionRef.current = null;
         };
 
-        recognitionRef.current = recognition;
-        recognition.start();
-        setIsListening(true);
+        try {
+            recognitionRef.current = recognition;
+            recognition.start();
+            setIsListening(true);
+        } catch (err) {
+            console.error('[SpeechRecognition] failed to start:', err);
+            setError('Failed to start speech recognition.');
+            setIsListening(false);
+            recognitionRef.current = null;
+        }
     }, [lang, onResult]);
 
     const toggle = useCallback(() => {
@@ -88,5 +114,5 @@ export function useSpeechToText(lang: string, onResult: (text: string) => void) 
         };
     }, []);
 
-    return { isListening, toggle, supported };
+    return { isListening, toggle, supported, error };
 }

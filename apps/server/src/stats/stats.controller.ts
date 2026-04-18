@@ -22,6 +22,10 @@ export class StatsController {
   ) {
     const numDays = days ? Math.min(90, Math.max(7, +days)) : 30;
     const numOffset = offset ? Math.max(0, +offset) : 0;
-    return this.statsService.getActivity(req.user?.id ?? '', numDays, numOffset);
+    return this.statsService.getActivity(
+      req.user?.id ?? '',
+      numDays,
+      numOffset,
+    );
   }
 }

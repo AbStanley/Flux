@@ -73,7 +73,12 @@ export class ReadingSessionsService {
       console.error(
         '[ReadingSessions] Create failed:',
         error instanceof Error ? error.message : error,
-        { title: data.title, fileType: data.fileType, textLength: data.text?.length, chaptersCount: chapters?.length },
+        {
+          title: data.title,
+          fileType: data.fileType,
+          textLength: data.text?.length,
+          chaptersCount: chapters?.length,
+        },
       );
       throw error;
     }

@@ -27,7 +27,11 @@ export class StatsService {
     }
 
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
 
     const [
       totalWords,
@@ -38,8 +42,12 @@ export class StatsService {
       srsReviewedToday,
       streakDays,
     ] = await Promise.all([
-      this.prisma.word.count({ where: { userId: resolvedUserId, type: 'word' } }),
-      this.prisma.word.count({ where: { userId: resolvedUserId, type: 'phrase' } }),
+      this.prisma.word.count({
+        where: { userId: resolvedUserId, type: 'word' },
+      }),
+      this.prisma.word.count({
+        where: { userId: resolvedUserId, type: 'phrase' },
+      }),
       this.getLanguageBreakdown(resolvedUserId),
       this.prisma.word.count({
         where: { userId: resolvedUserId, srsNextReview: { lte: now } },
@@ -102,7 +110,10 @@ export class StatsService {
     ]);
 
     // Build day-by-day map
-    const dayMap = new Map<string, { wordsAdded: number; wordsReviewed: number }>();
+    const dayMap = new Map<
+      string,
+      { wordsAdded: number; wordsReviewed: number }
+    >();
 
     for (let d = 0; d <= days; d++) {
       const date = new Date(since);

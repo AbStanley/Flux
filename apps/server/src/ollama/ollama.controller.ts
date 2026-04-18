@@ -148,7 +148,10 @@ export class OllamaController {
   }
 
   @Post('generate-content')
-  async generateContent(@Body() body: GenerateContentDto, @Res() res: Response) {
+  async generateContent(
+    @Body() body: GenerateContentDto,
+    @Res() res: Response,
+  ) {
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
       const stream = await this.ollamaService.generateContentStream(body);

@@ -107,7 +107,7 @@ Each placeholder names the language to write in. Omit any key whose condition is
     "<tense name for ${srcLang}>": [ {"pronoun":"<${srcLang}>","conjugation":"<${srcLang}>"}, … rows ],
     … every tense of ${srcLang} applicable to this verb
   },
-  "examples":     [ {"sentence":"<${srcLang}>","translation":"<${targetLanguage}>"}, 2-3 entries ],
+  "examples":     [ {"sentence":"<${srcLang} ONLY>","translation":"<${targetLanguage} ONLY>"}, 2-3 entries ],
   "alternatives": [ "<${targetLanguage}>", 1-2 entries ]
 }
 
@@ -132,6 +132,8 @@ Every "conjugation" string is the fully inflected form in ${srcLang} (e.g. Russi
 Return at least 2 tenses. If you are about to close the JSON with an empty "conjugations" object, you have not completed the task — fill it first.
 
 Every string value must be in the language the schema assigns to that slot. Do not copy vocabulary, pronouns, or example sentences from any language other than ${srcLang} or ${targetLanguage} — they do not belong here. In particular, every "<${srcLang}>" slot must contain actual ${srcLang} output for "${text}", not placeholder text from some other language.
+
+STRICT RULE for "examples": each entry MUST have "sentence" written entirely in ${srcLang} and "translation" written entirely in ${targetLanguage}. NEVER put both fields in the same language, and NEVER swap them. If ${srcLang} and ${targetLanguage} use different scripts, the two fields MUST use different scripts.
 
 Output JSON only. No markdown, no preamble.`;
 };

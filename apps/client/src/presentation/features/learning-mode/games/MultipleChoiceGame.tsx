@@ -31,7 +31,19 @@ export function MultipleChoiceGame() {
 
         const correctAnswer = currentItem.answer;
         const pool = items.filter(i => i.id !== currentItem.id);
-        const distractors = pool.sort(() => 0.5 - Math.random()).slice(0, 3).map(i => i.answer);
+
+        // Prefer distractors not used in the immediately previous round.
+        // Read the latest recent ids from the store without subscribing,
+        // so this effect only re-runs when the question/items change.
+        const { recentDistractorIds, setRecentDistractorIds } = useGameStore.getState();
+        const recentSet = new Set(recentDistractorIds);
+        const shuffle = <T,>(arr: T[]) => arr.slice().sort(() => 0.5 - Math.random());
+        const fresh = shuffle(pool.filter(i => !recentSet.has(i.id)));
+        const stale = shuffle(pool.filter(i => recentSet.has(i.id)));
+        const picked = [...fresh, ...stale].slice(0, 3);
+        const distractors = picked.map(i => i.answer);
+
+        setRecentDistractorIds(picked.map(i => i.id));
 
         setTimeout(() => {
             setOptions([...distractors, correctAnswer].sort(() => 0.5 - Math.random()));

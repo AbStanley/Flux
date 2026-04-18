@@ -1,7 +1,10 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { OllamaClientService } from './ollama-client.service';
 import { WRITING_ANALYSIS_PROMPT } from '../prompts';
-import { WritingAnalysisResponse, WritingCorrection } from '../interfaces/ollama.interfaces';
+import {
+  WritingAnalysisResponse,
+  WritingCorrection,
+} from '../interfaces/ollama.interfaces';
 
 interface RawCorrection {
   mistake: string;
@@ -16,7 +19,9 @@ function extractJsonArray(raw: string): RawCorrection[] {
   try {
     const parsed = JSON.parse(trimmed);
     if (Array.isArray(parsed)) return parsed;
-  } catch { /* continue */ }
+  } catch {
+    /* continue */
+  }
 
   // Extract the first [...] block from the response
   const start = trimmed.indexOf('[');
@@ -25,20 +30,30 @@ function extractJsonArray(raw: string): RawCorrection[] {
     try {
       const parsed = JSON.parse(trimmed.slice(start, end + 1));
       if (Array.isArray(parsed)) return parsed;
-    } catch { /* continue */ }
+    } catch {
+      /* continue */
+    }
   }
 
   return [];
 }
 
-function buildCorrections(originalText: string, raw: RawCorrection[]): WritingCorrection[] {
+function buildCorrections(
+  originalText: string,
+  raw: RawCorrection[],
+): WritingCorrection[] {
   const corrections: WritingCorrection[] = [];
   let searchFrom = 0;
 
   // Sort by order of appearance in the original text
   const withOffsets = raw
-    .filter(r => r.mistake && r.correction && r.mistake.trim().toLowerCase() !== r.correction.trim().toLowerCase())
-    .map(r => {
+    .filter(
+      (r) =>
+        r.mistake &&
+        r.correction &&
+        r.mistake.trim().toLowerCase() !== r.correction.trim().toLowerCase(),
+    )
+    .map((r) => {
       const idx = originalText.indexOf(r.mistake, searchFrom);
       if (idx === -1) return null;
       searchFrom = idx + r.mistake.length;

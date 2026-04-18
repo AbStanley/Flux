@@ -39,6 +39,7 @@ interface GameState {
     maxHealth: number;
     error: string | null;
     history: Record<string, boolean>;
+    recentDistractorIds: string[];
 
     // Actions
     updateConfig: (updates: Partial<GameConfig>) => void;
@@ -50,6 +51,7 @@ interface GameState {
     reset: () => void; // Reset Session only
     tick: () => void;
     setTime: (time: number) => void;
+    setRecentDistractorIds: (ids: string[]) => void;
     syncProgress: () => Promise<void>;
 }
 
@@ -72,6 +74,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     error: null,
     isTimerPaused: false,
     history: {},
+    recentDistractorIds: [],
 
     updateConfig: (updates) => set((state) => ({ config: { ...state.config, ...updates } })),
 
@@ -114,7 +117,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
             health: 3,
             timeLeft: 100, // 10.0s
             isTimerPaused: false,
-            history: {}
+            history: {},
+            recentDistractorIds: []
         });
 
         try {
@@ -197,11 +201,14 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         timeLeft: 100,
         health: 3,
         history: {},
+        recentDistractorIds: [],
         // Config preserved
         isTimerPaused: false
     }),
 
     setTime: (time) => set({ timeLeft: time }),
+
+    setRecentDistractorIds: (ids) => set({ recentDistractorIds: ids }),
 
     tick: () => {
         const { timeLeft, status, submitAnswer, config, isTimerPaused } = get();

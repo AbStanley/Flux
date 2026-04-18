@@ -18,7 +18,27 @@ type RichObj = Record<string, unknown> & {
     tense?: string;
   };
   conjugations?: Record<string, unknown>;
+  examples?: unknown;
 };
+
+/**
+ * Rough script detection used to spot example pairs that collapsed to the
+ * same language. Returns 'latin' for ambiguous Latin-alphabet text — those
+ * pairs can't be reliably distinguished without a real language detector.
+ */
+function detectScript(text: string): string {
+  if (/[\u0400-\u04FF]/.test(text)) return 'cyrillic';
+  if (/[\u4E00-\u9FFF]/.test(text)) return 'cjk';
+  if (/[\u3040-\u30FF]/.test(text)) return 'japanese';
+  if (/[\uAC00-\uD7AF]/.test(text)) return 'korean';
+  if (/[\u0600-\u06FF]/.test(text)) return 'arabic';
+  if (/[\u0370-\u03FF]/.test(text)) return 'greek';
+  if (/[\u0590-\u05FF]/.test(text)) return 'hebrew';
+  if (/[\u0E00-\u0E7F]/.test(text)) return 'thai';
+  if (/[\u0900-\u097F]/.test(text)) return 'devanagari';
+  if (/[a-zA-Z]/.test(text)) return 'latin';
+  return 'unknown';
+}
 
 /**
  * Tense names to request per source language for the conjugation refill flow.
@@ -109,12 +129,48 @@ export class OllamaTranslationService {
 
     this.trimRunawayTranslation(rich, params.text);
     this.enforceVerbShape(rich);
+    this.dropSameLanguageExamples(rich);
 
     if (this.needsConjugationRefill(rich)) {
       await this.refillConjugations(rich, model, params.sourceLanguage);
     }
 
     return rich as unknown as RichTranslation;
+  }
+
+  /**
+   * Small models occasionally produce example pairs where both "sentence"
+   * and "translation" are in the same language (typically the source).
+   * Drop those pairs when the two fields share a detectable non-Latin script.
+   * Latin-alphabet pairs (e.g., English/Spanish) can't be caught this way
+   * without a real language detector — we rely on the prompt for those.
+   */
+  private dropSameLanguageExamples(rich: RichObj): void {
+    const examples = rich.examples;
+    if (!Array.isArray(examples)) return;
+    const filtered = examples.filter((ex) => {
+      if (!ex || typeof ex !== 'object') return false;
+      const entry = ex as { sentence?: unknown; translation?: unknown };
+      const sentence =
+        typeof entry.sentence === 'string' ? entry.sentence.trim() : '';
+      const translation =
+        typeof entry.translation === 'string' ? entry.translation.trim() : '';
+      if (!sentence || !translation) return false;
+      const srcScript = detectScript(sentence);
+      const tgtScript = detectScript(translation);
+      if (
+        srcScript !== 'latin' &&
+        srcScript !== 'unknown' &&
+        srcScript === tgtScript
+      ) {
+        this.logger.warn(
+          `[RichTranslation] dropped same-script example (${srcScript}): "${sentence}" / "${translation}"`,
+        );
+        return false;
+      }
+      return true;
+    });
+    rich.examples = filtered;
   }
 
   private async fetchRichTranslation(
