@@ -370,12 +370,35 @@ export class OllamaTranslationService {
         'json',
         { num_predict: 256, temperature: 0 },
       );
-      const parsed = cleanAndParseJson<{ rows?: unknown }>(response);
+      const preview =
+        typeof response === 'string'
+          ? response.slice(0, 300).replace(/\s+/g, ' ')
+          : String(response);
+      this.logger.log(
+        `[Conjugations] verb="${verb}" tense="${tense}" raw: ${preview}`,
+      );
+      let parsed: { rows?: unknown } | null = null;
+      try {
+        parsed = cleanAndParseJson<{ rows?: unknown }>(response);
+      } catch (parseErr) {
+        this.logger.warn(
+          `[Conjugations] verb="${verb}" tense="${tense}" JSON parse failed: ${String(parseErr)}`,
+        );
+        return null;
+      }
       const rows = parsed?.rows;
-      return Array.isArray(rows) && rows.length > 0 ? rows : null;
+      if (!Array.isArray(rows) || rows.length === 0) {
+        this.logger.warn(
+          `[Conjugations] verb="${verb}" tense="${tense}" produced ${
+            Array.isArray(rows) ? 'empty rows array' : `rows=${typeof rows}`
+          }`,
+        );
+        return null;
+      }
+      return rows as unknown[];
     } catch (e) {
       this.logger.warn(
-        `[RichTranslation] tense "${tense}" fetch failed: ${String(e)}`,
+        `[Conjugations] verb="${verb}" tense="${tense}" fetch failed: ${String(e)}`,
       );
       return null;
     }

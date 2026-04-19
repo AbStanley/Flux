@@ -42,26 +42,24 @@ const hasStrongVerbStructure = (data: RichTranslationResult): boolean => {
 /**
  * Decides whether the "Show conjugations" affordance should appear.
  *
- * When the model sets `isVerb` explicitly, respect it — that's the
- * cleanest signal we have. Small models routinely emit a spurious
- * `infinitive` on real nouns (e.g. Russian "интерпретации" → "интерпре-
- * тировать", a related verb that's NOT this word) so we must NOT override
- * an explicit isVerb=false with structural evidence.
+ * `partOfSpeech` is the strongest explicit signal the model gives us —
+ * when it's present we trust it, even if `isVerb` disagrees. Small
+ * models routinely set `isVerb: false` on real verbs while still
+ * labeling them `partOfSpeech: "verbo"` (German "war" is a recurring
+ * example); trusting the label recovers those cases. In the opposite
+ * direction — nouns correctly labeled "sustantivo" with a stray
+ * infinitive field tacked on — we correctly skip the button.
  *
- * When `isVerb` is absent, fall back to `partOfSpeech`, then to structure
- * (infinitive + tense both present). Structure-override here covers the
- * case where the model classifies a verb as "sustantivo" but still fills
- * the verb-only grammar fields.
+ * `isVerb` only matters when `partOfSpeech` is absent. Structural
+ * evidence (infinitive + tense both present) is the last-resort fallback.
  */
 const coreLooksLikeVerb = (data: RichTranslationResult): boolean => {
-  if (data.isVerb === true) return true;
-  if (data.isVerb === false) return false;
-
   const pos = data.grammar?.partOfSpeech;
   if (typeof pos === "string" && pos.trim()) {
-    if (VERB_POS_RE.test(pos)) return true;
-    return hasStrongVerbStructure(data);
+    return VERB_POS_RE.test(pos);
   }
+  if (data.isVerb === true) return true;
+  if (data.isVerb === false) return false;
   return hasStrongVerbStructure(data);
 };
 
