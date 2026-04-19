@@ -56,18 +56,47 @@ export class OllamaGateway implements OnGatewayInit {
       const model = await this.client.ensureModel(body.model);
       const stream = await this.client.chat(model, body.messages, true);
 
-      for await (const part of stream) {
-        socket.emit('chat:token', {
-          content: part.message?.content ?? '',
-          done: part.done ?? false,
-        });
-      }
+      // Stash the stream so `chat:cancel` can abort the Ollama generation
+      // instead of just letting tokens keep arriving after the user
+      // clicked Stop.
+      const socketData = socket.data as Record<string, unknown>;
+      socketData['activeChatStream'] = stream;
 
-      socket.emit('chat:done');
+      try {
+        for await (const part of stream) {
+          socket.emit('chat:token', {
+            content: part.message?.content ?? '',
+            done: part.done ?? false,
+          });
+        }
+        socket.emit('chat:done');
+      } finally {
+        delete socketData['activeChatStream'];
+      }
     } catch (e) {
+      // Ignore abort — it's the expected path when the user cancels.
+      if (e instanceof Error && /abort/i.test(e.message)) {
+        socket.emit('chat:done');
+        return;
+      }
       const msg = e instanceof Error ? e.message : 'Stream failed';
       this.logger.error(`WebSocket chat error: ${msg}`);
       socket.emit('chat:error', { error: msg });
+    }
+  }
+
+  @SubscribeMessage('chat:cancel')
+  handleChatCancel(@ConnectedSocket() socket: Socket) {
+    const socketData = socket.data as Record<string, unknown>;
+    const stream = socketData['activeChatStream'] as
+      | { abort?: () => void }
+      | undefined;
+    if (stream?.abort) {
+      try {
+        stream.abort();
+      } catch (e) {
+        this.logger.warn(`Chat cancel failed: ${String(e)}`);
+      }
     }
   }
 

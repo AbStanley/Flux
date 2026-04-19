@@ -78,6 +78,11 @@ const shouldFetchConjugations = (
 // conjugations" affordance without duplicating the heuristic.
 export { coreLooksLikeVerb, shouldFetchConjugations };
 
+// Per-tab AbortControllers for in-flight rich streams. Lives outside the
+// store because AbortController isn't serializable and we only ever have
+// one stream per tab at a time. `cancelRichLoad(id)` aborts and forgets.
+const activeRichAborts = new Map<string, AbortController>();
+
 /**
  * Small models occasionally emit nested objects or `null` where a JSON
  * schema asked for strings. React refuses to render those into text nodes
@@ -213,6 +218,13 @@ export interface RichDetailsTab {
   text: string;
   data: RichTranslationResult | null;
   isLoading: boolean;
+  /**
+   * True while the rich-translation stream is still receiving chunks,
+   * including after `isLoading` has flipped to false (which happens as
+   * soon as the first useful field lands so the spinner clears). Drives
+   * the Stop button visibility.
+   */
+  isStreaming?: boolean;
   error: string | null;
   context: string;
   sourceLang: string;
@@ -275,6 +287,12 @@ export interface RichDetailsSlice {
    * available, falling back to the raw text for single-token input.
    */
   fetchConjugationsForTab: (id: string, aiService: IAIService) => Promise<void>;
+
+  /**
+   * Aborts the in-flight rich-translation stream for a tab. Any partial
+   * data already rendered stays. No-op if nothing is in flight.
+   */
+  cancelRichLoad: (id: string) => void;
 }
 
 async function runRichLoad(
@@ -285,6 +303,7 @@ async function runRichLoad(
   aiService: IAIService,
   updateTab: (updater: (tab: RichDetailsTab) => RichDetailsTab) => void,
   syncHoverCache: (translation: string) => void,
+  signal: AbortSignal,
 ): Promise<void> {
   let lastSyncedTranslation: string | null = null;
 
@@ -331,6 +350,7 @@ async function runRichLoad(
     targetLanguage: targetLang,
     context,
     sourceLanguage: sourceLang,
+    signal,
     onPartial,
   });
 
@@ -341,6 +361,7 @@ async function runRichLoad(
     ...tab,
     data: safe,
     isLoading: false,
+    isStreaming: false,
     error: null,
     conjugationsLoading: false,
     conjugationsError: null,
@@ -388,6 +409,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
       text,
       data: null,
       isLoading: true,
+      isStreaming: true,
       error: null,
       context,
       sourceLang,
@@ -407,6 +429,9 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
       }));
     };
 
+    const controller = new AbortController();
+    activeRichAborts.set(text, controller);
+
     try {
       await runRichLoad(
         text,
@@ -417,16 +442,28 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
         updateTab,
         (translation) =>
           syncRichIntoHoverCache(set, text, targetLang, translation),
+        controller.signal,
       );
     } catch (error: unknown) {
-      console.error(error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to load";
-      updateTab((tab) => ({ ...tab, isLoading: false, error: errorMessage }));
+      // User-triggered abort is a clean stop, not an error banner.
+      if (controller.signal.aborted) {
+        updateTab((tab) => ({ ...tab, isLoading: false, isStreaming: false }));
+      } else {
+        console.error(error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to load";
+        updateTab((tab) => ({ ...tab, isLoading: false, isStreaming: false, error: errorMessage }));
+      }
+    } finally {
+      if (activeRichAborts.get(text) === controller) {
+        activeRichAborts.delete(text);
+      }
     }
   },
 
   closeTab: (id) => {
+    activeRichAborts.get(id)?.abort();
+    activeRichAborts.delete(id);
     set((state) => {
       const newTabs = state.richDetailsTabs.filter((t) => t.id !== id);
       let newActiveId = state.activeTabId;
@@ -447,11 +484,20 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
   },
 
   closeAllTabs: () => {
+    for (const controller of activeRichAborts.values()) controller.abort();
+    activeRichAborts.clear();
     set({
       richDetailsTabs: [],
       activeTabId: null,
       isRichInfoOpen: false,
     });
+  },
+
+  cancelRichLoad: (id) => {
+    const controller = activeRichAborts.get(id);
+    if (!controller) return;
+    controller.abort();
+    activeRichAborts.delete(id);
   },
 
   setActiveTab: (id) => {
@@ -470,7 +516,16 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
       }));
     };
 
-    updateTab((t) => ({ ...t, data: null, isLoading: true, error: null }));
+    updateTab((t) => ({
+      ...t,
+      data: null,
+      isLoading: true,
+      isStreaming: true,
+      error: null,
+    }));
+
+    const controller = new AbortController();
+    activeRichAborts.set(id, controller);
 
     try {
       await runRichLoad(
@@ -482,11 +537,20 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
         updateTab,
         (translation) =>
           syncRichIntoHoverCache(set, tab.text, tab.targetLang, translation),
+        controller.signal,
       );
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Regeneration failed";
-      updateTab((t) => ({ ...t, isLoading: false, error: errorMessage }));
+      if (controller.signal.aborted) {
+        updateTab((t) => ({ ...t, isLoading: false, isStreaming: false }));
+      } else {
+        const errorMessage =
+          error instanceof Error ? error.message : "Regeneration failed";
+        updateTab((t) => ({ ...t, isLoading: false, isStreaming: false, error: errorMessage }));
+      }
+    } finally {
+      if (activeRichAborts.get(id) === controller) {
+        activeRichAborts.delete(id);
+      }
     }
   },
 

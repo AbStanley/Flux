@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useConversationStore, type ChatMessage } from '../store/useConversationStore';
 import { Button } from '../../../components/ui/button';
-import { MessageCircle, Send, RotateCcw, Loader2, Mic, MicOff, Sun, Moon } from 'lucide-react';
+import { MessageCircle, Send, RotateCcw, Loader2, Mic, MicOff, Sun, Moon, Square } from 'lucide-react';
 import { FormattedContent } from './FormattedContent';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 import { LANGUAGE_CODES } from '../constants';
@@ -40,7 +40,7 @@ function MessageBubble({ message, targetLanguage, nativeLanguage }: {
 const MAX_INPUT_HEIGHT = 160;
 
 export function ChatScreen() {
-    const { messages, isStreaming, error, sendMessage, reset, targetLanguage, nativeLanguage } =
+    const { messages, isStreaming, error, sendMessage, cancelStreaming, reset, targetLanguage, nativeLanguage } =
         useConversationStore();
     const [input, setInput] = useState('');
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -164,9 +164,21 @@ export function ChatScreen() {
                             {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                         </Button>
                     )}
-                    <Button type="submit" size="default" disabled={isStreaming || !input.trim()}>
-                        <Send className="w-4 h-4" />
-                    </Button>
+                    {isStreaming ? (
+                        <Button
+                            type="button"
+                            size="default"
+                            variant="destructive"
+                            onClick={cancelStreaming}
+                            title="Stop generating"
+                        >
+                            <Square className="w-4 h-4 fill-current" />
+                        </Button>
+                    ) : (
+                        <Button type="submit" size="default" disabled={!input.trim()}>
+                            <Send className="w-4 h-4" />
+                        </Button>
+                    )}
                 </form>
             </div>
         </div>

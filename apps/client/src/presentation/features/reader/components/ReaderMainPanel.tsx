@@ -51,6 +51,7 @@ export function ReaderMainPanel() {
         closeAllTabs,
         regenerateTab,
         fetchConjugationsForTab,
+        cancelRichLoad,
         showTranslations,
         removeTranslation,
         translateIndices
@@ -184,6 +185,7 @@ export function ReaderMainPanel() {
                     onCloseTab={closeTab}
                     onRegenerate={regenerateTab}
                     onFetchConjugations={fetchConjugationsForTab}
+                    onCancel={cancelRichLoad}
                     onClearAll={closeAllTabs}
                 />
             </div>

@@ -35,8 +35,13 @@ interface ConversationState {
   ) => void;
   startConversation: () => void;
   sendMessage: (text: string) => Promise<void>;
+  cancelStreaming: () => void;
   reset: () => void;
 }
+
+// Lives outside the persisted store — AbortControllers aren't serializable
+// and we only care about the currently-active stream anyway.
+let activeAbort: AbortController | null = null;
 
 const LEVEL_INSTRUCTIONS: Record<string, string> = {
   beginner: `- Use simple, common vocabulary and short sentences (5-8 words).
@@ -97,6 +102,7 @@ async function streamViaNdjson(
   messages: { role: string; content: string }[],
   model: string,
   appendToken: (token: string, fullContent: string) => string,
+  signal?: AbortSignal,
 ) {
   const baseUrl = await defaultClient.getActiveBaseUrl();
   const token = await getAuthToken();
@@ -107,6 +113,7 @@ async function streamViaNdjson(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ model: model || undefined, messages, stream: true }),
+    signal,
   });
   if (!response.ok) throw new Error(`Chat failed: ${response.status}`);
   const reader = response.body?.getReader();
@@ -182,6 +189,11 @@ export const useConversationStore = create<ConversationState>()(
           { role: "assistant" as const, content: "" },
         ];
 
+        // Swap in a fresh AbortController for this run. cancelStreaming()
+        // calls .abort() on this and emits chat:cancel to the gateway.
+        activeAbort = new AbortController();
+        const signal = activeAbort.signal;
+
         set({ messages: withAssistant, isStreaming: true, error: null });
 
         const ollamaMessages = updatedMessages.map((m) => ({
@@ -217,16 +229,23 @@ export const useConversationStore = create<ConversationState>()(
                 cleanup();
                 reject(new Error(data.error));
               };
+              const onAbort = () => {
+                socket.emit("chat:cancel");
+                cleanup();
+                resolve(); // treat abort as a clean stop, not an error
+              };
 
               const cleanup = () => {
                 socket.off("chat:token", onToken);
                 socket.off("chat:done", onDone);
                 socket.off("chat:error", onError);
+                signal.removeEventListener("abort", onAbort);
               };
 
               socket.on("chat:token", onToken);
               socket.on("chat:done", onDone);
               socket.on("chat:error", onError);
+              signal.addEventListener("abort", onAbort);
               socket.emit("chat", {
                 model: model || undefined,
                 messages: ollamaMessages,
@@ -234,36 +253,54 @@ export const useConversationStore = create<ConversationState>()(
             });
           } else {
             // Fallback to NDJSON
-            await streamViaNdjson(ollamaMessages, model, appendToken);
+            await streamViaNdjson(ollamaMessages, model, appendToken, signal);
           }
         } catch (e) {
-          // If WebSocket fails, try NDJSON fallback
-          try {
-            let fullContent = "";
-            const msgs = get().messages;
-            const lastMsg = msgs[msgs.length - 1];
-            if (lastMsg?.role === "assistant") fullContent = lastMsg.content;
-            if (!fullContent) {
-              await streamViaNdjson(ollamaMessages, model, appendToken);
-            } else {
-              throw e; // Already had partial content from WS, surface the error
+          // User-triggered abort surfaces as DOMException("AbortError"); it's
+          // a clean stop, not something to show as an error banner.
+          if (signal.aborted) {
+            // No-op — the partial response stays, spinner clears in finally.
+          } else {
+            // If WebSocket fails, try NDJSON fallback
+            try {
+              let fullContent = "";
+              const msgs = get().messages;
+              const lastMsg = msgs[msgs.length - 1];
+              if (lastMsg?.role === "assistant") fullContent = lastMsg.content;
+              if (!fullContent) {
+                await streamViaNdjson(ollamaMessages, model, appendToken, signal);
+              } else {
+                throw e; // Already had partial content from WS, surface the error
+              }
+            } catch (fallbackErr) {
+              if (signal.aborted) {
+                // Aborted during fallback — also clean.
+              } else {
+                const msg =
+                  fallbackErr instanceof Error
+                    ? fallbackErr.message
+                    : "Failed to send message";
+                // Remove the empty assistant placeholder
+                const msgs = get().messages;
+                const last = msgs[msgs.length - 1];
+                const cleaned =
+                  last?.role === "assistant" && !last.content
+                    ? msgs.slice(0, -1)
+                    : msgs;
+                set({ error: msg, messages: cleaned });
+              }
             }
-          } catch (fallbackErr) {
-            const msg =
-              fallbackErr instanceof Error
-                ? fallbackErr.message
-                : "Failed to send message";
-            // Remove the empty assistant placeholder
-            const msgs = get().messages;
-            const last = msgs[msgs.length - 1];
-            const cleaned =
-              last?.role === "assistant" && !last.content
-                ? msgs.slice(0, -1)
-                : msgs;
-            set({ error: msg, messages: cleaned });
           }
         } finally {
+          activeAbort = null;
           set({ isStreaming: false });
+        }
+      },
+
+      cancelStreaming: () => {
+        if (activeAbort) {
+          activeAbort.abort();
+          activeAbort = null;
         }
       },
 

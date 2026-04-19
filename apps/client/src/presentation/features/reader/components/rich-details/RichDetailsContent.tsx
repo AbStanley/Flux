@@ -1,6 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import { Button } from "../../../../components/ui/button";
-import { Loader2, Volume2, BookA } from "lucide-react";
+import { Loader2, Volume2, BookA, Square } from "lucide-react";
 import { useAudioStore } from '../../store/useAudioStore';
 import { ConjugationsDisplay } from '../ConjugationsDisplay';
 import { AnalysisSection } from './AnalysisSection';
@@ -13,15 +13,19 @@ interface RichDetailsContentProps {
     tab: RichDetailsTab;
     onRegenerate: () => void;
     onFetchConjugations: () => void;
+    onCancel: () => void;
 }
 
-export function RichDetailsContent({ tab, onRegenerate, onFetchConjugations }: RichDetailsContentProps) {
-    const { data, isLoading, error, sourceLang, conjugationsLoading, conjugationsError } = tab;
+export function RichDetailsContent({ tab, onRegenerate, onFetchConjugations, onCancel }: RichDetailsContentProps) {
+    const { data, isLoading, isStreaming, error, sourceLang, conjugationsLoading, conjugationsError } = tab;
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-40 space-y-4">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">Analyzing...</p>
+                <Button variant="outline" size="sm" onClick={onCancel} className="gap-2">
+                    <Square className="h-3 w-3 fill-current" /> Stop
+                </Button>
             </div>
         );
     }
@@ -57,6 +61,17 @@ export function RichDetailsContent({ tab, onRegenerate, onFetchConjugations }: R
                     >
                         <Volume2 className="h-4 w-4" />
                     </Button>
+                    {isStreaming && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 rounded-full text-destructive hover:text-destructive"
+                            onClick={onCancel}
+                            title="Stop generating"
+                        >
+                            <Square className="h-3.5 w-3.5 fill-current" />
+                        </Button>
+                    )}
                 </div>
                 <div className="text-2xl font-bold prose dark:prose-invert prose-p:my-0 prose-headings:my-1 max-w-none">
                     <ReactMarkdown>{data.translation}</ReactMarkdown>
