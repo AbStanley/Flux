@@ -49,7 +49,7 @@ export function FluxContentApp() {
         currentCue, isActive: isYouTube,
         pauseVideo, playVideo, getIsPlaying,
         seekPrev, seekNext, hasPrev, hasNext,
-    } = useYouTubeSubtitles();
+    } = useYouTubeSubtitles(settings.fluxEnabled);
 
     // Universal Subtitle Logic (non-YouTube videos)
     const videoDetector = useVideoDetector();

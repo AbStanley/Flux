@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { YouTubeService, type SubtitleCue } from '../services/YouTubeService';
 
-export const useYouTubeSubtitles = () => {
+export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
     const [allCues, setAllCues] = useState<SubtitleCue[]>([]);
     const [currentCue, setCurrentCue] = useState<SubtitleCue | null>(null);
     const [isActive, setIsActive] = useState(false);
@@ -35,7 +35,11 @@ export const useYouTubeSubtitles = () => {
                         setTimeout(checkPage, 2000);
                     }
                 }
-                YouTubeService.hideNativeSubtitles();
+                if (fluxEnabled) {
+                    YouTubeService.hideNativeSubtitles();
+                } else {
+                    YouTubeService.showNativeSubtitles();
+                }
             } else {
                 setCurrentCue(null);
                 setAllCues([]);
@@ -70,7 +74,7 @@ export const useYouTubeSubtitles = () => {
             window.history.pushState = originalPushState;
             YouTubeService.showNativeSubtitles();
         };
-    }, [allCues.length]);
+    }, [allCues.length, fluxEnabled]);
 
     // Sync currentCue with video time
     useEffect(() => {
