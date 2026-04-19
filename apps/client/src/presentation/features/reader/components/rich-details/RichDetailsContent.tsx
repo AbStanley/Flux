@@ -1,22 +1,22 @@
 import ReactMarkdown from 'react-markdown';
 import { Button } from "../../../../components/ui/button";
-import { Loader2, Volume2 } from "lucide-react";
+import { Loader2, Volume2, BookA } from "lucide-react";
 import { useAudioStore } from '../../store/useAudioStore';
-import type { RichTranslationResult } from '../../../../../core/interfaces/IAIService';
 import { ConjugationsDisplay } from '../ConjugationsDisplay';
 import { AnalysisSection } from './AnalysisSection';
 import { GrammarTable } from './GrammarTable';
 import { ExamplesList } from './ExamplesList';
 import { AlternativesList } from './AlternativesList';
+import { shouldFetchConjugations, type RichDetailsTab } from '../../store/slices/richDetailsSlice';
 
 interface RichDetailsContentProps {
-    data: RichTranslationResult | null;
-    isLoading: boolean;
-    error: string | null;
+    tab: RichDetailsTab;
     onRegenerate: () => void;
+    onFetchConjugations: () => void;
 }
 
-export function RichDetailsContent({ data, isLoading, error, onRegenerate }: RichDetailsContentProps) {
+export function RichDetailsContent({ tab, onRegenerate, onFetchConjugations }: RichDetailsContentProps) {
+    const { data, isLoading, error, sourceLang, conjugationsLoading, conjugationsError } = tab;
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-40 space-y-4">
@@ -70,10 +70,46 @@ export function RichDetailsContent({ data, isLoading, error, onRegenerate }: Ric
 
             <GrammarTable grammar={data.grammar} />
 
-            {/* Conjugations (Verbs Only) */}
-            {data.conjugations && Object.keys(data.conjugations).length > 0 && (
-                <ConjugationsDisplay conjugations={data.conjugations} />
-            )}
+            {/* Conjugations — on-demand. The button appears for verb-like
+                lookups in supported source languages; clicking triggers
+                the fetch and the table replaces the button once loaded. */}
+            {(() => {
+                const hasConjugations = data.conjugations && Object.keys(data.conjugations).length > 0;
+                if (hasConjugations) {
+                    return <ConjugationsDisplay conjugations={data.conjugations!} />;
+                }
+                if (!shouldFetchConjugations(data, sourceLang)) return null;
+                return (
+                    <div className="border rounded-lg p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                            <h4 className="text-sm font-semibold flex items-center gap-2">
+                                <BookA className="h-4 w-4" /> Conjugations
+                            </h4>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={onFetchConjugations}
+                                disabled={conjugationsLoading}
+                            >
+                                {conjugationsLoading ? (
+                                    <>
+                                        <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                                        Generating…
+                                    </>
+                                ) : conjugationsError ? 'Retry' : 'Show conjugations'}
+                            </Button>
+                        </div>
+                        {conjugationsError && (
+                            <p className="text-xs text-destructive">{conjugationsError}</p>
+                        )}
+                        {!conjugationsError && !conjugationsLoading && (
+                            <p className="text-xs text-muted-foreground">
+                                Generate a full conjugation table for this verb.
+                            </p>
+                        )}
+                    </div>
+                );
+            })()}
 
             {/* Explanation */}
             {data.grammar?.explanation && (

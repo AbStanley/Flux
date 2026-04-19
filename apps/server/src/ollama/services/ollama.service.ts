@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { GenerateResponse } from 'ollama';
 import { OllamaClientService } from './ollama-client.service';
 import { OllamaTranslationService } from './ollama-translation.service';
 import { OllamaGrammarService } from './ollama-grammar.service';
@@ -7,6 +8,7 @@ import {
   GrammarAnalysisResponse,
   WritingAnalysisResponse,
   RichTranslation,
+  RichConjugations,
   Message,
 } from '../interfaces/ollama.interfaces';
 import { OllamaWritingService } from './ollama-writing.service';
@@ -75,6 +77,35 @@ export class OllamaService {
     model?: string;
   }): Promise<RichTranslation> {
     return this.translation.getRichTranslation(params);
+  }
+
+  async getRichTranslationStream(params: {
+    text: string;
+    targetLanguage: string;
+    context?: string;
+    sourceLanguage?: string;
+    model?: string;
+  }): Promise<AsyncIterable<GenerateResponse>> {
+    return this.translation.getRichTranslationStream(params);
+  }
+
+  async getConjugations(params: {
+    infinitive: string;
+    sourceLanguage: string;
+    model?: string;
+  }): Promise<RichConjugations> {
+    return this.translation.getConjugations(params);
+  }
+
+  getConjugationsStream(params: {
+    infinitive: string;
+    sourceLanguage: string;
+    model?: string;
+  }): AsyncGenerator<{
+    tense: string;
+    rows: Array<{ pronoun: string; conjugation: string }>;
+  }> {
+    return this.translation.getConjugationsStream(params);
   }
 
   async generateContent(params: {

@@ -6,6 +6,7 @@ import {
   GrammarAnalysisResponse,
   WritingAnalysisResponse,
   RichTranslation,
+  RichConjugations,
   Message,
 } from './interfaces/ollama.interfaces';
 import { GenerateContentDto } from './dto/generate-content.dto';
@@ -142,9 +143,46 @@ export class OllamaController {
       context?: string;
       sourceLanguage?: string;
       model?: string;
+      stream?: boolean;
     },
-  ): Promise<RichTranslation> {
-    return await this.ollamaService.getRichTranslation(body);
+    @Res() res: Response,
+  ) {
+    if (body.stream) {
+      res.setHeader('Content-Type', 'application/x-ndjson');
+      const stream = await this.ollamaService.getRichTranslationStream(body);
+      for await (const chunk of stream) {
+        res.write(JSON.stringify(chunk) + '\n');
+      }
+      res.end();
+      return;
+    }
+    const result: RichTranslation =
+      await this.ollamaService.getRichTranslation(body);
+    res.json(result);
+  }
+
+  @Post('rich-translation/conjugations')
+  async richTranslationConjugations(
+    @Body()
+    body: {
+      infinitive: string;
+      sourceLanguage: string;
+      model?: string;
+      stream?: boolean;
+    },
+    @Res() res: Response,
+  ) {
+    if (body.stream) {
+      res.setHeader('Content-Type', 'application/x-ndjson');
+      for await (const item of this.ollamaService.getConjugationsStream(body)) {
+        res.write(JSON.stringify(item) + '\n');
+      }
+      res.end();
+      return;
+    }
+    const result: RichConjugations =
+      await this.ollamaService.getConjugations(body);
+    res.json(result);
   }
 
   @Post('generate-content')

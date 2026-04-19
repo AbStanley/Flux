@@ -1,4 +1,4 @@
-import type { IAIService, RichTranslationResult } from '../../core/interfaces/IAIService';
+import type { IAIService, RichTranslationResult, RichConjugationsResult } from '../../core/interfaces/IAIService';
 import type { PartOfSpeech } from '../../core/types/Linguistics';
 
 export class MockAIService implements IAIService {
@@ -51,6 +51,46 @@ export class MockAIService implements IAIService {
             examples: [],
             alternatives: ["Mock alt 1", "Mock alt 2"]
         };
+    }
+
+    async getConjugations(): Promise<RichConjugationsResult> {
+        await new Promise(resolve => setTimeout(resolve, 900));
+        return { conjugations: {} };
+    }
+
+    async getConjugationsStream(
+        _infinitive: string,
+        _sourceLanguage: string,
+        opts: {
+            signal?: AbortSignal;
+            onTense: (tense: string, rows: Array<{ pronoun: string; conjugation: string }>) => void;
+        },
+    ): Promise<RichConjugationsResult> {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const rows = [{ pronoun: "I", conjugation: "mock" }];
+        opts.onTense("Present", rows);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        opts.onTense("Past", rows);
+        return { conjugations: { Present: rows, Past: rows } };
+    }
+
+    async getRichTranslationStream(
+        text: string,
+        opts: {
+            targetLanguage?: string;
+            context?: string;
+            sourceLanguage?: string;
+            signal?: AbortSignal;
+            onPartial: (partial: Partial<RichTranslationResult>) => void;
+        },
+    ): Promise<RichTranslationResult> {
+        const final = await this.getRichTranslation(text, opts.targetLanguage, opts.context);
+        opts.onPartial({ segment: final.segment, translation: final.translation });
+        await new Promise(resolve => setTimeout(resolve, 200));
+        opts.onPartial({ ...final, alternatives: [] });
+        await new Promise(resolve => setTimeout(resolve, 200));
+        opts.onPartial(final);
+        return final;
     }
 
     async checkHealth(): Promise<boolean> {

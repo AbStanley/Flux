@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { GenerateResponse } from 'ollama';
 import { OllamaClientService } from './ollama-client.service';
 import {
   getTranslatePrompt,
@@ -7,7 +8,10 @@ import {
   getSingleTensePrompt,
 } from '../prompts';
 import { cleanResponse, cleanAndParseJson } from '../utils/ollama-utils';
-import { RichTranslation } from '../interfaces/ollama.interfaces';
+import {
+  RichTranslation,
+  RichConjugations,
+} from '../interfaces/ollama.interfaces';
 
 type RichObj = Record<string, unknown> & {
   isVerb?: boolean;
@@ -41,8 +45,8 @@ function detectScript(text: string): string {
 }
 
 /**
- * Tense names to request per source language for the conjugation refill flow.
- * Keys are lowercase language names (matched case-insensitively).
+ * Tense names to request per source language for the on-demand conjugations
+ * fetch. Keys are lowercase language names (matched case-insensitively).
  */
 const CORE_TENSES: Readonly<Record<string, readonly string[]>> = {
   english: ['Present', 'Past', 'Future', 'Present Perfect'],
@@ -131,11 +135,127 @@ export class OllamaTranslationService {
     this.enforceVerbShape(rich);
     this.dropSameLanguageExamples(rich);
 
-    if (this.needsConjugationRefill(rich)) {
-      await this.refillConjugations(rich, model, params.sourceLanguage);
+    return rich as unknown as RichTranslation;
+  }
+
+  /**
+   * Streaming variant of getRichTranslation. Returns the raw Ollama chunk
+   * stream — each chunk exposes a forward-prefix `response` string and a
+   * `done` flag. The client best-effort-parses the cumulative response
+   * and renders completed fields progressively so the popup feels alive
+   * instead of waiting for the full object to close.
+   */
+  async getRichTranslationStream(params: {
+    text: string;
+    targetLanguage: string;
+    context?: string;
+    sourceLanguage?: string;
+    model?: string;
+  }): Promise<AsyncIterable<GenerateResponse>> {
+    const model = await this.ollamaClient.ensureModel(params.model);
+    const prompt = getRichTranslationPrompt(
+      params.text,
+      params.targetLanguage,
+      params.context,
+      params.sourceLanguage,
+    );
+    return this.ollamaClient.generate(model, prompt, true, 'json', {
+      num_ctx: 2048,
+      num_predict: 768,
+      temperature: 0,
+    });
+  }
+
+  /**
+   * On-demand conjugation fetch triggered by the "Show conjugations"
+   * button in the rich-details panel. Returns an empty object when the
+   * source is unsupported or no infinitive was provided.
+   */
+  async getConjugations(params: {
+    infinitive: string;
+    sourceLanguage: string;
+    model?: string;
+  }): Promise<RichConjugations> {
+    const model = await this.ollamaClient.ensureModel(params.model);
+    const verb = params.infinitive.trim();
+    const tenses = CORE_TENSES[params.sourceLanguage.toLowerCase()];
+    if (!verb || !tenses?.length) return { conjugations: {} };
+
+    const results = await Promise.all(
+      tenses.map((tense) =>
+        this.fetchTenseRows(verb, params.sourceLanguage, tense, model),
+      ),
+    );
+
+    const conjugations: RichConjugations['conjugations'] = {};
+    tenses.forEach((tense, i) => {
+      const rows = results[i];
+      if (rows)
+        conjugations[tense] = rows as Array<{
+          pronoun: string;
+          conjugation: string;
+        }>;
+    });
+
+    return { conjugations };
+  }
+
+  /**
+   * Streaming variant of getConjugations. Fires every core tense in
+   * parallel and yields each one as its rows come back, so the client
+   * can render the first tense table while later tenses are still
+   * generating. Tenses that produced no valid rows are skipped silently.
+   */
+  async *getConjugationsStream(params: {
+    infinitive: string;
+    sourceLanguage: string;
+    model?: string;
+  }): AsyncGenerator<{
+    tense: string;
+    rows: Array<{ pronoun: string; conjugation: string }>;
+  }> {
+    const model = await this.ollamaClient.ensureModel(params.model);
+    const verb = params.infinitive.trim();
+    const tenses = CORE_TENSES[params.sourceLanguage.toLowerCase()];
+    if (!verb || !tenses?.length) return;
+
+    // Fire all tense fetches eagerly, then emit as each resolves. Uses a
+    // tiny signal/queue pattern so results come out in completion order
+    // rather than tense-list order — matters when OLLAMA_NUM_PARALLEL>1.
+    const queue: Array<{ tense: string; rows: unknown[] | null }> = [];
+    let settled = 0;
+    let notify: (() => void) | null = null;
+
+    for (const tense of tenses) {
+      this.fetchTenseRows(verb, params.sourceLanguage, tense, model)
+        .then((rows) => {
+          queue.push({ tense, rows });
+        })
+        .catch(() => {
+          queue.push({ tense, rows: null });
+        })
+        .finally(() => {
+          settled += 1;
+          notify?.();
+          notify = null;
+        });
     }
 
-    return rich as unknown as RichTranslation;
+    while (settled < tenses.length || queue.length > 0) {
+      if (queue.length === 0) {
+        await new Promise<void>((resolve) => {
+          notify = resolve;
+        });
+      }
+      while (queue.length > 0) {
+        const item = queue.shift();
+        if (!item?.rows) continue;
+        yield {
+          tense: item.tense,
+          rows: item.rows as Array<{ pronoun: string; conjugation: string }>,
+        };
+      }
+    }
   }
 
   /**
@@ -193,9 +313,20 @@ export class OllamaTranslationService {
       prompt,
       false,
       'json',
-      { num_predict: 1024, temperature: 0 },
+      { num_ctx: 2048, num_predict: 768, temperature: 0 },
     );
-    return cleanAndParseJson<RichObj>(response);
+    try {
+      return cleanAndParseJson<RichObj>(response);
+    } catch (e) {
+      const preview =
+        typeof response === 'string'
+          ? response.slice(0, 500)
+          : String(response);
+      this.logger.error(
+        `[RichTranslation] JSON parse failed. Raw (first 500 chars): ${preview}`,
+      );
+      throw e;
+    }
   }
 
   /**
@@ -222,47 +353,6 @@ export class OllamaTranslationService {
       delete rich.grammar.infinitive;
       delete rich.grammar.tense;
     }
-  }
-
-  /** A verb needs a refill when the primary call returned fewer than 2 tenses. */
-  private needsConjugationRefill(rich: RichObj): boolean {
-    if (rich.isVerb !== true) return false;
-    const conj = rich.conjugations;
-    if (!conj || typeof conj !== 'object') return true;
-    return Object.keys(conj).length < 2;
-  }
-
-  /**
-   * Fetch each core tense in parallel with its own focused prompt. A small
-   * model that drops 3-of-4 tenses in a one-shot table reliably completes a
-   * single-tense request. Successful tenses overwrite/extend whatever the
-   * primary call returned; failures are silently dropped.
-   */
-  private async refillConjugations(
-    rich: RichObj,
-    model: string,
-    sourceLanguage?: string,
-  ): Promise<void> {
-    const verb = (rich.grammar?.infinitive || rich.segment || '').trim();
-    if (!verb || !sourceLanguage) return;
-
-    const tenses = CORE_TENSES[sourceLanguage.toLowerCase()];
-    if (!tenses?.length) return;
-
-    const results = await Promise.all(
-      tenses.map((tense) =>
-        this.fetchTenseRows(verb, sourceLanguage, tense, model),
-      ),
-    );
-
-    const filled: Record<string, unknown[]> = {};
-    tenses.forEach((tense, i) => {
-      const rows = results[i];
-      if (rows) filled[tense] = rows;
-    });
-
-    if (Object.keys(filled).length === 0) return;
-    rich.conjugations = { ...(rich.conjugations ?? {}), ...filled };
   }
 
   /** Returns the rows array for one tense, or null on failure / bad shape. */

@@ -48,6 +48,7 @@ export const useTranslation = (enableAutoFetch = false) => {
     const closeAllTabs = useTranslationStore(state => state.closeAllTabs);
     const setActiveTab = useTranslationStore(state => state.setActiveTab);
     const regenerateTabAction = useTranslationStore(state => state.regenerateTab);
+    const fetchConjugationsForTabAction = useTranslationStore(state => state.fetchConjugationsForTab);
 
     const toggleShowTranslations = useTranslationStore(state => state.toggleShowTranslations);
     const clearSelectionTranslations = useTranslationStore(state => state.clearSelectionTranslations);
@@ -128,6 +129,10 @@ export const useTranslation = (enableAutoFetch = false) => {
         regenerateTabAction(id, aiService);
     }, [regenerateTabAction, aiService]);
 
+    const fetchConjugationsForTab = useCallback((id: string) => {
+        fetchConjugationsForTabAction(id, aiService);
+    }, [fetchConjugationsForTabAction, aiService]);
+
     return {
         // State
         selectionTranslations,
@@ -167,6 +172,7 @@ export const useTranslation = (enableAutoFetch = false) => {
         closeAllTabs,
         setActiveTab,
         regenerateTab,
+        fetchConjugationsForTab,
 
         // Exposed helper for manual triggering (e.g. click-to-merge)
         translateIndices: (indices: Set<number>, force: boolean = false) => {

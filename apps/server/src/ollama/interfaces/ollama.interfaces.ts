@@ -36,6 +36,10 @@ export interface RichTranslation {
   }[];
 }
 
+export interface RichConjugations {
+  conjugations: Record<string, Array<{ pronoun: string; conjugation: string }>>;
+}
+
 export interface TranslationResponse {
   response: string;
   sourceLanguage?: string;

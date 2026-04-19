@@ -3,6 +3,7 @@ import type { GrammaticalGender, GrammaticalTense, PartOfSpeech, TranslationType
 
 export interface RichTranslationResult {
     type?: TranslationType; // Discriminator
+    isVerb?: boolean;
     translation: string;
     segment: string;
     // Word-specific
@@ -26,6 +27,11 @@ export interface RichTranslationResult {
     conjugations?: {
         [tense: string]: Array<{ pronoun: string; conjugation: string }>;
     };
+}
+
+/** On-demand conjugation tables fetched when the user clicks "Show conjugations". */
+export interface RichConjugationsResult {
+    conjugations: NonNullable<RichTranslationResult['conjugations']>;
 }
 
 export interface IAIService {
@@ -53,6 +59,44 @@ export interface IAIService {
      * Helper to get rich translation info with grammar and examples
      */
     getRichTranslation(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string): Promise<RichTranslationResult>;
+
+    /**
+     * Streaming variant of getRichTranslation. Calls `onPartial` with a
+     * best-effort-parsed partial of the eventual rich result each time the
+     * stream reveals a newly-completed field, and returns the final result.
+     * The signal is optional and aborts the underlying fetch if provided.
+     */
+    getRichTranslationStream(
+        text: string,
+        opts: {
+            targetLanguage?: string;
+            context?: string;
+            sourceLanguage?: string;
+            signal?: AbortSignal;
+            onPartial: (partial: Partial<RichTranslationResult>) => void;
+        },
+    ): Promise<RichTranslationResult>;
+
+    /**
+     * On-demand conjugation tables. Called when the user clicks "Show
+     * conjugations" in the rich details panel.
+     */
+    getConjugations(infinitive: string, sourceLanguage: string): Promise<RichConjugationsResult>;
+
+    /**
+     * Streaming variant — fires `onTense` as each tense's rows land so
+     * the UI can render the first table while later ones are still
+     * generating. Resolves with the full conjugations object once every
+     * tense has either arrived or failed.
+     */
+    getConjugationsStream(
+        infinitive: string,
+        sourceLanguage: string,
+        opts: {
+            signal?: AbortSignal;
+            onTense: (tense: string, rows: Array<{ pronoun: string; conjugation: string }>) => void;
+        },
+    ): Promise<RichConjugationsResult>;
 
     /**
      * Checks if the service is available/healthy.

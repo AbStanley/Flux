@@ -20,6 +20,7 @@ interface RichInfoPanelProps {
     onTabChange: (id: string) => void;
     onCloseTab: (id: string) => void;
     onRegenerate: (id: string) => void;
+    onFetchConjugations: (id: string) => void;
     onClearAll: () => void;
     forceOverlay?: boolean;
 }
@@ -41,7 +42,7 @@ const nextSnap = (snap: RichSnapState): RichSnapState => {
     return 'peek';
 };
 
-export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange, onCloseTab, onRegenerate, onClearAll, forceOverlay }: RichInfoPanelProps) {
+export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange, onCloseTab, onRegenerate, onFetchConjugations, onClearAll, forceOverlay }: RichInfoPanelProps) {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const { wordsState, phrasesState, addWord, updateWord } = useWordsStore();
     const snapState = useTranslationStore(s => s.snapState);
@@ -285,10 +286,9 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
                         tabs.map(tab => (
                             <div key={tab.id} className={activeTabId === tab.id ? 'block' : 'hidden'}>
                                 <RichDetailsContent
-                                    data={tab.data}
-                                    isLoading={tab.isLoading}
-                                    error={tab.error}
+                                    tab={tab}
                                     onRegenerate={() => onRegenerate(tab.id)}
+                                    onFetchConjugations={() => onFetchConjugations(tab.id)}
                                 />
                             </div>
                         ))

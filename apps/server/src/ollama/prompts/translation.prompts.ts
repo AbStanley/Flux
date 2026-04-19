@@ -79,63 +79,57 @@ export const getRichTranslationPrompt = (
     sourceLanguage && sourceLanguage !== 'Auto'
       ? sourceLanguage
       : 'source language';
+  const isSentence = text.length > 40 || /\s/.test(text.trim());
 
-  return `You are a bilingual dictionary. Look up "${text}" (${srcLang}) for a ${targetLanguage}-speaking learner.
-Context (use only to disambiguate; never translate it): "${context || 'none'}"
+  return `You are a ${srcLang}→${targetLanguage} bilingual dictionary.
 
-Reply with ONE JSON object in the shape below. Decide "isVerb" FIRST and let it drive the rest of the JSON.
+A learner is reading this ${srcLang} sentence:
+"${context || 'none'}"
 
-Definitions:
-- isVerb=true  → "${text}" is a verb in ${srcLang} (infinitive, conjugated form, participle, gerund, zu-infinitive, etc.). Include "conjugations" and the verb-only grammar fields.
-- isVerb=false → "${text}" is anything else (noun, adjective, adverb, pronoun, particle, sentence, …). Do NOT include "conjugations". Do NOT include "infinitive" or "tense".
+Within that sentence they tapped: "${text}"
 
-Each placeholder names the language to write in. Omit any key whose condition is false — never write a literal string like "n/a" or "omitido" as a value.
+CRITICAL: "${text}" is a ${srcLang} word (or phrase) as used in the ${srcLang} sentence above. Do NOT interpret it as a word from English or any other language, even if it looks identical to one. Cross-language homograph trap — watch for it:
+- German "war" → past tense of "sein" (to be), NOT the English noun "war"
+- German "also" → "therefore", NOT the English "also"
+- Spanish "once" → the number 11, NOT the English "once"
+
+BEFORE writing JSON, decide:
+1. In THIS ${srcLang} sentence, is "${text}" a verb form? (infinitive, conjugated, participle, gerund, zu-infinitive all count)
+2. If yes, what is the ${srcLang} infinitive? (e.g. "ging" → "gehen", "war" → "sein", "подошла" → "подойти", "come" → "comer")
+
+Reply with ONE JSON object in this exact shape:
 
 {
   "type": "word" | "sentence",
   "isVerb": true | false,
   "segment": "${text}",
-  "translation": "<${targetLanguage}: dictionary headword(s); ≤3 ${targetLanguage} words for single-word input>",
+  "translation": "<${targetLanguage}: dictionary headword(s) for the ${srcLang} word in this context; ≤3 words for single-word input>",
   "grammar": {
+    "infinitive":   "<${srcLang} dictionary form; REQUIRED and MUST be filled when isVerb=true>",
     "partOfSpeech": "<${targetLanguage}>",
-    "infinitive":   "<${srcLang}; ONLY if isVerb=true>",
-    "tense":        "<${targetLanguage}; ONLY if isVerb=true>",
+    "tense":        "<${targetLanguage}; REQUIRED when isVerb=true>",
     "gender":       "<${targetLanguage}; ONLY when grammatically gendered>",
-    "explanation":  "<${targetLanguage}, one sentence>"
+    "explanation":  "<${targetLanguage}, one full sentence about how the word functions in THIS sentence>"
   },
-  "conjugations": {
-    "<tense name for ${srcLang}>": [ {"pronoun":"<${srcLang}>","conjugation":"<${srcLang}>"}, … rows ],
-    … every tense of ${srcLang} applicable to this verb
-  },
-  "examples":     [ {"sentence":"<${srcLang} ONLY>","translation":"<${targetLanguage} ONLY>"}, 2-3 entries ],
-  "alternatives": [ "<${targetLanguage}>", 1-2 entries ]
+  "examples":     [ {"sentence":"<${srcLang} ONLY>","translation":"<${targetLanguage} ONLY>"}, 2-3 entries — REQUIRED ],
+  "alternatives": [ "<${targetLanguage}>", 1-2 entries — REQUIRED ]${
+    isSentence
+      ? `,
+  "syntaxAnalysis": "<${targetLanguage}, 1-2 sentences describing structure>",
+  "grammarRules":   [ "<${targetLanguage}, one grammar point>", 2-4 entries ]`
+      : ''
+  }
 }
 
-For multi-word input: type="sentence", isVerb=false, omit "conjugations", add "syntaxAnalysis" (${targetLanguage} string) and "grammarRules" (${targetLanguage} string[]).
-Conjugation forms inflect the ${srcLang} infinitive — the forms always share the infinitive's stem.
+Rules:
+- Use the ${srcLang} sentence above to pick the correct sense. The translation must match how the word is actually used there.
+- When isVerb=true, "infinitive" MUST be the ${srcLang} dictionary form — NEVER copy the segment verbatim when the segment is a conjugated form.
+- Every string value MUST be in the language its slot assigns. Omit optional keys whose condition is false — never write "n/a", "none", or empty strings.
+- "examples": each "sentence" entirely in ${srcLang}, each "translation" entirely in ${targetLanguage}. Never swap. If scripts differ, the two fields MUST use different scripts.
+- Examples should show "${text}" used in natural, varied ${srcLang} contexts — not all the same sense.
+${isSentence ? `- Multi-word input: type="sentence", isVerb=false.` : ''}
 
-When isVerb=true, "conjugations" is REQUIRED and must be fully populated — never return an empty "{}" or skip the block. Produce the tenses of ${srcLang} that this specific verb has, drawn from this set (pick only those that apply):
-  - English:  Present, Past, Future, Present Perfect
-  - Spanish / Italian / Portuguese:  Presente, Pretérito, Imperfecto, Futuro
-  - French:   Présent, Passé composé, Imparfait, Futur
-  - German:   Präsens, Präteritum, Perfekt, Futur
-  - Russian:  Настоящее, Прошедшее, Будущее  (perfective verbs have no Настоящее — include only Прошедшее and Будущее)
-  - Other:    the core tenses of ${srcLang}
-
-Row count matches the natural paradigm of each tense — NOT a fixed 6:
-  - Six-person languages (English, Spanish, French, German, Russian present/future, …): 6 rows by person/number; "pronoun" is the pronoun in ${srcLang}.
-  - Russian past tense: 4 rows by gender/number — "pronoun" is "он" / "она" / "оно" / "они" — because Russian past inflects for gender, not person.
-  - Any other tense whose paradigm differs: use whatever row count the paradigm has; "pronoun" names the relevant feature in ${srcLang}.
-
-Every "conjugation" string is the fully inflected form in ${srcLang} (e.g. Russian "плаваю", Spanish "nado", German "schwimme"). Never leave a row with an empty or placeholder string.
-
-Return at least 2 tenses. If you are about to close the JSON with an empty "conjugations" object, you have not completed the task — fill it first.
-
-Every string value must be in the language the schema assigns to that slot. Do not copy vocabulary, pronouns, or example sentences from any language other than ${srcLang} or ${targetLanguage} — they do not belong here. In particular, every "<${srcLang}>" slot must contain actual ${srcLang} output for "${text}", not placeholder text from some other language.
-
-STRICT RULE for "examples": each entry MUST have "sentence" written entirely in ${srcLang} and "translation" written entirely in ${targetLanguage}. NEVER put both fields in the same language, and NEVER swap them. If ${srcLang} and ${targetLanguage} use different scripts, the two fields MUST use different scripts.
-
-Output JSON only. No markdown, no preamble.`;
+Output JSON only. No markdown, no preamble. Do NOT include a "conjugations" field — conjugation tables are fetched separately when the user requests them.`;
 };
 
 /**

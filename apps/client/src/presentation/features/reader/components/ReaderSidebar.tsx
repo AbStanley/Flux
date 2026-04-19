@@ -12,7 +12,8 @@ export function ReaderSidebar() {
         setActiveTab,
         closeTab,
         closeAllTabs,
-        regenerateTab
+        regenerateTab,
+        fetchConjugationsForTab
     } = useTranslation(true);
 
     // When not in reading mode, the container is narrow (max-w-4xl) — show panel as
@@ -27,6 +28,7 @@ export function ReaderSidebar() {
                 onTabChange={setActiveTab}
                 onCloseTab={closeTab}
                 onRegenerate={regenerateTab}
+                onFetchConjugations={fetchConjugationsForTab}
                 onClearAll={closeAllTabs}
                 forceOverlay
             />
@@ -45,6 +47,7 @@ export function ReaderSidebar() {
                     onTabChange={setActiveTab}
                     onCloseTab={closeTab}
                     onRegenerate={regenerateTab}
+                    onFetchConjugations={fetchConjugationsForTab}
                     onClearAll={closeAllTabs}
                 />
             </div>
