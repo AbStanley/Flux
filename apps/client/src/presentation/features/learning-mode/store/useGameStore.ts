@@ -85,7 +85,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         const params: GameContentParams = {
             source: config.source,
             config: {
-                limit: 10,
+                limit: 30,
                 gameMode: config.mode,
                 timerEnabled: config.timerEnabled,
                 language: {

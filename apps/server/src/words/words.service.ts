@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, Word } from '@prisma/client';
 
 @Injectable()
 export class WordsService {
@@ -71,7 +71,7 @@ export class WordsService {
   async findAll(query?: {
     sourceLanguage?: string;
     targetLanguage?: string;
-    sort?: 'date_desc' | 'date_asc' | 'text_asc';
+    sort?: 'date_desc' | 'date_asc' | 'text_asc' | 'random';
     skip?: number;
     limit?: number;
     type?: 'word' | 'phrase';
@@ -92,6 +92,19 @@ export class WordsService {
     };
 
     try {
+      if (sort === 'random') {
+        const items = await this.prisma.$queryRaw<Word[]>`
+          SELECT * FROM "Word"
+          WHERE ("sourceLanguage" ILIKE ${sourceLanguage || '%'})
+            AND ("targetLanguage" ILIKE ${targetLanguage || '%'})
+            AND ("type"::text = ${type || 'word'})
+            AND (${userId}::text IS NULL OR "userId" = ${userId})
+          ORDER BY RANDOM()
+          LIMIT ${limit || 20}
+        `;
+        return { total: items.length, items };
+      }
+
       const [total, items] = await this.prisma.$transaction([
         this.prisma.word.count({ where }),
         this.prisma.word.findMany({

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { Button } from "@/presentation/components/ui/button";
 import { Card } from "@/presentation/components/ui/card";
@@ -16,9 +16,15 @@ export const StoryGame = () => {
 
     const [userAnswer, setUserAnswer] = useState('');
 
-    const handleSubmit = (e?: FormEvent) => {
+    const handleSubmit = useCallback((e?: FormEvent) => {
         e?.preventDefault();
-        if (!currentItem || isSubmitted) return;
+        if (!currentItem) return;
+
+        if (isSubmitted) {
+            nextItem();
+            setUserAnswer('');
+            return;
+        }
 
         const cleanUser = userAnswer.trim().toLowerCase();
         const cleanAnswer = currentItem.answer.toLowerCase();
@@ -27,7 +33,18 @@ export const StoryGame = () => {
 
         submitAnswer(correct);
         setTime(0); // Stop timer visually
-    };
+    }, [currentItem, isSubmitted, nextItem, submitAnswer, setTime, userAnswer]);
+
+    // Global listener for Enter key when input is disabled or focused on the button
+    useEffect(() => {
+        const handleGlobalKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Enter' && isSubmitted) {
+                handleSubmit();
+            }
+        };
+        window.addEventListener('keydown', handleGlobalKeyDown);
+        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    }, [isSubmitted, handleSubmit]);
 
     if (!currentItem) return null;
 

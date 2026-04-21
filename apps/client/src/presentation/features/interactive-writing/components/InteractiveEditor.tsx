@@ -4,7 +4,7 @@ import { useWritingStore } from '../store/writing.store';
 
 import { cn } from '@/lib/utils';
 import { AnimatePresence } from 'framer-motion';
-import { Sparkles, RotateCcw, Cpu, Languages, Trash2 } from 'lucide-react';
+import { Sparkles, Cpu, Languages, Trash2 } from 'lucide-react';
 import { ModelSelect } from '@/presentation/components/ModelSelect';
 import { LANGUAGES } from '@/content/constants';
 import { CorrectionTooltip } from './CorrectionTooltip';
@@ -143,12 +143,51 @@ export const InteractiveEditor = () => {
             >
               <button
                 type="button"
-                onClick={() => store.undo()}
-                className="flex h-[2.75rem] w-[2.75rem] shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground lg:rounded-full lg:bg-transparent lg:hover:bg-muted/60"
-                title="Undo"
+                onClick={() => {
+                  const prompts = [
+                    "Describe a childhood memory that still makes you smile today.",
+                    "If you could travel to any point in the future, where would you go and why?",
+                    "What are the qualities you value most in a close friend?",
+                    "Write about a fictional character you'd love to meet in real life.",
+                    "How has technology changed the way you communicate with others?",
+                    "What does your 'ideal day' look like from morning until night?",
+                    "Discuss a book or movie that significantly changed your perspective on life.",
+                    "If you could start any business tomorrow, what would it be?",
+                    "What advice would you give to your 10-year-old self?",
+                    "Describe a place where you feel completely at peace.",
+                    "Is it better to be a 'jack of all trades' or a master of one? Why?",
+                    "What is a tradition from your culture that you find particularly meaningful?",
+                    "If you could have dinner with anyone from history, who would it be?",
+                    "Explain a complex hobby of yours to someone who has never heard of it.",
+                    "What do you think is the most important invention of the last century?",
+                    "Write about a time you stepped out of your comfort zone and what happened.",
+                    "How do you stay motivated when things get difficult?",
+                    "If you could change one thing about the world, what would it be and why?",
+                    "Describe the best meal you've ever had in vivid detail.",
+                    "What does 'success' mean to you personally?"
+                  ];
+                  
+                  // Simple shuffle logic avoiding the same prompt twice in a row
+                  let nextPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+                  while (nextPrompt === store.text) {
+                    nextPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+                  }
+                  
+                  store.setText(nextPrompt);
+                }}
+                className={cn(
+                  'flex min-h-[2.75rem] items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold shadow-sm transition-all',
+                  'sm:px-5 lg:flex-none lg:rounded-full lg:px-5',
+                  'bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/50',
+                )}
+                title="Get a creative writing prompt"
               >
-                <RotateCcw className="h-4 w-4" />
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span>Suggest Topic</span>
+                </div>
               </button>
+
               <button
                 type="button"
                 onClick={() => store.checkText(store.text, store.sourceLanguage)}

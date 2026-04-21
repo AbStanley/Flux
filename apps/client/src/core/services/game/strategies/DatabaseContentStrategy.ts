@@ -29,7 +29,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
                 limit,
                 sourceLanguage: reqSource,
                 targetLanguage: reqTarget,
-                type: typeFilter
+                type: typeFilter,
+                sort: 'random'
             });
 
             // 2. Reverse Fetch: Search for the opposite to support "Backwards" learning
@@ -40,7 +41,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
                     limit,
                     sourceLanguage: reqTarget,
                     targetLanguage: reqSource,
-                    type: typeFilter
+                    type: typeFilter,
+                    sort: 'random'
                 });
             }
 

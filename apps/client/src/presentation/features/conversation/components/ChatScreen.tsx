@@ -7,17 +7,19 @@ import { useSpeechToText } from '../hooks/useSpeechToText';
 import { LANGUAGE_CODES } from '../constants';
 import { useTheme } from '../../../providers/useTheme';
 
-function MessageBubble({ message, targetLanguage, nativeLanguage }: {
+function MessageBubble({ message, targetLanguage, nativeLanguage, fontSize }: {
     message: ChatMessage;
     targetLanguage: string;
     nativeLanguage: string;
+    fontSize: number;
 }) {
     const isUser = message.role === 'user';
 
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
             <div
-                className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed
+                style={{ fontSize: `${fontSize}px` }}
+                className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-2.5 leading-relaxed
                     ${isUser
                         ? 'bg-primary text-primary-foreground rounded-br-md'
                         : 'bg-muted text-foreground rounded-bl-md'
@@ -43,6 +45,7 @@ export function ChatScreen() {
     const { messages, isStreaming, error, sendMessage, cancelStreaming, reset, targetLanguage, nativeLanguage } =
         useConversationStore();
     const [input, setInput] = useState('');
+    const [fontSize, setFontSize] = useState(14); // default text-sm equivalent
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -79,6 +82,9 @@ export function ChatScreen() {
         }
     };
 
+    const increaseFontSize = () => setFontSize(prev => Math.min(prev + 1, 24));
+    const decreaseFontSize = () => setFontSize(prev => Math.max(prev - 1, 10));
+
     const visibleMessages = messages.filter((m) => m.role !== 'system');
 
     return (
@@ -87,16 +93,39 @@ export function ChatScreen() {
             <div className="flex items-center justify-between px-4 py-3 border-b">
                 <div className="flex items-center gap-2">
                     <MessageCircle className="w-5 h-5 text-primary" />
-                    <h2 className="font-semibold text-foreground">Conversation Practice</h2>
+                    <h2 className="font-semibold text-foreground hidden sm:block">Conversation Practice</h2>
                     <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                         {targetLanguage}
                     </span>
                 </div>
                 <div className="flex items-center gap-1">
+                    {/* Font Resize Controls */}
+                    <div className="flex items-center gap-0.5 mr-2 bg-muted/30 rounded-lg p-0.5">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-[10px] font-bold"
+                            onClick={decreaseFontSize}
+                            title="Decrease text size"
+                        >
+                            A-
+                        </Button>
+                        <span className="text-[10px] text-muted-foreground w-4 text-center">{fontSize}</span>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-xs font-bold"
+                            onClick={increaseFontSize}
+                            title="Increase text size"
+                        >
+                            A+
+                        </Button>
+                    </div>
+
                     <ThemeToggle />
-                    <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5">
+                    <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5 h-8">
                         <RotateCcw className="w-3.5 h-3.5" />
-                        New
+                        <span className="hidden xs:inline">New</span>
                     </Button>
                 </div>
             </div>
@@ -109,6 +138,7 @@ export function ChatScreen() {
                         message={msg}
                         targetLanguage={targetLanguage}
                         nativeLanguage={nativeLanguage}
+                        fontSize={fontSize}
                     />
                 ))}
 
