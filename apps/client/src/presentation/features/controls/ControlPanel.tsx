@@ -70,71 +70,81 @@ export function ControlPanel() {
 
     return (
         <Card className={cn("w-full mt-5 mb-2 glass text-card-foreground")}>
-            <CardHeader className={cn("space-y-2 p-4")}>
-                <div className={cn("flex flex-col sm:flex-row gap-2 pb-2 border-b border-border/40 items-center sm:items-end justify-center")}>
-                    <LanguageSelect
-                        label="Foreign Language 🌍"
-                        value={sourceLang}
-                        onChange={setSourceLang}
-                        options={SOURCE_LANGUAGES}
-                        placeholder="Select Foreign"
-                        className="w-full sm:w-[200px]"
-                        disabled={isGenerating}
-                    />
+            <CardHeader className={cn("p-4 transition-all duration-500", isGenerating && "p-0")}>
+                <div className={cn("grid transition-all duration-500 ease-in-out", isGenerating ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100")}>
+                    <div className="overflow-hidden space-y-2">
+                        <div className={cn("flex flex-col sm:flex-row gap-2 pb-2 border-b border-border/40 items-center sm:items-end justify-center")}>
+                            <LanguageSelect
+                                label="Foreign Language 🌍"
+                                value={sourceLang}
+                                onChange={setSourceLang}
+                                options={SOURCE_LANGUAGES}
+                                placeholder="Select Foreign"
+                                className="w-full sm:w-[200px]"
+                                disabled={isGenerating}
+                            />
 
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleSwapLanguages}
-                        className={cn("mb-[2px] hover:bg-secondary/80")}
-                        title="Swap Languages"
-                        disabled={isGenerating}
-                    >
-                        <ArrowRightLeft className="h-4 w-4" />
-                    </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleSwapLanguages}
+                                className={cn("mb-[2px] hover:bg-secondary/80")}
+                                title="Swap Languages"
+                                disabled={isGenerating}
+                            >
+                                <ArrowRightLeft className="h-4 w-4" />
+                            </Button>
 
-                    <LanguageSelect
-                        label="Native Language 🏠"
-                        value={targetLang}
-                        onChange={setTargetLang}
-                        options={TARGET_LANGUAGES}
-                        placeholder="Select Native"
-                        className="w-full sm:w-[200px]"
-                        disabled={isGenerating}
-                    />
+                            <LanguageSelect
+                                label="Native Language 🏠"
+                                value={targetLang}
+                                onChange={setTargetLang}
+                                options={TARGET_LANGUAGES}
+                                placeholder="Select Native"
+                                className="w-full sm:w-[200px]"
+                                disabled={isGenerating}
+                            />
+                        </div>
+
+                        <div className={cn(isGenerating ? 'opacity-50 pointer-events-none' : '')}>
+                            <LearningControls
+                                isLearningMode={isLearningMode}
+                                setIsLearningMode={setIsLearningMode}
+                                proficiencyLevel={proficiencyLevel}
+                                setProficiencyLevel={setProficiencyLevel}
+                                topic={topic}
+                                setTopic={setTopic}
+                                contentType={contentType}
+                                setContentType={setContentType}
+                            />
+                        </div>
+
+                        <AIControls isGenerating={isGenerating} />
+
+                        <CardDescription className={cn("text-xs hidden sm:block")}>
+                            Enter text below or generate a story to practice reading.
+                        </CardDescription>
+                    </div>
                 </div>
-
-                <div className={cn(isGenerating ? 'opacity-50 pointer-events-none' : '')}>
-                    <LearningControls
-                        isLearningMode={isLearningMode}
-                        setIsLearningMode={setIsLearningMode}
-                        proficiencyLevel={proficiencyLevel}
-                        setProficiencyLevel={setProficiencyLevel}
-                        topic={topic}
-                        setTopic={setTopic}
-                        contentType={contentType}
-                        setContentType={setContentType}
-                    />
-                </div>
-
-                <AIControls isGenerating={isGenerating} />
-
-                <CardDescription className={cn("text-xs hidden sm:block")}>
-                    Enter text below or generate a story to practice reading.
-                </CardDescription>
             </CardHeader>
 
-            <CardContent className={cn("space-y-2 p-4 pt-0")}>
-                <SessionLibrary />
+            <CardContent className={cn("space-y-2 p-4 pt-0 transition-all duration-500", isGenerating && "space-y-0")}>
+                <div className={cn("grid transition-all duration-500 ease-in-out", isGenerating ? "grid-rows-[0fr] opacity-0 mb-0" : "grid-rows-[1fr] opacity-100 mb-2")}>
+                    <div className="overflow-hidden">
+                        <SessionLibrary />
+                    </div>
+                </div>
 
-                <ReaderInput
-                    text={text}
-                    isGenerating={isGenerating}
-                    onChange={(e) => setText(e.target.value)}
-                    onClear={() => setText('')}
-                />
+                <div className={cn("transition-all duration-500", isGenerating ? "mt-0" : "")}>
+                    <ReaderInput
+                        text={text}
+                        isGenerating={isGenerating}
+                        onChange={(e) => setText(e.target.value)}
+                        onClear={() => setText('')}
+                    />
+                </div>
 
-                <div className={cn("flex gap-4 flex-wrap")}>
+                <div className={cn("flex gap-4 flex-wrap transition-all duration-500", isGenerating ? "justify-center mt-4" : "mt-2")}>
                     {isGenerating ? (
                         <Button
                             onClick={stopGeneration}
@@ -145,30 +155,32 @@ export function ControlPanel() {
                             Stop Generating
                         </Button>
                     ) : (
-                        <Button
-                            onClick={generateStory}
-                            className={cn("w-full sm:w-auto")}
-                        >
-                            Generate Story
-                        </Button>
+                        <>
+                            <Button
+                                onClick={generateStory}
+                                className={cn("w-full sm:w-auto")}
+                            >
+                                Generate Story
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                className={cn("w-full sm:w-auto cursor-pointer")}
+                                disabled={isGenerating}
+                                onClick={() => setIsImporterOpen(true)}
+                            >
+                                Import File (PDF/EPUB)
+                            </Button>
+
+                            <Button
+                                onClick={handleStartReading}
+                                disabled={!text.trim() || isGenerating}
+                                className={cn("w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all")}
+                            >
+                                Open Reading Mode
+                            </Button>
+                        </>
                     )}
-
-                    <Button
-                        variant="outline"
-                        className={cn("w-full sm:w-auto cursor-pointer")}
-                        disabled={isGenerating}
-                        onClick={() => setIsImporterOpen(true)}
-                    >
-                        Import File (PDF/EPUB)
-                    </Button>
-
-                    <Button
-                        onClick={handleStartReading}
-                        disabled={!text.trim() || isGenerating}
-                        className={cn("w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all")}
-                    >
-                        Open Reading Mode
-                    </Button>
                 </div>
             </CardContent>
             <FileImporter open={isImporterOpen} onOpenChange={setIsImporterOpen} />

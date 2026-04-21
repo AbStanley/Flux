@@ -21,8 +21,8 @@ export function ReaderInput({
         <div className={cn("relative")}>
             <Textarea
                 placeholder="Paste text here, or generate..."
-                className={cn("min-h-[100px] font-mono text-base shadow-sm resize-none focus-visible:ring-primary bg-[var(--reader-textarea-bg)] border-border/50",
-                    isGenerating && "overflow-hidden select-none"
+                className={cn("min-h-[100px] font-mono text-base shadow-sm resize-none focus-visible:ring-primary bg-[var(--reader-textarea-bg)] border-border/50 transition-all duration-500",
+                    isGenerating && "min-h-[300px] select-none"
                 )}
                 value={text}
                 onChange={onChange}
@@ -42,10 +42,10 @@ export function ReaderInput({
             )}
 
             {isGenerating && (
-                <div className={cn("absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/10 backdrop-blur-[2px] rounded-md transition-all duration-500")}>
-                    <div className={cn("flex items-center gap-3 p-4 bg-background/60 rounded-xl shadow-xl border border-primary/10 backdrop-blur-md animate-pulse")}>
-                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                        <span className={cn("text-sm font-semibold tracking-wide text-primary")}>Creating Story...</span>
+                <div className={cn("absolute bottom-4 right-4 z-10 flex flex-col items-center justify-center transition-all duration-500")}>
+                    <div className={cn("flex items-center gap-2 p-3 bg-background/80 rounded-full shadow-lg border border-primary/20 backdrop-blur-md animate-pulse")}>
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        <span className={cn("text-xs font-semibold tracking-wide text-primary pr-1")}>Generating...</span>
                     </div>
                 </div>
             )}
