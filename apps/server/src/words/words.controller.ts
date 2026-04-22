@@ -109,8 +109,8 @@ export class WordsController {
   }
 
   @Get('languages')
-  getLanguages() {
-    return this.wordsService.getLanguages();
+  getLanguages(@Request() req: AuthenticatedRequest) {
+    return this.wordsService.getLanguages(req.user?.id);
   }
 
   @Get(':id')

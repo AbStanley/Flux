@@ -8,18 +8,19 @@ import { Prisma, PrismaClient, Word } from '@prisma/client';
 export class WordsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createWordDto: CreateWordDto, userId?: string) {
-    // Use authenticated user, or fall back to default for localhost
-    let resolvedUserId = userId;
-    if (!resolvedUserId) {
-      let user = await this.prisma.user.findFirst();
-      if (!user) {
-        user = await this.prisma.user.create({
-          data: { email: 'default@local.com' },
-        });
-      }
-      resolvedUserId = user.id;
+  private async resolveUserId(userId?: string): Promise<string> {
+    if (userId) return userId;
+    let user = await this.prisma.user.findFirst();
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: { email: 'default@local.com' },
+      });
     }
+    return user.id;
+  }
+
+  async create(createWordDto: CreateWordDto, userId?: string) {
+    const resolvedUserId = await this.resolveUserId(userId);
 
     const sanitizedText = createWordDto.text
       .replace(/[.,"'()<>/\\;{}[\]=+&]/g, '')
@@ -189,7 +190,8 @@ export class WordsService {
     });
   }
 
-  async getLanguages() {
+  async getLanguages(userId?: string) {
+    const resolvedUserId = await this.resolveUserId(userId);
     const words = await this.prisma.word.findMany({
       distinct: ['sourceLanguage', 'targetLanguage'],
       select: {
@@ -199,6 +201,7 @@ export class WordsService {
       where: {
         sourceLanguage: { not: null },
         targetLanguage: { not: null },
+        userId: resolvedUserId,
       },
     });
 

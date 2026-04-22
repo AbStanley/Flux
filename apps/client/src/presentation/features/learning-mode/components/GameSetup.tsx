@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Switch } from "@/presentation/components/ui/switch";
 import { Label } from "@/presentation/components/ui/label";
@@ -11,7 +12,11 @@ import { AnkiSetup } from './setup/AnkiSetup';
 import { AiSetup } from './setup/AiSetup';
 
 export function GameSetup() {
-    const { config, updateConfig, startGame, error } = useGameStore();
+    const { config, updateConfig, startGame, initializeLanguages, error } = useGameStore();
+
+    useEffect(() => {
+        initializeLanguages();
+    }, [initializeLanguages]);
 
     return (
         <div className="w-full max-w-4xl mx-auto p-4 md:p-8 animate-in fade-in duration-500">

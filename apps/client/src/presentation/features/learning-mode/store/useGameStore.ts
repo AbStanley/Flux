@@ -43,6 +43,7 @@ interface GameState {
 
     // Actions
     updateConfig: (updates: Partial<GameConfig>) => void;
+    initializeLanguages: () => Promise<void>;
     startGame: () => Promise<void>; // Uses config
     restartGame: () => Promise<void>;
     submitAnswer: (isCorrect: boolean) => void;
@@ -53,7 +54,14 @@ interface GameState {
     setTime: (time: number) => void;
     setRecentDistractorIds: (ids: string[]) => void;
     syncProgress: () => Promise<void>;
+
+    // Language cache for UI
+    availableLangs: string[];
+    languageGraph: Record<string, string[]>;
+    isLoadingLangs: boolean;
 }
+
+import { wordsApi } from '@/infrastructure/api/words';
 
 export const useGameStore = create<GameState>()(persist((set, get) => ({
     status: 'idle',
@@ -76,7 +84,76 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     history: {},
     recentDistractorIds: [],
 
+    // Language cache
+    availableLangs: [],
+    languageGraph: {},
+    isLoadingLangs: false,
+
     updateConfig: (updates) => set((state) => ({ config: { ...state.config, ...updates } })),
+
+    initializeLanguages: async () => {
+        const { isLoadingLangs, config, updateConfig } = get();
+        if (isLoadingLangs) return;
+
+        set({ isLoadingLangs: true });
+        try {
+            const result = await wordsApi.getLanguages();
+            const graph: Record<string, Set<string>> = {};
+            const all = new Set<string>();
+
+            result.forEach(langPair => {
+                const s = langPair.sourceLanguage;
+                const t = langPair.targetLanguage;
+
+                if (s && t) {
+                    if (!graph[s]) graph[s] = new Set();
+                    if (!graph[t]) graph[t] = new Set();
+
+                    graph[s].add(t);
+                    graph[t].add(s);
+
+                    all.add(s);
+                    all.add(t);
+                }
+            });
+
+            const finalGraph: Record<string, string[]> = {};
+            Object.keys(graph).forEach(key => {
+                finalGraph[key] = Array.from(graph[key]).sort();
+            });
+
+            const uniqueLangs = Array.from(all).sort();
+            set({
+                availableLangs: uniqueLangs,
+                languageGraph: finalGraph,
+                isLoadingLangs: false
+            });
+
+            // Auto-select if currently 'all' or empty
+            if (uniqueLangs.length > 0) {
+                const updates: Partial<GameConfig> = {};
+                if (config.sourceLang === 'all' || !uniqueLangs.includes(config.sourceLang)) {
+                    updates.sourceLang = uniqueLangs[0];
+                }
+
+                // If we updated source, we might need to update target too
+                const currentSource = updates.sourceLang || config.sourceLang;
+                const validTargets = finalGraph[currentSource] || uniqueLangs;
+                
+                if (config.targetLang === 'all' || !validTargets.includes(config.targetLang)) {
+                    // Try to find a target that isn't the source
+                    updates.targetLang = validTargets.find(t => t !== currentSource) || validTargets[0];
+                }
+
+                if (Object.keys(updates).length > 0) {
+                    updateConfig(updates);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to initialize languages", e);
+            set({ isLoadingLangs: false });
+        }
+    },
 
     startGame: async () => {
         const { config } = get();

@@ -1,85 +1,22 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { ArrowRightLeft } from 'lucide-react';
-import { wordsApi } from '@/infrastructure/api/words';
 import { useGameStore } from '../../store/useGameStore';
 import { LanguageSelector } from './LanguageSelector';
 
 export function DbSetup() {
-    const { config, updateConfig } = useGameStore();
-
-    // Map of Language -> Connected Languages
-    const [languageGraph, setLanguageGraph] = useState<Record<string, string[]>>({});
-    const [allUniqueLangs, setAllUniqueLangs] = useState<string[]>([]);
-    const [isLoadingLangs, setIsLoadingLangs] = useState(false);
-
-    // Fetch languages on mount
-    useEffect(() => {
-        const fetchLanguages = async () => {
-            if (allUniqueLangs.length === 0) {
-                setIsLoadingLangs(true);
-                try {
-                    const result = await wordsApi.getLanguages();
-                    const graph: Record<string, Set<string>> = {};
-                    const all = new Set<string>();
-
-                    result.forEach(langPair => {
-                        const s = langPair.sourceLanguage;
-                        const t = langPair.targetLanguage;
-
-                        if (s && t) {
-                            if (!graph[s]) graph[s] = new Set();
-                            if (!graph[t]) graph[t] = new Set();
-
-                            graph[s].add(t);
-                            graph[t].add(s);
-
-                            all.add(s);
-                            all.add(t);
-                        }
-                    });
-
-                    const finalGraph: Record<string, string[]> = {};
-                    Object.keys(graph).forEach(key => {
-                        finalGraph[key] = Array.from(graph[key]).sort();
-                    });
-
-                    setLanguageGraph(finalGraph);
-                    setAllUniqueLangs(Array.from(all).sort());
-                } catch (e) {
-                    console.error("Failed to fetch languages", e);
-                } finally {
-                    setIsLoadingLangs(false);
-                }
-            }
-        };
-        fetchLanguages();
-    }, [allUniqueLangs.length]);
+    const { config, updateConfig, availableLangs, languageGraph, isLoadingLangs } = useGameStore();
 
     // Derived Available Lists
     const availableSourceLangs = useMemo(() => {
-        if (config.targetLang === 'all') return allUniqueLangs;
+        if (config.targetLang === 'all') return availableLangs;
         return languageGraph[config.targetLang] || [];
-    }, [config.targetLang, allUniqueLangs, languageGraph]);
+    }, [config.targetLang, availableLangs, languageGraph]);
 
     const availableTargetLangs = useMemo(() => {
-        if (config.sourceLang === 'all') return allUniqueLangs;
+        if (config.sourceLang === 'all') return availableLangs;
         return languageGraph[config.sourceLang] || [];
-    }, [config.sourceLang, allUniqueLangs, languageGraph]);
-
-    // Auto-select first source language if currently 'all'
-    useEffect(() => {
-        if (allUniqueLangs.length > 0 && config.sourceLang === 'all') {
-            updateConfig({ sourceLang: allUniqueLangs[0] });
-        }
-    }, [allUniqueLangs, config.sourceLang, updateConfig]);
-
-    // Auto-select first target language if currently 'all' or invalid
-    useEffect(() => {
-        if (availableTargetLangs.length > 0 && (config.targetLang === 'all' || !availableTargetLangs.includes(config.targetLang))) {
-            updateConfig({ targetLang: availableTargetLangs[0] });
-        }
-    }, [availableTargetLangs, config.targetLang, updateConfig]);
+    }, [config.sourceLang, availableLangs, languageGraph]);
 
     const swapLanguages = () => {
         updateConfig({

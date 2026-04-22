@@ -96,7 +96,8 @@ export const AiSetup = () => {
                             label="Foreign Language 🌍"
                             value={config.sourceLang}
                             onChange={(val) => updateConfig({ sourceLang: val })}
-                            disabled={loading}
+                            disabled={loading || isLoadingLangs}
+                            options={availableLangs}
                         />
 
                         <div className="flex justify-center md:pb-2">
@@ -118,7 +119,8 @@ export const AiSetup = () => {
                             label="Native Language 🏠"
                             value={config.targetLang}
                             onChange={(val) => updateConfig({ targetLang: val })}
-                            disabled={loading}
+                            disabled={loading || isLoadingLangs}
+                            options={availableLangs}
                         />
                     </div>
 
