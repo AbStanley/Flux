@@ -30,7 +30,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
                 sourceLanguage: reqSource,
                 targetLanguage: reqTarget,
                 type: typeFilter,
-                sort: 'random'
+                sort: 'random',
+                _cb: Date.now().toString()
             });
 
             // 2. Reverse Fetch: Search for the opposite to support "Backwards" learning
@@ -42,7 +43,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
                     sourceLanguage: reqTarget,
                     targetLanguage: reqSource,
                     type: typeFilter,
-                    sort: 'random'
+                    sort: 'random',
+                    _cb: (Date.now() + 1).toString()
                 });
             }
 
@@ -86,7 +88,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
                 limit,
                 type: 'phrase',
                 sourceLanguage: reqSource,
-                targetLanguage: reqTarget
+                targetLanguage: reqTarget,
+                _cb: Date.now().toString()
             });
 
             // 1b. Reverse Fetch: Phrases (Search for opposite direction)
@@ -96,7 +99,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
                     limit,
                     type: 'phrase',
                     sourceLanguage: reqTarget,
-                    targetLanguage: reqSource
+                    targetLanguage: reqSource,
+                    _cb: (Date.now() + 1).toString()
                 });
             }
 
@@ -105,7 +109,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
                 limit: limit * 2, // Get more to have enough examples
                 type: 'word',
                 sourceLanguage: reqSource,
-                targetLanguage: reqTarget
+                targetLanguage: reqTarget,
+                _cb: (Date.now() + 2).toString()
             });
 
             // 2b. Reverse Fetch: Words (for examples)
@@ -115,7 +120,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
                     limit: limit * 2,
                     type: 'word',
                     sourceLanguage: reqTarget,
-                    targetLanguage: reqSource
+                    targetLanguage: reqSource,
+                    _cb: (Date.now() + 3).toString()
                 });
             }
 

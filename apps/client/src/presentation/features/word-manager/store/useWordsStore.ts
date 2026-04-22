@@ -75,12 +75,18 @@ export const useWordsStore = create<WordsState>((set, get) => ({
             set(state => {
                 const currentItems = page === 1 ? [] : state[stateKey].items;
                 const newTotalItems = currentItems.length + items.length;
+                
+                // Robust hasMore logic: 
+                // 1. Must have returned at least one item this time
+                // 2. Total items fetched must be less than the reported total
+                const hasMore = items.length > 0 && newTotalItems < total;
+
                 return {
                     [stateKey]: {
                         items: [...currentItems, ...items],
                         total,
                         page,
-                        hasMore: newTotalItems < total,
+                        hasMore,
                         isLoading: false
                     }
                 };
