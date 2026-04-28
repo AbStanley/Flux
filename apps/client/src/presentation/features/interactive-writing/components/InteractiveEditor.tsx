@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useWritingStore } from '../store/writing.store';
 
@@ -12,6 +12,7 @@ import { EditorFooter } from './EditorFooter';
 import { HighlightedText } from './HighlightedText';
 import { useAvailableModels } from '../hooks/useAvailableModels';
 import { useCorrectionTooltip } from '../hooks/useCorrectionTooltip';
+import { backendAiApi } from '@/infrastructure/api/backend-ai-api';
 
 const editorLayerStyles = cn(
   'grid-area-1 w-full text-lg leading-[1.85] whitespace-pre-wrap break-words border-none focus:ring-0 outline-none antialiased',
@@ -27,6 +28,11 @@ export const InteractiveEditor = () => {
 
   const { availableModels, modelsLoadFailed } = useAvailableModels();
   const tooltip = useCorrectionTooltip();
+  const [topicSuggestion, setTopicSuggestion] = useState('');
+  const [isSuggestingTopic, setIsSuggestingTopic] = useState(false);
+  const [topicError, setTopicError] = useState<string | null>(null);
+  const topicAbortRef = useRef<AbortController | null>(null);
+  const recentSuggestionsRef = useRef<string[]>([]);
 
   // Auto-select first available model when none is set
   useEffect(() => {
@@ -39,6 +45,94 @@ export const InteractiveEditor = () => {
     store.evaluationModel && !availableModels.includes(store.evaluationModel)
       ? [store.evaluationModel, ...availableModels]
       : availableModels;
+
+  const suggestionKey = useMemo(
+    () => `${store.sourceLanguage}|${store.evaluationModel || 'default'}`,
+    [store.sourceLanguage, store.evaluationModel],
+  );
+
+  const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
+
+  const requestTopicSuggestion = async () => {
+    if (isSuggestingTopic) return;
+
+    topicAbortRef.current?.abort();
+    const controller = new AbortController();
+    topicAbortRef.current = controller;
+    setTopicSuggestion('');
+    setTopicError(null);
+    setIsSuggestingTopic(true);
+
+    const getRecentForKey = () => {
+      return recentSuggestionsRef.current
+        .filter((item) => item.startsWith(`${suggestionKey}::`))
+        .map((item) => item.slice(`${suggestionKey}::`.length))
+        .slice(-6);
+    };
+
+    try {
+      let accepted = '';
+
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        let streamed = '';
+        const avoidList = getRecentForKey();
+        const randomSeed = Math.random().toString(36).slice(2, 10);
+        const prompt = `
+You create ONE creative writing topic in ${store.sourceLanguage}.
+Requirements:
+- Return only the topic sentence, no bullets, no title, no quotes.
+- Keep it 8-16 words.
+- Use simple language (A2-B1 level), easy to understand and answer.
+- Choose everyday themes: daily life, hobbies, food, travel, friends, study, work, feelings.
+- Avoid abstract/philosophical or technical topics.
+- Make it concrete and practical.
+- Must be different from these previous topics:
+${avoidList.length > 0 ? avoidList.map((t) => `- ${t}`).join('\n') : '- (none)'}
+- Variation seed: ${randomSeed}
+- Attempt number: ${attempt + 1}
+`.trim();
+
+        await backendAiApi.generateTextStream(
+          {
+            prompt,
+            model: store.evaluationModel.trim() || undefined,
+          },
+          {
+            signal: controller.signal,
+            onChunk: (_chunk, fullText) => {
+              streamed = fullText.trim();
+              setTopicSuggestion(streamed);
+            },
+          },
+        );
+
+        const cleaned = streamed.replace(/^["'`]+|["'`]+$/g, '').trim();
+        if (!cleaned) continue;
+
+        const isDuplicate = getRecentForKey().some((prev) => normalize(prev) === normalize(cleaned));
+        if (isDuplicate) continue;
+
+        accepted = cleaned;
+        break;
+      }
+
+      if (!accepted) {
+        throw new Error('Could not generate a unique topic right now. Please try again.');
+      }
+
+      setTopicSuggestion(accepted);
+      recentSuggestionsRef.current = [...recentSuggestionsRef.current, `${suggestionKey}::${accepted}`].slice(-30);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+      setTopicError(err instanceof Error ? err.message : 'Failed to suggest a topic');
+      setTopicSuggestion('');
+    } finally {
+      if (topicAbortRef.current === controller) {
+        topicAbortRef.current = null;
+        setIsSuggestingTopic(false);
+      }
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -143,48 +237,19 @@ export const InteractiveEditor = () => {
             >
               <button
                 type="button"
-                onClick={() => {
-                  const prompts = [
-                    "Describe a childhood memory that still makes you smile today.",
-                    "If you could travel to any point in the future, where would you go and why?",
-                    "What are the qualities you value most in a close friend?",
-                    "Write about a fictional character you'd love to meet in real life.",
-                    "How has technology changed the way you communicate with others?",
-                    "What does your 'ideal day' look like from morning until night?",
-                    "Discuss a book or movie that significantly changed your perspective on life.",
-                    "If you could start any business tomorrow, what would it be?",
-                    "What advice would you give to your 10-year-old self?",
-                    "Describe a place where you feel completely at peace.",
-                    "Is it better to be a 'jack of all trades' or a master of one? Why?",
-                    "What is a tradition from your culture that you find particularly meaningful?",
-                    "If you could have dinner with anyone from history, who would it be?",
-                    "Explain a complex hobby of yours to someone who has never heard of it.",
-                    "What do you think is the most important invention of the last century?",
-                    "Write about a time you stepped out of your comfort zone and what happened.",
-                    "How do you stay motivated when things get difficult?",
-                    "If you could change one thing about the world, what would it be and why?",
-                    "Describe the best meal you've ever had in vivid detail.",
-                    "What does 'success' mean to you personally?"
-                  ];
-                  
-                  // Simple shuffle logic avoiding the same prompt twice in a row
-                  let nextPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-                  while (nextPrompt === store.text) {
-                    nextPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-                  }
-                  
-                  store.setText(nextPrompt);
-                }}
+                onClick={requestTopicSuggestion}
+                disabled={isSuggestingTopic}
                 className={cn(
                   'flex min-h-[2.75rem] items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold shadow-sm transition-all',
                   'sm:px-5 lg:flex-none lg:rounded-full lg:px-5',
                   'bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/50',
+                  'disabled:opacity-60 disabled:cursor-not-allowed',
                 )}
                 title="Get a creative writing prompt"
               >
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                  <span>Suggest Topic</span>
+                  <span className={cn('h-2 w-2 rounded-full bg-amber-400', isSuggestingTopic && 'animate-pulse')} />
+                  <span>{isSuggestingTopic ? 'Generating...' : 'Suggest Topic'}</span>
                 </div>
               </button>
 
@@ -205,6 +270,39 @@ export const InteractiveEditor = () => {
               </button>
             </div>
           </div>
+
+          {(topicSuggestion || topicError || isSuggestingTopic) && (
+            <div className="mb-4 flex w-full justify-start">
+              <div className="max-w-3xl rounded-2xl rounded-tl-sm border border-primary/20 bg-primary/5 px-4 py-3 shadow-sm">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary/80">
+                  AI Topic Suggestion
+                </p>
+                {topicError ? (
+                  <p className="text-sm text-destructive">{topicError}</p>
+                ) : (
+                  <div className="space-y-2">
+                    {isSuggestingTopic && !topicSuggestion && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                          <span>Preparing topic...</span>
+                        </div>
+                        <div className="h-2 w-64 max-w-full overflow-hidden rounded-full bg-primary/15">
+                          <div className="h-full w-1/3 rounded-full bg-primary/60 animate-[pulse_1s_ease-in-out_infinite]" />
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-sm leading-relaxed text-foreground">
+                      {topicSuggestion}
+                      {isSuggestingTopic && topicSuggestion && (
+                        <span className="ml-1 inline-block h-4 w-1 translate-y-[2px] rounded-sm bg-primary/70 animate-pulse" />
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Writing canvas */}
           <div className="rounded-2xl border border-border/60 bg-muted/20 p-[1px] dark:border-white/[0.07] dark:bg-white/[0.03]">
