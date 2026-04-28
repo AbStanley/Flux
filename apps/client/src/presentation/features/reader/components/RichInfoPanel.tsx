@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { Button } from "../../../components/ui/button";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { X, Trash2, Edit } from "lucide-react";
+import { X, Trash2, Edit, BookOpen } from "lucide-react";
 import type { RichDetailsTab } from '../store/useTranslationStore';
 import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { EditWordDialog } from '../../word-manager/components/EditWordDialog';
@@ -11,6 +11,7 @@ import { useWordsStore } from '../../word-manager/store/useWordsStore';
 import { type CreateWordRequest } from '../../../../infrastructure/api/words';
 import { useTranslationStore } from '../store/useTranslationStore';
 import type { RichSnapState } from '../store/slices/richDetailsSlice';
+import { useReaderStore } from '../store/useReaderStore';
 
 interface RichInfoPanelProps {
     isOpen: boolean;
@@ -268,6 +269,19 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
+
+                            {/* New Extend to Reading Mode Button */}
+                            {!useReaderStore.getState().isReading && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => useReaderStore.getState().setIsReading(true)}
+                                    className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10"
+                                    title="Open Reading Mode"
+                                >
+                                    <BookOpen className="h-4 w-4" />
+                                </Button>
+                            )}
                         </div>
                     ) : (
                         <CardTitle className="text-xl font-bold px-2 py-1">Details</CardTitle>

@@ -9,6 +9,9 @@ import { TimelineControl } from './controls/TimelineControl';
 import { VoiceSettings } from './controls/VoiceSettings';
 import { ReaderSettings, TranslationSettings, GrammarModeToggle } from './controls/ReaderSettings';
 import { CollapseExpandButton } from './controls/CollapseExpandButton';
+import { Button } from "@/presentation/components/ui/button";
+import { cn } from "@/lib/utils";
+import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 
 interface PlayerControlsProps {
     vertical?: boolean;
@@ -241,6 +244,24 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                 <SettingsModal />
 
                 <div className="h-6 w-px bg-border/50 mx-1" />
+
+                {/* Sidebar Toggle Button */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => useTranslationStore.getState().toggleRichInfo()}
+                    className={cn(
+                        "h-9 w-9 rounded-full transition-all",
+                        isRichInfoOpen ? "text-primary bg-primary/10" : "text-muted-foreground"
+                    )}
+                    title="Toggle Details Panel"
+                >
+                    {isRichInfoOpen ? (
+                        <PanelRightClose className="h-5 w-5" />
+                    ) : (
+                        <PanelRightOpen className="h-5 w-5" />
+                    )}
+                </Button>
             </div>
         </div >
     );
