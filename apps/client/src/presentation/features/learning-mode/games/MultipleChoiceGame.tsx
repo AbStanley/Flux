@@ -10,10 +10,14 @@ import { useGameAudio } from './hooks/useGameAudio';
 export function MultipleChoiceGame() {
     const { items, currentIndex, submitAnswer, nextItem, timeLeft, config } = useGameStore();
     const timerEnabled = config.timerEnabled;
-    const [selectedOption, setSelectedOption] = useState<string | null>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [interaction, setInteraction] = useState<{ itemId: string; selectedOption: string | null; isProcessing: boolean }>({
+        itemId: '',
+        selectedOption: null,
+        isProcessing: false,
+    });
     const { playAudio, stopAudio } = useGameAudio();
     const abortControllerRef = useRef<AbortController | null>(null);
+    const timeoutHandledRef = useRef<string>('');
 
     // Setup AbortController for clean async cancellation
     useEffect(() => {
@@ -48,36 +52,63 @@ export function MultipleChoiceGame() {
         return baseItem;
     }, [baseItem, config.mixMode]);
 
-    const optionsRef = useRef<{ id: string, options: string[], distractors: string[] }>({ id: '', options: [], distractors: [] });
+    const hashString = (value: string) => {
+        let hash = 0;
+        for (let i = 0; i < value.length; i += 1) {
+            hash = (hash * 31 + value.charCodeAt(i)) | 0;
+        }
+        return Math.abs(hash);
+    };
 
-    // Compute options synchronously when currentItem changes to avoid double transition flash
-    if (currentItem && optionsRef.current.id !== currentItem.id && items.length >= 4) {
+    const seededShuffle = <T,>(arr: T[], seed: number): T[] => {
+        const result = [...arr];
+        let s = seed || 1;
+        for (let i = result.length - 1; i > 0; i -= 1) {
+            s = (s * 1664525 + 1013904223) >>> 0;
+            const j = s % (i + 1);
+            [result[i], result[j]] = [result[j], result[i]];
+        }
+        return result;
+    };
+
+    const optionsData = useMemo(() => {
+        if (!currentItem || items.length < 4) {
+            return { options: [] as string[], distractorIds: [] as string[] };
+        }
+
         const correctAnswer = currentItem.answer;
         const pool = items.filter(i => i.id !== currentItem.id);
         const recentSet = new Set(useGameStore.getState().recentDistractorIds);
-
         const fresh = pool.filter(i => !recentSet.has(i.id));
         const stale = pool.filter(i => recentSet.has(i.id));
-        const shuffle = <T,>(arr: T[]) => arr.slice().sort(() => 0.5 - Math.random());
 
-        const pickedItems = [...shuffle(fresh), ...shuffle(stale)].slice(0, 3);
+        const baseSeed = hashString(`${currentItem.id}|${currentIndex}|${items.length}`);
+        const pickedItems = [
+            ...seededShuffle(fresh, baseSeed + 1),
+            ...seededShuffle(stale, baseSeed + 2),
+        ].slice(0, 3);
+
         const distractors = pickedItems.map(i => {
             if (i.lang?.target === currentItem.lang?.target) return i.answer;
             if (i.lang?.source === currentItem.lang?.target) return i.question;
             return i.answer;
         });
 
-        const finalOptions = [...distractors, correctAnswer].sort(() => 0.5 - Math.random());
-        optionsRef.current = { id: currentItem.id, options: finalOptions, distractors: pickedItems.map(i => i.id) };
-    }
+        const finalOptions = seededShuffle([...distractors, correctAnswer], baseSeed + 3);
+        return { options: finalOptions, distractorIds: pickedItems.map(i => i.id) };
+    }, [currentItem, currentIndex, items]);
 
-    const options = currentItem ? optionsRef.current.options : [];
+    const options = optionsData.options;
+    const isCurrentInteraction = currentItem ? interaction.itemId === currentItem.id : false;
+    const selectedOption = isCurrentInteraction ? interaction.selectedOption : null;
+    const isProcessing = isCurrentInteraction ? interaction.isProcessing : false;
+    const timedOut = timerEnabled && timeLeft === 0;
 
     useEffect(() => {
-        if (currentItem && optionsRef.current.distractors.length > 0) {
-            useGameStore.getState().setRecentDistractorIds(optionsRef.current.distractors);
+        if (currentItem && optionsData.distractorIds.length > 0) {
+            useGameStore.getState().setRecentDistractorIds(optionsData.distractorIds);
         }
-    }, [currentItem]);
+    }, [currentItem, optionsData.distractorIds]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -111,48 +142,55 @@ export function MultipleChoiceGame() {
 
     // Handle Timeout
     useEffect(() => {
-        if (timerEnabled && timeLeft === 0 && !isProcessing) {
-            setIsProcessing(true);
-            soundService.playWrong();
-            submitAnswer(false);
-            
-            const processTimeout = async () => {
-                try {
-                    await playAudio(currentItem!.answer, currentItem!.lang?.target, undefined);
-                    await sleep(1500, abortControllerRef.current?.signal);
-                    nextItem();
-                } catch (e) {
-                    if (e instanceof Error && e.name === 'AbortError') return;
-                    console.error(e);
-                }
-            };
-            processTimeout();
-        }
-    }, [timeLeft, timerEnabled, isProcessing, playAudio, currentItem, submitAnswer, nextItem]);
+        if (!currentItem || !timerEnabled || timeLeft !== 0) return;
+        if (timeoutHandledRef.current === currentItem.id) return;
 
-    // Reset local state when item changes
+        timeoutHandledRef.current = currentItem.id;
+        soundService.playWrong();
+        submitAnswer(false);
+
+        const processTimeout = async () => {
+            try {
+                await playAudio(currentItem.answer, currentItem.lang?.target, undefined);
+                await sleep(1500, abortControllerRef.current?.signal);
+                nextItem();
+            } catch (e) {
+                if (e instanceof Error && e.name === 'AbortError') return;
+                console.error(e);
+            }
+        };
+        void processTimeout();
+    }, [timeLeft, timerEnabled, playAudio, currentItem, submitAnswer, nextItem]);
+
+    const currentItemId = currentItem?.id;
     useEffect(() => {
-        setSelectedOption(null);
-        setIsProcessing(false);
-    }, [currentIndex]);
+        if (currentItemId) {
+            timeoutHandledRef.current = '';
+        }
+    }, [currentItemId]);
 
     const handleOptionClick = async (option: string) => {
         if (isProcessing) return;
-        setIsProcessing(true);
-        setSelectedOption(option);
+        if (!currentItem) return;
 
-        const isCorrect = option === currentItem!.answer;
+        setInteraction({
+            itemId: currentItem.id,
+            selectedOption: option,
+            isProcessing: true,
+        });
+
+        const isCorrect = option === currentItem.answer;
         submitAnswer(isCorrect);
 
         try {
             if (isCorrect) {
                 soundService.playCorrect();
-                await playAudio(option, currentItem!.lang?.target, undefined);
+                await playAudio(option, currentItem.lang?.target, undefined);
                 await sleep(500, abortControllerRef.current?.signal);
                 nextItem();
             } else {
                 soundService.playWrong();
-                await playAudio(currentItem!.answer, currentItem!.lang?.target, undefined);
+                await playAudio(currentItem.answer, currentItem.lang?.target, undefined);
                 await sleep(1500, abortControllerRef.current?.signal); // Give enough time, but strictly controlled
                 nextItem();
             }
@@ -174,7 +212,7 @@ export function MultipleChoiceGame() {
         )
     }
 
-    const isWrongOrTimeout = isProcessing && (selectedOption !== currentItem.answer || timeLeft === 0);
+    const isWrongOrTimeout = (isProcessing && selectedOption !== currentItem.answer) || timedOut;
 
     return (
         <div className="flex flex-col h-full justify-center items-center gap-8 w-full">
@@ -227,7 +265,7 @@ export function MultipleChoiceGame() {
                                 variantClass
                             )}
                             onClick={() => handleOptionClick(option)}
-                            disabled={isProcessing}
+                            disabled={isProcessing || timedOut}
                         >
                             {option}
                         </Button>

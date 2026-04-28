@@ -22,12 +22,16 @@ export const AiSetup = () => {
 
     const isExtension = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
 
+    const fetchUniqueModels = useCallback(async () => {
+        const m = await serverAIService.getAvailableModels();
+        return Array.from(new Set(m));
+    }, []);
+
     const refreshModels = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const m = await serverAIService.getAvailableModels();
-            const unique = Array.from(new Set(m));
+            const unique = await fetchUniqueModels();
             setModels(unique);
             if (unique.length > 0 && (!llmModel || !unique.includes(llmModel))) {
                 setLlmModel(unique[0]);
@@ -39,12 +43,35 @@ export const AiSetup = () => {
         } finally {
             setLoading(false);
         }
-    }, [llmModel, setLlmModel]);
+    }, [fetchUniqueModels, llmModel, setLlmModel]);
 
     useEffect(() => {
         if (globalAiHost) setApiClientBaseUrl(globalAiHost);
-        refreshModels();
-    }, [globalAiHost, refreshModels]);
+
+        let cancelled = false;
+        setLoading(true);
+        setError(null);
+
+        fetchUniqueModels()
+            .then((unique) => {
+                if (cancelled) return;
+                setModels(unique);
+                if (unique.length > 0 && (!llmModel || !unique.includes(llmModel))) {
+                    setLlmModel(unique[0]);
+                }
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                console.error('Failed to fetch models:', err);
+                setError('Could not connect to Ollama. Make sure it is running.');
+                if (!llmModel) setIsManualInput(true);
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+
+        return () => { cancelled = true; };
+    }, [fetchUniqueModels, globalAiHost, llmModel, setLlmModel]);
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
