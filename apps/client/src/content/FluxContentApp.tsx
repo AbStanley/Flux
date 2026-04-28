@@ -8,7 +8,7 @@ import { UniversalSubtitleOverlay } from './components/universal-subs/UniversalS
 import { VideoPickerOverlay } from './components/universal-subs/VideoPickerOverlay';
 import { wordsApi } from '../infrastructure/api/words';
 import { useServices } from '../presentation/contexts/ServiceContext';
-import { useReaderStore } from '../presentation/features/reader/store/useReaderStore';
+import { useSettingsStore } from '../presentation/features/settings/store/useSettingsStore';
 import { THEMES, DEFAULT_THEME, type FluxTheme } from './constants';
 import { useChromeSettings } from './hooks/useChromeSettings';
 import { useNotification } from './hooks/useNotification';
@@ -31,7 +31,7 @@ export function FluxContentApp() {
     const theme: FluxTheme = THEMES[settings.themeId] || THEMES[DEFAULT_THEME];
 
     // Sync model to aiService + reader store
-    const setAiModel = useReaderStore((s) => s.setAiModel);
+    const setAiModel = useSettingsStore((s) => s.setLlmModel);
     useEffect(() => {
         if (settings.selectedModel) {
             aiService.setModel(settings.selectedModel);

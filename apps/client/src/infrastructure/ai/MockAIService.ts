@@ -129,9 +129,9 @@ export class MockAIService implements IAIService {
         sourceLanguage: string;
         targetLanguage: string;
         limit?: number;
-    }): Promise<string> {
+    }): Promise<Array<{ question?: string; answer?: string; context?: string; type?: 'word' | 'phrase' }>> {
         console.log(`[MockAI] Generating game content for topic: ${params.topic}, mode: ${params.mode}`);
         await new Promise(resolve => setTimeout(resolve, 1000));
-        return JSON.stringify([{ question: "Mock?", answer: "Mock!", context: "Just mocking.", type: "word" }]);
+        return [{ question: "Mock?", answer: "Mock!", context: "Just mocking.", type: "word" }];
     }
 }

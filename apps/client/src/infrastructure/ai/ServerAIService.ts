@@ -396,7 +396,7 @@ export class ServerAIService implements IAIService {
     sourceLanguage: string;
     targetLanguage: string;
     limit?: number;
-  }): AsyncIterable<{ question: string; answer: string; context?: string; type?: 'word' | 'phrase' }> {
+  }): AsyncIterable<{ question?: string; answer?: string; target_text?: string; source_translation?: string; target_lang_code?: string; source_lang_code?: string; context?: string; type?: 'word' | 'phrase' }> {
     const items = await this.generateGameContent(params);
     for (const item of items) {
       yield item;

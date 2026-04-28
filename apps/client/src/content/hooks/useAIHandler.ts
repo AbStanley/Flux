@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useServices } from '../../presentation/contexts/ServiceContext';
-import { useReaderStore } from '../../presentation/features/reader/store/useReaderStore';
+import { useSettingsStore } from '../../presentation/features/settings/store/useSettingsStore';
 
 export type Mode = 'EXPLAIN' | 'TRANSLATE';
 
@@ -9,7 +9,8 @@ export const useAIHandler = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { aiService } = useServices();
-    const { aiModel, setAiModel } = useReaderStore();
+    const aiModel = useSettingsStore((s) => s.llmModel);
+    const setAiModel = useSettingsStore((s) => s.setLlmModel);
     const lastRequestId = useRef(0);
 
     const handleAction = async (text: string, mode: Mode, targetLang: string, sourceLang: string = 'Auto', context?: string) => {

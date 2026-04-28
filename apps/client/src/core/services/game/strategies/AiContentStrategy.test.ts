@@ -30,11 +30,9 @@ describe('AiContentStrategy', () => {
     });
 
     it('should parse valid JSON response from AI', async () => {
-        const mockResponse = `
-        [
-            { "question": "Casa", "answer": "House", "context": "Mi casa es grande", "type": "word" }
-        ]
-        `;
+        const mockResponse = [
+            { question: "Casa", answer: "House", context: "Mi casa es grande", type: "word" as const }
+        ];
         vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
 
         const items = await strategy.fetchItems({
@@ -49,11 +47,9 @@ describe('AiContentStrategy', () => {
     });
 
     it('should generate valid story segments', async () => {
-        const mockResponse = `
-        [
-            { "context": "Once upon a time", "question": "time", "answer": "tiempo", "type": "phrase" }
-        ]
-        `;
+        const mockResponse = [
+            { context: "Once upon a time", question: "time", answer: "tiempo", type: "phrase" as const }
+        ];
         vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
 
         const items = await strategy.fetchItems({
@@ -67,11 +63,9 @@ describe('AiContentStrategy', () => {
     });
 
     it('should generate valid scramble sentences', async () => {
-        const mockResponse = `
-        [
-            { "question": "The dog runs.", "answer": "El perro corre.", "context": "Simple sentence", "type": "phrase" }
-        ]
-        `;
+        const mockResponse = [
+            { question: "The dog runs.", answer: "El perro corre.", context: "Simple sentence", type: "phrase" as const }
+        ];
         vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
 
         const items = await strategy.fetchItems({
@@ -94,7 +88,7 @@ describe('AiContentStrategy', () => {
     });
 
     it('should convert language codes to full names in prompt', async () => {
-        const mockResponse = JSON.stringify([{ question: "Hello", answer: "Hola" }]);
+        const mockResponse = [{ question: "Hello", answer: "Hola", type: "word" as const }];
         serverAIService.generateGameContent = vi.fn().mockResolvedValue(mockResponse);
 
         await strategy.fetchItems({
@@ -109,13 +103,7 @@ describe('AiContentStrategy', () => {
     });
 
     it('should handle AI response with extra text', async () => {
-        const mockResponse = `
-        Here is your JSON:
-        [
-            { "question": "Gato", "answer": "Cat", "type": "word" }
-        ]
-        Hope that helps!
-        `;
+        const mockResponse = [{ question: "Gato", answer: "Cat", type: "word" as const }];
         vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
 
         const items = await strategy.fetchItems({ aiTopic: 'Pets' });
@@ -124,10 +112,10 @@ describe('AiContentStrategy', () => {
     });
 
     it('should throw error if all items are filtered (duplicates)', async () => {
-        const mockResponse = JSON.stringify([
+        const mockResponse = [
             { question: "Same", answer: "Same", type: "word" },
             { question: "Test", answer: "test", type: "word" }
-        ]);
+        ];
 
         serverAIService.generateGameContent = vi.fn().mockResolvedValue(mockResponse);
 
@@ -138,7 +126,7 @@ describe('AiContentStrategy', () => {
     });
 
     it('should throw error on invalid JSON', async () => {
-        vi.mocked(serverAIService.generateGameContent).mockResolvedValue("Not JSON");
-        await expect(strategy.fetchItems({ aiTopic: 'Test' })).rejects.toThrow("Invalid format from AI");
+        vi.mocked(serverAIService.generateGameContent).mockResolvedValue([]);
+        await expect(strategy.fetchItems({ aiTopic: 'Test' })).rejects.toThrow("No valid content generated");
     });
 });
