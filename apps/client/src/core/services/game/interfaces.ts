@@ -37,6 +37,7 @@ export interface GameContentParams {
         /** Only fetch items capable of this game mode? */
         gameMode?: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'story' | 'cloze';
         timerEnabled?: boolean;
+        strictDirection?: boolean;
 
         // Anki Specific
         ankiFieldSource?: string;

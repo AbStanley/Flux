@@ -10,6 +10,8 @@ export interface GameConfig {
     mode: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'story' | 'cloze';
     source: 'db' | 'anki' | 'ai';
     timerEnabled: boolean;
+    mixMode?: boolean;
+    strictDirection?: boolean;
     sourceLang: string;
     targetLang: string;
     // Anki Specific
@@ -70,6 +72,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         mode: 'multiple-choice',
         source: 'db',
         timerEnabled: true,
+        mixMode: false,
+        strictDirection: false,
         sourceLang: 'all',
         targetLang: 'all'
     },
@@ -178,6 +182,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
                     ankiFieldSource: config.ankiFieldSource,
                     ankiFieldTarget: config.ankiFieldTarget
                 } : {}),
+
+                strictDirection: config.strictDirection,
 
                 // Pass AI config (from global settings)
                 aiTopic: config.aiTopic,

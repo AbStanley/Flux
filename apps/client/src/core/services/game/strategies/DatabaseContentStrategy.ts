@@ -19,14 +19,15 @@ export class DatabaseContentStrategy implements IContentStrategy {
             const limit = config?.limit || 20;
             const reqSource = config?.language?.source;
             const reqTarget = config?.language?.target;
+            const isStrict = config?.strictDirection;
 
             // Determine content type based on game mode
             // STRICT RULE: Only 'scramble' mode allows phrases. All others must be words.
             // Note: 'scramble' is handled above and returns early, so we are guaranteed to be in a word-only mode here.
             const typeFilter: 'word' | 'phrase' | undefined = 'word';
 
-            // 1. Fetch items exactly as requested
-            const result = await wordsApi.getAll({
+            // 1. Fetch forward direction
+            const forwardPromise = wordsApi.getAll({
                 limit,
                 sourceLanguage: reqSource,
                 targetLanguage: reqTarget,
@@ -35,7 +36,27 @@ export class DatabaseContentStrategy implements IContentStrategy {
                 _cb: Date.now().toString()
             });
 
-            const items: GameItem[] = result.items.map(word => this.mapToGameItem(word, false));
+            // 2. Fetch reverse direction (if not strict)
+            let reversePromise: Promise<{ items: Word[]; total: number }> | undefined;
+            if (!isStrict && (reqSource || reqTarget) && reqSource !== reqTarget) {
+                reversePromise = wordsApi.getAll({
+                    limit,
+                    sourceLanguage: reqTarget,
+                    targetLanguage: reqSource,
+                    type: typeFilter,
+                    sort: 'random',
+                    _cb: (Date.now() + 1).toString()
+                });
+            }
+
+            const [forwardRes, reverseRes] = await Promise.all([
+                forwardPromise,
+                reversePromise || Promise.resolve({ items: [], total: 0 })
+            ]);
+
+            const items: GameItem[] = [];
+            forwardRes.items.forEach(word => items.push(this.mapToGameItem(word, false)));
+            reverseRes.items.forEach(word => items.push(this.mapToGameItem(word, true)));
 
             return items.sort(() => 0.5 - Math.random()).slice(0, limit);
 
@@ -54,6 +75,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
             const limit = config?.limit || 20;
             const reqSource = config?.language?.source;
             const reqTarget = config?.language?.target;
+            const isStrict = config?.strictDirection;
 
             // Fetch phrases directly
             const phrasesPromise = wordsApi.getAll({
@@ -66,7 +88,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
 
             // 1b. Reverse Fetch: Phrases (Search for opposite direction)
             let revPhrasesPromise: Promise<{ items: Word[]; total: number }> | undefined;
-            if ((reqSource || reqTarget) && reqSource !== reqTarget) {
+            if (!isStrict && (reqSource || reqTarget) && reqSource !== reqTarget) {
                 revPhrasesPromise = wordsApi.getAll({
                     limit,
                     type: 'phrase',
@@ -87,7 +109,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
 
             // 2b. Reverse Fetch: Words (for examples)
             let revWordsPromise: Promise<{ items: Word[]; total: number }> | undefined;
-            if ((reqSource || reqTarget) && reqSource !== reqTarget) {
+            if (!isStrict && (reqSource || reqTarget) && reqSource !== reqTarget) {
                 revWordsPromise = wordsApi.getAll({
                     limit: limit * 2,
                     type: 'word',

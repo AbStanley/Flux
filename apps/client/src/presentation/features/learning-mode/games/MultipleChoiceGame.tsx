@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { Button } from "@/presentation/components/ui/button";
 import { Card, CardContent } from "@/presentation/components/ui/card";
 import { useGameStore } from '../store/useGameStore';
@@ -15,43 +15,61 @@ export function MultipleChoiceGame() {
     const { playAudio, stopAudio } = useGameAudio();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const currentItem = items[currentIndex];
+    const baseItem = items[currentIndex];
 
-    // Generate Options with useMemo (deterministic per item)
-    // We use a specific dependency on currentItem?.id to ensure we only reshuffle when the question changes,
-    // not when other transient state changes.
-    const [options, setOptions] = useState<string[]>([]);
+    // Mix Mode Logic: Randomly flip question/answer for this item
+    const currentItem = useMemo(() => {
+        if (!baseItem) return null;
+        if (!config.mixMode) return baseItem;
+
+        // Deterministic pseudo-random based on id to prevent flipping on re-renders
+        const charCode = baseItem.id.charCodeAt(baseItem.id.length - 1);
+        const shouldFlip = charCode % 2 === 0;
+
+        if (shouldFlip) {
+            return {
+                ...baseItem,
+                question: baseItem.answer,
+                answer: baseItem.question,
+                lang: {
+                    source: baseItem.lang?.target,
+                    target: baseItem.lang?.source
+                }
+            };
+        }
+        return baseItem;
+    }, [baseItem, config.mixMode]);
+
+    const optionsRef = useRef<{ id: string, options: string[], distractors: string[] }>({ id: '', options: [], distractors: [] });
+
+    // Compute options synchronously when currentItem changes to avoid double transition flash
+    if (currentItem && optionsRef.current.id !== currentItem.id && items.length >= 4) {
+        const correctAnswer = currentItem.answer;
+        const pool = items.filter(i => i.id !== currentItem.id);
+        const recentSet = new Set(useGameStore.getState().recentDistractorIds);
+        
+        const fresh = pool.filter(i => !recentSet.has(i.id));
+        const stale = pool.filter(i => recentSet.has(i.id));
+        const shuffle = <T,>(arr: T[]) => arr.slice().sort(() => 0.5 - Math.random());
+        
+        const pickedItems = [...shuffle(fresh), ...shuffle(stale)].slice(0, 3);
+        const distractors = pickedItems.map(i => {
+            if (i.lang?.target === currentItem.lang?.target) return i.answer;
+            if (i.lang?.source === currentItem.lang?.target) return i.question;
+            return i.answer;
+        });
+
+        const finalOptions = [...distractors, correctAnswer].sort(() => 0.5 - Math.random());
+        optionsRef.current = { id: currentItem.id, options: finalOptions, distractors: pickedItems.map(i => i.id) };
+    }
+
+    const options = currentItem ? optionsRef.current.options : [];
 
     useEffect(() => {
-        if (!currentItem || items.length < 4) {
-            // Reset on item change
-            setTimeout(() => setOptions([]), 0);
-            return;
+        if (currentItem && optionsRef.current.distractors.length > 0) {
+            useGameStore.getState().setRecentDistractorIds(optionsRef.current.distractors);
         }
-
-        const correctAnswer = currentItem.answer;
-        const pool = items.filter(i => 
-            i.id !== currentItem.id && 
-            i.lang?.target === currentItem.lang?.target
-        );
-
-        // Prefer distractors not used in the immediately previous round.
-        // Read the latest recent ids from the store without subscribing,
-        // so this effect only re-runs when the question/items change.
-        const { recentDistractorIds, setRecentDistractorIds } = useGameStore.getState();
-        const recentSet = new Set(recentDistractorIds);
-        const shuffle = <T,>(arr: T[]) => arr.slice().sort(() => 0.5 - Math.random());
-        const fresh = shuffle(pool.filter(i => !recentSet.has(i.id)));
-        const stale = shuffle(pool.filter(i => recentSet.has(i.id)));
-        const picked = [...fresh, ...stale].slice(0, 3);
-        const distractors = picked.map(i => i.answer);
-
-        setRecentDistractorIds(picked.map(i => i.id));
-
-        setTimeout(() => {
-            setOptions([...distractors, correctAnswer].sort(() => 0.5 - Math.random()));
-        }, 0);
-    }, [currentItem, items]);
+    }, [currentItem]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -64,39 +82,33 @@ export function MultipleChoiceGame() {
     // Auto-play Question on load
     useEffect(() => {
         let mounted = true;
-        if (currentItem) {
+        if (currentItem && options.length > 0) {
             const timer = setTimeout(() => {
                 if (mounted) playAudio(currentItem.question, currentItem.lang?.source, currentItem.audioUrl);
-            }, 500);
+            }, 300);
             return () => {
                 mounted = false;
                 clearTimeout(timer);
             };
         }
-    }, [currentItem, playAudio]);
+    }, [currentItem, options.length, playAudio]);
 
     // Handle Timeout
     useEffect(() => {
         if (timerEnabled && timeLeft === 0 && !isProcessing) {
-
-            setTimeout(() => {
-                setIsProcessing(true);
-            }, 0);
+            setIsProcessing(true);
             soundService.playWrong();
-
-            playAudio(currentItem.answer, currentItem.lang?.target, undefined).then(() => {
+            submitAnswer(false);
+            playAudio(currentItem!.answer, currentItem!.lang?.target, undefined).then(() => {
                 timeoutRef.current = setTimeout(() => nextItem(), 1500);
             });
         }
-    }, [timeLeft, timerEnabled, isProcessing, playAudio, currentItem, nextItem]);
+    }, [timeLeft, timerEnabled, isProcessing, playAudio, currentItem, submitAnswer, nextItem]);
 
     // Reset local state when item changes
     useEffect(() => {
-
-        setTimeout(() => {
-            setSelectedOption(null);
-            setIsProcessing(false);
-        }, 0);
+        setSelectedOption(null);
+        setIsProcessing(false);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }, [currentIndex]);
 
@@ -105,24 +117,25 @@ export function MultipleChoiceGame() {
         setIsProcessing(true);
         setSelectedOption(option);
 
-        const isCorrect = option === currentItem.answer;
+        const isCorrect = option === currentItem!.answer;
+        submitAnswer(isCorrect);
 
         if (isCorrect) {
             soundService.playCorrect();
-            await playAudio(option, currentItem.lang?.target, undefined);
+            await playAudio(option, currentItem!.lang?.target, undefined);
+            timeoutRef.current = setTimeout(() => {
+                nextItem();
+            }, 500);
         } else {
             soundService.playWrong();
-            await playAudio(currentItem.answer, currentItem.lang?.target, undefined);
+            await playAudio(currentItem!.answer, currentItem!.lang?.target, undefined);
+            timeoutRef.current = setTimeout(() => {
+                nextItem();
+            }, 1000); // Auto-advance after giving time to hear audio and see hint
         }
-
-        submitAnswer(isCorrect);
-
-        timeoutRef.current = setTimeout(() => {
-            nextItem();
-        }, 500);
     };
 
-    if (!currentItem) return null;
+    if (!currentItem || options.length === 0) return null;
 
     if (items.length < 4) {
         return (
@@ -134,12 +147,13 @@ export function MultipleChoiceGame() {
         )
     }
 
+    const isWrongOrTimeout = isProcessing && (selectedOption !== currentItem.answer || timeLeft === 0);
+
     return (
-        <div className="flex flex-col h-full justify-center items-center gap-8 animate-in fade-in duration-500">
+        <div className="flex flex-col h-full justify-center items-center gap-8 w-full">
             {/* Question Card */}
             <Card className="w-full max-w-2xl bg-gradient-to-br from-card to-secondary/20 border-2 shadow-lg hover:shadow-xl transition-all">
                 <CardContent className="flex flex-col items-center justify-center p-12 min-h-[200px] gap-6">
-
                     <h2 className="text-4xl md:text-5xl font-black text-center text-primary drop-shadow-sm tracking-tight leading-tight">
                         {currentItem.question}
                     </h2>
@@ -192,16 +206,18 @@ export function MultipleChoiceGame() {
                         </Button>
                     );
                 })}
-
-
             </div>
 
-            {/* Hint */}
-            {isProcessing && selectedOption !== currentItem.answer && currentItem.context && (
-                <div className="text-sm text-muted-foreground animate-in slide-in-from-top-2 bg-secondary/50 px-4 py-2 rounded-lg">
-                    💡 Hint: {currentItem.context}
+            {/* Hint & Continue Button Wrapper */}
+            <div className="w-full max-w-2xl flex flex-col sm:flex-row items-center justify-between gap-4 h-14">
+                <div className="flex-1">
+                    {isWrongOrTimeout && currentItem.context && (
+                        <div className="text-sm text-muted-foreground animate-in slide-in-from-left-4 bg-secondary/50 px-4 py-2 rounded-lg">
+                            💡 Hint: {currentItem.context}
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
-};
+}

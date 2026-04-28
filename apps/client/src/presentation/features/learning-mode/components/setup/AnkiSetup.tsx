@@ -6,6 +6,7 @@ import { ArrowRightLeft } from 'lucide-react';
 import { ankiService } from '@/infrastructure/external/anki/AnkiService';
 import { useGameStore } from '../../store/useGameStore';
 import { LanguageSelector } from './LanguageSelector';
+import { Switch } from '@radix-ui/react-switch';
 
 export function AnkiSetup() {
     const { config, updateConfig } = useGameStore();
@@ -249,6 +250,19 @@ export function AnkiSetup() {
                             onChange={(val) => updateConfig({ targetLang: val })}
                         />
                     </div>
+
+                    {config.mode === 'multiple-choice' && (
+                        <div className="flex items-center space-x-3 px-1 mt-4">
+                            <Switch
+                                checked={config.mixMode}
+                                onCheckedChange={(checked) => updateConfig({ mixMode: checked })}
+                            />
+                            <div className="flex flex-col">
+                                <span className="text-sm font-medium text-foreground">Mix Mode</span>
+                                <span className="text-xs text-muted-foreground">Randomly swap prompt and answer directions during gameplay</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

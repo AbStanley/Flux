@@ -9,6 +9,7 @@ import { Button } from '@/presentation/components/ui/button';
 import { LanguageSelector } from './LanguageSelector';
 import { Input } from '@/presentation/components/ui/input';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/presentation/components/ui/switch';
 
 export const AiSetup = () => {
     const { config, updateConfig, availableLangs, isLoadingLangs } = useGameStore();
@@ -77,6 +78,19 @@ export const AiSetup = () => {
                             options={availableLangs}
                         />
                     </div>
+
+                    {config.mode === 'multiple-choice' && (
+                        <div className="flex items-center space-x-3 px-1 mt-2">
+                            <Switch 
+                                checked={config.mixMode} 
+                                onCheckedChange={(checked) => updateConfig({ mixMode: checked })} 
+                            />
+                            <div className="flex flex-col">
+                                <span className="text-sm font-medium text-foreground">Mix Mode</span>
+                                <span className="text-xs text-muted-foreground">Randomly swap prompt and answer directions during gameplay</span>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="h-px bg-border my-2" />
 
