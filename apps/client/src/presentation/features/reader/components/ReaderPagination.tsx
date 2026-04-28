@@ -1,4 +1,5 @@
 import { Slider } from '../../../components/ui/slider';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ReaderPaginationProps {
     currentPage: number;
@@ -14,25 +15,29 @@ export function ReaderPagination({
     if (totalPages <= 1) return null;
 
     return (
-        <div className="flex flex-col gap-4 py-6 mt-4 border-t border-border/40">
+        <div className="flex flex-col gap-4 py-2">
             {/* Slider for rapid navigation */}
-            <div className="flex items-center gap-4 px-2">
-                <span className="text-[10px] font-medium text-muted-foreground w-8">Page 1</span>
-                <Slider
-                    value={[currentPage]}
-                    min={1}
-                    max={totalPages}
-                    step={1}
-                    onValueChange={([val]: number[]) => onPageChange(val)}
-                    className="flex-1"
-                />
-                <span className="text-[10px] font-medium text-muted-foreground w-8 text-right">Page {totalPages}</span>
+            <div className="flex items-center gap-4 px-6 group">
+                <span className="text-[10px] font-bold text-muted-foreground/50 tabular-nums">1</span>
+                <div className="flex-1 py-4 relative">
+                    <Slider
+                        value={[currentPage]}
+                        min={1}
+                        max={totalPages}
+                        step={1}
+                        onValueChange={([val]: number[]) => onPageChange(val)}
+                        className="cursor-pointer relative z-10"
+                    />
+                    {/* Animated background glow behind slider track */}
+                    <div className="absolute inset-x-0 h-1 top-1/2 -translate-y-1/2 bg-primary/10 rounded-full blur-sm" />
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground/50 tabular-nums">{totalPages}</span>
             </div>
 
             {/* Stepper controls */}
             <div className="flex justify-center items-center gap-6">
                 <button
-                    className="h-9 px-4 rounded-md border bg-background hover:bg-muted text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="h-10 px-5 rounded-xl border bg-background hover:bg-muted text-sm font-semibold transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
                     onClick={() => onPageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                 >
@@ -40,13 +45,25 @@ export function ReaderPagination({
                 </button>
                 
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold font-mono bg-muted/50 px-3 py-1.5 rounded-md border shadow-inner min-w-[60px] text-center">
-                        {currentPage} <span className="text-muted-foreground font-normal mx-1">/</span> {totalPages}
-                    </span>
+                    <div className="flex items-center justify-center text-sm font-black font-mono bg-primary/5 text-primary px-4 py-2 rounded-xl border-2 border-primary/20 shadow-inner min-w-[80px] overflow-hidden">
+                        <AnimatePresence mode="wait">
+                            <motion.span
+                                key={currentPage}
+                                initial={{ y: 10, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -10, opacity: 0 }}
+                                transition={{ duration: 0.15, ease: "easeOut" }}
+                            >
+                                {currentPage}
+                            </motion.span>
+                        </AnimatePresence>
+                        <span className="text-muted-foreground/40 font-normal mx-2">/</span> 
+                        <span className="text-muted-foreground/60">{totalPages}</span>
+                    </div>
                 </div>
 
                 <button
-                    className="h-9 px-4 rounded-md border bg-background hover:bg-muted text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="h-10 px-5 rounded-xl border bg-background hover:bg-muted text-sm font-semibold transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
                     onClick={() => onPageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                 >

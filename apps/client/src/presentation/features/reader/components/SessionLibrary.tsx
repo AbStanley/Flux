@@ -3,6 +3,7 @@ import { Button } from '@/presentation/components/ui/button';
 import { readingSessionsApi, type ReadingSessionSummary, type ReadingSession, type ChapterInfo } from '@/infrastructure/api/reading-sessions';
 import { useReaderStore } from '../store/useReaderStore';
 import { BookOpen, ChevronDown, ChevronRight, FileText, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /** Extract chapter previews from full session text */
 function getChapterPreviews(session: ReadingSession): Map<string, string> {
@@ -31,6 +32,7 @@ function getChapterPreviews(session: ReadingSession): Map<string, string> {
 }
 
 export function SessionLibrary() {
+    const currentSessionId = useReaderStore(state => state.sessionId);
     const [sessions, setSessions] = useState<ReadingSessionSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -130,23 +132,24 @@ export function SessionLibrary() {
     if (sessions.length === 0) return null;
 
     return (
-        <div className="border rounded-lg bg-muted/20 overflow-hidden">
+        <div className="border rounded-lg bg-muted/20 overflow-hidden shadow-sm">
             <div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/30">
-                <BookOpen className="w-4 h-4 text-muted-foreground" />
-                <h3 className="text-sm font-semibold">My Library</h3>
-                <span className="text-xs text-muted-foreground ml-auto">{sessions.length} documents</span>
+                <BookOpen className="w-4 h-4 text-primary/70" />
+                <h3 className="text-sm font-semibold tracking-tight">Recent Sessions</h3>
+                <span className="text-[10px] font-mono text-muted-foreground ml-auto bg-muted px-1.5 py-0.5 rounded">{sessions.length}</span>
                 <button
                     onClick={handleDeleteAll}
-                    className="text-xs text-muted-foreground hover:text-destructive transition-colors px-1.5 py-0.5 rounded hover:bg-destructive/10"
+                    className="text-[10px] text-muted-foreground hover:text-destructive transition-colors px-1.5 py-0.5 rounded hover:bg-destructive/10 uppercase tracking-tighter font-bold"
                     title="Delete all sessions"
                 >
                     Clear All
                 </button>
             </div>
 
-            <div className={`divide-y ${sessions.length > 3 ? 'max-h-64 overflow-y-auto' : ''}`}>
+            <div className={`divide-y ${sessions.length > 5 ? 'max-h-[300px] overflow-y-auto' : ''}`}>
                 {sessions.map((session) => {
                     const isExpanded = expandedId === session.id;
+                    const isActive = currentSessionId === session.id;
                     const hasChapters = session.chapters && Array.isArray(session.chapters) && session.chapters.length > 0;
                     const progress = session.totalPages > 0
                         ? Math.round((session.currentPage / session.totalPages) * 100)
@@ -187,9 +190,14 @@ export function SessionLibrary() {
                                 )}
 
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">{session.title}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className={cn("text-sm font-medium truncate", isActive && "text-primary")}>{session.title}</p>
+                                        {isActive && (
+                                            <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                        )}
+                                    </div>
                                     <p className="text-xs text-muted-foreground">
-                                        {session.fileType && <span className="uppercase">{session.fileType} · </span>}
+                                        {session.fileType && <span className="uppercase font-bold text-[9px] text-muted-foreground/60">{session.fileType} · </span>}
                                         p.{session.currentPage}/{session.totalPages} · {date}
                                     </p>
                                 </div>

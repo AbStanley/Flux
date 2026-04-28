@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { Card, CardContent } from "@/presentation/components/ui/card";
 import { Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../ReaderView.module.css';
 
 import { useReader } from '../hooks/useReader';
@@ -117,7 +118,7 @@ export function ReaderMainPanel() {
 
     return (
         <>
-            <Card className="flex-1 h-full border-none shadow-sm glass overflow-hidden flex flex-col">
+            <Card className="flex-1 h-[75vh] min-h-[600px] border-none shadow-sm glass overflow-hidden flex flex-col">
                 <CardContent className={`p-0 relative flex-1 ${isGenerating ? 'overflow-hidden select-none' : 'overflow-y-auto'} ${styles.textAreaContainer} flex flex-col`}>
 
                     {readingMode === 'GRAMMAR' ? (
@@ -133,33 +134,35 @@ export function ReaderMainPanel() {
                                 <PlayerControls />
                             </div>
 
-                            {!isGenerating && (
-                                <ReaderTextContent
-                                    tokens={tokens}
-                                    paginatedTokens={paginatedTokens}
-                                    groups={groups}
-                                    currentPage={currentPage}
-                                    PAGE_SIZE={PAGE_SIZE}
-                                    selectionMode={selectionMode}
-                                    visualGroupStarts={visualGroupStarts}
-                                    groupStarts={groupStarts}
-                                    tokenPositions={tokenPositions}
-                                    textAreaRef={textAreaRef}
-                                    handleTokenClick={onTokenClick}
-                                    onMoreInfoClick={onMoreInfoClick}
-                                    onPlayClick={onPlayClick}
-                                    onRegenerateClick={onRegenerateClick}
-                                    showTranslations={showTranslations}
-                                />
-                            )}
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={currentPage}
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="flex-1 flex flex-col"
+                                >
+                                    <ReaderTextContent
+                                        tokens={tokens}
+                                        paginatedTokens={paginatedTokens}
+                                        groups={groups}
+                                        currentPage={currentPage}
+                                        PAGE_SIZE={PAGE_SIZE}
+                                        selectionMode={selectionMode}
+                                        visualGroupStarts={visualGroupStarts}
+                                        groupStarts={groupStarts}
+                                        tokenPositions={tokenPositions}
+                                        textAreaRef={textAreaRef}
+                                        handleTokenClick={onTokenClick}
+                                        onMoreInfoClick={onMoreInfoClick}
+                                        onPlayClick={onPlayClick}
+                                        onRegenerateClick={onRegenerateClick}
+                                        showTranslations={showTranslations}
+                                    />
+                                </motion.div>
+                            </AnimatePresence>
 
-                            <div className="mt-auto px-8 min-[1200px]:px-0 py-8">
-                                <ReaderPagination
-                                    currentPage={currentPage}
-                                    totalPages={totalPages}
-                                    onPageChange={setCurrentPage}
-                                />
-                            </div>
                         </>
                     )}
 
@@ -172,6 +175,15 @@ export function ReaderMainPanel() {
                         </div>
                     )}
                 </CardContent>
+                
+                {/* Fixed Footer for Pagination */}
+                <div className="border-t bg-background/95 backdrop-blur-md px-4 py-3 flex-shrink-0 z-[250] shadow-sm">
+                    <ReaderPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
             </Card>
 
             {/* Mobile Bottom Sheet (Info Panel) - Managed by RichInfoPanel internally with media queries */}

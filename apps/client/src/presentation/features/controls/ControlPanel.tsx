@@ -128,14 +128,14 @@ export function ControlPanel() {
                 </div>
             </CardHeader>
 
-            <CardContent className={cn("space-y-2 p-4 pt-0 transition-all duration-500", isGenerating && "space-y-0")}>
+            <CardContent className={cn("space-y-2 p-4 pt-0", isGenerating && "space-y-0")}>
                 <div className={cn("grid transition-all duration-500 ease-in-out", isGenerating ? "grid-rows-[0fr] opacity-0 mb-0" : "grid-rows-[1fr] opacity-100 mb-2")}>
                     <div className="overflow-hidden">
                         <SessionLibrary />
                     </div>
                 </div>
 
-                <div className={cn("transition-all duration-500", isGenerating ? "mt-0" : "")}>
+                <div className={cn(isGenerating ? "mt-0" : "")}>
                     <ReaderInput
                         text={text}
                         isGenerating={isGenerating}
@@ -144,7 +144,7 @@ export function ControlPanel() {
                     />
                 </div>
 
-                <div className={cn("flex gap-4 flex-wrap transition-all duration-500", isGenerating ? "justify-center mt-4" : "mt-2")}>
+                <div className={cn("flex gap-4 flex-wrap", isGenerating ? "justify-center mt-4" : "mt-4")}>
                     {isGenerating ? (
                         <Button
                             onClick={stopGeneration}
@@ -175,9 +175,13 @@ export function ControlPanel() {
                             <Button
                                 onClick={handleStartReading}
                                 disabled={!text.trim() || isGenerating}
-                                className={cn("w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all")}
+                                className={cn(
+                                    "w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-lg transition-all",
+                                    "ring-4 ring-green-500/20 animate-pulse hover:animate-none",
+                                    "font-bold px-8"
+                                )}
                             >
-                                Open Reading Mode
+                                ✨ Open Reading Mode
                             </Button>
                         </>
                     )}

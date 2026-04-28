@@ -6,6 +6,7 @@
     width: 100%;
     padding: 3rem;
     padding-bottom: 3rem;
+    scrollbar-gutter: stable;
 }
 
 @media (max-width: 1200px) {

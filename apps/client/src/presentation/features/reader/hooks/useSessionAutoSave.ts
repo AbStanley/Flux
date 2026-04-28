@@ -21,20 +21,21 @@ export function useSessionAutoSave() {
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const createDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const savingRef = useRef(false);
+    const creatingRef = useRef(false);
 
     // Auto-create session when text is loaded (with or without reading mode)
     // Skip while generating (text changes every token) and if sessionId is already set
     useEffect(() => {
-        if (!text || sessionId || savingRef.current || isGenerating) return;
+        if (!text || sessionId || savingRef.current || creatingRef.current || isGenerating) return;
 
         // Debounce creation to wait for text to stabilize
         if (createDebounceRef.current) clearTimeout(createDebounceRef.current);
         createDebounceRef.current = setTimeout(() => {
             // Re-check conditions after debounce
             const state = useReaderStore.getState();
-            if (!state.text || state.sessionId || state.isGenerating) return;
+            if (!state.text || state.sessionId || state.isGenerating || creatingRef.current) return;
 
-            savingRef.current = true;
+            creatingRef.current = true;
             const totalPages = Math.ceil(state.tokens.length / state.PAGE_SIZE);
             const title = state.text
                 .replace(/^#{1,6}\s+/gm, '') // strip markdown headers like ### Title
@@ -52,7 +53,9 @@ export function useSessionAutoSave() {
             }).then((session) => {
                 useReaderStore.getState().setSession(session.id, session.title);
             }).catch(console.error)
-              .finally(() => { savingRef.current = false; });
+              .finally(() => { 
+                creatingRef.current = false; 
+              });
         }, 2000);
 
         return () => {
