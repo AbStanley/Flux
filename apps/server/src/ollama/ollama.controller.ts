@@ -214,9 +214,23 @@ export class OllamaController {
       targetLanguage: string;
       limit?: number;
       model?: string;
+      stream?: boolean;
+      sourceLangCode?: string;
+      targetLangCode?: string;
     },
+    @Res() res: Response,
   ) {
-    return this.ollamaService.generateGameContent(body);
+    if (body.stream) {
+      res.setHeader('Content-Type', 'application/x-ndjson');
+      const stream = await this.ollamaService.generateGameContentStream(body);
+      for await (const part of stream) {
+        res.write(JSON.stringify(part) + '\n');
+      }
+      res.end();
+    } else {
+      const result = await this.ollamaService.generateGameContent(body);
+      res.json(result);
+    }
   }
 
   @Post('check-writing')

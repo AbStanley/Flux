@@ -138,8 +138,24 @@ export class OllamaService {
     targetLanguage: string;
     limit?: number;
     model?: string;
+    sourceLangCode?: string;
+    targetLangCode?: string;
   }): Promise<string> {
     return this.generation.generateGameContent(params);
+  }
+
+  async generateGameContentStream(params: {
+    topic: string;
+    level: string;
+    mode: string;
+    sourceLanguage: string;
+    targetLanguage: string;
+    limit?: number;
+    model?: string;
+    sourceLangCode?: string;
+    targetLangCode?: string;
+  }) {
+    return this.generation.generateGameContentStream(params);
   }
 
   async analyzeGrammar(params: {

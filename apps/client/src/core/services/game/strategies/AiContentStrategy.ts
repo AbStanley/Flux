@@ -14,26 +14,18 @@ export class AiContentStrategy implements IContentStrategy {
         return found ? found.name : code;
     }
 
-    async fetchItems(config: GameContentParams['config']): Promise<GameItem[]> {
+    async fetchItems(config: GameContentParams['config'], onItem?: (item: GameItem) => void): Promise<GameItem[]> {
         if (!config?.aiTopic) {
             throw new Error("Topic is required for AI strategy.");
         }
 
-        // Set base URL if provided in config (not supported in serverAIService yet via config, assuming default or global set)
-        // If config.aiHost is important, we might need to expose setBaseUrl in ServerAIService
-
         const topic = config.aiTopic;
         const level = config.aiLevel || 'intermediate';
-
-        // Resolve full names for the prompt
-        const sourceLang = this.getLanguageName(config.language?.source || 'English');
-        let targetLang = this.getLanguageName(config.language?.target || 'Spanish');
-
-        // Ensure source and target are not the same
-        if (sourceLang.toLowerCase() === targetLang.toLowerCase()) {
-            console.warn(`Source and Target languages are the same (${sourceLang}). Defaulting Target to English (or Spanish if source is English).`);
-            targetLang = sourceLang.toLowerCase() === 'english' ? 'Spanish' : 'English';
-        }
+        // In this app's convention (from AiSetup.tsx and DB strategy):
+        // sourceLang = Foreign/Learning language
+        // targetLang = Native/Translation language
+        const learningLang = this.getLanguageName(config.language?.source || 'Spanish');
+        const nativeLang = this.getLanguageName(config.language?.target || 'English');
 
         const limit = config.limit || 10;
         const mode = config.gameMode || 'multiple-choice';
@@ -43,52 +35,77 @@ export class AiContentStrategy implements IContentStrategy {
             serverAIService.setModel(aiModel);
         }
 
-        const responseText = await serverAIService.generateGameContent({
-            topic,
-            level,
-            mode,
-            sourceLanguage: sourceLang,
-            targetLanguage: targetLang,
-            limit
-        });
+        const learningLangCode = normalizeLanguageCode(learningLang);
+        const nativeLangCode = normalizeLanguageCode(nativeLang);
 
+        const items: GameItem[] = [];
         try {
-            // Basic cleanup to find JSON array
-            const jsonStart = responseText.indexOf('[');
-            const jsonEnd = responseText.lastIndexOf(']') + 1;
-
-            if (jsonStart === -1 || jsonEnd === 0) {
-                throw new Error("Invalid format from AI");
-            }
-
-            const cleanJson = responseText.slice(jsonStart, jsonEnd);
-            const parsed = JSON.parse(cleanJson);
-
-            const filtered = parsed.map((item: { question: string; answer: string; context?: string; type?: 'word' | 'phrase' }, index: number) => ({
-                id: `ai-${Date.now()}-${index}`,
-                question: item.question,
-                answer: item.answer,
-                context: item.context,
-                source: 'ai',
-                type: item.type || 'word',
-                lang: {
-                    source: normalizeLanguageCode(mode === 'scramble' ? targetLang : sourceLang),
-                    target: normalizeLanguageCode(mode === 'scramble' ? sourceLang : targetLang)
-                }
-            })).filter((item: GameItem) => {
-                const isValid = item.question && item.answer && item.question.toLowerCase() !== item.answer.toLowerCase();
-                if (!isValid) console.warn("[AiStrategy] Filtered invalid/duplicate item:", item);
-                return isValid;
+            const rawItems = await serverAIService.generateGameContent({
+                topic,
+                level,
+                mode,
+                sourceLanguage: nativeLang,
+                targetLanguage: learningLang,
+                sourceLangCode: nativeLangCode,
+                targetLangCode: learningLangCode,
+                limit
             });
 
-            if (filtered.length === 0) {
-                throw new Error(`AI generated ${parsed.length} items but all were invalid or identical question/answers. Try a different topic or model.`);
+            console.log(`[AiStrategy] Received ${rawItems.length} items from AI.`);
+            console.log("[AiStrategy] Raw AI items:", rawItems);
+
+            let index = 0;
+            for (const rawItem of rawItems) {
+                const ri = rawItem as Record<string, unknown>;
+                let q = ri.target_text as string || ri.question as string;
+                let a = ri.source_translation as string || ri.answer as string;
+                let qCode = (ri.target_lang_code as string) || learningLangCode;
+                let aCode = (ri.source_lang_code as string) || nativeLangCode;
+
+                // AUTO-SWAP SAFETY NET: 
+                // If the AI explicitly tagged the 'target' as the native language,
+                // it means the model swapped the direction. We swap it back.
+                if (ri.target_lang_code === nativeLangCode || (ri.source_lang_code === learningLangCode && qCode !== aCode)) {
+                    console.warn("[AiStrategy] Detected language inversion from AI. Auto-swapping fields back.");
+                    const temp = q;
+                    q = a;
+                    a = temp;
+                    const tempCode = qCode;
+                    qCode = aCode;
+                    aCode = tempCode;
+                }
+
+                const item: GameItem = {
+                    id: `ai-${Date.now()}-${index++}`,
+                    question: q,
+                    answer: a,
+                    context: rawItem.context as string,
+                    source: 'ai',
+                    type: (ri.type as 'word' | 'phrase') || 'word',
+                    lang: {
+                        source: qCode,
+                        target: aCode
+                    }
+                };
+
+                // Validate
+                if (item.question && item.answer && item.question.toLowerCase().trim() !== item.answer.toLowerCase().trim()) {
+                    items.push(item);
+                    onItem?.(item);
+                } else {
+                    console.warn(`[AiStrategy] Filtered item because question and answer are identical or empty in both languages: "${item.question}" vs "${item.answer}"`);
+                }
             }
 
-            return filtered;
+            if (items.length === 0) {
+                throw new Error(`AI generated ${rawItems.length} items, but they were all invalid (likely identical in both languages). Try a different model like 'llama3' or check your source/target language settings.`);
+            }
+
+            return items;
 
         } catch (e) {
-            console.error("AI Generation Error", e, responseText);
+            console.error("AI Generation Error", e);
+            if (items.length > 0) return items;
             throw new Error((e instanceof Error ? e.message : String(e)));
         }
     }

@@ -98,13 +98,14 @@ export function useSentenceScrambleLogic() {
         // Play immediate feedback sound
         if (isCorrect) {
             soundService.playClick();
-            // Play the word audio in the target language (delayed to avoid conflict with click sound)
-            setTimeout(() => {
-                playAudio(brick.word, currentItem?.lang?.target);
-            }, 10);
         } else {
             soundService.playWrong();
         }
+
+        // Play the word audio in the target language (delayed to avoid conflict with click sound)
+        setTimeout(() => {
+            playAudio(brick.word, currentItem?.lang?.target);
+        }, 10);
 
         // Mark brick as used
         setWordPool(prev => prev.map(b =>

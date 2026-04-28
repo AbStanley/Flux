@@ -144,5 +144,16 @@ export interface IAIService {
         sourceLanguage: string;
         targetLanguage: string;
         limit?: number;
-    }): Promise<string>;
+        sourceLangCode?: string;
+        targetLangCode?: string;
+    }): Promise<Array<{ 
+        question?: string; 
+        answer?: string; 
+        target_text?: string; 
+        source_translation?: string;
+        target_lang_code?: string;
+        source_lang_code?: string;
+        context?: string; 
+        type?: 'word' | 'phrase' 
+    }>>;
 }

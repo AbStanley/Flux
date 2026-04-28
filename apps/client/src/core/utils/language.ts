@@ -5,11 +5,15 @@ export const normalizeLanguageCode = (languageName?: string): string => {
 
     const languageMap: Record<string, string> = {
         'english': 'en-US',
+        'english (us)': 'en-US',
+        'english (uk)': 'en-GB',
         'spanish': 'es-ES',
+        'spanish (latin america)': 'es-MX',
         'french': 'fr-FR',
         'german': 'de-DE',
         'italian': 'it-IT',
         'portuguese': 'pt-PT',
+        'portuguese (brazil)': 'pt-BR',
         'russian': 'ru-RU',
         'japanese': 'ja-JP',
         'korean': 'ko-KR',
@@ -37,5 +41,12 @@ export const normalizeLanguageCode = (languageName?: string): string => {
         return languageName;
     }
 
-    return languageMap[lowerName] || 'en-US';
+    const mapped = languageMap[lowerName];
+    if (mapped) return mapped;
+
+    // Fallback search for partial matches
+    const partialMatch = Object.keys(languageMap).find(key => lowerName.includes(key));
+    if (partialMatch) return languageMap[partialMatch];
+
+    return 'en-US';
 };

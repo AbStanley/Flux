@@ -8,7 +8,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
         return true;
     }
 
-    async fetchItems(config: GameContentParams['config']): Promise<GameItem[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async fetchItems(config: GameContentParams['config'], _onItem?: (item: GameItem) => void): Promise<GameItem[]> {
         // For scramble mode, use specialized fetching
         if (config?.gameMode === 'scramble') {
             return this.fetchScrambleItems(config);
@@ -24,8 +25,8 @@ export class DatabaseContentStrategy implements IContentStrategy {
             // Note: 'scramble' is handled above and returns early, so we are guaranteed to be in a word-only mode here.
             const typeFilter: 'word' | 'phrase' | undefined = 'word';
 
-            // 1. Forward Fetch: Search exactly as requested
-            const fwdPromise = wordsApi.getAll({
+            // 1. Fetch items exactly as requested
+            const result = await wordsApi.getAll({
                 limit,
                 sourceLanguage: reqSource,
                 targetLanguage: reqTarget,
@@ -34,36 +35,7 @@ export class DatabaseContentStrategy implements IContentStrategy {
                 _cb: Date.now().toString()
             });
 
-            // 2. Reverse Fetch: Search for the opposite to support "Backwards" learning
-            let revPromise: Promise<{ items: Word[]; total: number }> | undefined;
-
-            if ((reqSource || reqTarget) && reqSource !== reqTarget) {
-                revPromise = wordsApi.getAll({
-                    limit,
-                    sourceLanguage: reqTarget,
-                    targetLanguage: reqSource,
-                    type: typeFilter,
-                    sort: 'random',
-                    _cb: (Date.now() + 1).toString()
-                });
-            }
-
-            const [fwdRes, revRes] = await Promise.all([
-                fwdPromise,
-                revPromise || Promise.resolve({ items: [], total: 0 })
-            ]);
-
-            const items: GameItem[] = [];
-
-            fwdRes.items.forEach(word => {
-                items.push(this.mapToGameItem(word, false));
-            });
-
-            revRes.items.forEach(word => {
-                if (word.definition) {
-                    items.push(this.mapToGameItem(word, true));
-                }
-            });
+            const items: GameItem[] = result.items.map(word => this.mapToGameItem(word, false));
 
             return items.sort(() => 0.5 - Math.random()).slice(0, limit);
 

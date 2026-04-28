@@ -1,14 +1,16 @@
 import type { IContentStrategy, GameItem, GameContentParams } from '../interfaces';
 import { ankiService } from '@/infrastructure/external/anki/AnkiService';
+import { normalizeLanguageCode } from '../../../utils/language';
 
 export class AnkiContentStrategy implements IContentStrategy {
     async validateAvailability(): Promise<boolean> {
         return ankiService.ping();
     }
 
-    async fetchItems(config: GameContentParams['config']): Promise<GameItem[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async fetchItems(config: GameContentParams['config'], _onItem?: (item: GameItem) => void): Promise<GameItem[]> {
         if (!config?.collectionId) {
-            throw new Error("Deck name (collectionId) is required for Anki strategy.");
+            throw new Error("Anki deck name is required for Anki strategy.");
         }
 
         const deckName = config.collectionId;
@@ -51,8 +53,8 @@ export class AnkiContentStrategy implements IContentStrategy {
                 type: 'word', // Defaulting to word, could be phrase
                 originalData: info,
                 lang: {
-                    source: config.language?.source || 'unknown',
-                    target: config.language?.target || 'unknown'
+                    source: normalizeLanguageCode(config.language?.source),
+                    target: normalizeLanguageCode(config.language?.target)
                 }
             };
         });

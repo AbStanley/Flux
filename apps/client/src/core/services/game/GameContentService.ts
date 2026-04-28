@@ -18,7 +18,7 @@ export class GameContentService {
         this.strategies[source] = strategy;
     }
 
-    async getItems(params: GameContentParams): Promise<GameItem[]> {
+    async getItems(params: GameContentParams, onItem?: (item: GameItem) => void): Promise<GameItem[]> {
         const strategy = this.strategies[params.source];
         if (!strategy) {
             console.warn(`Strategy for source '${params.source}' not found. Falling back to DB.`);
@@ -36,7 +36,7 @@ export class GameContentService {
             throw new Error(`Source '${params.source}' is currently unavailable.`);
         }
 
-        return strategy.fetchItems(params.config);
+        return strategy.fetchItems(params.config, onItem);
     }
 
     async syncProgress(source: string, items: GameItem[], results: Record<string, boolean>): Promise<void> {

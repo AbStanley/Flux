@@ -336,11 +336,71 @@ export class ServerAIService implements IAIService {
     sourceLanguage: string;
     targetLanguage: string;
     limit?: number;
-  }): Promise<string> {
-    return defaultClient.post<string>('/api/generate-game-content', {
+    sourceLangCode?: string;
+    targetLangCode?: string;
+  }): Promise<Array<{ 
+    question?: string; 
+    answer?: string; 
+    target_text?: string; 
+    source_translation?: string;
+    target_lang_code?: string;
+    source_lang_code?: string;
+    context?: string; 
+    type?: 'word' | 'phrase' 
+  }>> {
+    const data = await defaultClient.post<string | unknown>('/api/generate-game-content', {
       ...params,
       model: this.model,
+      stream: false,
     });
+
+    // The backend might return a raw string (the JSON) or already parsed JSON object
+    let rawText: string;
+    if (typeof data === 'string') {
+      rawText = data;
+    } else if (data && typeof data === 'object' && 'response' in data && typeof (data as Record<string, unknown>).response === 'string') {
+      rawText = (data as { response: string }).response;
+    } else {
+      rawText = JSON.stringify(data);
+    }
+    
+    // Find the start of the JSON array/object to skip conversational garbage
+    const arrayStart = rawText.indexOf('[');
+    const objectStart = rawText.indexOf('{');
+    const jsonStart = arrayStart !== -1 ? arrayStart : objectStart;
+    
+    if (jsonStart === -1) {
+      throw new Error("AI failed to generate valid JSON content.");
+    }
+
+    const jsonPart = rawText.substring(jsonStart)
+      .replace(/```json\s*/g, '')
+      .replace(/```/g, '')
+      .trim();
+
+    try {
+      const parsed = JSON.parse(jsonPart);
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      return items.filter(item => item && ((item.question && item.answer) || (item.target_text && item.source_translation)));
+    } catch (e) {
+      console.error("[ServerAIService] Failed to parse AI response:", e);
+      throw new Error("AI generated malformed content. Please try again.");
+    }
+  }
+
+  // Deprecated: Keeping for interface compatibility but strategy will use non-streaming
+  async *generateGameContentStream(params: {
+    topic: string;
+    level: string;
+    mode: string;
+    sourceLanguage: string;
+    targetLanguage: string;
+    limit?: number;
+  }): AsyncIterable<{ question: string; answer: string; context?: string; type?: 'word' | 'phrase' }> {
+    const items = await this.generateGameContent(params);
+    for (const item of items) {
+      yield item;
+    }
   }
 }
 

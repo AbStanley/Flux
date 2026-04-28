@@ -1,4 +1,3 @@
-import { Layers } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { GameShell } from './GameShell';
 import { MultipleChoiceGame } from './games/MultipleChoiceGame';
@@ -7,6 +6,7 @@ import { AudioDictationGame } from './games/dictation/AudioDictationGame';
 import { SentenceScrambleGame } from './games/scramble/SentenceScrambleGame';
 import { StoryGame } from './games/story/StoryGame';
 import { ClozeGame } from './games/cloze/ClozeGame';
+import { GameLoading } from './components/GameLoading';
 import { GameSetup } from './components/GameSetup';
 
 export function LearningModePage() {
@@ -38,13 +38,7 @@ export function LearningModePage() {
     }
 
     if (status === 'loading') {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <div className="animate-spin text-primary">
-                    <Layers size={48} />
-                </div>
-            </div>
-        );
+        return <GameLoading />;
     }
 
     return (

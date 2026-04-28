@@ -51,7 +51,7 @@ export interface GameContentParams {
 }
 
 export interface IContentStrategy {
-    fetchItems(params: GameContentParams['config']): Promise<GameItem[]>;
+    fetchItems(params: GameContentParams['config'], onItem?: (item: GameItem) => void): Promise<GameItem[]>;
     validateAvailability(): Promise<boolean>;
     syncProgress?(items: GameItem[], results: Record<string, boolean>): Promise<void>;
 }

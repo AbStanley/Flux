@@ -15,7 +15,7 @@ export function MultipleChoiceGame() {
     const { playAudio, stopAudio } = useGameAudio();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const [currentItem] = useState(() => items[currentIndex]);
+    const currentItem = items[currentIndex];
 
     // Generate Options with useMemo (deterministic per item)
     // We use a specific dependency on currentItem?.id to ensure we only reshuffle when the question changes,
@@ -30,7 +30,10 @@ export function MultipleChoiceGame() {
         }
 
         const correctAnswer = currentItem.answer;
-        const pool = items.filter(i => i.id !== currentItem.id);
+        const pool = items.filter(i => 
+            i.id !== currentItem.id && 
+            i.lang?.target === currentItem.lang?.target
+        );
 
         // Prefer distractors not used in the immediately previous round.
         // Read the latest recent ids from the store without subscribing,
@@ -112,7 +115,7 @@ export function MultipleChoiceGame() {
 
         submitAnswer(isCorrect);
 
-        await playAudio(currentItem.answer, currentItem.lang?.target, undefined);
+        await playAudio(option, currentItem.lang?.target, undefined);
 
         timeoutRef.current = setTimeout(() => {
             nextItem();

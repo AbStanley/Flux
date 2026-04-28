@@ -5,6 +5,9 @@ export const getGameContentPrompt = (
   sourceLang: string,
   targetLang: string,
   limit: number = 10,
+  _isStreaming: boolean = false,
+  sourceLangCode: string = 'en-US',
+  targetLangCode: string = 'es-ES'
 ): string => {
   const isStoryMode = mode === 'story';
   const contextInstruction =
@@ -12,73 +15,80 @@ export const getGameContentPrompt = (
       ? 'Generate FULL SENTENCES.'
       : 'Generate simple words or short phrases.';
 
+  const baseInstruction = `Return strictly a JSON array of objects. Do not include markdown code blocks or any other text.`;
+
   if (isStoryMode) {
     return `
       Generate a short cohesive story about "${topic}" in ${targetLang} (Level: ${level}).
       Split the story into ${limit} short segments.
-      for each segment, identify a key phrase or word to translate to ${sourceLang}.
+      For each segment, identify a key phrase or word to translate to ${sourceLang}.
 
-      Return strictly a JSON array of objects. Each object must have:
+      ${baseInstruction}
+      Each object must have:
       - "context": The story segment in ${targetLang}.
       - "question": The key phrase/word in ${targetLang} (from the segment).
       - "answer": The translation of the key phrase/word in ${sourceLang}.
+      - "target_lang_code": ALWAYS "${targetLangCode}"
+      - "source_lang_code": ALWAYS "${sourceLangCode}"
       - "type": "phrase"
       
-      Example JSON format:
+      Example:
       [
-          { "context": "Había una vez un gato.", "question": "gato", "answer": "cat", "type": "phrase" }
+          { "context": "Había una vez un gato.", "question": "gato", "answer": "cat", "target_lang_code": "${targetLangCode}", "source_lang_code": "${sourceLangCode}", "type": "phrase" }
       ]
-
-      Do not include markdown. Just JSON.
       `;
   } else if (mode === 'scramble') {
     return `
       For "scramble" mode, generate ${limit} FULL SENTENCES about "${topic}".
-      Level criteria:
-      - Beginner: Simple Subject-Verb-Object sentences (5-8 words).
-      - Intermediate: Sentences with conjunctions or simple relative clauses (8-12 words).
-      - Advanced: Complex sentences with subordinate clauses or idiomatic expressions (12+ words).
-      
       Current Level: ${level}
-
-      Return strictly a JSON array of objects. Each object must have:
-      - "question": The full sentence in ${targetLang} (for reference/hint).
-      - "answer": The full sentence in ${sourceLang} (this will be scrambled).
+      
+      ${baseInstruction}
+      Each object must have:
+      - "question": The full sentence in ${sourceLang} (for reference/hint).
+      - "answer": The full sentence in ${targetLang} (this will be scrambled).
+      - "target_lang_code": ALWAYS "${targetLangCode}"
+      - "source_lang_code": ALWAYS "${sourceLangCode}"
       - "context": A brief explanation of grammar or context if needed.
       - "type": "phrase"
 
-      Example JSON format:
+      Example:
      [
-         { "question": "The cat sleeps on the sofa.", "answer": "El gato duerme en el sofá.", "context": "Simple present tense description.", "type": "phrase" }
+         { "question": "The cat sleeps on the sofa.", "answer": "El gato duerme en el sofá.", "target_lang_code": "${targetLangCode}", "source_lang_code": "${sourceLangCode}", "context": "Simple present.", "type": "phrase" }
      ]
-     
-     Do not include markdown formatting or explanations. Just the JSON array.
       `;
   } else {
     // Default / Multiple Choice
     return `
+      TRANSLATION DIRECTION: Translate from ${targetLang} to ${sourceLang}.
+      
       Generate ${limit} items for a language learning game.
       Topic: "${topic}"
       Difficulty Level: ${level}
       Game Mode: ${mode} (${contextInstruction})
 
-      Return strictly a JSON array of objects. Each object must have:
-      - "question": The content in ${sourceLang}.
-      - "answer": The translation in ${targetLang}.
+      ${baseInstruction}
+      Each object must have:
+      - "target_text": The word or phrase in ${targetLang}.
+      - "target_lang_code": ALWAYS "${targetLangCode}"
+      - "source_translation": The exact translation in ${sourceLang}.
+      - "source_lang_code": ALWAYS "${sourceLangCode}"
       - "context": A short example sentence using the word in ${targetLang}.
       - "type": "word" or "phrase".
 
-      IMPORTANT criteria:
-      1. "question" and "answer" must be in the specified languages.
-      2. "question" and "answer" must NOT be identical (unless the word is the same in both languages, which should be rare).
-      3. Avoid proper nouns if they don't change between languages.
+      CRITICAL CONSTRAINTS:
+      1. FIELD NAMES: You MUST use "target_text" and "source_translation". DO NOT use "question" or "answer".
+      2. LANGUAGES: 
+         - "target_text" MUST be in ${targetLang}.
+         - "source_translation" MUST be in ${sourceLang} (Translation).
+      3. LANGUAGE CODES: 
+         - Set "target_lang_code" to "${targetLangCode}".
+         - Set "source_lang_code" to "${sourceLangCode}".
+      4. ANTI-REPETITION: "source_translation" MUST NOT be in ${targetLang}.
 
-           Example JSON format:
-          [
-              { "question": "Hello", "answer": "Hola", "context": "Hola, ¿cómo estás?", "type": "word" }
-          ]
-          
-          Do not include markdown formatting or explanations. Just the JSON array.
+      Example:
+      [
+          { "target_text": "Hola", "target_lang_code": "${targetLangCode}", "source_translation": "Hello", "source_lang_code": "${sourceLangCode}", "context": "Hola, ¿cómo estás?", "type": "word" }
+      ]
       `;
   }
 };

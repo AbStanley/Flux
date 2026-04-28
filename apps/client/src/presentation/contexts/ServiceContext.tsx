@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import type { IAIService } from '../../core/interfaces/IAIService';
 import { MockAIService } from '../../infrastructure/ai/MockAIService';
 import { ServerAIService } from '../../infrastructure/ai/ServerAIService';
-import { useReaderStore } from '../features/reader/store/useReaderStore';
+import { useSettingsStore } from '../features/settings/store/useSettingsStore';
 
 interface OllamaConfig {
     model?: string;
@@ -18,7 +18,7 @@ const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 export function ServiceProvider({ children }: { children: ReactNode }) {
     // Get persisted model from store
-    const persistedModel = useReaderStore((s) => s.aiModel);
+    const persistedModel = useSettingsStore((s) => s.llmModel);
     const [currentServiceType, setCurrentServiceType] = useState<'mock' | 'ollama'>('ollama');
 
     // Initialize aiService state
@@ -37,7 +37,7 @@ export function ServiceProvider({ children }: { children: ReactNode }) {
     }, [persistedModel, currentServiceType, aiService]);
 
     // Get the setter from the store to persist model changes
-    const setAiModel = useReaderStore((s) => s.setAiModel);
+    const setAiModel = useSettingsStore((s) => s.setLlmModel);
 
     const setServiceType = (type: 'mock' | 'ollama', config?: OllamaConfig) => {
         setCurrentServiceType(type);

@@ -121,6 +121,8 @@ export class OllamaGenerationService {
     targetLanguage: string;
     limit?: number;
     model?: string;
+    sourceLangCode?: string;
+    targetLangCode?: string;
   }): Promise<string> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getGameContentPrompt(
@@ -130,6 +132,9 @@ export class OllamaGenerationService {
       params.sourceLanguage,
       params.targetLanguage,
       params.limit,
+      false, // isStreaming
+      params.sourceLangCode || 'en-US',
+      params.targetLangCode || 'es-ES',
     );
 
     const response = await this.ollamaClient.generate(
@@ -144,5 +149,46 @@ export class OllamaGenerationService {
       },
     );
     return cleanResponse(response.response, { multiline: true });
+  }
+
+  async *generateGameContentStream(params: {
+    topic: string;
+    level: string;
+    mode: string;
+    sourceLanguage: string;
+    targetLanguage: string;
+    limit?: number;
+    model?: string;
+    sourceLangCode?: string;
+    targetLangCode?: string;
+  }): AsyncIterable<{ response: string; done: boolean }> {
+    const model = await this.ollamaClient.ensureModel(params.model);
+    const prompt = getGameContentPrompt(
+      params.topic,
+      params.level,
+      params.mode,
+      params.sourceLanguage,
+      params.targetLanguage,
+      params.limit,
+      true, // isStreaming
+      params.sourceLangCode || 'en-US',
+      params.targetLangCode || 'es-ES',
+    );
+
+    const stream = await this.ollamaClient.generate(
+      model,
+      prompt,
+      true,
+      undefined,
+      {
+        temperature: 0.8,
+        top_p: 0.9,
+        top_k: 40,
+      },
+    );
+
+    for await (const chunk of stream) {
+      yield { response: chunk.response, done: chunk.done };
+    }
   }
 }

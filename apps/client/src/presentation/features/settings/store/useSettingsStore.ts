@@ -51,6 +51,7 @@ interface SettingsState {
     contentType: ContentType;
     proficiencyLevel: ProficiencyLevel;
     speakOnHover: boolean;
+    aiHost: string;
 
     setFont: (font: ReaderFont) => void;
     setFontSize: (size: FontSize) => void;
@@ -58,6 +59,7 @@ interface SettingsState {
     setContentType: (type: ContentType) => void;
     setProficiencyLevel: (level: ProficiencyLevel) => void;
     setSpeakOnHover: (enabled: boolean) => void;
+    setAiHost: (host: string) => void;
 
     addCustomTheme: (theme: CustomTheme) => void;
     removeCustomTheme: (id: string) => void;
@@ -92,6 +94,7 @@ export const useSettingsStore = create<SettingsState>()(
             contentType: 'Story',
             proficiencyLevel: 'B1',
             speakOnHover: false,
+            aiHost: '',
 
             setFont: (font) => set({ font }),
             setFontSize: (fontSize) => set({ fontSize }),
@@ -99,6 +102,7 @@ export const useSettingsStore = create<SettingsState>()(
             setContentType: (contentType) => set({ contentType }),
             setProficiencyLevel: (proficiencyLevel) => set({ proficiencyLevel }),
             setSpeakOnHover: (speakOnHover) => set({ speakOnHover }),
+            setAiHost: (aiHost) => set({ aiHost }),
 
             addCustomTheme: (theme) => set((state) => ({ customThemes: [...state.customThemes, theme] })),
             removeCustomTheme: (id) => set((state) => ({ customThemes: state.customThemes.filter((t) => t.id !== id) })),

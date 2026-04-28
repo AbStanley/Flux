@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import type { GameItem, GameContentParams } from '../../../../core/services/game/interfaces';
 import { gameContentService } from '../../../../core/services/game/GameContentService';
 import { useUserStats } from './useUserStats';
+import { useSettingsStore } from '../../settings/store/useSettingsStore';
+import { wordsApi } from '@/infrastructure/api/words';
 
 export interface GameConfig {
     mode: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'story' | 'cloze';
@@ -61,7 +63,6 @@ interface GameState {
     isLoadingLangs: boolean;
 }
 
-import { wordsApi } from '@/infrastructure/api/words';
 
 export const useGameStore = create<GameState>()(persist((set, get) => ({
     status: 'idle',
@@ -157,12 +158,13 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
     startGame: async () => {
         const { config } = get();
+        const settings = useSettingsStore.getState();
 
         // Prepare Params from Config
         const params: GameContentParams = {
             source: config.source,
             config: {
-                limit: 30,
+                limit: config.source === 'ai' ? 10 : 30,
                 gameMode: config.mode,
                 timerEnabled: config.timerEnabled,
                 language: {
@@ -177,10 +179,10 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
                     ankiFieldTarget: config.ankiFieldTarget
                 } : {}),
 
-                // Pass AI config
+                // Pass AI config (from global settings)
                 aiTopic: config.aiTopic,
-                aiModel: config.aiModel,
-                aiHost: config.aiHost,
+                aiModel: settings.llmModel || config.aiModel,
+                aiHost: settings.aiHost || config.aiHost,
                 aiLevel: config.aiLevel
             }
         };
@@ -200,13 +202,26 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
         try {
             set({ error: null }); // Clear previous errors
-            const items = await gameContentService.getItems(params);
-            if (items.length === 0) {
-                const msg = "No items found for game. Please checks your filters.";
+            const items = await gameContentService.getItems(params, (newItem) => {
+                const currentItems = get().items;
+                // Prevent duplicate addition if needed, though getItems should be clean
+                if (!currentItems.find(i => i.id === newItem.id)) {
+                    set((state) => ({
+                        items: [...state.items, newItem],
+                        // If it was loading, we can start playing as soon as 1 item is there
+                        status: state.status === 'loading' ? 'playing' : state.status
+                    }));
+                }
+            });
+
+            if (items.length === 0 && get().items.length === 0) {
+                const msg = "No items found for game. Please check your filters.";
                 console.warn(msg);
                 set({ status: 'idle', error: msg });
                 return;
             }
+            
+            // Final sync of items in case streaming didn't catch them all or strategy is non-streaming
             set({ items, status: 'playing' });
         } catch (error: unknown) {
             console.error("Failed to start game:", error);
