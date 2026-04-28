@@ -21,6 +21,11 @@ const EXTENSION_TO_WEBAPP_THEME: Record<string, Theme> = {
     ivory: "cream",
     nordic: "nordic",
     sunset: "sunset",
+    light: "light",
+    cream: "cream",
+    'rose-pine': "rose-pine",
+    evergreen: "evergreen",
+    moonlight: "moonlight",
 }
 
 export function ThemeProvider({
@@ -41,8 +46,8 @@ export function ThemeProvider({
         // Load initial theme from extension storage
         window.chrome.storage.local.get(['fluxTheme'], (result: Record<string, unknown>) => {
             const extTheme = result.fluxTheme as string | undefined;
-            if (extTheme && EXTENSION_TO_WEBAPP_THEME[extTheme]) {
-                const mapped = EXTENSION_TO_WEBAPP_THEME[extTheme];
+            if (extTheme) {
+                const mapped = extTheme.startsWith('custom-') ? extTheme : (EXTENSION_TO_WEBAPP_THEME[extTheme] || extTheme);
                 localStorage.setItem(storageKey, mapped);
                 setThemeState(mapped);
             }
@@ -51,11 +56,10 @@ export function ThemeProvider({
         // Listen for theme changes from extension popup
         const handleChange = (changes: Record<string, { newValue?: unknown }>) => {
             if (changes.fluxTheme?.newValue) {
-                const mapped = EXTENSION_TO_WEBAPP_THEME[changes.fluxTheme.newValue as string];
-                if (mapped) {
-                    localStorage.setItem(storageKey, mapped);
-                    setThemeState(mapped);
-                }
+                const extTheme = changes.fluxTheme.newValue as string;
+                const mapped = extTheme.startsWith('custom-') ? extTheme : (EXTENSION_TO_WEBAPP_THEME[extTheme] || extTheme);
+                localStorage.setItem(storageKey, mapped);
+                setThemeState(mapped);
             }
         };
         window.chrome.storage.onChanged.addListener(handleChange);

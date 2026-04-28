@@ -84,7 +84,7 @@ function CorrectionChip({ token, targetLanguage, nativeLanguage }: {
                                 <p className="text-sm">
                                     <span className="line-through text-destructive">{token.wrong}</span>
                                     {' → '}
-                                    <span className="font-semibold text-green-600 dark:text-green-400">{token.correct}</span>
+                                    <span className="font-semibold text-success">{token.correct}</span>
                                 </p>
                             </div>
                         </div>
@@ -123,10 +123,10 @@ function ConfirmationChip({ token }: { token: ConfirmationToken }) {
         <span ref={ref} className="relative inline-block align-middle">
             <span
                 onClick={() => hasExplanation && setShowPopover(!showPopover)}
-                className={`inline-flex items-center gap-1 whitespace-nowrap bg-green-500/15
-                    text-green-600 dark:text-green-400 px-2 py-0.5 rounded-md text-xs font-medium
-                    transition-colors border border-green-500/20 mx-0.5
-                    ${hasExplanation ? 'cursor-pointer hover:bg-green-500/25' : ''}`}
+                className={`inline-flex items-center gap-1 whitespace-nowrap bg-success/10
+                    text-success px-2 py-0.5 rounded-md text-xs font-medium
+                    transition-colors border border-success/20 mx-0.5
+                    ${hasExplanation ? 'cursor-pointer hover:bg-success/20' : ''}`}
                 title={hasExplanation ? token.explanation : `"${token.text}" — looks good`}
             >
                 <CheckCircle2 className="w-3 h-3" />

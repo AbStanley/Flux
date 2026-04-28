@@ -18,6 +18,28 @@ html, body, #root {
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
   }
+
+  /* Custom minimal scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+  
+  /* For Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
 }
 
 @layer base {
@@ -72,6 +94,8 @@ html, body, #root {
     --input-background: var(--background);
     /* Default inputs to match background */
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
+    --success: 142 60% 36%;
+    --success-foreground: 0 0% 100%;
   }
 
   .dark {
@@ -117,6 +141,8 @@ html, body, #root {
     /* Custom Premium Colors */
     --link-color: 142 70% 50%;
     /* Emerald-400 */
+    --success: 142 70% 50%;
+    --success-foreground: 220 30% 12%;
   }
 
   .nordic {
@@ -167,6 +193,8 @@ html, body, #root {
     /* Custom Premium Colors */
     --link-color: 200 80% 70%;
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
+    --success: 142 60% 55%;
+    --success-foreground: 220 15% 10%;
   }
 
   .cream {
@@ -218,6 +246,8 @@ html, body, #root {
     /* Custom Premium Colors */
     --link-color: 36 70% 42%;
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
+    --success: 142 55% 32%;
+    --success-foreground: 0 0% 100%;
   }
 
   .sunset {
@@ -280,6 +310,8 @@ html, body, #root {
     /* Navy-ish */
     --reader-textarea-bg: hsl(43 60% 94%);
     /* Opaque light cream for Sunset */
+    --success: 142 55% 32%;
+    --success-foreground: 0 0% 100%;
   }
 
   .rose-pine {
@@ -330,6 +362,8 @@ html, body, #root {
     --link-color: 189 43% 73%;
     /* foam */
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
+    --success: 142 60% 55%;
+    --success-foreground: 249 22% 12%;
   }
 
   .evergreen {
@@ -376,6 +410,8 @@ html, body, #root {
 
     --link-color: 158 50% 35%;
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
+    --success: 142 55% 32%;
+    --success-foreground: 0 0% 100%;
   }
 
   .moonlight {
@@ -424,6 +460,8 @@ html, body, #root {
 
     --link-color: 185 70% 65%;
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
+    --success: 142 60% 55%;
+    --success-foreground: 232 30% 10%;
   }
 }
 

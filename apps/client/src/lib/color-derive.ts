@@ -1,8 +1,10 @@
 import { hexToHsl, hslToHex } from './color-utils';
+import type { FluxTheme } from '@/content/constants';
+import type { CustomTheme } from '@/presentation/features/settings/store/useSettingsStore';
 
 // ─── HSL helpers ────────────────────────────────────────────────────────────
 
-function parseHsl(hsl: string): [number, number, number] {
+export function parseHsl(hsl: string): [number, number, number] {
     const parts = hsl.replace(/%/g, '').trim().split(/\s+/);
     return [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])];
 }
@@ -32,7 +34,7 @@ function desaturate(hsl: string, fraction: number): string {
  * Automatically pick a legible foreground (text) colour for a given background.
  * Returns a dark or light HSL string based on contrast.
  */
-function autoFg(bgHsl: string, darkFg: string, lightFg: string): string {
+export function autoFg(bgHsl: string, darkFg: string, lightFg: string): string {
     const [, , l] = parseHsl(bgHsl);
     return l > 52 ? darkFg : lightFg;
 }
@@ -74,6 +76,9 @@ export interface DerivedTokens {
     'input-background': string;
     'reader-textarea-bg': string;
     ring: string;
+    success: string;
+    'success-foreground': string;
+    'link-color': string;
 }
 
 /**
@@ -148,6 +153,9 @@ export function deriveTokens(seeds: SeedColors): DerivedTokens {
         'input-background': inputBg,
         'reader-textarea-bg': readerBg,
         ring,
+        success: bl > 60 ? '142 55% 32%' : '142 65% 52%',
+        'success-foreground': '0 0% 100%',
+        'link-color': bl > 60 ? pr : '142 65% 52%', // Default to primary for light, success/emerald for dark
     };
 }
 
@@ -210,3 +218,48 @@ export const THEME_PRESETS: { id: string; label: string; seeds: SeedColors }[] =
         seeds: { background: '#eae2b7', foreground: '#003049', primary: '#f77f00', card: '#dfd8a8', border: '#c8bf90' },
     },
 ];
+
+// ─── Custom Theme → FluxTheme bridge ─────────────────────────────────────────
+
+/** Converts an HSL token string + alpha → CSS rgba() string */
+function hslToRgba(hsl: string, alpha: number): string {
+    const hex = hslToHex(hsl);
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Converts a stored CustomTheme (HSL CSS-variable tokens) into the FluxTheme
+ * object used by the extension popup, subtitle overlays, and hover popups.
+ * This is the bridge between the two theming worlds.
+ */
+export function customThemeToFluxTheme(theme: CustomTheme): FluxTheme {
+    const tokens = theme.colors as DerivedTokens;
+    const [, , bgL] = parseHsl(tokens.background);
+    const isDark = bgL < 52;
+
+    const borderAlpha = isDark ? 0.22 : 0.30;
+
+    return {
+        name:         theme.name,
+        id:           theme.id,
+        dot:          hslToHex(tokens.background),
+        bg:           hslToRgba(tokens.popover, 0.80),
+        bgSolid:      hslToHex(tokens.popover),
+        surface:      hslToHex(tokens.card),
+        surfaceActive: hslToHex(tokens.secondary),
+        text:         hslToHex(tokens.foreground),
+        textSecondary: hslToHex(tokens['muted-foreground']),
+        textDim:      hslToRgba(tokens['muted-foreground'], 0.50),
+        accent:       hslToHex(tokens.primary),
+        accentGlow:   hslToRgba(tokens.primary, 0.20),
+        border:       hslToRgba(tokens.border, borderAlpha),
+        borderLight:  hslToRgba(tokens.border, borderAlpha * 0.5),
+        error:        hslToHex(tokens.destructive),
+        success:      hslToHex(tokens.success ?? (isDark ? '142 65% 52%' : '142 55% 32%')),
+        info:         hslToHex(tokens.primary),
+    };
+}
+

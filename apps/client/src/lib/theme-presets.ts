@@ -1,0 +1,179 @@
+import type { DerivedTokens } from './color-derive';
+
+// ─── Exact token values from global.css ──────────────────────────────────────
+// These are verbatim from the CSS, NOT re-derived. Used so "Start from preset"
+// produces a pixel-perfect copy of the original theme.
+
+type ThemeTokenMap = Record<string, DerivedTokens>;
+
+export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
+    light: {
+        background: '214 32% 98%', foreground: '220 13% 20%',
+        card: '210 20% 98%', 'card-foreground': '220 13% 20%',
+        popover: '215 50% 96%', 'popover-foreground': '220 13% 20%',
+        primary: '193 100% 33%', 'primary-foreground': '0 0% 100%',
+        secondary: '210 16% 93%', 'secondary-foreground': '220 13% 25%',
+        muted: '210 14% 96%', 'muted-foreground': '215 14% 45%',
+        accent: '210 16% 93%', 'accent-foreground': '220 13% 20%',
+        destructive: '0 72% 51%', 'destructive-foreground': '0 0% 100%',
+        border: '214 20% 88%', input: '210 14% 93%',
+        'input-background': '214 32% 98%', 'reader-textarea-bg': '210 16% 97%',
+        ring: '193 100% 33%', success: '142 60% 36%', 'success-foreground': '0 0% 100%',
+        'link-color': '193 100% 33%',
+    },
+    dark: {
+        background: '220 30% 12%', foreground: '210 20% 98%',
+        card: '220 30% 15%', 'card-foreground': '210 20% 98%',
+        popover: '220 30% 15%', 'popover-foreground': '210 20% 98%',
+        primary: '210 20% 98%', 'primary-foreground': '222 47% 11%',
+        secondary: '215 25% 20%', 'secondary-foreground': '210 20% 98%',
+        muted: '215 25% 20%', 'muted-foreground': '215 20% 70%',
+        accent: '215 25% 20%', 'accent-foreground': '210 20% 98%',
+        destructive: '0 50% 55%', 'destructive-foreground': '210 20% 98%',
+        border: '215 25% 22%', input: '215 25% 22%',
+        'input-background': '215 25% 20%', 'reader-textarea-bg': '215 25% 14%',
+        ring: '224 76% 60%', success: '142 70% 50%', 'success-foreground': '220 30% 12%',
+        'link-color': '142 70% 50%',
+    },
+    nordic: {
+        background: '220 15% 13%', foreground: '210 15% 92%',
+        card: '220 14% 16%', 'card-foreground': '210 15% 95%',
+        popover: '220 14% 18%', 'popover-foreground': '210 15% 95%',
+        primary: '200 80% 65%', 'primary-foreground': '220 15% 10%',
+        secondary: '220 12% 22%', 'secondary-foreground': '210 15% 88%',
+        muted: '220 12% 20%', 'muted-foreground': '215 15% 75%',
+        accent: '200 40% 30%', 'accent-foreground': '210 15% 95%',
+        destructive: '0 45% 58%', 'destructive-foreground': '0 0% 98%',
+        border: '220 12% 25%', input: '220 12% 22%',
+        'input-background': '220 12% 22%', 'reader-textarea-bg': '220 12% 15%',
+        ring: '200 80% 65%', success: '142 60% 55%', 'success-foreground': '220 15% 10%',
+        'link-color': '200 80% 70%',
+    },
+    cream: {
+        background: '43 47% 92%', foreground: '30 25% 18%',
+        card: '40 45% 88%', 'card-foreground': '30 25% 15%',
+        popover: '30 35% 28%', 'popover-foreground': '0 0% 98%',
+        primary: '36 90% 50%', 'primary-foreground': '0 0% 100%',
+        secondary: '40 60% 96%', 'secondary-foreground': '30 25% 18%',
+        muted: '42 35% 85%', 'muted-foreground': '30 20% 42%',
+        accent: '38 45% 78%', 'accent-foreground': '30 25% 15%',
+        destructive: '0 70% 48%', 'destructive-foreground': '42 50% 95%',
+        border: '40 30% 75%', input: '42 38% 85%',
+        'input-background': '220 60% 60%', 'reader-textarea-bg': '40 60% 96%',
+        ring: '36 90% 50%', success: '142 55% 32%', 'success-foreground': '0 0% 100%',
+        'link-color': '36 70% 42%',
+    },
+    sunset: {
+        background: '43 47% 90%', foreground: '203 100% 14%',
+        card: '43 50% 87%', 'card-foreground': '203 100% 14%',
+        popover: '43 60% 96%', 'popover-foreground': '203 100% 14%',
+        primary: '31 100% 48%', 'primary-foreground': '0 0% 100%',
+        secondary: '40 80% 65%', 'secondary-foreground': '203 100% 14%',
+        muted: '43 40% 85%', 'muted-foreground': '203 60% 30%',
+        accent: '40 80% 65%', 'accent-foreground': '203 100% 14%',
+        destructive: '355 83% 50%', 'destructive-foreground': '0 0% 100%',
+        border: '40 35% 75%', input: '40 50% 85%',
+        'input-background': '43 60% 96%', 'reader-textarea-bg': '43 60% 94%',
+        ring: '31 100% 48%', success: '142 55% 32%', 'success-foreground': '0 0% 100%',
+        'link-color': '203 80% 35%',
+    },
+    'rose-pine': {
+        background: '249 22% 12%', foreground: '245 7% 81%',
+        card: '247 23% 15%', 'card-foreground': '245 7% 81%',
+        popover: '249 18% 18%', 'popover-foreground': '245 7% 81%',
+        primary: '2 55% 70%', 'primary-foreground': '249 22% 12%',
+        secondary: '249 15% 20%', 'secondary-foreground': '245 7% 81%',
+        muted: '249 12% 22%', 'muted-foreground': '248 10% 55%',
+        accent: '35 88% 72%', 'accent-foreground': '249 22% 12%',
+        destructive: '343 60% 60%', 'destructive-foreground': '249 22% 12%',
+        border: '249 15% 22%', input: '249 15% 20%',
+        'input-background': '249 15% 20%', 'reader-textarea-bg': '249 15% 14%',
+        ring: '2 55% 70%', success: '142 60% 55%', 'success-foreground': '249 22% 12%',
+        'link-color': '189 43% 73%',
+    },
+    evergreen: {
+        background: '150 15% 96%', foreground: '160 20% 18%',
+        card: '145 18% 93%', 'card-foreground': '160 20% 18%',
+        popover: '140 14% 90%', 'popover-foreground': '160 20% 18%',
+        primary: '158 40% 42%', 'primary-foreground': '0 0% 100%',
+        secondary: '148 20% 88%', 'secondary-foreground': '160 20% 22%',
+        muted: '146 14% 90%', 'muted-foreground': '155 12% 45%',
+        accent: '148 20% 88%', 'accent-foreground': '160 20% 18%',
+        destructive: '0 65% 48%', 'destructive-foreground': '0 0% 100%',
+        border: '148 16% 82%', input: '148 14% 88%',
+        'input-background': '150 15% 96%', 'reader-textarea-bg': '148 20% 92%',
+        ring: '158 40% 42%', success: '142 55% 32%', 'success-foreground': '0 0% 100%',
+        'link-color': '158 50% 35%',
+    },
+    moonlight: {
+        background: '232 30% 10%', foreground: '225 15% 85%',
+        card: '232 28% 13%', 'card-foreground': '225 15% 85%',
+        popover: '232 25% 16%', 'popover-foreground': '225 15% 85%',
+        primary: '185 70% 60%', 'primary-foreground': '232 30% 10%',
+        secondary: '232 22% 18%', 'secondary-foreground': '225 15% 85%',
+        muted: '232 20% 20%', 'muted-foreground': '228 15% 55%',
+        accent: '25 80% 68%', 'accent-foreground': '232 30% 10%',
+        destructive: '0 45% 58%', 'destructive-foreground': '225 15% 90%',
+        border: '232 20% 22%', input: '232 22% 18%',
+        'input-background': '232 22% 18%', 'reader-textarea-bg': '232 22% 12%',
+        ring: '185 70% 60%', success: '142 60% 55%', 'success-foreground': '232 30% 10%',
+        'link-color': '185 70% 65%',
+    },
+};
+
+// ─── Token groups for the advanced editor ────────────────────────────────────
+
+export interface TokenMeta { key: keyof DerivedTokens; label: string; hint: string }
+export interface TokenGroup { label: string; emoji: string; tokens: TokenMeta[] }
+
+export const TOKEN_GROUPS: TokenGroup[] = [
+    {
+        label: 'Foundation', emoji: '🎨',
+        tokens: [
+            { key: 'background',          label: 'Page Background',  hint: 'Main background of all pages' },
+            { key: 'foreground',          label: 'Body Text',         hint: 'Main text on the background' },
+            { key: 'primary',             label: 'Accent Color',      hint: 'Buttons, links, active highlights' },
+            { key: 'primary-foreground',  label: 'Accent Text',       hint: 'Text on accent-colored elements' },
+        ],
+    },
+    {
+        label: 'Surfaces', emoji: '📦',
+        tokens: [
+            { key: 'card',                label: 'Card Background',   hint: 'Panels and content cards' },
+            { key: 'card-foreground',     label: 'Card Text',         hint: 'Text inside cards' },
+            { key: 'popover',             label: 'Popup Background',  hint: 'Dropdowns and dialog surfaces' },
+            { key: 'popover-foreground',  label: 'Popup Text',        hint: 'Text inside popups' },
+            { key: 'secondary',           label: 'Secondary BG',      hint: 'Secondary buttons and tab bars' },
+            { key: 'secondary-foreground', label: 'Secondary Text',   hint: 'Text on secondary elements' },
+        ],
+    },
+    {
+        label: 'States', emoji: '✨',
+        tokens: [
+            { key: 'muted',               label: 'Muted Background',  hint: 'Disabled and subtle areas' },
+            { key: 'muted-foreground',    label: 'Muted Text',        hint: 'Hints, placeholders, secondary text' },
+            { key: 'accent',              label: 'Hover Background',  hint: 'Background when hovering items' },
+            { key: 'accent-foreground',   label: 'Hover Text',        hint: 'Text color when hovering items' },
+        ],
+    },
+    {
+        label: 'Semantic', emoji: '⚠️',
+        tokens: [
+            { key: 'destructive',             label: 'Error / Danger',    hint: 'Delete buttons, error states, Due chip' },
+            { key: 'destructive-foreground',  label: 'Error Text',         hint: 'Text on error-colored elements' },
+            { key: 'success',                 label: 'Success Color',      hint: 'Confirmations, "Looks good" chip' },
+            { key: 'success-foreground',      label: 'Success Text',       hint: 'Text on success-colored elements' },
+            { key: 'link-color',              label: 'Selected Words',     hint: 'Underline and popup for reading selections' },
+        ],
+    },
+    {
+        label: 'Layout', emoji: '🔲',
+        tokens: [
+            { key: 'border',              label: 'Borders & Dividers', hint: 'Lines separating sections' },
+            { key: 'input',               label: 'Input Border',       hint: 'Border around input fields' },
+            { key: 'input-background',    label: 'Input Background',   hint: 'Fill of text input fields' },
+            { key: 'reader-textarea-bg',  label: 'Reader Area',        hint: 'Background of the reading text zone' },
+            { key: 'ring',                label: 'Focus Ring',         hint: 'Outline when an element is focused' },
+        ],
+    },
+];

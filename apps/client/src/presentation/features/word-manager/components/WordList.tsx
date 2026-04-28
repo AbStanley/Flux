@@ -156,12 +156,12 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                                     </TableCell>
                                     <TableCell className="align-top py-4">
                                         {(word.sourceLanguage || word.targetLanguage) ? (
-                                            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
-                                                <Globe className="w-3 h-3" />
-                                                <span>{word.sourceLanguage || '?'}</span>
-                                                <span className="text-muted-foreground/60 px-0.5">→</span>
-                                                <span>{word.targetLanguage || '?'}</span>
-                                            </div>
+                                        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                            <Globe className="w-3 h-3" />
+                                            <span>{word.sourceLanguage || '?'}</span>
+                                            <span className="text-muted-foreground/60 px-0.5">→</span>
+                                            <span>{word.targetLanguage || '?'}</span>
+                                        </div>
                                         ) : (
                                             <span className="text-muted-foreground/30 text-xs">-</span>
                                         )}
@@ -169,7 +169,7 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                                     <TableCell className="align-top py-4">
                                         <div className="flex flex-col gap-1.5">
                                             {word.sourceTitle && (
-                                                <div className="flex items-start gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                                                <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
                                                     <BookOpen className="w-3 h-3 mt-0.5 shrink-0" />
                                                     <span className="truncate max-w-[160px]" title={word.sourceTitle}>
                                                         {word.sourceTitle}
@@ -360,7 +360,7 @@ function SrsBadge({ word }: { word: Word }) {
 
     if (isDue) {
         return (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-orange-600 dark:text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded-full w-fit">
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full w-fit border border-destructive/20">
                 <Clock className="w-2.5 h-2.5" />
                 Due
             </span>
@@ -369,7 +369,7 @@ function SrsBadge({ word }: { word: Word }) {
 
     if (reps > 0) {
         return (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded-full w-fit">
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full w-fit">
                 {reps}x reviewed
             </span>
         );

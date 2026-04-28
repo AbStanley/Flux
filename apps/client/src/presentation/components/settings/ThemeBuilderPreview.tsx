@@ -1,27 +1,26 @@
+import { useMemo } from 'react';
 import type { DerivedTokens } from '@/lib/color-derive';
+import { customThemeToFluxTheme } from '@/lib/color-derive';
 import { hslToHex } from '@/lib/color-utils';
+import { ThemePreviewPopup } from './ThemePreviewPopup';
+import { Volume2, Search, RefreshCcw, Save } from 'lucide-react';
 
-interface ThemePreviewProps {
-    tokens: DerivedTokens;
-    name: string;
-}
+interface Props { tokens: DerivedTokens; name: string; activeToken?: string | null; onHoverToken?: (t: string | null) => void; onClickToken?: (t: string) => void; }
 
-/** Converts HSL token string → usable CSS hsl() value */
-function hsl(token: string) {
-    return `hsl(${token})`;
-}
+function hsl(token: string) { return `hsl(${token})`; }
 
-/**
- * A self-contained live preview panel that renders sample UI elements
- * using the derived token set — no class names, just inline styles.
- */
-export function ThemeBuilderPreview({ tokens, name }: ThemePreviewProps) {
+export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, onClickToken }: Props) {
+    // Derive the FluxTheme used by the extension popup / overlays
+    const fluxTheme = useMemo(() => customThemeToFluxTheme({
+        id: 'preview', name, colors: tokens,
+    }), [tokens, name]);
+
     const bg   = hsl(tokens.background);
     const fg   = hsl(tokens.foreground);
-    const cd   = hsl(tokens.card);
-    const cdFg = hsl(tokens['card-foreground']);
     const pr   = hsl(tokens.primary);
     const prFg = hsl(tokens['primary-foreground']);
+    const cd   = hsl(tokens.card);
+    const cdFg = hsl(tokens['card-foreground']);
     const bd   = hsl(tokens.border);
     const mt   = hsl(tokens.muted);
     const mtFg = hsl(tokens['muted-foreground']);
@@ -29,79 +28,132 @@ export function ThemeBuilderPreview({ tokens, name }: ThemePreviewProps) {
     const acFg = hsl(tokens['accent-foreground']);
     const ds   = hsl(tokens.destructive);
     const dsFg = hsl(tokens['destructive-foreground']);
-    const rng  = hsl(tokens.ring);
+    const sc   = hsl(tokens.success ?? '142 60% 40%');
+    const pk   = hsl(tokens.popover);
+    const pkFg = hsl(tokens['popover-foreground']);
     const inBg = hsl(tokens['input-background']);
+    const link = hsl(tokens['link-color']);
+
+    const isToken = (k: string) => activeToken === k;
+    const hoverStyle = (k: string) => isToken(k) ? { outline: `2px solid ${pr}`, outlineOffset: -1, zIndex: 10, cursor: 'pointer' } : { cursor: 'pointer' };
 
     return (
-        <div
-            className="rounded-xl overflow-hidden border flex flex-col text-[11px] select-none"
-            style={{ background: bg, color: fg, borderColor: bd, minHeight: 260 }}
-        >
-            {/* Nav bar */}
-            <div className="flex items-center gap-2 px-3 py-2 border-b" style={{ borderColor: bd, background: cd }}>
-                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ background: pr, color: prFg }}>F</div>
-                <span className="font-semibold text-[11px]" style={{ color: cdFg }}>Flux</span>
-                <div className="ml-auto flex gap-1.5">
-                    <div className="w-2 h-2 rounded-full" style={{ background: ds }} />
-                    <div className="w-2 h-2 rounded-full" style={{ background: pr }} />
-                </div>
-            </div>
+        <div className="rounded-xl overflow-hidden border text-[10px] select-none transition-all" style={{ borderColor: bd, ...hoverStyle('background') }}
+             onMouseEnter={() => onHoverToken?.('background')} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
 
-            {/* Body */}
-            <div className="flex flex-1 gap-2 p-2">
-                {/* Sidebar */}
-                <div className="flex flex-col gap-1 w-16" style={{ flexShrink: 0 }}>
-                    <div className="rounded px-1.5 py-1 font-medium" style={{ background: pr, color: prFg }}>Reader</div>
-                    <div className="rounded px-1.5 py-1" style={{ background: ac, color: acFg }}>Games</div>
-                    <div className="rounded px-1.5 py-1" style={{ color: mtFg }}>Vocab</div>
-                    <div className="rounded px-1.5 py-1" style={{ color: mtFg }}>AI Chat</div>
+            {/* ── 1. App UI ── */}
+            <div style={{ background: bg, color: fg }}>
+                {/* Nav */}
+                <div style={{ background: cd, borderBottom: `1px solid ${bd}`, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', ...hoverStyle('card') }}
+                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: pr, color: prFg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, ...hoverStyle('primary') }}
+                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>F</div>
+                    <span style={{ fontWeight: 600, color: cdFg }}>Flux Reader — {name || 'My Theme'}</span>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                        <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 10, background: pr, color: prFg }}>Reader</span>
+                        <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 10, background: ac, color: acFg }}>Vocab</span>
+                        <span style={{ fontSize: 9, color: mtFg }}>AI Chat</span>
+                    </div>
                 </div>
 
-                {/* Main card */}
-                <div className="flex-1 flex flex-col gap-1.5">
-                    <div className="rounded-lg p-2 flex flex-col gap-1.5 border" style={{ background: cd, borderColor: bd }}>
-                        <p className="font-semibold" style={{ color: cdFg }}>
-                            {name || 'My Theme'}
-                        </p>
-                        <p className="leading-relaxed" style={{ color: mtFg, fontSize: 10 }}>
-                            The quick brown fox jumps over the lazy dog. Reader text will look like this.
-                        </p>
+                {/* Body */}
+                <div style={{ display: 'flex', gap: 8, padding: 8 }}>
+                    {/* Card */}
+                    <div style={{ flex: 1, background: cd, border: `1px solid ${bd}`, borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column', gap: 6, ...hoverStyle('card') }}
+                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
+                        <p style={{ fontWeight: 700, color: cdFg }}>Word Manager</p>
 
-                        {/* Input row */}
-                        <div
-                            className="rounded border px-1.5 py-0.5 outline-none"
-                            style={{ background: inBg, borderColor: rng, color: fg, fontSize: 10 }}
-                        >
-                            Sample input field...
+                        {/* Vocab row with language tag + Due chip */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', borderBottom: `1px solid ${bd}` }}>
+                            <span style={{ fontWeight: 600, color: cdFg, ...hoverStyle('link-color'), paddingBottom: 1, borderBottom: `2px solid ${link}` }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>ephemeral</span>
+                            <span style={{ fontSize: 9, color: mtFg, padding: '1px 5px', background: mt, borderRadius: 10, ...hoverStyle('muted') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted'); }}>EN → ES</span>
+                            <span style={{ fontSize: 9, color: dsFg, padding: '1px 5px', background: ds, borderRadius: 10, marginLeft: 'auto', ...hoverStyle('destructive') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>Due</span>
                         </div>
 
-                        {/* Button row */}
-                        <div className="flex gap-1 mt-0.5">
-                            <div className="rounded px-2 py-0.5 font-medium" style={{ background: pr, color: prFg }}>Save</div>
-                            <div className="rounded px-2 py-0.5" style={{ background: mt, color: mtFg }}>Cancel</div>
-                            <div className="ml-auto rounded px-2 py-0.5" style={{ background: ds, color: dsFg }}>Delete</div>
+                        {/* Input */}
+                        <div style={{ background: inBg, border: `1px solid ${bd}`, borderRadius: 5, padding: '3px 7px', color: mtFg, ...hoverStyle('input-background') }}
+                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('input-background'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('input-background'); }}>
+                            Search vocabulary...
+                        </div>
+
+                        {/* Buttons */}
+                        <div style={{ display: 'flex', gap: 5 }}>
+                            <span style={{ background: pr, color: prFg, borderRadius: 5, padding: '3px 8px', fontWeight: 600, ...hoverStyle('primary') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Save</span>
+                            <span style={{ background: mt, color: mtFg, borderRadius: 5, padding: '3px 8px', ...hoverStyle('muted') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted'); }}>Cancel</span>
+                            <span style={{ background: ds, color: dsFg, borderRadius: 5, padding: '3px 8px', marginLeft: 'auto', ...hoverStyle('destructive') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>Delete</span>
+                        </div>
+
+                        {/* Chat chips row */}
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                            <span style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.destructive)}22`, color: ds, border: `1px solid ${ds}44`, ...hoverStyle('destructive') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>
+                                <s>grammer</s> → grammar
+                            </span>
+                            <span style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.success ?? '142 60% 40%')}22`, color: sc, border: `1px solid ${sc}44`, ...hoverStyle('success') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('success'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('success'); }}>
+                                ✓ Looks good
+                            </span>
+                            <span style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.success ?? '142 60% 40%')}22`, color: sc, ...hoverStyle('success') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('success'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('success'); }}>3× reviewed</span>
                         </div>
                     </div>
 
-                    {/* Muted badge row */}
-                    <div className="flex gap-1 flex-wrap">
-                        {['English', 'Reading', 'AI'].map(tag => (
-                            <div key={tag} className="rounded-full px-1.5 py-0.5" style={{ background: ac, color: acFg, fontSize: 9 }}>
-                                {tag}
-                            </div>
-                        ))}
-                        <div className="rounded-full px-1.5 py-0.5" style={{ background: mt, color: mtFg, fontSize: 9 }}>
-                            + more
+                    {/* Sidebar popover example */}
+                    <div style={{ width: 90, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ background: pk, border: `1px solid ${bd}`, borderRadius: 6, padding: 6, color: pkFg, ...hoverStyle('popover') }}
+                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
+                            <p style={{ fontWeight: 600, marginBottom: 3 }}>Popover</p>
+                            <p style={{ color: mtFg, fontSize: 9 }}>Dropdown menus use this surface color.</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                            {[bg, cd, pr, ac, ds, sc].map((c, i) => (
+                                <div key={i} style={{ width: 14, height: 14, borderRadius: 3, background: c, border: `1px solid ${bd}` }} />
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Footer swatch row */}
-            <div className="flex gap-1 px-2 pb-2">
-                {[bg, cd, hsl(tokens.secondary), pr, ac, ds, hslToHex(tokens.border)].map((c, i) => (
-                    <div key={i} className="flex-1 h-2 rounded-sm" style={{ background: c, border: `1px solid ${bd}` }} />
-                ))}
+            {/* ── 2. Reading Page Hover & Inline Popup ── */}
+            <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8 }}>
+                <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>READING PAGE: INLINE POPUP</p>
+                <div style={{ background: bg, padding: '20px 12px 12px', borderRadius: 8, border: `1px solid ${bd}`, position: 'relative', ...hoverStyle('background') }}
+                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
+                    
+                    {/* Inline Selection Popup (ReaderPopup style) */}
+                    <div style={{ 
+                        position: 'absolute', top: -4, left: 12, 
+                        background: link, color: prFg, padding: '4px 8px', borderRadius: 6, 
+                        display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600,
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                        ...hoverStyle('link-color') 
+                    }}
+                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
+                        <span>was</span>
+                        <div style={{ display: 'flex', gap: 2, opacity: 0.9 }}>
+                            <Volume2 size={12} /> <Search size={12} /> <RefreshCcw size={12} /> <Save size={12} />
+                        </div>
+                    </div>
+
+                    <span style={{ color: mtFg }}>The student opened the book and began to read. The word </span>
+                    <span style={{ color: link, borderBottom: `2px solid ${link}`, paddingBottom: 1, fontWeight: 600, ...hoverStyle('link-color') }}
+                          onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
+                        ephemeral
+                    </span>
+                    <span style={{ color: mtFg }}> caught their attention.</span>
+                </div>
+            </div>
+
+            {/* ── 3. Extension Translation Popover ── */}
+            <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8 }}>
+                <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>EXTENSION TRANSLATION POPOVER</p>
+                <ThemePreviewPopup theme={fluxTheme} activeToken={activeToken} onHoverToken={onHoverToken} onClickToken={onClickToken} />
             </div>
         </div>
     );

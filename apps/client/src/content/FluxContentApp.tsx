@@ -15,6 +15,7 @@ import { useNotification } from './hooks/useNotification';
 import { useVideoDetector } from './hooks/useVideoDetector';
 import { useSubtitleTracks } from './hooks/useSubtitleTracks';
 import { useVideoSync } from './hooks/useVideoSync';
+import { customThemeToFluxTheme } from '../lib/color-derive';
 
 type ViewState = 'HIDDEN' | 'FAB' | 'POPUP';
 
@@ -28,7 +29,15 @@ export function FluxContentApp() {
     const settings = useChromeSettings(aiService);
     const { notification, isSaving, setIsSaving, showNotification } = useNotification();
 
-    const theme: FluxTheme = THEMES[settings.themeId] || THEMES[DEFAULT_THEME];
+    // Resolve FluxTheme: built-in lookup first, then custom theme bridge, then default
+    const customThemes = useSettingsStore((s) => s.customThemes);
+    const theme: FluxTheme = (() => {
+        if (settings.themeId.startsWith('custom-')) {
+            const custom = customThemes.find(t => t.id === settings.themeId);
+            if (custom) return customThemeToFluxTheme(custom);
+        }
+        return THEMES[settings.themeId] ?? THEMES[DEFAULT_THEME];
+    })();
 
     // Sync model to aiService + reader store
     const setAiModel = useSettingsStore((s) => s.setLlmModel);
