@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Check, X } from 'lucide-react';
 import { hslToHex } from '@/lib/color-utils';
 import { hexToHsl } from '@/lib/color-utils';
 import type { DerivedTokens } from '@/lib/color-derive';
@@ -25,7 +25,9 @@ function TokenRow({ tokenKey, label, hint, hsl, onChange, isActive, isClicked, o
     onHover: () => void;
 }) {
     const hex = hslToHex(hsl);
-    const rowRef = useRef<HTMLLabelElement>(null);
+    const [originalHsl, setOriginalHsl] = useState(hsl);
+    const [isEditing, setIsEditing] = useState(false);
+    const rowRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (isClicked && rowRef.current) {
@@ -33,35 +35,72 @@ function TokenRow({ tokenKey, label, hint, hsl, onChange, isActive, isClicked, o
         }
     }, [isClicked]);
 
+    const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!isEditing) {
+            setOriginalHsl(hsl);
+            setIsEditing(true);
+        }
+        onChange(tokenKey, hexToHsl(e.target.value));
+    };
+
+    const confirm = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsEditing(false);
+    };
+
+    const cancel = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onChange(tokenKey, originalHsl);
+        setIsEditing(false);
+    };
+
     const activeStyles = 'bg-primary/10 border-primary/30 ring-1 ring-primary/30 shadow-sm z-10 relative';
     const clickedStyles = 'bg-primary/20 border-primary shadow-md ring-2 ring-primary ring-offset-2 ring-offset-background z-20 scale-[1.02]';
+    const editingStyles = 'border-primary shadow-sm bg-primary/5';
+
+    const hasChanged = isEditing && hsl !== originalHsl;
 
     return (
-        <label
+        <div
             ref={rowRef}
-            htmlFor={`token-${tokenKey}`}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer group transition-all duration-300 ${isClicked ? clickedStyles : isActive ? activeStyles : 'hover:bg-muted/40'}`}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 ${isClicked ? clickedStyles : hasChanged ? editingStyles : isActive ? activeStyles : 'hover:bg-muted/40'}`}
             onMouseEnter={onHover}
         >
-            {/* Swatch */}
-            <div className="relative flex-shrink-0 w-8 h-8 rounded-md border border-border shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
-                <div className="absolute inset-0" style={{ background: `hsl(${hsl})` }} />
-                <input
-                    id={`token-${tokenKey}`}
-                    type="color"
-                    value={hex}
-                    onChange={e => onChange(tokenKey, hexToHsl(e.target.value))}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-            </div>
-            {/* Text */}
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium leading-tight">{label}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{hint}</p>
-            </div>
-            {/* Hex */}
-            <span className="text-[11px] font-mono text-muted-foreground tabular-nums flex-shrink-0">{hex}</span>
-        </label>
+            <label className="flex flex-1 items-center gap-3 cursor-pointer group" title="Click to edit color">
+                {/* Swatch */}
+                <div className="relative flex-shrink-0 w-8 h-8 rounded-md border border-border shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
+                    <div className="absolute inset-0" style={{ background: `hsl(${hsl})` }} />
+                    <input
+                        type="color"
+                        value={hex}
+                        onChange={handleColorChange}
+                        onClick={() => { if (!isEditing) setOriginalHsl(hsl); setIsEditing(true); }}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                </div>
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-tight">{label}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{hint}</p>
+                </div>
+            </label>
+
+            {/* Actions / Hex */}
+            {hasChanged ? (
+                <div className="flex gap-1 animate-in fade-in zoom-in duration-200">
+                    <button onClick={confirm} className="p-1.5 rounded bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors cursor-pointer" title="Keep new color">
+                        <Check className="w-4 h-4" />
+                    </button>
+                    <button onClick={cancel} className="p-1.5 rounded bg-red-500/20 text-red-600 hover:bg-red-500/30 transition-colors cursor-pointer" title="Discard and revert">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <span className="text-[11px] font-mono text-muted-foreground tabular-nums flex-shrink-0">{hex}</span>
+            )}
+        </div>
     );
 }
 

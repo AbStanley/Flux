@@ -12,23 +12,61 @@ import { THEME_PRESETS } from '@/lib/color-derive';
 import { BUILT_IN_THEME_TOKENS } from '@/lib/theme-presets';
 import { ThemeBuilderAdvanced } from './ThemeBuilderAdvanced';
 import { ThemeBuilderPreview } from './ThemeBuilderPreview';
+import { Check, X } from 'lucide-react';
 
 type Mode = 'simple' | 'full';
 
 function ColorPickerRow({ label, hint, color, onChange }: { label: string; hint: string; color: string; onChange: (c: string) => void }) {
+    const [originalColor, setOriginalColor] = useState(color);
+    const [isEditing, setIsEditing] = useState(false);
+
+    const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!isEditing) {
+            setOriginalColor(color);
+            setIsEditing(true);
+        }
+        onChange(e.target.value);
+    };
+
+    const confirm = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsEditing(false);
+    };
+
+    const cancel = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onChange(originalColor);
+        setIsEditing(false);
+    };
+
+    const hasChanged = isEditing && color !== originalColor;
+
     return (
-        <div className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-card/50 hover:border-primary/50 transition-colors group">
-            <label className="relative flex-shrink-0 cursor-pointer">
+        <div className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors group ${hasChanged ? 'border-primary shadow-sm bg-primary/5' : 'border-border bg-card/50 hover:border-primary/50'}`}>
+            <label className="relative flex-shrink-0 cursor-pointer" title="Click to pick color">
                 <div className="w-9 h-9 rounded-md border border-border shadow-sm group-hover:scale-105 transition-transform"
                     style={{ background: color }} />
-                <input type="color" value={color} onChange={(e) => onChange(e.target.value)}
+                <input type="color" value={color} onChange={handleColorChange} onClick={() => { if (!isEditing) setOriginalColor(color); setIsEditing(true); }}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
             </label>
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{label}</p>
                 <p className="text-xs text-muted-foreground">{hint}</p>
             </div>
-            <span className="text-xs font-mono text-muted-foreground">{color}</span>
+            {hasChanged ? (
+                <div className="flex gap-1 animate-in fade-in zoom-in duration-200">
+                    <button onClick={confirm} className="p-1.5 rounded bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors cursor-pointer" title="Keep new color">
+                        <Check className="w-4 h-4" />
+                    </button>
+                    <button onClick={cancel} className="p-1.5 rounded bg-red-500/20 text-red-600 hover:bg-red-500/30 transition-colors cursor-pointer" title="Discard and revert">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            ) : (
+                <span className="text-xs font-mono text-muted-foreground">{color}</span>
+            )}
         </div>
     );
 }
