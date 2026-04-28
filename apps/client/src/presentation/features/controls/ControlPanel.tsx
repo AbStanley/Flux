@@ -149,7 +149,7 @@ export function ControlPanel() {
                         <Button
                             onClick={stopGeneration}
                             variant="destructive"
-                            className={cn("w-full sm:w-auto")}
+                            className={cn("w-full sm:w-auto mt-4")}
                         >
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Stop Generating
