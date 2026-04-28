@@ -14,10 +14,10 @@ export function ExamplesList({ examples }: ExamplesListProps) {
             <div className="space-y-3">
                 {examples.map((ex, i) => (
                     <div key={i} className="text-sm border-l-2 border-primary pl-3 py-1">
-                        <div className="italic mb-1 prose dark:prose-invert prose-sm prose-p:my-0 max-w-none">
+                        <div className="italic mb-1 prose dark:prose-invert prose-sm prose-p:text-current prose-strong:text-current max-w-none">
                             <ReactMarkdown>{ex.sentence}</ReactMarkdown>
                         </div>
-                        <div className="text-muted-foreground prose dark:prose-invert prose-sm prose-p:my-0 max-w-none">
+                        <div className="text-muted-foreground prose dark:prose-invert prose-sm prose-p:text-current prose-strong:text-current max-w-none">
                             <ReactMarkdown>{ex.translation}</ReactMarkdown>
                         </div>
                     </div>

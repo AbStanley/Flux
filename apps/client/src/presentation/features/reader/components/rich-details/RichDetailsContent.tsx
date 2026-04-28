@@ -49,7 +49,7 @@ export function RichDetailsContent({ tab, onRegenerate, onFetchConjugations, onC
             {/* Main Translation */}
             <div>
                 <div className="flex items-center gap-2 mb-1">
-                    <div className="text-lg font-semibold text-primary prose dark:prose-invert prose-p:my-0 prose-headings:my-0 prose-headings:text-lg prose-headings:font-semibold prose-headings:text-primary max-w-none">
+                    <div className="text-lg font-semibold text-primary prose dark:prose-invert prose-p:my-0 prose-p:text-current prose-headings:my-0 prose-headings:text-lg prose-headings:font-semibold prose-headings:text-current max-w-none">
                         <ReactMarkdown>{data.segment}</ReactMarkdown>
                     </div>
                     <Button
@@ -73,7 +73,7 @@ export function RichDetailsContent({ tab, onRegenerate, onFetchConjugations, onC
                         </Button>
                     )}
                 </div>
-                <div className="text-2xl font-bold prose dark:prose-invert prose-p:my-0 prose-headings:my-1 max-w-none">
+                <div className="text-2xl font-bold prose dark:prose-invert prose-p:my-0 prose-p:text-current prose-headings:my-1 prose-headings:text-current max-w-none">
                     <ReactMarkdown>{data.translation}</ReactMarkdown>
                 </div>
             </div>
@@ -130,7 +130,7 @@ export function RichDetailsContent({ tab, onRegenerate, onFetchConjugations, onC
             {data.grammar?.explanation && (
                 <div className="bg-muted p-3 rounded-lg text-sm">
                     <p className="font-medium mb-1">Explanation</p>
-                    <div className="text-muted-foreground prose dark:prose-invert prose-sm max-w-none">
+                    <div className="text-muted-foreground prose dark:prose-invert prose-sm prose-p:text-current max-w-none">
                         <ReactMarkdown>{data.grammar.explanation}</ReactMarkdown>
                     </div>
                 </div>
