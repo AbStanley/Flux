@@ -169,6 +169,16 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
         onClose();
     };
 
+    const handleCancel = () => {
+        const isModified = name !== initial.name || JSON.stringify(tokens) !== JSON.stringify(initial.tokens);
+        if (isModified) {
+            if (!window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+                return;
+            }
+        }
+        onClose();
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={() => {
             // We ONLY want to allow closing via the Cancel or Save buttons explicitly
@@ -176,6 +186,7 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
         }}>
             <DialogContent
                 className="max-w-4xl h-[85vh] max-h-[800px] min-h-[500px] flex flex-col gap-0 p-0 sm:rounded-2xl overflow-hidden"
+                hideClose={true}
                 aria-describedby={undefined}
                 onPointerDownOutside={(e) => e.preventDefault()}
                 onEscapeKeyDown={(e) => e.preventDefault()}
@@ -258,7 +269,7 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
 
                 <DialogFooter className="px-5 py-4 border-t gap-2 sm:justify-between bg-background">
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={onClose}>Cancel</Button>
+                        <Button variant="outline" onClick={handleCancel}>Cancel</Button>
                         <Button variant="ghost" onClick={handleReset} className="text-muted-foreground hover:text-destructive">
                             <RotateCcw className="w-4 h-4 mr-1.5" /> Reset
                         </Button>

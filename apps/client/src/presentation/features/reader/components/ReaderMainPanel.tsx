@@ -39,6 +39,7 @@ export function ReaderMainPanel() {
     const isGenerating = useReaderStore(state => state.isGenerating);
     const readingMode = useReaderStore(state => state.readingMode);
     const setReadingMode = useReaderStore(state => state.setReadingMode);
+    const isReading = useReaderStore(state => state.isReading);
 
     const {
         selectionTranslations,
@@ -118,7 +119,7 @@ export function ReaderMainPanel() {
 
     return (
         <>
-            <Card className="flex-1 h-[75vh] min-h-[600px] border-none shadow-sm glass overflow-hidden flex flex-col">
+            <Card className={`flex-1 ${isReading ? 'h-full min-h-0' : 'h-[75vh] min-h-[600px]'} border-none shadow-sm glass overflow-hidden flex flex-col`}>
                 <CardContent className={`p-0 relative flex-1 ${isGenerating ? 'overflow-hidden select-none' : 'overflow-y-auto'} ${styles.textAreaContainer} flex flex-col`}>
 
                     {readingMode === 'GRAMMAR' ? (
