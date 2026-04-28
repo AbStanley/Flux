@@ -137,9 +137,9 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                 </div>
 
                 <div className="flex-1 overflow-y-auto min-h-0 pr-2 -mr-2 md:pr-4 md:-mr-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 pb-4">
                         {Object.entries(colors).map(([key, hslValue]) => (
-                            <div key={key} className="flex flex-col gap-1 md:gap-2 p-2 md:p-3 rounded-lg border bg-card/50">
+                            <div key={key} className="flex flex-col gap-1 md:gap-2 p-1.5 md:p-3 rounded-lg border bg-card/50">
                                 <Label className="text-[10px] md:text-xs truncate font-medium" title={key}>
                                     {COLOR_LABELS[key] || key}
                                 </Label>

@@ -42,10 +42,19 @@ function MessageBubble({ message, targetLanguage, nativeLanguage, fontSize }: {
 const MAX_INPUT_HEIGHT = 160;
 
 export function ChatScreen() {
-    const { messages, isStreaming, error, sendMessage, cancelStreaming, reset, targetLanguage, nativeLanguage } =
-        useConversationStore();
+    const {
+        messages,
+        isStreaming,
+        error,
+        sendMessage,
+        cancelStreaming,
+        reset,
+        targetLanguage,
+        nativeLanguage,
+        fontSize,
+        setConfig
+    } = useConversationStore();
     const [input, setInput] = useState('');
-    const [fontSize, setFontSize] = useState(14); // default text-sm equivalent
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -82,8 +91,8 @@ export function ChatScreen() {
         }
     };
 
-    const increaseFontSize = () => setFontSize(prev => Math.min(prev + 1, 24));
-    const decreaseFontSize = () => setFontSize(prev => Math.max(prev - 1, 10));
+    const increaseFontSize = () => setConfig({ fontSize: Math.min(fontSize + 1, 24) });
+    const decreaseFontSize = () => setConfig({ fontSize: Math.max(fontSize - 1, 10) });
 
     const visibleMessages = messages.filter((m) => m.role !== 'system');
 

@@ -23,13 +23,14 @@ interface ConversationState {
   topic: string;
   model: string;
   level: string;
+  fontSize: number;
 
   // Actions
   setConfig: (
     updates: Partial<
       Pick<
         ConversationState,
-        "targetLanguage" | "nativeLanguage" | "topic" | "model" | "level"
+        "targetLanguage" | "nativeLanguage" | "topic" | "model" | "level" | "fontSize"
       >
     >,
   ) => void;
@@ -151,6 +152,7 @@ export const useConversationStore = create<ConversationState>()(
       topic: "",
       model: "",
       level: "intermediate",
+      fontSize: 14,
 
       setConfig: (updates) => set(updates),
 
@@ -320,6 +322,7 @@ export const useConversationStore = create<ConversationState>()(
         topic: state.topic,
         model: state.model,
         level: state.level,
+        fontSize: state.fontSize,
         status: state.status,
         messages: state.messages,
       }),

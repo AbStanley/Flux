@@ -67,7 +67,9 @@ export function FileImporter({ open, onOpenChange }: FileImporterProps) {
             fileType,
             chapters: chapters || pdfChapters,
         }).then((session) => {
-            useReaderStore.getState().setSession(session.id, session.title);
+            const finalStore = useReaderStore.getState();
+            finalStore.setSession(session.id, session.title);
+            finalStore.setIsReading(true);
         }).catch((err) => {
             console.error('Failed to create session:', err);
             useReaderStore.getState().setSession(null, null);

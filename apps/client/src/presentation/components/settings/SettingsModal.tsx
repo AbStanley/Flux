@@ -61,12 +61,12 @@ export function SettingsModal({ open, onOpenChange, hideTrigger }: {
                         </Button>
                     </DialogTrigger>
                 )}
-                <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
-                    <DialogHeader>
+                <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col gap-0 p-0" aria-describedby={undefined}>
+                    <DialogHeader className="px-6 py-4 border-b">
                         <DialogTitle>Reader Settings</DialogTitle>
                     </DialogHeader>
 
-                    <div className="space-y-6">
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
                         <ThemeSection
                             theme={theme}
                             setTheme={setTheme}

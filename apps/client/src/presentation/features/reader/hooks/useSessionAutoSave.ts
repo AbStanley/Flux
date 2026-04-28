@@ -62,7 +62,7 @@ export function useSessionAutoSave() {
 
     // Auto-update page on changes (debounced)
     useEffect(() => {
-        if (!sessionId || sessionId === '_importing' || !isReading) return;
+        if (!sessionId || sessionId === '_importing') return;
 
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
