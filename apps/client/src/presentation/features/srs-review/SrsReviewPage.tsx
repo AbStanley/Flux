@@ -4,6 +4,7 @@ import { wordsApi } from '../../../infrastructure/api/words';
 import { Button } from '../../components/ui/button';
 import { RotateCcw, Brain, CheckCircle2, Flame, Clock, BookOpen, Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import { getLanguageCode } from '../../features/word-manager/utils/languageUtils';
+import { useSettingsStore } from '../settings/store/useSettingsStore';
 
 export function SrsReviewPage() {
     const {
@@ -15,23 +16,54 @@ export function SrsReviewPage() {
 
     const [languages, setLanguages] = useState<{ sourceLanguage: string; targetLanguage: string }[]>([]);
     const [audioEnabled, setAudioEnabled] = useState(true);
+    const srsRevealAudioMode = useSettingsStore((s) => s.srsRevealAudioMode);
+    const setSrsRevealAudioMode = useSettingsStore((s) => s.setSrsRevealAudioMode);
+    const currentWord = words[currentIndex];
 
-    const pronounce = useCallback((text: string, lang?: string) => {
+    const pronounce = useCallback((text: string, lang?: string, resetQueue = true) => {
         if (!audioEnabled) return;
-        window.speechSynthesis.cancel();
+        if (resetQueue) {
+            window.speechSynthesis.cancel();
+        }
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = getLanguageCode(lang);
         utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
     }, [audioEnabled]);
 
+    const playRevealAudio = useCallback(() => {
+        if (!audioEnabled || !currentWord || srsRevealAudioMode === 'none') return;
+
+        if (srsRevealAudioMode === 'source') {
+            pronounce(currentWord.text, currentWord.sourceLanguage);
+            return;
+        }
+
+        if (srsRevealAudioMode === 'target') {
+            pronounce(currentWord.definition || '', currentWord.targetLanguage);
+            return;
+        }
+
+        if (srsRevealAudioMode === 'both') {
+            window.speechSynthesis.cancel();
+            pronounce(currentWord.text, currentWord.sourceLanguage, false);
+            if (currentWord.definition) {
+                pronounce(currentWord.definition, currentWord.targetLanguage, false);
+            }
+        }
+    }, [audioEnabled, currentWord, pronounce, srsRevealAudioMode]);
+
     // Auto-pronounce when new card appears
-    const currentWord = words[currentIndex];
     useEffect(() => {
         if (currentWord && status === 'reviewing') {
             pronounce(currentWord.text, currentWord.sourceLanguage);
         }
     }, [currentIndex, currentWord, status, pronounce]);
+
+    useEffect(() => {
+        if (!isFlipped || status !== 'reviewing') return;
+        playRevealAudio();
+    }, [isFlipped, status, playRevealAudio]);
 
     useEffect(() => {
         loadStats();
@@ -141,6 +173,14 @@ export function SrsReviewPage() {
     if (!word) return null;
 
     const progress = ((currentIndex) / words.length) * 100;
+    const revealAudioLabel =
+        srsRevealAudioMode === 'none'
+            ? 'silent'
+            : srsRevealAudioMode === 'source'
+                ? 'source'
+                : srsRevealAudioMode === 'target'
+                    ? 'target'
+                    : 'both';
 
     return (
         <div className="container py-8 max-w-2xl mx-auto space-y-6 animate-in fade-in">
@@ -169,6 +209,24 @@ export function SrsReviewPage() {
             >
                 {/* Audio controls — top right */}
                 <div className="absolute top-3 right-3 flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 rounded-full px-2 text-[11px]"
+                        onClick={() => {
+                            const nextMode = srsRevealAudioMode === 'none'
+                                ? 'source'
+                                : srsRevealAudioMode === 'source'
+                                    ? 'target'
+                                    : srsRevealAudioMode === 'target'
+                                        ? 'both'
+                                        : 'none';
+                            setSrsRevealAudioMode(nextMode);
+                        }}
+                        title="Reveal audio mode: silent/source/target/both"
+                    >
+                        Reveal: {revealAudioLabel}
+                    </Button>
                     <Button
                         variant="ghost"
                         size="icon"

@@ -14,6 +14,7 @@ export type ReaderFont =
     | 'roboto';
 
 export type FontSize = 'small' | 'medium' | 'large' | 'xl';
+export type SrsRevealAudioMode = 'none' | 'source' | 'target' | 'both';
 
 export interface CustomTheme {
     id: string; // 'custom-<uuid>'
@@ -51,6 +52,7 @@ interface SettingsState {
     contentType: ContentType;
     proficiencyLevel: ProficiencyLevel;
     speakOnHover: boolean;
+    srsRevealAudioMode: SrsRevealAudioMode;
     aiHost: string;
 
     setFont: (font: ReaderFont) => void;
@@ -59,6 +61,7 @@ interface SettingsState {
     setContentType: (type: ContentType) => void;
     setProficiencyLevel: (level: ProficiencyLevel) => void;
     setSpeakOnHover: (enabled: boolean) => void;
+    setSrsRevealAudioMode: (mode: SrsRevealAudioMode) => void;
     setAiHost: (host: string) => void;
 
     addCustomTheme: (theme: CustomTheme) => void;
@@ -94,6 +97,7 @@ export const useSettingsStore = create<SettingsState>()(
             contentType: 'Story',
             proficiencyLevel: 'B1',
             speakOnHover: false,
+            srsRevealAudioMode: 'target',
             aiHost: '',
 
             setFont: (font) => set({ font }),
@@ -102,6 +106,8 @@ export const useSettingsStore = create<SettingsState>()(
             setContentType: (contentType) => set({ contentType }),
             setProficiencyLevel: (proficiencyLevel) => set({ proficiencyLevel }),
             setSpeakOnHover: (speakOnHover) => set({ speakOnHover }),
+            setSrsRevealAudioMode: (srsRevealAudioMode) =>
+                set({ srsRevealAudioMode }),
             setAiHost: (aiHost) => set({ aiHost }),
 
             addCustomTheme: (theme) => set((state) => ({ customThemes: [...state.customThemes, theme] })),

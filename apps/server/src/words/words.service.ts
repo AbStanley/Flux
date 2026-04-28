@@ -8,6 +8,15 @@ import { Prisma, PrismaClient, Word } from '@prisma/client';
 export class WordsService {
   constructor(private prisma: PrismaService) {}
 
+  private sanitizeVocabularyField(value?: string): string | undefined {
+    if (value === undefined || value === null) return value;
+
+    return value
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, '');
+  }
+
   private async resolveUserId(userId?: string): Promise<string> {
     if (userId) return userId;
     let user = await this.prisma.user.findFirst();
@@ -22,10 +31,10 @@ export class WordsService {
   async create(createWordDto: CreateWordDto, userId?: string) {
     const resolvedUserId = await this.resolveUserId(userId);
 
-    const sanitizedText = createWordDto.text
-      .replace(/[.,"'()<>/\\;{}[\]=+&]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const sanitizedText = this.sanitizeVocabularyField(createWordDto.text) ?? '';
+    const sanitizedDefinition = this.sanitizeVocabularyField(
+      createWordDto.definition,
+    );
 
     // Duplicate Check
     const existingWord = await this.prisma.word.findFirst({
@@ -47,7 +56,7 @@ export class WordsService {
     return this.prisma.word.create({
       data: {
         text: sanitizedText,
-        definition: createWordDto.definition,
+        definition: sanitizedDefinition,
         explanation: createWordDto.explanation,
         context: createWordDto.context,
         sourceLanguage: createWordDto.sourceLanguage,
@@ -142,6 +151,16 @@ export class WordsService {
 
   async update(id: string, updateWordDto: UpdateWordDto) {
     const { examples, ...wordData } = updateWordDto;
+    const sanitizedWordData = { ...wordData };
+
+    if (wordData.text !== undefined) {
+      sanitizedWordData.text = this.sanitizeVocabularyField(wordData.text);
+    }
+    if (wordData.definition !== undefined) {
+      sanitizedWordData.definition = this.sanitizeVocabularyField(
+        wordData.definition,
+      );
+    }
 
     // Use transaction to atomically update word and replace examples
     return await this.prisma.$transaction(
@@ -163,7 +182,7 @@ export class WordsService {
         return tx.word.update({
           where: { id },
           data: {
-            ...wordData,
+            ...sanitizedWordData,
             examples:
               examples && examples.length > 0
                 ? {
