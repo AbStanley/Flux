@@ -155,6 +155,28 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                 <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>EXTENSION TRANSLATION POPOVER</p>
                 <ThemePreviewPopup theme={fluxTheme} activeToken={activeToken} onHoverToken={onHoverToken} onClickToken={onClickToken} />
             </div>
+            {/* ── 4. Rich Details & Markdown ── */}
+            <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8 }}>
+                <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>RICH DETAILS & MARKDOWN</p>
+                <div style={{ background: bg, padding: '12px', borderRadius: 8, border: `1px solid ${bd}`, ...hoverStyle('background') }}
+                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
+                    
+                    <p style={{ fontWeight: 700, color: pr, marginBottom: 6, ...hoverStyle('primary') }}
+                       onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Structure Analysis</p>
+                    
+                    <div style={{ paddingLeft: 8, borderLeft: `2px solid ${pr}`, display: 'flex', flexDirection: 'column', gap: 4, ...hoverStyle('primary') }}
+                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>
+                        <div style={{ fontStyle: 'italic', color: fg, fontSize: 11, ...hoverStyle('foreground') }}
+                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('foreground'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('foreground'); }}>
+                            Ich habe das Buch gelesen.
+                        </div>
+                        <div style={{ color: mtFg, fontSize: 11, ...hoverStyle('muted-foreground') }}
+                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>
+                            I have read that book.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

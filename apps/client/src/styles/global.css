@@ -495,6 +495,24 @@ html, body, #root {
   }
 }
 
+@layer components {
+  .prose {
+    --tw-prose-body: inherit;
+    --tw-prose-headings: inherit;
+    --tw-prose-bold: inherit;
+    --tw-prose-quotes: inherit;
+    --tw-prose-code: inherit;
+    --tw-prose-links: hsl(var(--primary));
+    
+    --tw-prose-invert-body: inherit;
+    --tw-prose-invert-headings: inherit;
+    --tw-prose-invert-bold: inherit;
+    --tw-prose-invert-quotes: inherit;
+    --tw-prose-invert-code: inherit;
+    --tw-prose-invert-links: hsl(var(--primary));
+  }
+}
+
 @layer utilities {
   @keyframes shake {
 
