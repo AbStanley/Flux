@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from "@/presentation/components/ui/button";
 import { Progress } from "@/presentation/components/ui/progress";
 import { X, Heart, Trophy, Flame, Timer } from 'lucide-react';
@@ -146,18 +146,15 @@ export function GameShell({ children }: GameShellProps) {
 
             {/* Game Content */}
             <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-4 md:p-8">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={currentIndex}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.2 }}
-                        className="w-full h-full"
-                    >
-                        {children}
-                    </motion.div>
-                </AnimatePresence>
+                <motion.div
+                    key={currentIndex}
+                    initial={{ opacity: 0, scale: 0.96, y: 15 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    className="w-full h-full"
+                >
+                    {children}
+                </motion.div>
             </main>
         </div>
     );

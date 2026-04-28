@@ -13,7 +13,15 @@ export function MultipleChoiceGame() {
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const { playAudio, stopAudio } = useGameAudio();
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    // Setup AbortController for clean async cancellation
+    useEffect(() => {
+        abortControllerRef.current = new AbortController();
+        return () => {
+            abortControllerRef.current?.abort();
+        };
+    }, [currentIndex]); // Re-create per question to kill lingering promises when advancing
 
     const baseItem = items[currentIndex];
 
@@ -47,11 +55,11 @@ export function MultipleChoiceGame() {
         const correctAnswer = currentItem.answer;
         const pool = items.filter(i => i.id !== currentItem.id);
         const recentSet = new Set(useGameStore.getState().recentDistractorIds);
-        
+
         const fresh = pool.filter(i => !recentSet.has(i.id));
         const stale = pool.filter(i => recentSet.has(i.id));
         const shuffle = <T,>(arr: T[]) => arr.slice().sort(() => 0.5 - Math.random());
-        
+
         const pickedItems = [...shuffle(fresh), ...shuffle(stale)].slice(0, 3);
         const distractors = pickedItems.map(i => {
             if (i.lang?.target === currentItem.lang?.target) return i.answer;
@@ -74,10 +82,18 @@ export function MultipleChoiceGame() {
     // Cleanup on unmount
     useEffect(() => {
         return () => {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
             stopAudio();
         };
     }, [stopAudio]);
+
+    const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve, reject) => {
+        if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
+        const timer = setTimeout(resolve, ms);
+        signal?.addEventListener('abort', () => {
+            clearTimeout(timer);
+            reject(new DOMException('Aborted', 'AbortError'));
+        });
+    });
 
     // Auto-play Question on load
     useEffect(() => {
@@ -99,9 +115,18 @@ export function MultipleChoiceGame() {
             setIsProcessing(true);
             soundService.playWrong();
             submitAnswer(false);
-            playAudio(currentItem!.answer, currentItem!.lang?.target, undefined).then(() => {
-                timeoutRef.current = setTimeout(() => nextItem(), 1500);
-            });
+            
+            const processTimeout = async () => {
+                try {
+                    await playAudio(currentItem!.answer, currentItem!.lang?.target, undefined);
+                    await sleep(1500, abortControllerRef.current?.signal);
+                    nextItem();
+                } catch (e) {
+                    if (e instanceof Error && e.name === 'AbortError') return;
+                    console.error(e);
+                }
+            };
+            processTimeout();
         }
     }, [timeLeft, timerEnabled, isProcessing, playAudio, currentItem, submitAnswer, nextItem]);
 
@@ -109,7 +134,6 @@ export function MultipleChoiceGame() {
     useEffect(() => {
         setSelectedOption(null);
         setIsProcessing(false);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }, [currentIndex]);
 
     const handleOptionClick = async (option: string) => {
@@ -120,18 +144,21 @@ export function MultipleChoiceGame() {
         const isCorrect = option === currentItem!.answer;
         submitAnswer(isCorrect);
 
-        if (isCorrect) {
-            soundService.playCorrect();
-            await playAudio(option, currentItem!.lang?.target, undefined);
-            timeoutRef.current = setTimeout(() => {
+        try {
+            if (isCorrect) {
+                soundService.playCorrect();
+                await playAudio(option, currentItem!.lang?.target, undefined);
+                await sleep(500, abortControllerRef.current?.signal);
                 nextItem();
-            }, 500);
-        } else {
-            soundService.playWrong();
-            await playAudio(currentItem!.answer, currentItem!.lang?.target, undefined);
-            timeoutRef.current = setTimeout(() => {
+            } else {
+                soundService.playWrong();
+                await playAudio(currentItem!.answer, currentItem!.lang?.target, undefined);
+                await sleep(1500, abortControllerRef.current?.signal); // Give enough time, but strictly controlled
                 nextItem();
-            }, 1000); // Auto-advance after giving time to hear audio and see hint
+            }
+        } catch (e) {
+            if (e instanceof Error && e.name === 'AbortError') return;
+            console.error(e);
         }
     };
 
