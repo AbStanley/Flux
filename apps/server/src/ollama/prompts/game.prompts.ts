@@ -26,8 +26,8 @@ export const getGameContentPrompt = (
       ${baseInstruction}
       Each object must have:
       - "context": The story segment in ${targetLang}.
-      - "question": The key phrase/word in ${targetLang} (from the segment).
-      - "answer": The translation of the key phrase/word in ${sourceLang}.
+      - "answer": The key phrase/word in ${targetLang} (from the segment).
+      - "question": The translation of the key phrase/word in ${sourceLang}.
       - "target_lang_code": ALWAYS "${targetLangCode}"
       - "source_lang_code": ALWAYS "${sourceLangCode}"
       - "type": "phrase"

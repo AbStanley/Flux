@@ -109,13 +109,13 @@ export function MultipleChoiceGame() {
 
         if (isCorrect) {
             soundService.playCorrect();
+            await playAudio(option, currentItem.lang?.target, undefined);
         } else {
             soundService.playWrong();
+            await playAudio(currentItem.answer, currentItem.lang?.target, undefined);
         }
 
         submitAnswer(isCorrect);
-
-        await playAudio(option, currentItem.lang?.target, undefined);
 
         timeoutRef.current = setTimeout(() => {
             nextItem();

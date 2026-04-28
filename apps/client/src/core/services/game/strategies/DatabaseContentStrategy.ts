@@ -244,16 +244,16 @@ export class DatabaseContentStrategy implements IContentStrategy {
 
         return {
             id: word.id,
-            question: swap ? (word.definition || '???') : word.text,
-            answer: swap ? word.text : (word.definition || 'No definition'),
+            question: swap ? word.text : (word.definition || 'No definition'),
+            answer: swap ? (word.definition || '???') : word.text,
             context: word.context || (word.examples && word.examples.length > 0 ? word.examples[0].sentence : undefined),
-            audioUrl: swap ? undefined : word.pronunciation,
+            audioUrl: swap ? word.pronunciation : undefined,
             imageUrl: word.imageUrl,
             source: 'db',
             type: word.type === 'phrase' ? 'phrase' : 'word',
             lang: {
-                source: normalizeLanguageCode(swap ? targetLang : sourceLang),
-                target: normalizeLanguageCode(swap ? sourceLang : targetLang)
+                source: normalizeLanguageCode(swap ? sourceLang : targetLang),
+                target: normalizeLanguageCode(swap ? targetLang : sourceLang)
             },
             originalData: word
         };

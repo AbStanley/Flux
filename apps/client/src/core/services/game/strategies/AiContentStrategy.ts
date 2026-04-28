@@ -57,23 +57,10 @@ export class AiContentStrategy implements IContentStrategy {
             let index = 0;
             for (const rawItem of rawItems) {
                 const ri = rawItem as Record<string, unknown>;
-                let q = ri.target_text as string || ri.question as string;
-                let a = ri.source_translation as string || ri.answer as string;
-                let qCode = (ri.target_lang_code as string) || learningLangCode;
-                let aCode = (ri.source_lang_code as string) || nativeLangCode;
-
-                // AUTO-SWAP SAFETY NET: 
-                // If the AI explicitly tagged the 'target' as the native language,
-                // it means the model swapped the direction. We swap it back.
-                if (ri.target_lang_code === nativeLangCode || (ri.source_lang_code === learningLangCode && qCode !== aCode)) {
-                    console.warn("[AiStrategy] Detected language inversion from AI. Auto-swapping fields back.");
-                    const temp = q;
-                    q = a;
-                    a = temp;
-                    const tempCode = qCode;
-                    qCode = aCode;
-                    aCode = tempCode;
-                }
+                const q = ri.source_translation as string || ri.question as string;
+                const a = ri.target_text as string || ri.answer as string;
+                const qCode = (ri.source_lang_code as string) || nativeLangCode;
+                const aCode = (ri.target_lang_code as string) || learningLangCode;
 
                 const item: GameItem = {
                     id: `ai-${Date.now()}-${index++}`,
