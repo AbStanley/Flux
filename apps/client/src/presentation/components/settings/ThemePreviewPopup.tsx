@@ -25,7 +25,6 @@ export function ThemePreviewPopup({ theme: t, activeToken, onHoverToken, onClick
                     borderRadius: 4,
                     padding: '1px 4px',
                     fontWeight: 600,
-                    cursor: 'pointer',
                     ...hoverStyle('primary')
                 }}
                 onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }}
