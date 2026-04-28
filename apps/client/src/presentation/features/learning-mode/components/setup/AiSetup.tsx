@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { useSettingsStore } from '../../../settings/store/useSettingsStore';
 import { serverAIService } from '@/infrastructure/ai/ServerAIService';
@@ -14,6 +14,12 @@ import { Switch } from '@/presentation/components/ui/switch';
 export const AiSetup = () => {
     const { config, updateConfig, availableLangs, isLoadingLangs } = useGameStore();
     const { llmModel, setLlmModel, aiHost: globalAiHost, setAiHost: setGlobalAiHost } = useSettingsStore();
+    
+    // Use a ref to access the current model value without triggering effect re-runs
+    const llmModelRef = useRef(llmModel);
+    useEffect(() => {
+        llmModelRef.current = llmModel;
+    }, [llmModel]);
     
     const [models, setModels] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
@@ -56,7 +62,8 @@ export const AiSetup = () => {
             .then((unique) => {
                 if (cancelled) return;
                 setModels(unique);
-                if (unique.length > 0 && (!llmModel || !unique.includes(llmModel))) {
+                const currentModel = llmModelRef.current;
+                if (unique.length > 0 && (!currentModel || !unique.includes(currentModel))) {
                     setLlmModel(unique[0]);
                 }
             })
@@ -64,14 +71,14 @@ export const AiSetup = () => {
                 if (cancelled) return;
                 console.error('Failed to fetch models:', err);
                 setError('Could not connect to Ollama. Make sure it is running.');
-                if (!llmModel) setIsManualInput(true);
+                if (!llmModelRef.current) setIsManualInput(true);
             })
             .finally(() => {
                 if (!cancelled) setLoading(false);
             });
 
         return () => { cancelled = true; };
-    }, [fetchUniqueModels, globalAiHost, llmModel, setLlmModel]);
+    }, [fetchUniqueModels, globalAiHost, setLlmModel]);
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
