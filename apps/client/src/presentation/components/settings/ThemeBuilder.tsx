@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Save, Sliders, Sparkles } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
+import { Save, Sliders, Sparkles, Download, Upload, RotateCcw } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -15,12 +15,30 @@ import { ThemeBuilderPreview } from './ThemeBuilderPreview';
 
 type Mode = 'simple' | 'full';
 
+function ColorPickerRow({ label, hint, color, onChange }: { label: string; hint: string; color: string; onChange: (c: string) => void }) {
+    return (
+        <div className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-card/50 hover:border-primary/50 transition-colors group">
+            <label className="relative flex-shrink-0 cursor-pointer">
+                <div className="w-9 h-9 rounded-md border border-border shadow-sm group-hover:scale-105 transition-transform"
+                    style={{ background: color }} />
+                <input type="color" value={color} onChange={(e) => onChange(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+            </label>
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{label}</p>
+                <p className="text-xs text-muted-foreground">{hint}</p>
+            </div>
+            <span className="text-xs font-mono text-muted-foreground">{color}</span>
+        </div>
+    );
+}
+
 const SEED_FIELDS: { key: keyof SeedColors; label: string; hint: string }[] = [
-    { key: 'background', label: 'Background',   hint: 'Main page colour' },
-    { key: 'foreground', label: 'Text',          hint: 'Body text on background' },
-    { key: 'primary',    label: 'Accent',        hint: 'Buttons & highlights' },
-    { key: 'card',       label: 'Card Surface',  hint: 'Panels & cards' },
-    { key: 'border',     label: 'Border',        hint: 'Lines & separators' },
+    { key: 'background', label: 'Background', hint: 'Main page colour' },
+    { key: 'foreground', label: 'Text', hint: 'Body text on background' },
+    { key: 'primary', label: 'Accent', hint: 'Buttons & highlights' },
+    { key: 'card', label: 'Card Surface', hint: 'Panels & cards' },
+    { key: 'border', label: 'Border', hint: 'Lines & separators' },
 ];
 
 function generateId(): string {
@@ -29,7 +47,7 @@ function generateId(): string {
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
     const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 interface ThemeBuilderProps {
@@ -41,6 +59,7 @@ interface ThemeBuilderProps {
 export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps) {
     const { addCustomTheme, updateCustomTheme, customThemes } = useSettingsStore();
     const { setTheme } = useTheme();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const initial = useMemo(() => {
         if (editThemeId) {
@@ -50,9 +69,9 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
         return { name: 'My Theme', tokens: BUILT_IN_THEME_TOKENS.light };
     }, [editThemeId, customThemes]);
 
-    const [name, setName]     = useState(initial.name);
+    const [name, setName] = useState(initial.name);
     const [tokens, setTokens] = useState<DerivedTokens>(initial.tokens);
-    const [mode, setMode]     = useState<Mode>('simple');
+    const [mode, setMode] = useState<Mode>('simple');
     const [hoveredToken, setHoveredToken] = useState<string | null>(null);
     const [clickedToken, setClickedToken] = useState<string | null>(null);
 
@@ -71,7 +90,7 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
 
     const handleSeedChange = (key: keyof SeedColors, hex: string) => {
         const newSeeds = { ...seeds, [key]: hex };
-        
+
         // Auto-adapt foregrounds based on contrast
         if (key === 'background') {
             const bgHsl = hexToHsl(hex);
@@ -98,6 +117,46 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
         setTokens(exact ?? deriveTokens(presetSeeds));
     };
 
+    const handleReset = () => {
+        setName(initial.name);
+        setTokens(initial.tokens);
+    };
+
+    const handleExport = () => {
+        const blob = new Blob([JSON.stringify({ name, colors: tokens }, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${name.replace(/\s+/g, '_').toLowerCase()}_theme.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const imported = JSON.parse(event.target?.result as string);
+                if (imported.colors && imported.name) {
+                    setName(imported.name || 'Imported Theme');
+                    setTokens(imported.colors);
+                    setMode('full'); // Imported themes might have advanced tweaks
+                } else {
+                    alert('Invalid theme file format. Missing colors.');
+                }
+            } catch {
+                alert('Could not read theme file. Make sure it is a valid JSON.');
+            }
+        };
+        reader.readAsText(file);
+        // Reset input so the same file can be imported again if needed
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
     const handleSave = () => {
         if (!name.trim()) return;
         const newTheme: CustomTheme = {
@@ -111,10 +170,28 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
-            <DialogContent className="max-w-4xl h-[85vh] max-h-[800px] min-h-[500px] flex flex-col gap-0 p-0" aria-describedby={undefined}>
-                <DialogHeader className="px-5 pt-5 pb-3 border-b">
+        <Dialog open={isOpen} onOpenChange={() => {
+            // We ONLY want to allow closing via the Cancel or Save buttons explicitly
+            // to prevent accidental data loss.
+        }}>
+            <DialogContent
+                className="max-w-4xl h-[85vh] max-h-[800px] min-h-[500px] flex flex-col gap-0 p-0 sm:rounded-2xl overflow-hidden"
+                aria-describedby={undefined}
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onEscapeKeyDown={(e) => e.preventDefault()}
+            >
+                <DialogHeader className="px-5 pt-5 pb-3 border-b flex flex-row items-center justify-between">
                     <DialogTitle>{editThemeId ? 'Edit Theme' : 'Create New Theme'}</DialogTitle>
+                    <div className="flex items-center gap-2 pr-6">
+                        <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => fileInputRef.current?.click()} title="Import Theme">
+                            <Upload className="w-3 h-3 mr-1" /> Import
+                        </Button>
+                        <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleImport} />
+
+                        <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={handleExport} title="Export Theme">
+                            <Download className="w-3 h-3 mr-1" /> Export
+                        </Button>
+                    </div>
                 </DialogHeader>
 
                 <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
@@ -156,21 +233,13 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                         {mode === 'simple' ? (
                             <div className="grid grid-cols-1 gap-2">
                                 {SEED_FIELDS.map(({ key, label, hint }) => (
-                                    <label key={key} htmlFor={`seed-${key}`}
-                                        className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-card/50 cursor-pointer hover:border-primary/50 transition-colors group">
-                                        <div className="relative flex-shrink-0">
-                                            <div className="w-9 h-9 rounded-md border border-border shadow-sm group-hover:scale-105 transition-transform"
-                                                style={{ background: seeds[key] }} />
-                                            <input id={`seed-${key}`} type="color" value={seeds[key]}
-                                                onChange={e => handleSeedChange(key, e.target.value)}
-                                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium">{label}</p>
-                                            <p className="text-xs text-muted-foreground">{hint}</p>
-                                        </div>
-                                        <span className="text-xs font-mono text-muted-foreground">{seeds[key]}</span>
-                                    </label>
+                                    <ColorPickerRow
+                                        key={key}
+                                        label={label}
+                                        hint={hint}
+                                        color={seeds[key]}
+                                        onChange={(val) => handleSeedChange(key, val)}
+                                    />
                                 ))}
                             </div>
                         ) : (
@@ -188,7 +257,12 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                 </div>
 
                 <DialogFooter className="px-5 py-4 border-t gap-2 sm:justify-between bg-background">
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={onClose}>Cancel</Button>
+                        <Button variant="ghost" onClick={handleReset} className="text-muted-foreground hover:text-destructive">
+                            <RotateCcw className="w-4 h-4 mr-1.5" /> Reset
+                        </Button>
+                    </div>
                     <Button onClick={handleSave} disabled={!name.trim()}>
                         <Save className="w-4 h-4 mr-2" /> Save & Apply
                     </Button>
