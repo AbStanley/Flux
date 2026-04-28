@@ -3,19 +3,57 @@ import { useWordsStore } from './store/useWordsStore';
 import { WordList } from './components/WordList';
 import { EditWordDialog } from './components/EditWordDialog';
 import { Button } from '../../components/ui/button';
-import { Plus, Download, FileDown } from 'lucide-react';
+import { Plus, Download, FileDown, Search, Filter } from 'lucide-react';
 import { type CreateWordRequest, type Word, wordsApi } from '../../../infrastructure/api/words';
 import { exportToCSV, exportToAnki } from './utils/exportUtils';
+import { Input } from '../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 
 export function WordManager() {
     const { wordsState, phrasesState, error, addWord, updateWord, deleteWord, fetchWords } = useWordsStore();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingWord, setEditingWord] = useState<Word | undefined>(undefined);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortOption, setSortOption] = useState('date_desc');
+    const [sourceLanguage, setSourceLanguage] = useState('all');
+    const [targetLanguage, setTargetLanguage] = useState('all');
+    const [availableLanguages, setAvailableLanguages] = useState<{ sourceLanguage: string; targetLanguage: string }[]>([]);
 
     useEffect(() => {
-        fetchWords('word', 1);
-        fetchWords('phrase', 1);
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+        const loadLanguages = async () => {
+            try {
+                const response = await wordsApi.getLanguages();
+                setAvailableLanguages(Array.isArray(response) ? response : []);
+            } catch (err) {
+                console.error('Failed to load languages', err);
+                setAvailableLanguages([]);
+            }
+        };
+        loadLanguages();
+    }, []);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchWords(
+                'word',
+                1,
+                searchQuery,
+                sortOption,
+                sourceLanguage !== 'all' ? sourceLanguage : undefined,
+                targetLanguage !== 'all' ? targetLanguage : undefined
+            );
+            fetchWords(
+                'phrase',
+                1,
+                searchQuery,
+                sortOption,
+                sourceLanguage !== 'all' ? sourceLanguage : undefined,
+                targetLanguage !== 'all' ? targetLanguage : undefined
+            );
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery, sortOption, sourceLanguage, targetLanguage, fetchWords]);
 
     const handleCreate = async (data: CreateWordRequest) => {
         await addWord(data);
@@ -63,6 +101,8 @@ export function WordManager() {
     };
 
     const [activeTab, setActiveTab] = useState<'word' | 'phrase'>('word');
+    const uniqueSourceLangs = Array.from(new Set(availableLanguages.map(l => l.sourceLanguage).filter(Boolean)));
+    const uniqueTargetLangs = Array.from(new Set(availableLanguages.map(l => l.targetLanguage).filter(Boolean)));
 
     return (
         <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6 md:space-y-8 pb-20 md:pb-6">
@@ -130,6 +170,61 @@ export function WordManager() {
                     </button>
                 </div>
 
+                {/* Search + Filters */}
+                <div className="flex flex-col lg:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search entry, definition, context, examples..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9 bg-background/50 border-muted-foreground/20 focus-visible:ring-primary/50 transition-all"
+                        />
+                    </div>
+
+                    <div className="flex flex-wrap lg:flex-nowrap gap-3 items-center">
+                        <Filter className="h-4 w-4 text-muted-foreground hidden lg:block" />
+
+                        <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
+                            <SelectTrigger className="w-full lg:w-[140px] bg-background/50 h-9">
+                                <SelectValue placeholder="Source Lang" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Source</SelectItem>
+                                {uniqueSourceLangs.map(lang => (
+                                    <SelectItem key={`source-${lang}`} value={lang}>{lang}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                            <SelectTrigger className="w-full lg:w-[140px] bg-background/50 h-9">
+                                <SelectValue placeholder="Target Lang" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Target</SelectItem>
+                                {uniqueTargetLangs.map(lang => (
+                                    <SelectItem key={`target-${lang}`} value={lang}>{lang}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={sortOption} onValueChange={setSortOption}>
+                            <SelectTrigger className="w-full lg:w-[170px] bg-background/50 h-9">
+                                <SelectValue placeholder="Sort by" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="date_desc">Newest First</SelectItem>
+                                <SelectItem value="date_asc">Oldest First</SelectItem>
+                                <SelectItem value="text_asc">Entry (A-Z)</SelectItem>
+                                <SelectItem value="text_desc">Entry (Z-A)</SelectItem>
+                                <SelectItem value="definition_asc">Definition (A-Z)</SelectItem>
+                                <SelectItem value="definition_desc">Definition (Z-A)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
                 <div className="min-h-[400px]">
                     {activeTab === 'word' ? (
                         wordsState.isLoading && wordsState.items.length === 0 ? (
@@ -146,7 +241,14 @@ export function WordManager() {
                                     emptyMessage="No words saved yet."
                                     hasMore={wordsState.hasMore}
                                     isLoading={wordsState.isLoading}
-                                    onLoadMore={() => fetchWords('word', wordsState.page + 1)}
+                                    onLoadMore={() => fetchWords(
+                                        'word',
+                                        wordsState.page + 1,
+                                        searchQuery,
+                                        sortOption,
+                                        sourceLanguage !== 'all' ? sourceLanguage : undefined,
+                                        targetLanguage !== 'all' ? targetLanguage : undefined
+                                    )}
                                 />
                             </div>
                         )
@@ -165,7 +267,14 @@ export function WordManager() {
                                     emptyMessage="No phrases saved yet."
                                     hasMore={phrasesState.hasMore}
                                     isLoading={phrasesState.isLoading}
-                                    onLoadMore={() => fetchWords('phrase', phrasesState.page + 1)}
+                                    onLoadMore={() => fetchWords(
+                                        'phrase',
+                                        phrasesState.page + 1,
+                                        searchQuery,
+                                        sortOption,
+                                        sourceLanguage !== 'all' ? sourceLanguage : undefined,
+                                        targetLanguage !== 'all' ? targetLanguage : undefined
+                                    )}
                                 />
                             </div>
                         )

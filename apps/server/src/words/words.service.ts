@@ -17,6 +17,43 @@ export class WordsService {
       .replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, '');
   }
 
+  private buildSearchFilter(search?: string): Prisma.WordWhereInput | undefined {
+    if (!search?.trim()) return undefined;
+
+    const normalized = search.trim().replace(/\s+/g, ' ');
+    const terms = normalized
+      .split(' ')
+      .map((term) => term.trim())
+      .filter((term) => term.length > 0)
+      .slice(0, 8);
+
+    const searchableFields = (term: string): Prisma.WordWhereInput[] => [
+      { text: { contains: term, mode: 'insensitive' } },
+      { definition: { contains: term, mode: 'insensitive' } },
+      { explanation: { contains: term, mode: 'insensitive' } },
+      { context: { contains: term, mode: 'insensitive' } },
+      { sourceTitle: { contains: term, mode: 'insensitive' } },
+      { pronunciation: { contains: term, mode: 'insensitive' } },
+      {
+        examples: {
+          some: { sentence: { contains: term, mode: 'insensitive' } },
+        },
+      },
+      {
+        examples: {
+          some: { translation: { contains: term, mode: 'insensitive' } },
+        },
+      },
+    ];
+
+    // Every search term must match at least one field.
+    return {
+      AND: terms.map((term) => ({
+        OR: searchableFields(term),
+      })),
+    };
+  }
+
   private async resolveUserId(userId?: string): Promise<string> {
     if (userId) return userId;
     let user = await this.prisma.user.findFirst();
@@ -79,16 +116,32 @@ export class WordsService {
   }
 
   async findAll(query?: {
+    search?: string;
     sourceLanguage?: string;
     targetLanguage?: string;
-    sort?: 'date_desc' | 'date_asc' | 'text_asc' | 'random';
+    sort?:
+      | 'date_desc'
+      | 'date_asc'
+      | 'text_asc'
+      | 'text_desc'
+      | 'definition_asc'
+      | 'definition_desc'
+      | 'random';
     skip?: number;
     limit?: number;
     type?: 'word' | 'phrase';
     userId?: string;
   }) {
-    const { sourceLanguage, targetLanguage, sort, skip, limit, type, userId } =
-      query || {};
+    const {
+      search,
+      sourceLanguage,
+      targetLanguage,
+      sort,
+      skip,
+      limit,
+      type,
+      userId,
+    } = query || {};
 
     const where: Prisma.WordWhereInput = {
       sourceLanguage: sourceLanguage
@@ -99,6 +152,7 @@ export class WordsService {
         : undefined,
       type,
       userId: userId ? { equals: userId } : undefined,
+      ...this.buildSearchFilter(search),
     };
 
     try {
@@ -124,6 +178,12 @@ export class WordsService {
               ? { createdAt: 'asc' }
               : sort === 'text_asc'
                 ? { text: 'asc' }
+                : sort === 'text_desc'
+                  ? { text: 'desc' }
+                  : sort === 'definition_asc'
+                    ? { definition: 'asc' }
+                    : sort === 'definition_desc'
+                      ? { definition: 'desc' }
                 : { createdAt: 'desc' },
           include: {
             examples: true,

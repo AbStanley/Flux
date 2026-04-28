@@ -22,7 +22,14 @@ interface WordsState {
     phrasesState: PaginatedState;
     error: string | null;
 
-    fetchWords: (type: 'word' | 'phrase', page?: number) => Promise<void>;
+    fetchWords: (
+        type: 'word' | 'phrase',
+        page?: number,
+        search?: string,
+        sort?: string,
+        sourceLanguage?: string,
+        targetLanguage?: string
+    ) => Promise<void>;
 
     addWord: (data: CreateWordRequest) => Promise<Word>;
     deleteWord: (id: string, type: 'word' | 'phrase') => Promise<void>;
@@ -34,12 +41,12 @@ export const useWordsStore = create<WordsState>((set, get) => ({
     phrasesState: { ...initialPaginatedState },
     error: null,
 
-    fetchWords: async (type, page = 1) => {
+    fetchWords: async (type, page = 1, search, sort = 'date_desc', sourceLanguage, targetLanguage) => {
         const stateKey = type === 'word' ? 'wordsState' : 'phrasesState';
 
-        // Prevent concurrent fetches for the same type
+        // Prevent concurrent fetches for pagination, but allow fresh page=1 queries.
         const current = get()[stateKey];
-        if (current.isLoading) return;
+        if (current.isLoading && page !== 1) return;
 
         set(state => ({
             [stateKey]: { ...state[stateKey], isLoading: true },
@@ -51,7 +58,10 @@ export const useWordsStore = create<WordsState>((set, get) => ({
             const response = await wordsApi.getAll({
                 type,
                 page,
-                sort: 'date_desc'
+                search,
+                sort,
+                sourceLanguage,
+                targetLanguage
             });
 
             // Handle both new (paginated) and old (array) response formats
