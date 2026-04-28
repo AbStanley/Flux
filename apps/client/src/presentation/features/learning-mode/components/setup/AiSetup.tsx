@@ -55,28 +55,34 @@ export const AiSetup = () => {
         if (globalAiHost) setApiClientBaseUrl(globalAiHost);
 
         let cancelled = false;
-        setLoading(true);
-        setError(null);
 
-        fetchUniqueModels()
-            .then((unique) => {
+        const performFetch = async () => {
+            // Move to next tick to avoid synchronous setState in effect body
+            await Promise.resolve();
+            if (cancelled) return;
+
+            setLoading(true);
+            setError(null);
+
+            try {
+                const unique = await fetchUniqueModels();
                 if (cancelled) return;
                 setModels(unique);
                 const currentModel = llmModelRef.current;
                 if (unique.length > 0 && (!currentModel || !unique.includes(currentModel))) {
                     setLlmModel(unique[0]);
                 }
-            })
-            .catch((err) => {
+            } catch (err) {
                 if (cancelled) return;
                 console.error('Failed to fetch models:', err);
                 setError('Could not connect to Ollama. Make sure it is running.');
                 if (!llmModelRef.current) setIsManualInput(true);
-            })
-            .finally(() => {
+            } finally {
                 if (!cancelled) setLoading(false);
-            });
+            }
+        };
 
+        performFetch();
         return () => { cancelled = true; };
     }, [fetchUniqueModels, globalAiHost, setLlmModel]);
 
