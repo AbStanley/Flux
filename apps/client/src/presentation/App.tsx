@@ -142,12 +142,12 @@ function App() {
     if (isReading) {
       // Immediately switch to reading mode to allow smooth expansion
       setVisualReadingMode(true);
-    } else {
-      // Add slight delay when exiting to let animations finish
+    } else if (visualReadingMode) {
+      // Only add delay when exiting from an active reading state
       const timer = setTimeout(() => setVisualReadingMode(false), 100);
       return () => clearTimeout(timer);
     }
-  }, [isReading]);
+  }, [isReading, visualReadingMode]);
 
   // Auth gate: show login for unauthenticated users (both web app and side panel)
   if (authLoading) {
@@ -160,6 +160,7 @@ function App() {
   return (
     <ServiceProvider>
       <motion.div 
+        initial={false}
         animate={{
           paddingLeft: visualReadingMode ? 0 : '1rem',
           paddingRight: visualReadingMode ? 0 : '1rem',
