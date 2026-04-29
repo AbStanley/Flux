@@ -171,7 +171,7 @@ function App() {
           paddingRight: { duration: 0.6 },
         }}
         className={cn(
-          "flex flex-col transition-none",
+          "flex flex-col transition-none max-w-full",
           visualReadingMode 
             ? "h-[100dvh] overflow-hidden w-full max-w-none" 
             : "container mx-auto min-h-[100dvh] max-w-4xl py-4"
