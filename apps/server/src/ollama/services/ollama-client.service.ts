@@ -140,9 +140,9 @@ export class OllamaClientService {
       );
     }
 
-    // Cache verified models for 60s to avoid hammering /api/tags
+    // Cache verified models for 300s (5m) to avoid hammering /api/tags
     const now = Date.now();
-    if (this.verifiedModels.has(model) && now - this.verifiedAt < 60_000) {
+    if (this.verifiedModels.has(model) && now - this.verifiedAt < 300_000) {
       return model;
     }
 
