@@ -28,9 +28,21 @@ export const AiSetup = () => {
 
     const isExtension = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
 
-    const fetchUniqueModels = useCallback(async () => {
-        const m = await serverAIService.getAvailableModels();
-        return Array.from(new Set(m));
+    const fetchUniqueModels = useCallback(async (retryCount = 2) => {
+        let attempt = 0;
+        while (attempt <= retryCount) {
+            try {
+                const m = await serverAIService.getAvailableModels();
+                if (m && m.length > 0) return Array.from(new Set(m));
+                // If we got an empty list, maybe it's still loading
+                if (attempt < retryCount) await new Promise(r => setTimeout(r, 2000));
+            } catch (err) {
+                if (attempt >= retryCount) throw err;
+                await new Promise(r => setTimeout(r, 2000));
+            }
+            attempt++;
+        }
+        return [];
     }, []);
 
     const refreshModels = useCallback(async () => {
@@ -39,26 +51,26 @@ export const AiSetup = () => {
         try {
             const unique = await fetchUniqueModels();
             setModels(unique);
-            if (unique.length > 0 && (!llmModel || !unique.includes(llmModel))) {
+            const currentModel = llmModelRef.current;
+            if (unique.length > 0 && (!currentModel || !unique.includes(currentModel))) {
                 setLlmModel(unique[0]);
             }
         } catch (err) {
             console.error('Failed to fetch models:', err);
-            setError('Could not connect to Ollama. Make sure it is running.');
-            if (!llmModel) setIsManualInput(true);
+            setError('Could not connect to Ollama. Make sure it is running and the server is reachable.');
+            if (!llmModelRef.current) setIsManualInput(true);
         } finally {
             setLoading(false);
         }
-    }, [fetchUniqueModels, llmModel, setLlmModel]);
+    }, [fetchUniqueModels, setLlmModel]);
 
     useEffect(() => {
         if (globalAiHost) setApiClientBaseUrl(globalAiHost);
 
         let cancelled = false;
-
         const performFetch = async () => {
-            // Move to next tick to avoid synchronous setState in effect body
-            await Promise.resolve();
+            // Wait a small bit for the store to stabilize and ApiClient to be ready
+            await new Promise(r => setTimeout(r, 500));
             if (cancelled) return;
 
             setLoading(true);
@@ -75,7 +87,7 @@ export const AiSetup = () => {
             } catch (err) {
                 if (cancelled) return;
                 console.error('Failed to fetch models:', err);
-                setError('Could not connect to Ollama. Make sure it is running.');
+                setError('Ollama connection failed. Check if it is running or try refreshing.');
                 if (!llmModelRef.current) setIsManualInput(true);
             } finally {
                 if (!cancelled) setLoading(false);

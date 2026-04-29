@@ -75,7 +75,8 @@ export const getSelectionGroups = (indices: Set<number>, tokens: string[]): numb
 };
 
 /**
- * Fetches a translation with a 15 s timeout and configurable retry count.
+ * Fetches a translation with configurable timeout and retry count.
+ * Increased to 30s default to handle slower Ollama/LLM responses.
  * Returns null on exhausted retries or empty input.
  */
 export const fetchTranslationHelper = async (
@@ -84,7 +85,8 @@ export const fetchTranslationHelper = async (
     sourceLang: string,
     targetLang: string,
     aiService: IAIService,
-    retries = 3
+    retries = 3,
+    timeoutMs = 60000
 ): Promise<string | null> => {
     if (!text.trim()) return null;
 
@@ -93,14 +95,21 @@ export const fetchTranslationHelper = async (
         try {
             const fetchPromise = aiService.translateText(text.trim(), targetLang, context, sourceLang);
             const timeoutPromise = new Promise<null>((_, reject) =>
-                setTimeout(() => reject(new Error("Timeout")), 15000)
+                setTimeout(() => reject(new Error("Timeout")), timeoutMs)
             );
 
             return await Promise.race([fetchPromise, timeoutPromise]) as string;
         } catch (error: unknown) {
-            console.warn(`Translation attempt ${attempt + 1} failed:`, error);
             attempt++;
-            if (attempt >= retries) return null;
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            console.warn(`Translation attempt ${attempt} failed:`, errorMsg);
+
+            if (attempt >= retries) {
+                console.error(`Translation failed after ${retries} retries for text: "${text}"`);
+                return null;
+            }
+
+            // Exponential backoff: 500ms, 1s, 1.5s, etc.
             await new Promise(resolve => setTimeout(resolve, 500 * attempt));
         }
     }
