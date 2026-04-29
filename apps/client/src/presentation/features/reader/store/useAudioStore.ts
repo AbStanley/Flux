@@ -6,6 +6,7 @@ import { useReaderStore } from './useReaderStore';
 interface AudioState {
     isPlaying: boolean;
     isPaused: boolean;
+    activeSingleText: string | null; // Tracks the text currently playing via playSingle
     currentWordIndex: number | null; // Global token index
     playbackRate: number;
     selectedVoice: SpeechSynthesisVoice | null;
@@ -38,6 +39,7 @@ const audioService = new WebSpeechAudioService();
 export const useAudioStore = create<AudioState>((set, get) => ({
     isPlaying: false,
     isPaused: false,
+    activeSingleText: null,
     currentWordIndex: null,
     playbackRate: 1,
     selectedVoice: null,
@@ -201,14 +203,17 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         // and we DO NOT clear currentWordIndex so we can resume.
         audioService.stop();
 
-        set({ isPlaying: false, isPaused: true }); // treat interruption as pause
+        set({ isPlaying: false, isPaused: true, activeSingleText: text }); // treat interruption as pause
 
         audioService.play(
             text,
             selectedVoice,
             playbackRate,
             () => { }, // No-op: Don't update highlight for single word
-            () => { }  // No-op: No state change on end
+            () => {
+                // Clear active single text when playback completes naturally
+                set({ activeSingleText: null });
+            }
         );
     },
 
