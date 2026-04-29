@@ -15,9 +15,9 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "preview": "vite preview",
-    "docker:up": "docker compose up -d --build",
-    "docker:dev": "docker compose up --build",
-    "docker:down": "docker compose down",
+    "docker:up": "docker compose -p flux-prod up -d --build",
+    "docker:dev": "docker compose -f ../../docker-compose.dev.yml -p flux-dev up --build",
+    "docker:down": "docker compose -p flux-prod down",
     "build:all": "npm run build && npm run docker:up",
     "prepare": "husky"
   },
