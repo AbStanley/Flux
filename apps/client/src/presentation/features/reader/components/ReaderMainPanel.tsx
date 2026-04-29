@@ -22,6 +22,30 @@ import { GrammarSlideshow } from './GrammarSlideshow';
 import { FloatingContextMenu } from './FloatingContextMenu';
 import { Button } from '@/presentation/components/ui/button';
 
+const premiumEase = [0.22, 1, 0.36, 1] as const;
+
+const MotionDiv = motion.create('div');
+
+const controlsV = {
+    hidden: { opacity: 0, y: -40 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: premiumEase, delay: 0.2 } },
+} as const;
+
+const textV = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: premiumEase, delay: 0.5 } },
+} as const;
+
+const paginationV = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: premiumEase, delay: 0.8 } },
+} as const;
+
+const progressV = {
+    hidden: { scaleX: 0 },
+    visible: { scaleX: 1, transition: { duration: 1.2, ease: premiumEase, delay: 0.3 } },
+} as const;
+
 export function ReaderMainPanel() {
     const {
         tokens,
@@ -120,6 +144,7 @@ export function ReaderMainPanel() {
         selectionTranslations
     });
 
+
     return (
         <>
             <Card className={`flex-1 ${isReading ? 'h-full min-h-0' : 'h-[75vh] min-h-[600px]'} border-none shadow-sm glass overflow-hidden flex flex-col`}>
@@ -134,16 +159,27 @@ export function ReaderMainPanel() {
                         />
                     ) : (
                         <>
-                            {/* Sticky Progress Bar */}
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-muted z-[300]">
+                            {/* Sticky Progress Bar — sweeps in from left */}
+                            <MotionDiv
+                                variants={progressV}
+                                initial="hidden"
+                                animate="visible"
+                                className="absolute top-0 left-0 right-0 h-1 bg-muted z-[300] origin-left"
+                            >
                                 <div
                                     className="h-full bg-primary transition-all duration-300"
                                     style={{ width: `${totalPages <= 1 ? 100 : ((currentPage - 1) / (totalPages - 1)) * 100}%` }}
                                 />
-                            </div>
+                            </MotionDiv>
 
+                            {/* Controls — slide down from top */}
                             {!isZenMode && (
-                                <div className="sticky top-0 z-[200] bg-background/95 backdrop-blur-sm border-b shadow-sm flex flex-col">
+                                <MotionDiv
+                                    variants={controlsV}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="sticky top-0 z-[200] bg-background/95 backdrop-blur-sm border-b shadow-sm flex flex-col"
+                                >
                                     {tokens.length > 0 && (
                                         <div className="flex items-center justify-between px-4 pt-1.5 pb-0 text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
                                             <span>Reading</span>
@@ -151,38 +187,46 @@ export function ReaderMainPanel() {
                                         </div>
                                     )}
                                     <PlayerControls />
-                                </div>
+                                </MotionDiv>
                             )}
 
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={currentPage}
-                                    initial={{ opacity: 0, x: 10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="flex-1 flex flex-col"
-                                >
-                                    <ReaderTextContent
-                                        tokens={tokens}
-                                        paginatedTokens={paginatedTokens}
-                                        groups={groups}
-                                        currentPage={currentPage}
-                                        PAGE_SIZE={PAGE_SIZE}
-                                        selectionMode={selectionMode}
-                                        visualGroupStarts={visualGroupStarts}
-                                        groupStarts={groupStarts}
-                                        tokenPositions={tokenPositions}
-                                        textAreaRef={textAreaRef}
-                                        handleTokenClick={onTokenClick}
-                                        onMoreInfoClick={onMoreInfoClick}
-                                        onPlayClick={onPlayClick}
-                                        onRegenerateClick={onRegenerateClick}
-                                        showTranslations={showTranslations}
-                                    />
-                                    <FloatingContextMenu />
-                                </motion.div>
-                            </AnimatePresence>
+                            {/* Text Content — fades up */}
+                            <MotionDiv
+                                variants={textV}
+                                initial="hidden"
+                                animate="visible"
+                                className="flex-1 flex flex-col"
+                            >
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={currentPage}
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="flex-1 flex flex-col"
+                                    >
+                                        <ReaderTextContent
+                                            tokens={tokens}
+                                            paginatedTokens={paginatedTokens}
+                                            groups={groups}
+                                            currentPage={currentPage}
+                                            PAGE_SIZE={PAGE_SIZE}
+                                            selectionMode={selectionMode}
+                                            visualGroupStarts={visualGroupStarts}
+                                            groupStarts={groupStarts}
+                                            tokenPositions={tokenPositions}
+                                            textAreaRef={textAreaRef}
+                                            handleTokenClick={onTokenClick}
+                                            onMoreInfoClick={onMoreInfoClick}
+                                            onPlayClick={onPlayClick}
+                                            onRegenerateClick={onRegenerateClick}
+                                            showTranslations={showTranslations}
+                                        />
+                                        <FloatingContextMenu />
+                                    </motion.div>
+                                </AnimatePresence>
+                            </MotionDiv>
 
                             {/* Floating Zen Mode Toggle */}
                             {isZenMode && (
@@ -210,15 +254,20 @@ export function ReaderMainPanel() {
                     )}
                 </CardContent>
 
-                {/* Fixed Footer for Pagination */}
+                {/* Fixed Footer for Pagination — slides up from bottom */}
                 {!isZenMode && (
-                    <div className="border-t bg-background/95 backdrop-blur-md px-4 py-3 flex-shrink-0 z-[250] shadow-sm">
+                    <MotionDiv
+                        variants={paginationV}
+                        initial="hidden"
+                        animate="visible"
+                        className="border-t bg-background/95 backdrop-blur-md px-4 py-3 flex-shrink-0 z-[250] shadow-sm"
+                    >
                         <ReaderPagination
                             currentPage={currentPage}
                             totalPages={totalPages}
                             onPageChange={setCurrentPage}
                         />
-                    </div>
+                    </MotionDiv>
                 )}
             </Card>
 

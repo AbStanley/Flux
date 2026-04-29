@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { motion } from 'framer-motion';
 
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 export function ControlPanel() {
     const { aiService } = useServices();
