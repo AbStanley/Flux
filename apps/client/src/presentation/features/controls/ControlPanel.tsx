@@ -15,7 +15,10 @@ import { AIControls } from './AIControls';
 import { ReaderInput } from './ReaderInput';
 import { SessionLibrary } from '../reader/components/SessionLibrary';
 import { cn } from "@/lib/utils";
+import { motion } from 'framer-motion';
 
+
+const MotionButton = motion(Button);
 
 export function ControlPanel() {
     const { aiService } = useServices();
@@ -172,17 +175,33 @@ export function ControlPanel() {
                                 Import File (PDF/EPUB)
                             </Button>
 
-                            <Button
+                            <MotionButton
                                 onClick={handleStartReading}
                                 disabled={!text.trim() || isGenerating}
+                                whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(34, 197, 94, 0.4)" }}
+                                whileTap={{ scale: 0.95 }}
+                                initial={{ boxShadow: "0 0 0px rgba(34, 197, 94, 0)" }}
+                                animate={{ 
+                                    boxShadow: [
+                                        "0 0 0px rgba(34, 197, 94, 0)",
+                                        "0 0 15px rgba(34, 197, 94, 0.5)",
+                                        "0 0 0px rgba(34, 197, 94, 0)"
+                                    ]
+                                }}
+                                transition={{ 
+                                    boxShadow: {
+                                        repeat: Infinity,
+                                        duration: 2,
+                                        ease: "easeInOut"
+                                    }
+                                }}
                                 className={cn(
                                     "w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-lg transition-all",
-                                    "ring-4 ring-green-500/20 animate-pulse hover:animate-none",
                                     "font-bold px-8"
                                 )}
                             >
                                 ✨ Open Reading Mode
-                            </Button>
+                            </MotionButton>
                         </>
                     )}
                 </div>
