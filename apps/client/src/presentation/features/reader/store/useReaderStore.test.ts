@@ -71,19 +71,19 @@ describe('useReaderStore', () => {
         expect(mockCloseRichInfo).toHaveBeenCalled();
     });
 
-    it('setPage should verify bounds', () => {
+    it('setCurrentPage should verify bounds', () => {
         // Create enough tokens for 3 pages (PAGE_SIZE = 500)
         // 1500 tokens
         const tokens = new Array(1500).fill("a");
         useReaderStore.setState({ tokens });
 
-        useReaderStore.getState().setPage(2);
+        useReaderStore.getState().setCurrentPage(2);
         expect(useReaderStore.getState().currentPage).toBe(2);
 
-        useReaderStore.getState().setPage(5); // Out of bounds (max 3)
+        useReaderStore.getState().setCurrentPage(5); // Out of bounds (max 3)
         expect(useReaderStore.getState().currentPage).toBe(3);
 
-        useReaderStore.getState().setPage(0); // Out of bounds (min 1)
+        useReaderStore.getState().setCurrentPage(0); // Out of bounds (min 1)
         expect(useReaderStore.getState().currentPage).toBe(1);
     });
 

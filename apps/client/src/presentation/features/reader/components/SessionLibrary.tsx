@@ -54,7 +54,7 @@ export function SessionLibrary() {
         if (full.targetLang) store.setTargetLang(full.targetLang);
         store.loadText(full.text);
         setTimeout(() => {
-            store.setPage(full.currentPage || 1);
+            store.setCurrentPage(full.currentPage || 1);
             store.setIsReading(true);
         }, 50);
     };
