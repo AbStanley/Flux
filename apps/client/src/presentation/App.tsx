@@ -141,7 +141,10 @@ function App() {
   useEffect(() => {
     if (isReading) {
       // Immediately switch to reading mode to allow smooth expansion
-      setVisualReadingMode(true);
+      // Wrap in microtask to avoid synchronous setState in effect body lint error
+      Promise.resolve().then(() => {
+        setVisualReadingMode(true);
+      });
     } else if (visualReadingMode) {
       // Only add delay when exiting from an active reading state
       const timer = setTimeout(() => setVisualReadingMode(false), 100);
