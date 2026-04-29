@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { authApi } from '@/infrastructure/api/auth';
 import { wordsApi } from '@/infrastructure/api/words';
+import { defaultClient } from '@/infrastructure/api/api-client';
 
 const USER_KEY = 'flux_auth_user';
 const REMEMBERED_KEY = 'flux_remembered_users';
@@ -85,6 +86,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     rememberedUsers: getRememberedUsers(),
 
     initialize: async () => {
+        // Register the logout callback with the API client so 401s trigger a redirect
+        defaultClient.setOnUnauthorized(() => {
+            const hadToken = !!localStorage.getItem('flux_auth_token');
+            useAuthStore.getState().logout();
+            if (hadToken) {
+                set({ error: 'Session expired. Please log in again.' });
+            }
+        });
+
         // In extension context, sync from chrome.storage.local first
         if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
             try {
@@ -107,6 +117,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         const user = getStoredUser();
         if (token) {
             set({ token, user, isAuthenticated: true, isLoading: false, rememberedUsers: getRememberedUsers() });
+            // Verify session is still valid in the background
+            authApi.getMe().catch(() => {
+                // onUnauthorized callback will handle the logout if this returns 401
+            });
         } else {
             set({ isLoading: false, rememberedUsers: getRememberedUsers() });
         }

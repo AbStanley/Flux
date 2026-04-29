@@ -21,6 +21,7 @@ export async function getAuthToken(): Promise<string | null> {
 
 export class ApiClient {
   private baseUrl: string;
+  private onUnauthorized?: () => void;
 
   constructor(baseUrl: string = "") {
     this.baseUrl = baseUrl;
@@ -37,6 +38,10 @@ export class ApiClient {
 
   public setBaseUrl(url: string) {
     this.baseUrl = url;
+  }
+
+  public setOnUnauthorized(callback: () => void) {
+    this.onUnauthorized = callback;
   }
 
   private async request<T>(
@@ -131,6 +136,11 @@ export class ApiClient {
       if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/register')) {
         const hadToken = !!localStorage.getItem("flux_auth_token");
         localStorage.removeItem("flux_auth_token");
+        
+        if (this.onUnauthorized) {
+          this.onUnauthorized();
+        }
+
         throw new Error(
           hadToken
             ? "Session expired. Please log in again."
