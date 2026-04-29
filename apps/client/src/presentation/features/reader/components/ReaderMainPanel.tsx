@@ -130,6 +130,15 @@ export function ReaderMainPanel() {
         playSingle
     });
 
+    // Progression: Give XP for reading (5 XP per page turn)
+    useEffect(() => {
+        if (isReading && currentPage > 0) {
+            import('@/presentation/features/learning-mode/store/useUserStats').then(({ useUserStats }) => {
+                useUserStats.getState().addXp(5);
+            });
+        }
+    }, [currentPage, isReading]);
+
     const textAreaRef = useRef<HTMLDivElement>(null);
     const visualGroupStarts = useVisualSplits({
         groups,
@@ -149,14 +158,23 @@ export function ReaderMainPanel() {
     return (
         <>
             <MotionCard 
-                layout
-                transition={{ 
-                    layout: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-                    opacity: { duration: 0.4 }
+                animate={{
+                    height: isReading ? '100%' : 'auto',
                 }}
-                className={`flex-1 ${isReading ? 'h-full min-h-0' : 'h-[75vh] min-h-[600px]'} border-none shadow-sm glass overflow-hidden flex flex-col`}
+                transition={{ 
+                    height: { duration: 0.6, ease: premiumEase },
+                }}
+                className={`flex-1 w-full ${isReading ? 'min-h-0' : 'min-h-[600px]'} border-none shadow-sm glass overflow-hidden flex flex-col`}
+                style={{
+                    height: isReading ? '100%' : undefined,
+                    contain: 'layout style paint',
+                }}
             >
-                <CardContent className={`p-0 relative flex-1 ${isGenerating ? 'overflow-hidden select-none' : 'overflow-y-auto'} ${styles.textAreaContainer} flex flex-col`}>
+                <CardContent className={`p-0 relative flex-1 ${isGenerating ? 'overflow-hidden select-none' : 'overflow-y-auto'} ${styles.textAreaContainer} flex flex-col`}
+                    style={{
+                        contain: 'layout style paint',
+                    }}
+                >
 
                     {readingMode === 'GRAMMAR' ? (
                         <GrammarSlideshow
@@ -184,11 +202,11 @@ export function ReaderMainPanel() {
                             {!isZenMode && (
                                 <MotionDiv
                                     variants={controlsV}
-                                    initial="hidden"
+                                    initial={isGenerating ? "visible" : "hidden"}
                                     animate="visible"
                                     className="sticky top-0 z-[200] bg-background/95 backdrop-blur-sm border-b shadow-sm flex flex-col"
                                 >
-                                    {tokens.length > 0 && (
+                                    {tokens.length > 0 && !isGenerating && (
                                         <div className="flex items-center justify-between px-4 pt-1.5 pb-0 text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
                                             <span>Reading</span>
                                             <span>~{Math.max(1, Math.ceil(tokens.length / 200))} min read</span>
@@ -201,14 +219,14 @@ export function ReaderMainPanel() {
                             {/* Text Content — fades up */}
                             <MotionDiv
                                 variants={textV}
-                                initial="hidden"
+                                initial={isGenerating ? "visible" : "hidden"}
                                 animate="visible"
                                 className="flex-1 flex flex-col"
                             >
                                 <AnimatePresence mode="wait">
                                     <motion.div
                                         key={currentPage}
-                                        initial={{ opacity: 0, x: 10 }}
+                                        initial={isGenerating ? { opacity: 1 } : { opacity: 0, x: 10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -10 }}
                                         transition={{ duration: 0.2 }}
@@ -263,7 +281,7 @@ export function ReaderMainPanel() {
                 </CardContent>
 
                 {/* Fixed Footer for Pagination — slides up from bottom */}
-                {!isZenMode && (
+                {!isZenMode && !isGenerating && (
                     <MotionDiv
                         variants={paginationV}
                         initial="hidden"

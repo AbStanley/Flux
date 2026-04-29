@@ -129,11 +129,10 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                             vertical={vertical}
                         />
                     </div>
-                    <div className="hidden md:flex items-center gap-4 shrink-0">
-                        <GrammarModeToggle
-                            isGrammarMode={readingMode === 'GRAMMAR'}
-                            onToggle={handleGrammarToggle}
-                            forceCollapsed={shouldCollapseGrammar}
+                    <div className="hidden md:flex items-center gap-2 shrink-0">
+                        <ReaderSettings
+                            selectionMode={selectionMode}
+                            onSelectionModeChange={setSelectionMode}
                         />
 
                         {/* Translation Controls */}
@@ -182,13 +181,13 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
 
                     {!vertical && <div className="h-6 w-px bg-border/50 mx-2 hidden md:block" />}
 
-                    {vertical && <div className="flex-1" />}
-
-                    <ReaderSettings
-                        selectionMode={selectionMode}
-                        onSelectionModeChange={setSelectionMode}
-                        vertical={vertical}
-                    />
+                    {!vertical && (
+                        <GrammarModeToggle
+                            isGrammarMode={readingMode === 'GRAMMAR'}
+                            onToggle={handleGrammarToggle}
+                            forceCollapsed={shouldCollapseGrammar}
+                        />
+                    )}
                 </div>
 
                 {/* Right Group: Voice Settings & Collapse Button */}
@@ -232,13 +231,13 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                     }}
                 />
 
-                {!vertical && (
-                    <GrammarModeToggle
-                        isGrammarMode={readingMode === 'GRAMMAR'}
-                        onToggle={handleGrammarToggle}
-                        forceCollapsed={shouldCollapseGrammar}
-                    />
-                )}
+                <div className="h-6 w-px bg-border/50 mx-2" />
+
+                <ReaderSettings
+                    selectionMode={selectionMode}
+                    onSelectionModeChange={setSelectionMode}
+                    vertical={vertical}
+                />
 
                 {/* Settings Button */}
                 <SettingsModal />

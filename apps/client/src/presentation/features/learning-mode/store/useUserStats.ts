@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { type UserStats, INITIAL_STATS, userStatsService } from '../../../../core/services/user/UserStatsService';
+import { chromeStorage } from '@/lib/chrome-storage';
 
 interface UserStatsStore extends UserStats {
     // Actions
@@ -36,7 +37,7 @@ export const useUserStats = create<UserStatsStore>()(
         }),
         {
             name: 'flux-user-stats',
-            storage: createJSONStorage(() => localStorage),
+            storage: createJSONStorage(() => chromeStorage),
         }
     )
 );

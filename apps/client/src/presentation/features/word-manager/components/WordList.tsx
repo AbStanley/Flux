@@ -110,7 +110,7 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
         <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden transition-all hover:shadow-md min-h-[500px] flex flex-col">
             {/* Desktop View */}
             <ScrollArea className="hidden md:block flex-1">
-                <table className="w-full caption-bottom text-sm border-collapse">
+                <table className="w-full caption-bottom text-sm border-collapse table-fixed">
                     <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-md shadow-sm border-b">
                         <TableRow className="hover:bg-transparent border-none">
                             <TableHead className="w-[50px] text-center">Audio</TableHead>
@@ -410,22 +410,22 @@ function WordListSkeleton({ isMobile }: { isMobile?: boolean }) {
         <>
             {[1, 2, 3, 4, 5, 6].map((i) => (
                 <TableRow key={i} className="hover:bg-transparent">
-                    <TableCell className="py-6 text-center">
+                    <TableCell className="w-[50px] py-6 text-center">
                         <Skeleton className="h-8 w-8 rounded-full mx-auto" />
                     </TableCell>
-                    <TableCell className="py-6 pl-6">
+                    <TableCell className="w-[200px] py-6 pl-6">
                         <div className="space-y-2">
                             <Skeleton className="h-5 w-3/4" />
                             <Skeleton className="h-3 w-1/2" />
                         </div>
                     </TableCell>
-                    <TableCell className="py-6">
+                    <TableCell className="w-[300px] py-6">
                         <Skeleton className="h-10 w-full" />
                     </TableCell>
-                    <TableCell className="py-6">
+                    <TableCell className="w-[150px] py-6">
                         <Skeleton className="h-4 w-20" />
                     </TableCell>
-                    <TableCell className="py-6">
+                    <TableCell className="w-[200px] py-6">
                         <div className="space-y-2">
                             <Skeleton className="h-3 w-3/4" />
                             <Skeleton className="h-3 w-1/2" />

@@ -6,7 +6,8 @@
     width: 100%;
     padding: 3rem;
     padding-bottom: 3rem;
-    scrollbar-gutter: stable;
+    /* Prevent layout thrashing during transitions */
+    will-change: auto;
 }
 
 @media (max-width: 1200px) {
@@ -18,6 +19,15 @@
 }
 
 /* Custom Scrollbar */
+.textAreaContainer {
+    /* Contain layout recalculations */
+    contain: layout style paint;
+    /* Ensure smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Reserve space for scrollbar to prevent layout shift */
+    scrollbar-gutter: stable;
+}
+
 .textAreaContainer::-webkit-scrollbar {
     width: 6px;
 }

@@ -4,61 +4,49 @@ import { ReaderSidebar } from './components/ReaderSidebar';
 import { SavedWordsPanel } from './components/SavedWordsPanel';
 import { useSessionAutoSave } from './hooks/useSessionAutoSave';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
+import { useTranslationStore } from './store/useTranslationStore';
 import { motion } from 'framer-motion';
+import { cn } from "@/lib/utils";
 
 const premiumEase = [0.22, 1, 0.36, 1] as const;
 
 const MotionDiv = motion.create('div');
 
-const containerVariants = {
-    hidden: {},
-    visible: {
-        transition: {
-            staggerChildren: 0.3,
-            delayChildren: 0.2,
-        },
-    },
-} as const;
-
-const mainPanelVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: { duration: 0.4, ease: premiumEase },
-    },
-} as const;
-
-const sidebarVariants = {
-    hidden: { opacity: 0, x: 80 },
-    visible: {
-        opacity: 1,
-        x: 0,
-        transition: { duration: 0.7, ease: premiumEase },
-    },
-} as const;
-
 export function ReaderView() {
     const activePanel = useReaderStore(state => state.activePanel);
     const isZenMode = useReaderStore(state => state.isZenMode);
+    const isRichInfoOpen = useTranslationStore(state => state.isRichInfoOpen);
+    
+    const isSidebarOpen = !isZenMode && (activePanel === 'SAVED_WORDS' || isRichInfoOpen);
+
     useSessionAutoSave();
     useGlobalShortcuts();
 
     return (
         <MotionDiv
-            layout
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className={`relative flex flex-col min-[1200px]:flex-row w-full flex-1 h-full min-h-0 mx-auto my-0 transition-all duration-500 gap-6 ${isZenMode ? 'max-w-4xl' : 'max-w-full'}`}
+            animate={{
+                gap: isSidebarOpen ? '1.5rem' : '0rem',
+            }}
+            transition={{ duration: 0.5, ease: premiumEase }}
+            className={cn(
+                "relative flex flex-col min-[1200px]:flex-row w-full flex-1 h-full min-h-0",
+                isZenMode ? 'max-w-4xl mx-auto my-0' : 'max-w-full'
+            )}
         >
-            <MotionDiv variants={mainPanelVariants} className="flex-1 flex flex-col min-h-0">
+            <MotionDiv className="flex-1 flex flex-col min-h-0">
                 <ReaderMainPanel />
             </MotionDiv>
             {!isZenMode && (
                 <MotionDiv
-                    variants={sidebarVariants}
-                    className="min-[1200px]:w-[400px]"
+                    animate={{
+                        opacity: isSidebarOpen ? 1 : 0,
+                        x: isSidebarOpen ? 0 : 80,
+                    }}
+                    transition={{ duration: 0.5, ease: premiumEase }}
+                    className="flex flex-col"
+                    style={{
+                        visibility: isSidebarOpen ? 'visible' : 'hidden',
+                    }}
                 >
                     {activePanel === 'SAVED_WORDS' ? <SavedWordsPanel /> : <ReaderSidebar />}
                 </MotionDiv>

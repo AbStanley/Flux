@@ -12,6 +12,7 @@ import { useAuthStore } from './features/auth/store/useAuthStore';
 import { authApi } from '@/infrastructure/api/auth';
 import { LoginPage } from './features/auth/LoginPage';
 import { Button } from './components/ui/button';
+import { cn } from "@/lib/utils";
 
 /**
  * App: The Main Application Root
@@ -134,6 +135,20 @@ function App() {
     }
   }, [setText, setIsReading]);
 
+  // Use a delayed state for the layout classes to prevent "jumping" before transitions finish
+  const [visualReadingMode, setVisualReadingMode] = useState(isReading);
+  
+  useEffect(() => {
+    if (isReading) {
+      // Immediately switch to reading mode to allow smooth expansion
+      setVisualReadingMode(true);
+    } else {
+      // Add slight delay when exiting to let animations finish
+      const timer = setTimeout(() => setVisualReadingMode(false), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isReading]);
+
   // Auth gate: show login for unauthenticated users (both web app and side panel)
   if (authLoading) {
     return null;
@@ -145,9 +160,22 @@ function App() {
   return (
     <ServiceProvider>
       <motion.div 
-        layout
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className={`container mx-auto ${isReading ? 'px-0 sm:px-4' : 'px-4'} flex flex-col ${isReading ? 'h-[100dvh] overflow-hidden max-w-[100vw] sm:max-w-[95vw]' : 'min-h-[100dvh] max-w-4xl py-4'}`}
+        animate={{
+          paddingLeft: visualReadingMode ? 0 : '1rem',
+          paddingRight: visualReadingMode ? 0 : '1rem',
+        }}
+        transition={{ 
+          duration: 0.6, 
+          ease: [0.22, 1, 0.36, 1],
+          paddingLeft: { duration: 0.6 },
+          paddingRight: { duration: 0.6 },
+        }}
+        className={cn(
+          "flex flex-col transition-none",
+          visualReadingMode 
+            ? "h-[100dvh] overflow-hidden w-full max-w-none" 
+            : "container mx-auto min-h-[100dvh] max-w-4xl py-4"
+        )}
       >
         <AppContent />
       </motion.div>

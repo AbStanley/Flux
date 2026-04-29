@@ -268,18 +268,18 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     },
 
     nextItem: () => {
-        const { currentIndex, items, health, status } = get();
+        const { currentIndex, items, health, status, endGame } = get();
         if (status !== 'playing') return;
 
         if (health <= 0) {
-            set({ status: 'finished' });
+            endGame();
             return;
         }
 
         if (currentIndex < items.length - 1) {
             set({ currentIndex: currentIndex + 1, timeLeft: 100, isTimerPaused: false });
         } else {
-            set({ status: 'finished' });
+            endGame();
         }
     },
 
