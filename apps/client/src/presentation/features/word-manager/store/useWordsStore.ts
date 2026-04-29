@@ -7,6 +7,7 @@ interface PaginatedState {
     page: number;
     hasMore: boolean;
     isLoading: boolean;
+    hasLoaded: boolean;
 }
 
 const initialPaginatedState: PaginatedState = {
@@ -15,6 +16,7 @@ const initialPaginatedState: PaginatedState = {
     page: 1,
     hasMore: true,
     isLoading: false,
+    hasLoaded: false,
 };
 
 interface WordsState {
@@ -97,7 +99,8 @@ export const useWordsStore = create<WordsState>((set, get) => ({
                         total,
                         page,
                         hasMore,
-                        isLoading: false
+                        isLoading: false,
+                        hasLoaded: true
                     }
                 };
             });

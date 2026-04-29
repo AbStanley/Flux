@@ -225,60 +225,23 @@ export function WordManager() {
                     </div>
                 </div>
 
-                <div className="min-h-[400px]">
-                    {activeTab === 'word' ? (
-                        wordsState.isLoading && wordsState.items.length === 0 ? (
-                            <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-2">
-                                <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
-                                Loading words...
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <WordList
-                                    words={wordsState.items}
-                                    onEdit={openEditDialog}
-                                    onDelete={(id) => handleDelete(id, 'word')}
-                                    emptyMessage="No words saved yet."
-                                    hasMore={wordsState.hasMore}
-                                    isLoading={wordsState.isLoading}
-                                    onLoadMore={() => fetchWords(
-                                        'word',
-                                        wordsState.page + 1,
-                                        searchQuery,
-                                        sortOption,
-                                        sourceLanguage !== 'all' ? sourceLanguage : undefined,
-                                        targetLanguage !== 'all' ? targetLanguage : undefined
-                                    )}
-                                />
-                            </div>
-                        )
-                    ) : (
-                        phrasesState.isLoading && phrasesState.items.length === 0 ? (
-                            <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-2">
-                                <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
-                                Loading phrases...
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <WordList
-                                    words={phrasesState.items}
-                                    onEdit={openEditDialog}
-                                    onDelete={(id) => handleDelete(id, 'phrase')}
-                                    emptyMessage="No phrases saved yet."
-                                    hasMore={phrasesState.hasMore}
-                                    isLoading={phrasesState.isLoading}
-                                    onLoadMore={() => fetchWords(
-                                        'phrase',
-                                        phrasesState.page + 1,
-                                        searchQuery,
-                                        sortOption,
-                                        sourceLanguage !== 'all' ? sourceLanguage : undefined,
-                                        targetLanguage !== 'all' ? targetLanguage : undefined
-                                    )}
-                                />
-                            </div>
-                        )
-                    )}
+                <div className="min-h-[500px] transition-all duration-500">
+                    <WordList
+                        words={activeTab === 'word' ? wordsState.items : phrasesState.items}
+                        onEdit={openEditDialog}
+                        onDelete={(id) => handleDelete(id, activeTab)}
+                        emptyMessage={activeTab === 'word' ? "No words found in your collection." : "No phrases found in your collection."}
+                        hasMore={activeTab === 'word' ? wordsState.hasMore : phrasesState.hasMore}
+                        isLoading={activeTab === 'word' ? (wordsState.isLoading || !wordsState.hasLoaded) : (phrasesState.isLoading || !phrasesState.hasLoaded)}
+                        onLoadMore={() => fetchWords(
+                            activeTab,
+                            (activeTab === 'word' ? wordsState.page : phrasesState.page) + 1,
+                            searchQuery,
+                            sortOption,
+                            sourceLanguage !== 'all' ? sourceLanguage : undefined,
+                            targetLanguage !== 'all' ? targetLanguage : undefined
+                        )}
+                    />
                 </div>
             </div>
 
