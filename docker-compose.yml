@@ -1,5 +1,6 @@
 services:
   web:
+    image: abstanley/flux-web:latest
     build:
       context: ./apps/client
       dockerfile: Dockerfile
@@ -10,13 +11,14 @@ services:
       - app-network
 
   server:
+    image: abstanley/flux-server:latest
     build:
       context: ./apps/server
       dockerfile: Dockerfile
     ports:
       - "3001:3000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/readerhelper
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/flux_db
       - OLLAMA_HOST=http://host.docker.internal:11434
       - PORT=3000
       - JWT_SECRET=${JWT_SECRET}
@@ -34,7 +36,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=readerhelper
+      - POSTGRES_DB=flux_db
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
@@ -48,7 +50,10 @@ services:
       - app-network
 
   caddy:
-    image: caddy:alpine
+    image: abstanley/flux-caddy:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
     restart: always
     ports:
       - "${CADDY_PORT_PROD:-443}:443"
@@ -68,4 +73,6 @@ networks:
 
 volumes:
   postgres_data_prod:
+    name: flux_production_postgres_data
   caddy_data_prod:
+    name: flux_production_caddy_data
