@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Volume2, Gamepad2, Edit, Trash2, Globe, BookOpen, Quote } from 'lucide-react';
+import { Volume2, Gamepad2, Edit, Trash2, BookOpen, Quote, Globe } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
 import { type Word } from '../../../../infrastructure/api/words';
@@ -25,17 +25,18 @@ export function WordTableDesktop({
     onEdit, onDelete, onPractice, onPlayAudio, sentinelRef
 }: WordTableDesktopProps) {
     return (
-        <table className="w-full caption-bottom text-sm border-collapse table-fixed">
-            <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-md shadow-sm border-b">
-                <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="w-[5%] text-center">Audio</TableHead>
-                    <TableHead className="w-[20%] pl-6">Entry</TableHead>
-                    <TableHead className="">Definition</TableHead>
-                    <TableHead className="w-[15%]">Translation</TableHead>
-                    <TableHead className="w-[20%]">Source & Context</TableHead>
-                    <TableHead className="w-[15%] text-right pr-6">Actions</TableHead>
-                </TableRow>
-            </TableHeader>
+        <div className="w-full overflow-x-auto no-scrollbar">
+            <table className="w-full caption-bottom text-sm border-collapse table-auto min-w-[900px]">
+                <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-md shadow-sm border-b">
+                    <TableRow className="hover:bg-transparent border-none">
+                        <TableHead className="w-[50px] text-center">Audio</TableHead>
+                        <TableHead className="min-w-[150px] pl-6">Entry</TableHead>
+                        <TableHead className="min-w-[250px]">Definition</TableHead>
+                        <TableHead className="min-w-[130px]">Languages</TableHead>
+                        <TableHead className="min-w-[180px]">Source & Context</TableHead>
+                        <TableHead className="w-[140px] text-right pr-6">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
             <TableBody>
                 {isLoading && words.length === 0 ? (
                     <WordListSkeleton />
@@ -115,7 +116,7 @@ export function WordTableDesktop({
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-right pr-6 align-top py-4">
-                                    <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex justify-end gap-1 transition-opacity">
                                         <Button
                                             variant="ghost" size="icon"
                                             className="h-8 w-8 hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400"
@@ -162,5 +163,6 @@ export function WordTableDesktop({
                 )}
             </TableBody>
         </table>
+        </div>
     );
 }
