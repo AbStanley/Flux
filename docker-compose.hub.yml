@@ -1,6 +1,6 @@
 services:
   web:
-    image: abstanley/reader-helper-web:latest
+    image: abstanley/flux-web:latest
     ports:
       - "8081:80"
     restart: always
@@ -8,11 +8,11 @@ services:
       - app-network
 
   server:
-    image: abstanley/reader-helper-server:latest
+    image: abstanley/flux-server:latest
     ports:
       - "3001:3000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/readerhelper
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/flux_db
       - OLLAMA_HOST=http://host.docker.internal:11434
       - PORT=3000
       - JWT_SECRET=${JWT_SECRET:-temporary_secret_change_me} # Default value if .env is missing
@@ -30,7 +30,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=readerhelper
+      - POSTGRES_DB=flux_db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -42,7 +42,7 @@ services:
       - app-network
 
   caddy:
-    image: abstanley/reader-helper-caddy:latest # Using your custom image
+    image: abstanley/flux-caddy:latest # Using your custom image
     restart: always
     ports:
       - "443:443"

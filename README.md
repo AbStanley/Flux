@@ -191,7 +191,7 @@ Here's the exact sequence after pulling migration changes:
 
 > **Important:** Prisma CLI needs `DATABASE_URL` to connect. Ensure `apps/server/.env` exists with the correct connection string for your environment:
 >
-> - **Local dev** (Docker postgres): `DATABASE_URL=postgresql://postgres:postgres@localhost:5435/readerhelper`
+> - **Local dev** (Docker postgres): `DATABASE_URL=postgresql://postgres:postgres@localhost:5435/flux_db`
 > - **Docker dev**: Set automatically via `docker-compose.dev.yml`
 > - **Production**: Set automatically via `docker-compose.yml`
 

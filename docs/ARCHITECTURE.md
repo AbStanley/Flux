@@ -76,13 +76,13 @@ We use **NPM Workspaces** to manage multiple applications in a single repository
 
 ### 2. Apps
 
-#### **Client (`@reader-helper/client`)**
+#### **Client (`@flux/client`)**
 
 - **Unexpected Design**: It thinks it's talking to a real cloud API, but it's just `localhost:3000`.
 - **Tech**: React 19, Tailwind, Zustand, Framer Motion, Radix UI, PDF.js, EPUB.js.
 - **Responsibility**: User Interface, Text Tokenization, Audio Playback, Gamified Learning, Chrome Extension.
 
-#### **Server (`@reader-helper/server`)**
+#### **Server (`@flux/server`)**
 
 - **The Brain**: Centralizes logic that requires persistence or heavy compute access.
 - **Tech**: NestJS 11, Prisma ORM, Express, JWT.

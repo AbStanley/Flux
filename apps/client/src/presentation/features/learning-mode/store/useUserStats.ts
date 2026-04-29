@@ -35,7 +35,7 @@ export const useUserStats = create<UserStatsStore>()(
             }
         }),
         {
-            name: 'reader-helper-user-stats',
+            name: 'flux-user-stats',
             storage: createJSONStorage(() => localStorage),
         }
     )

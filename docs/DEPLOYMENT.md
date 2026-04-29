@@ -11,7 +11,7 @@ npm run docker:prod
 - **Web App**: `https://localhost` (via Caddy reverse proxy)
 - **Client (direct)**: `http://localhost:8081`
 - **API (direct)**: `http://localhost:3001`
-- **Database**: Port `5433` (User: `postgres`, Pass: `postgres`, DB: `readerhelper`)
+- **Database**: Port `5433` (User: `postgres`, Pass: `postgres`, DB: `flux_db`)
 
 Stop the application:
 
@@ -72,13 +72,13 @@ If you modify `apps/server/prisma/schema.prisma`, run this to update the DB:
 
 ```bash
 # macOS / Linux
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/readerhelper" \
-  npx --workspace=@reader-helper/server prisma migrate dev
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db" \
+  npx --workspace=@flux/server prisma migrate dev
 ```
 
 ```powershell
 # Windows PowerShell
-$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/readerhelper"; npx --workspace=@reader-helper/server prisma migrate dev
+$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db"; npx --workspace=@flux/server prisma migrate dev
 ```
 
 ### 2. Open Database GUI (Prisma Studio)
@@ -87,13 +87,13 @@ To inspect production data:
 
 ```bash
 # macOS / Linux
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/readerhelper" \
-  npx --workspace=@reader-helper/server prisma studio
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db" \
+  npx --workspace=@flux/server prisma studio
 ```
 
 ```powershell
 # Windows PowerShell
-$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/readerhelper"; npx --workspace=@reader-helper/server prisma studio
+$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db"; npx --workspace=@flux/server prisma studio
 ```
 
 ### 3. Reset Database
@@ -101,8 +101,8 @@ $env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/readerhelper"; 
 To wipe the database and re-apply all migrations:
 
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/readerhelper" \
-  npx --workspace=@reader-helper/server prisma migrate reset
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db" \
+  npx --workspace=@flux/server prisma migrate reset
 ```
 
 ---
