@@ -5,6 +5,8 @@ import { Button } from '../../components/ui/button';
 import { RotateCcw, Brain, CheckCircle2, Flame, Clock, BookOpen, Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import { getLanguageCode } from '../../features/word-manager/utils/languageUtils';
 import { useSettingsStore } from '../settings/store/useSettingsStore';
+import confetti from 'canvas-confetti';
+import { motion, useAnimation } from 'framer-motion';
 
 export function SrsReviewPage() {
     const {
@@ -69,6 +71,19 @@ export function SrsReviewPage() {
         loadStats();
         wordsApi.getLanguages().then(setLanguages).catch(() => {});
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        if (status === 'finished' && reviewedCount > 0) {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#22c55e', '#3b82f6', '#f59e0b']
+            });
+        }
+    }, [status, reviewedCount]);
+
+    const controls = useAnimation();
 
     // Idle / Setup
     if (status === 'idle' || status === 'loading') {
@@ -199,11 +214,26 @@ export function SrsReviewPage() {
             </div>
 
             {/* Flashcard */}
-            <div
+            <motion.div
+                drag={isFlipped ? "x" : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.8}
+                onDragEnd={async (_, { offset }) => {
+                    if (offset.x < -100) {
+                        await controls.start({ x: -300, opacity: 0 });
+                        submitReview(1);
+                        controls.set({ x: 0, opacity: 1 });
+                    } else if (offset.x > 100) {
+                        await controls.start({ x: 300, opacity: 0 });
+                        submitReview(5);
+                        controls.set({ x: 0, opacity: 1 });
+                    }
+                }}
+                animate={controls}
                 onClick={() => !isFlipped && flipCard()}
-                className={`relative min-h-[300px] rounded-xl border-2 p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300
+                className={`relative min-h-[300px] rounded-xl border-2 p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 touch-pan-y
                     ${isFlipped
-                        ? 'bg-background border-primary/30'
+                        ? 'bg-background border-primary/30 shadow-md'
                         : 'bg-muted/30 border-border hover:border-primary/20 hover:shadow-lg'
                     }`}
             >
@@ -280,9 +310,14 @@ export function SrsReviewPage() {
                                 ))}
                             </div>
                         )}
+                        {isFlipped && (
+                            <p className="text-[10px] text-muted-foreground opacity-50 absolute bottom-4 left-0 right-0 text-center">
+                                Swipe left for Hard, right for Easy
+                            </p>
+                        )}
                     </div>
                 )}
-            </div>
+            </motion.div>
 
             {/* Rating buttons (only when flipped) */}
             {isFlipped && (

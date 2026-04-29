@@ -257,77 +257,47 @@ function ActivityChart({ data }: { data: DailyActivity[] }) {
         return <p className="text-muted-foreground text-center py-8">No activity in the last 30 days.</p>;
     }
 
+    const getIntensityClass = (total: number) => {
+        if (total === 0) return 'bg-muted/30';
+        const ratio = total / maxVal;
+        if (ratio < 0.25) return 'bg-primary/30';
+        if (ratio < 0.5) return 'bg-primary/50';
+        if (ratio < 0.75) return 'bg-primary/75';
+        return 'bg-primary';
+    };
+
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             {/* Legend */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                    <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: 'hsl(var(--primary))' }} />
-                    Words Added
-                </span>
-                <span className="flex items-center gap-1.5">
-                    <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: '#22c55e' }} />
-                    Words Reviewed
-                </span>
+            <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
+                <span>Less</span>
+                <div className="flex gap-1">
+                    <div className="w-3 h-3 rounded-sm bg-muted/30" />
+                    <div className="w-3 h-3 rounded-sm bg-primary/30" />
+                    <div className="w-3 h-3 rounded-sm bg-primary/50" />
+                    <div className="w-3 h-3 rounded-sm bg-primary/75" />
+                    <div className="w-3 h-3 rounded-sm bg-primary" />
+                </div>
+                <span>More</span>
             </div>
 
-            {/* SVG Bar Chart — reliable rendering */}
-            <svg width="100%" viewBox={`0 0 ${data.length * 14} 130`} className="overflow-visible">
-                {data.map((day, i) => {
-                    const x = i * 14;
-                    const barW = 12;
-                    const chartH = 120;
+            {/* Heatmap Grid */}
+            <div className="grid grid-cols-7 sm:grid-cols-10 gap-1.5 sm:gap-2">
+                {data.map((day) => {
                     const total = day.wordsAdded + day.wordsReviewed;
-                    const totalH = Math.max((total / maxVal) * chartH, total > 0 ? 4 : 0);
-                    const addedH = total > 0 ? (day.wordsAdded / total) * totalH : 0;
-                    const reviewedH = total > 0 ? (day.wordsReviewed / total) * totalH : 0;
-
+                    const dateObj = new Date(day.date + 'T00:00:00');
                     const isToday = day.date === new Date().toISOString().slice(0, 10);
-
+                    
                     return (
-                        <g key={day.date}>
-                            {/* Background bar for hover area */}
-                            <rect x={x} y={0} width={barW} height={chartH} fill="transparent">
-                                <title>{`${day.date}: +${day.wordsAdded} added, ${day.wordsReviewed} reviewed`}</title>
-                            </rect>
-                            {/* Reviewed bar (green, top portion) */}
-                            <rect
-                                x={x}
-                                y={chartH - totalH}
-                                width={barW}
-                                height={reviewedH}
-                                rx={2}
-                                fill={isToday ? '#22c55e' : '#22c55e99'}
-                            />
-                            {/* Added bar (primary/blue, bottom portion) */}
-                            <rect
-                                x={x}
-                                y={chartH - addedH}
-                                width={barW}
-                                height={addedH}
-                                rx={2}
-                                fill={isToday ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.7)'}
-                            />
-                            {/* Empty day line */}
-                            {total === 0 && (
-                                <rect x={x} y={chartH - 1} width={barW} height={1} rx={0.5} fill="hsl(var(--muted-foreground) / 0.2)" />
+                        <div 
+                            key={day.date} 
+                            className={cn(
+                                "aspect-square rounded-sm transition-all hover:scale-110 cursor-pointer",
+                                getIntensityClass(total),
+                                isToday && "ring-2 ring-primary ring-offset-1 ring-offset-background"
                             )}
-                        </g>
-                    );
-                })}
-                {/* Bottom axis line */}
-                <line x1={0} y1={120} x2={data.length * 14} y2={120} stroke="hsl(var(--border))" strokeWidth={1} />
-            </svg>
-
-            {/* X-axis labels */}
-            <div className="flex text-[10px] text-muted-foreground" style={{ paddingRight: '2px' }}>
-                {data.map((day, i) => {
-                    if (i % 7 !== 0) return <span key={day.date} className="flex-1" />;
-                    const date = new Date(day.date + 'T00:00:00');
-                    return (
-                        <span key={day.date} className="flex-1 text-center">
-                            {date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </span>
+                            title={`${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${total} total activity (${day.wordsAdded} added, ${day.wordsReviewed} reviewed)`}
+                        />
                     );
                 })}
             </div>

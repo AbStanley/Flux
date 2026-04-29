@@ -10,6 +10,7 @@ import '@fontsource/crimson-pro'
 import '@fontsource/eb-garamond'
 import '@fontsource/inter'
 import '@fontsource-variable/roboto-flex'
+import '@fontsource/opendyslexic'
 
 import App from './presentation/App.tsx'
 import { ThemeProvider } from './presentation/providers/ThemeProvider'

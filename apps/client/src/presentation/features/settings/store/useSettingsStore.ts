@@ -11,7 +11,8 @@ export type ReaderFont =
     | 'crimson-pro'
     | 'eb-garamond'
     | 'inter'
-    | 'roboto';
+    | 'roboto'
+    | 'dyslexic';
 
 export type FontSize = 'small' | 'medium' | 'large' | 'xl';
 export type SrsRevealAudioMode = 'none' | 'source' | 'target' | 'both';
@@ -78,6 +79,7 @@ export const FONT_FAMILY_MAP: Record<ReaderFont, string> = {
     'eb-garamond': "'EB Garamond', serif",
     inter: "'Inter', sans-serif",
     roboto: "'Roboto Flex Variable', sans-serif",
+    dyslexic: "'OpenDyslexic', sans-serif",
 };
 
 export const FONT_SIZE_MAP: Record<FontSize, string> = {

@@ -21,6 +21,7 @@ export const FONTS: { value: ReaderFont; label: string }[] = [
     { value: 'eb-garamond', label: 'EB Garamond' },
     { value: 'inter', label: 'Inter' },
     { value: 'roboto', label: 'Roboto' },
+    { value: 'dyslexic', label: 'OpenDyslexic' },
 ];
 
 export const SIZES: { value: FontSize; label: string }[] = [

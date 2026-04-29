@@ -24,12 +24,13 @@ interface AudioState {
     // Called when text changes
     setTokens: (tokens: string[]) => void;
 
-    play: (text: string) => void;
+    play: () => void;
     seek: (tokenIndex: number) => void;
     playSingle: (text: string) => void;
     pause: () => void;
     resume: () => void;
     stop: () => void;
+    togglePlayPause: () => void;
     setVoiceByLanguageName: (languageName: string) => void;
 }
 
@@ -194,6 +195,17 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     stop: () => {
         audioService.stop();
         set({ isPlaying: false, isPaused: false, currentWordIndex: null });
+    },
+
+    togglePlayPause: () => {
+        const { isPlaying, isPaused, play, pause, resume } = get();
+        if (isPlaying) {
+            pause();
+        } else if (isPaused) {
+            resume();
+        } else {
+            play();
+        }
     },
 
     playSingle: (text: string) => {

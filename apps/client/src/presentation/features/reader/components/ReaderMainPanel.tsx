@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Card, CardContent } from "@/presentation/components/ui/card";
-import { Loader2 } from 'lucide-react';
+import { Loader2, Minimize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../ReaderView.module.css';
 
@@ -19,6 +19,8 @@ import { ReaderTextContent } from './ReaderTextContent';
 import { PlayerControls } from './PlayerControls';
 import { RichInfoPanel } from './RichInfoPanel';
 import { GrammarSlideshow } from './GrammarSlideshow';
+import { FloatingContextMenu } from './FloatingContextMenu';
+import { Button } from '@/presentation/components/ui/button';
 
 export function ReaderMainPanel() {
     const {
@@ -40,6 +42,7 @@ export function ReaderMainPanel() {
     const readingMode = useReaderStore(state => state.readingMode);
     const setReadingMode = useReaderStore(state => state.setReadingMode);
     const isReading = useReaderStore(state => state.isReading);
+    const isZenMode = useReaderStore(state => state.isZenMode);
 
     const {
         selectionTranslations,
@@ -131,9 +134,25 @@ export function ReaderMainPanel() {
                         />
                     ) : (
                         <>
-                            <div className="sticky top-0 z-[200] bg-background/95 backdrop-blur-sm border-b shadow-sm">
-                                <PlayerControls />
+                            {/* Sticky Progress Bar */}
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-muted z-[300]">
+                                <div
+                                    className="h-full bg-primary transition-all duration-300"
+                                    style={{ width: `${totalPages <= 1 ? 100 : ((currentPage - 1) / (totalPages - 1)) * 100}%` }}
+                                />
                             </div>
+
+                            {!isZenMode && (
+                                <div className="sticky top-0 z-[200] bg-background/95 backdrop-blur-sm border-b shadow-sm flex flex-col">
+                                    {tokens.length > 0 && (
+                                        <div className="flex items-center justify-between px-4 pt-1.5 pb-0 text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
+                                            <span>Reading</span>
+                                            <span>~{Math.max(1, Math.ceil(tokens.length / 200))} min read</span>
+                                        </div>
+                                    )}
+                                    <PlayerControls />
+                                </div>
+                            )}
 
                             <AnimatePresence mode="wait">
                                 <motion.div
@@ -161,8 +180,22 @@ export function ReaderMainPanel() {
                                         onRegenerateClick={onRegenerateClick}
                                         showTranslations={showTranslations}
                                     />
+                                    <FloatingContextMenu />
                                 </motion.div>
                             </AnimatePresence>
+
+                            {/* Floating Zen Mode Toggle */}
+                            {isZenMode && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="fixed bottom-4 right-4 z-[400] opacity-50 hover:opacity-100 transition-opacity bg-background/50 backdrop-blur-sm rounded-full border shadow-lg"
+                                    onClick={() => useReaderStore.getState().toggleZenMode()}
+                                    title="Exit Zen Mode (Shortcut: Z)"
+                                >
+                                    <Minimize2 className="h-4 w-4" />
+                                </Button>
+                            )}
 
                         </>
                     )}
@@ -176,15 +209,17 @@ export function ReaderMainPanel() {
                         </div>
                     )}
                 </CardContent>
-                
+
                 {/* Fixed Footer for Pagination */}
-                <div className="border-t bg-background/95 backdrop-blur-md px-4 py-3 flex-shrink-0 z-[250] shadow-sm">
-                    <ReaderPagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
+                {!isZenMode && (
+                    <div className="border-t bg-background/95 backdrop-blur-md px-4 py-3 flex-shrink-0 z-[250] shadow-sm">
+                        <ReaderPagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                )}
             </Card>
 
             {/* Mobile Bottom Sheet (Info Panel) - Managed by RichInfoPanel internally with media queries */}

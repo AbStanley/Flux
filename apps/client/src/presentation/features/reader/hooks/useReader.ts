@@ -25,7 +25,7 @@ export const useReader = () => {
 
     // Actions
     // Actions
-    const setPage = useReaderStore(state => state.setPage);
+    const setCurrentPageAction = useReaderStore(state => state.setCurrentPage);
     const handleSelection = useReaderStore(state => state.handleSelection);
 
     // View Event Handlers
@@ -90,7 +90,7 @@ export const useReader = () => {
         targetLang: useReaderStore(state => state.targetLang),
 
         // Actions
-        setCurrentPage: setPage,
+        setCurrentPage: setCurrentPageAction,
         handleTokenClick,
         getSelectionGroups
     };

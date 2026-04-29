@@ -11,7 +11,7 @@ import { ReaderSettings, TranslationSettings, GrammarModeToggle } from './contro
 import { CollapseExpandButton } from './controls/CollapseExpandButton';
 import { Button } from "@/presentation/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { PanelRightClose, PanelRightOpen, Maximize2 } from 'lucide-react';
 
 interface PlayerControlsProps {
     vertical?: boolean;
@@ -38,7 +38,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
     } = useAudioStore();
 
     // Reader Store Actions
-    const { text, tokens: readerTokens, clearSelection } = useReaderStore();
+    const { text, tokens: readerTokens, clearSelection, toggleZenMode } = useReaderStore();
     const selectionMode = useReaderStore(state => state.selectionMode);
     const setSelectionMode = useReaderStore(state => state.setSelectionMode);
     const readingMode = useReaderStore(state => state.readingMode);
@@ -75,7 +75,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
         } else if (isPaused) {
             resume();
         } else {
-            play(text);
+            play();
         }
     };
 
@@ -261,6 +261,18 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                     ) : (
                         <PanelRightOpen className="h-5 w-5" />
                     )}
+                </Button>
+
+                <div className="h-6 w-px bg-border/50 mx-1" />
+
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleZenMode}
+                    className="h-9 w-9 rounded-full text-muted-foreground"
+                    title="Enter Zen Mode (Shortcut: Z)"
+                >
+                    <Maximize2 className="h-5 w-5" />
                 </Button>
             </div>
         </div >

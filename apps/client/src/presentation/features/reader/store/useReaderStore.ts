@@ -19,6 +19,7 @@ interface ReaderState {
     selectionMode: SelectionMode;
     activePanel: 'DETAILS' | 'SAVED_WORDS';
     readingMode: 'STANDARD' | 'GRAMMAR';
+    isZenMode: boolean;
 
 
     // Reading session
@@ -34,7 +35,9 @@ interface ReaderState {
     setSelectionMode: (mode: SelectionMode) => void;
     setActivePanel: (panel: 'DETAILS' | 'SAVED_WORDS') => void;
     setReadingMode: (mode: 'STANDARD' | 'GRAMMAR') => void;
-    setPage: (page: number) => void;
+    setZenMode: (zen: boolean) => void;
+    toggleZenMode: () => void;
+    setCurrentPage: (page: number) => void;
     handleSelection: (globalIndex: number) => Promise<void>;
     clearSelection: () => void;
     setSession: (id: string | null, title: string | null) => void;
@@ -56,6 +59,7 @@ export const useReaderStore = create<ReaderState>()(
             selectionMode: SelectionMode.Word,
             activePanel: 'DETAILS',
             readingMode: 'STANDARD',
+            isZenMode: false,
             sessionId: null,
             sessionTitle: null,
 
@@ -103,8 +107,10 @@ export const useReaderStore = create<ReaderState>()(
             setSelectionMode: (selectionMode) => set({ selectionMode }),
             setActivePanel: (activePanel) => set({ activePanel }),
             setReadingMode: (readingMode) => set({ readingMode }),
+            setZenMode: (isZenMode) => set({ isZenMode }),
+            toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
 
-            setPage: (currentPage) => {
+            setCurrentPage: (currentPage) => {
                 const { tokens, PAGE_SIZE } = get();
                 const totalPages = Math.ceil(tokens.length / PAGE_SIZE);
                 const newPage = Math.max(1, Math.min(currentPage, totalPages));
