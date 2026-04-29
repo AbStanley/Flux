@@ -20,6 +20,42 @@ import { motion } from 'framer-motion';
 
 const MotionButton = motion.create(Button);
 
+const premiumEase = [0.22, 1, 0.36, 1] as const;
+
+const panelVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+        opacity: 1, 
+        y: 0,
+        transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.05
+        }
+    }
+} as const;
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+        opacity: 1, 
+        y: 0,
+        transition: { duration: 0.4, ease: premiumEase }
+    }
+} as const;
+
+const collapseVariants = {
+    expanded: { 
+        height: 'auto', 
+        opacity: 1,
+        transition: { height: { duration: 0.5, ease: premiumEase }, opacity: { duration: 0.3 } }
+    },
+    collapsed: { 
+        height: 0, 
+        opacity: 0,
+        transition: { height: { duration: 0.5, ease: premiumEase }, opacity: { duration: 0.2 } }
+    }
+} as const;
+
 export function ControlPanel() {
     const { aiService } = useServices();
 
@@ -72,11 +108,23 @@ export function ControlPanel() {
     };
 
     return (
-        <Card className={cn("w-full mt-5 mb-2 glass text-card-foreground")}>
-            <CardHeader className={cn("p-4 transition-all duration-500", isGenerating && "p-0")}>
-                <div className={cn("grid transition-all duration-500 ease-in-out", isGenerating ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100")}>
-                    <div className="overflow-hidden space-y-2">
-                        <div className={cn("flex flex-col sm:flex-row gap-2 pb-2 border-b border-border/40 items-center sm:items-end justify-center")}>
+        <Card className={cn("w-full mt-5 mb-2 glass text-card-foreground overflow-hidden")}>
+            <CardHeader className={cn("p-4", isGenerating && "p-0")}>
+                <motion.div 
+                    variants={collapseVariants}
+                    animate={isGenerating ? "collapsed" : "expanded"}
+                    className="overflow-hidden"
+                >
+                    <motion.div 
+                        variants={panelVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="space-y-2"
+                    >
+                        <motion.div 
+                            variants={itemVariants}
+                            className={cn("flex flex-col sm:flex-row gap-2 pb-2 border-b border-border/40 items-center sm:items-end justify-center")}
+                        >
                             <LanguageSelect
                                 label="Foreign Language 🌍"
                                 value={sourceLang}
@@ -107,9 +155,12 @@ export function ControlPanel() {
                                 className="w-full sm:w-[200px]"
                                 disabled={isGenerating}
                             />
-                        </div>
+                        </motion.div>
 
-                        <div className={cn(isGenerating ? 'opacity-50 pointer-events-none' : '')}>
+                        <motion.div 
+                            variants={itemVariants}
+                            className={cn(isGenerating ? 'opacity-50 pointer-events-none' : '')}
+                        >
                             <LearningControls
                                 isLearningMode={isLearningMode}
                                 setIsLearningMode={setIsLearningMode}
@@ -120,34 +171,48 @@ export function ControlPanel() {
                                 contentType={contentType}
                                 setContentType={setContentType}
                             />
-                        </div>
+                        </motion.div>
 
-                        <AIControls isGenerating={isGenerating} />
+                        <motion.div variants={itemVariants}>
+                            <AIControls isGenerating={isGenerating} />
+                        </motion.div>
 
-                        <CardDescription className={cn("text-xs hidden sm:block")}>
-                            Enter text below or generate a story to practice reading.
-                        </CardDescription>
-                    </div>
-                </div>
+                        <motion.div variants={itemVariants}>
+                            <CardDescription className={cn("text-xs hidden sm:block")}>
+                                Enter text below or generate a story to practice reading.
+                            </CardDescription>
+                        </motion.div>
+                    </motion.div>
+                </motion.div>
             </CardHeader>
 
             <CardContent className={cn("space-y-2 p-4 pt-0", isGenerating && "space-y-0")}>
-                <div className={cn("grid transition-all duration-500 ease-in-out", isGenerating ? "grid-rows-[0fr] opacity-0 mb-0" : "grid-rows-[1fr] opacity-100 mb-2")}>
-                    <div className="overflow-hidden">
-                        <SessionLibrary />
-                    </div>
-                </div>
+                <motion.div 
+                    variants={collapseVariants}
+                    animate={isGenerating ? "collapsed" : "expanded"}
+                    className="overflow-hidden"
+                >
+                    <SessionLibrary />
+                </motion.div>
 
-                <div className={cn(isGenerating ? "mt-0" : "")}>
+                <motion.div 
+                    layout
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className={cn(isGenerating ? "mt-0" : "")}
+                >
                     <ReaderInput
                         text={text}
                         isGenerating={isGenerating}
                         onChange={(e) => setText(e.target.value)}
                         onClear={() => setText('')}
                     />
-                </div>
+                </motion.div>
 
-                <div className={cn("flex gap-4 flex-wrap", isGenerating ? "justify-center mt-4" : "mt-4")}>
+                <motion.div 
+                    layout
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className={cn("flex gap-4 flex-wrap", isGenerating ? "justify-center mt-4" : "mt-4")}
+                >
                     {isGenerating ? (
                         <Button
                             onClick={stopGeneration}
@@ -204,7 +269,7 @@ export function ControlPanel() {
                             </MotionButton>
                         </>
                     )}
-                </div>
+                </motion.div>
             </CardContent>
             <FileImporter open={isImporterOpen} onOpenChange={setIsImporterOpen} />
         </Card>

@@ -144,9 +144,13 @@ function App() {
 
   return (
     <ServiceProvider>
-      <div className={`container mx-auto ${isReading ? 'px-0 sm:px-4' : 'px-4'} flex flex-col ${isReading ? 'h-[100dvh] overflow-hidden max-w-[100vw] sm:max-w-[95vw]' : 'min-h-[100dvh] max-w-4xl py-4'}`}>
+      <motion.div 
+        layout
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className={`container mx-auto ${isReading ? 'px-0 sm:px-4' : 'px-4'} flex flex-col ${isReading ? 'h-[100dvh] overflow-hidden max-w-[100vw] sm:max-w-[95vw]' : 'min-h-[100dvh] max-w-4xl py-4'}`}
+      >
         <AppContent />
-      </div>
+      </motion.div>
     </ServiceProvider>
   );
 }

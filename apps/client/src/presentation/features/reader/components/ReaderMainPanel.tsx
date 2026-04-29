@@ -25,20 +25,21 @@ import { Button } from '@/presentation/components/ui/button';
 const premiumEase = [0.22, 1, 0.36, 1] as const;
 
 const MotionDiv = motion.create('div');
+const MotionCard = motion.create(Card);
 
 const controlsV = {
     hidden: { opacity: 0, y: -40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: premiumEase, delay: 0.2 } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: premiumEase, delay: 0.1 } },
 } as const;
 
 const textV = {
     hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: premiumEase, delay: 0.5 } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: premiumEase, delay: 0.3 } },
 } as const;
 
 const paginationV = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: premiumEase, delay: 0.8 } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: premiumEase, delay: 0.5 } },
 } as const;
 
 const progressV = {
@@ -147,7 +148,14 @@ export function ReaderMainPanel() {
 
     return (
         <>
-            <Card className={`flex-1 ${isReading ? 'h-full min-h-0' : 'h-[75vh] min-h-[600px]'} border-none shadow-sm glass overflow-hidden flex flex-col`}>
+            <MotionCard 
+                layout
+                transition={{ 
+                    layout: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+                    opacity: { duration: 0.4 }
+                }}
+                className={`flex-1 ${isReading ? 'h-full min-h-0' : 'h-[75vh] min-h-[600px]'} border-none shadow-sm glass overflow-hidden flex flex-col`}
+            >
                 <CardContent className={`p-0 relative flex-1 ${isGenerating ? 'overflow-hidden select-none' : 'overflow-y-auto'} ${styles.textAreaContainer} flex flex-col`}>
 
                     {readingMode === 'GRAMMAR' ? (
@@ -269,7 +277,7 @@ export function ReaderMainPanel() {
                         />
                     </MotionDiv>
                 )}
-            </Card>
+            </MotionCard>
 
             {/* Mobile Bottom Sheet (Info Panel) - Managed by RichInfoPanel internally with media queries */}
             <div className="min-[1200px]:hidden">

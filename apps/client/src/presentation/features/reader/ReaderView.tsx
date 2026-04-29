@@ -45,6 +45,8 @@ export function ReaderView() {
 
     return (
         <MotionDiv
+            layout
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             variants={containerVariants}
             initial="hidden"
             animate="visible"

@@ -23,15 +23,15 @@ export const FocusLayout: React.FC<FocusLayoutProps> = ({
 }) => {
     return (
         <div className={`flex flex-col gap-4 relative w-full flex-1 ${isReading ? 'h-full overflow-hidden' : ''}`}>
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="popLayout">
                 {!isReading ? (
                     <MotionDiv
                         key="control-panel"
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.92, filter: 'blur(8px)', y: -40 }}
-                        transition={{ duration: 0.5, ease: premiumEase }}
-                        className="w-full overflow-hidden"
+                        initial={{ opacity: 0, y: -50, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -100, filter: 'blur(10px)', transition: { duration: 0.4 } }}
+                        transition={{ duration: 0.6, ease: premiumEase }}
+                        className="w-full"
                     >
                         <div className="py-1">
                             {controlPanelSlot}
@@ -40,11 +40,12 @@ export const FocusLayout: React.FC<FocusLayoutProps> = ({
                 ) : (
                     <MotionDiv
                         key="reader-view"
-                        initial={{ opacity: 0, y: 60, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 30 }}
+                        layoutId="reader-surface"
+                        initial={{ opacity: 0, y: 100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 100 }}
                         transition={{ duration: 0.7, ease: premiumEase }}
-                        className="w-full flex-1 flex flex-col gap-2 overflow-hidden"
+                        className="w-full flex-1 flex flex-col gap-2 overflow-hidden z-10"
                     >
                         <MotionDiv
                             initial={{ opacity: 0, x: -20 }}
@@ -66,11 +67,17 @@ export const FocusLayout: React.FC<FocusLayoutProps> = ({
                 )}
             </AnimatePresence>
 
-            {/* Non-reading preview (no animation needed) */}
+            {/* Non-reading preview (morphs into full view via layoutId) */}
             {!isReading && hasText && (
-                <div className="w-full flex-1 flex flex-col gap-2 overflow-hidden">
+                <MotionDiv
+                    layoutId="reader-surface"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="w-full flex-1 flex flex-col gap-2 overflow-hidden"
+                >
                     {readerViewSlot}
-                </div>
+                </MotionDiv>
             )}
         </div>
     );
