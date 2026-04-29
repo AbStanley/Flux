@@ -73,7 +73,7 @@ export function RichDetailsContent({ tab, onRegenerate, onFetchConjugations, onC
                         </Button>
                     )}
                 </div>
-                <div className="text-2xl font-bold prose dark:prose-invert prose-p:my-0 prose-p:text-current prose-headings:my-1 prose-headings:text-current max-w-none">
+                <div className="text-2xl font-bold text-foreground prose dark:prose-invert prose-p:my-0 prose-p:text-current prose-headings:my-1 prose-headings:text-current max-w-none">
                     <ReactMarkdown>{data.translation}</ReactMarkdown>
                 </div>
             </div>

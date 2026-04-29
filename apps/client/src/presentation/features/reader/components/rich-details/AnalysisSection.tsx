@@ -15,7 +15,7 @@ export function AnalysisSection({ syntaxAnalysis, grammarRules }: AnalysisSectio
                         <span className="w-1 h-4 bg-primary rounded-full"></span>
                         Structure Analysis
                     </h4>
-                    <div className="text-sm leading-relaxed prose dark:prose-invert prose-sm prose-p:text-current prose-strong:text-current max-w-none">
+                    <div className="text-sm leading-relaxed text-foreground prose dark:prose-invert prose-sm prose-p:text-current prose-strong:text-current max-w-none">
                         <ReactMarkdown>{syntaxAnalysis}</ReactMarkdown>
                     </div>
                 </div>
