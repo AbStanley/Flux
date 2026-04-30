@@ -86,8 +86,12 @@ export function FluxMinimalPopup({
                 minHeight: '24px'
             }}>
                 {(loading || isDebouncing) ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
-                        <span className="animate-spin">⟳</span> Translating...
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.8 }}>
+                        <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: accent }}>
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.2 }} />
+                            <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor" />
+                        </svg>
+                        <span>Translating...</span>
                     </span>
                 ) : error ? (
                     <span style={{ color: errColor }}>⚠️ {error}</span>
@@ -142,32 +146,34 @@ export function FluxMinimalPopup({
                     />
                 </div>
 
-                <FluxIconButton
-                    onClick={() => onSave?.()}
-                    title="Save to vocabulary"
-                    theme={theme}
-                    style={{
-                        padding: '4px',
-                        borderRadius: '6px',
-                        backgroundColor: isSaved ? 'transparent' : 'transparent',
-                        color: isSaved ? successColor : accent,
-                    }}
-                >
-                    {isSaved ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: successColor }}>
+                {result && !loading && !isDebouncing && (
+                    <FluxIconButton
+                        onClick={() => onSave?.()}
+                        title="Save to vocabulary"
+                        theme={theme}
+                        style={{
+                            padding: '4px',
+                            borderRadius: '6px',
+                            backgroundColor: isSaved ? 'transparent' : 'transparent',
+                            color: isSaved ? successColor : accent,
+                        }}
+                    >
+                        {isSaved ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: successColor }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span style={{ fontSize: '12px', fontWeight: 600 }}>Saved</span>
+                            </div>
+                        ) : (
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12"></polyline>
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                                <line x1="12" y1="7" x2="12" y2="13" />
+                                <line x1="9" y1="10" x2="15" y2="10" />
                             </svg>
-                            <span style={{ fontSize: '12px', fontWeight: 600 }}>Saved</span>
-                        </div>
-                    ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                            <line x1="12" y1="7" x2="12" y2="13" />
-                            <line x1="9" y1="10" x2="15" y2="10" />
-                        </svg>
-                    )}
-                </FluxIconButton>
+                        )}
+                    </FluxIconButton>
+                )}
             </div>
 
             {saveError && (
