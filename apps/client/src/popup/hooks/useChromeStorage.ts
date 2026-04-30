@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import type { CustomTheme } from '../../presentation/features/settings/store/useSettingsStore';
+
 
 interface PopupStorageState {
     enabled: boolean;
@@ -15,7 +17,7 @@ interface PopupStorageState {
     persistModel: (model: string) => void;
     persistEmail: (email: string) => void;
     forgetUser: (email: string) => void;
-    customThemes: any[];
+    customThemes: CustomTheme[];
 }
 
 export function useChromeStorage(defaultTheme: string): PopupStorageState {
@@ -24,7 +26,7 @@ export function useChromeStorage(defaultTheme: string): PopupStorageState {
     const [selectedModel, setSelectedModel] = useState('');
     const [email, setEmail] = useState('');
     const [rememberedUsers, setRememberedUsers] = useState<string[]>([]);
-    const [customThemes, setCustomThemes] = useState<any[]>([]);
+    const [customThemes, setCustomThemes] = useState<CustomTheme[]>([]);
     const loaded = useRef(false);
 
     useEffect(() => {
@@ -47,7 +49,7 @@ export function useChromeStorage(defaultTheme: string): PopupStorageState {
         // Listen for changes (e.g. if custom themes are added in side panel)
         const handleChanges = (changes: Record<string, { newValue?: unknown }>) => {
             if (changes.fluxCustomThemes?.newValue) {
-                setCustomThemes(changes.fluxCustomThemes.newValue as any[]);
+                setCustomThemes(changes.fluxCustomThemes.newValue as CustomTheme[]);
             }
             if (changes.fluxTheme?.newValue) {
                 setThemeId(changes.fluxTheme.newValue as string);
