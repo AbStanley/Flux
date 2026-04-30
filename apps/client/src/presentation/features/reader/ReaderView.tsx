@@ -30,7 +30,7 @@ export function ReaderView() {
             transition={{ duration: 0.5, ease: premiumEase }}
             className={cn(
                 "relative flex flex-col min-[1200px]:flex-row w-full flex-1 h-full min-h-0",
-                isZenMode ? 'max-w-4xl mx-auto my-0' : 'max-w-full'
+                isZenMode ? (isSidebarOpen ? 'max-w-7xl mx-auto my-0' : 'max-w-4xl mx-auto my-0') : 'max-w-full'
             )}
         >
             <MotionDiv className="flex-1 flex flex-col min-h-0">

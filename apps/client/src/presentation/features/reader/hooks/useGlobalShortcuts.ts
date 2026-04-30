@@ -27,7 +27,7 @@ export function useGlobalShortcuts() {
                 if (currentPage > 1) {
                     setCurrentPage(currentPage - 1);
                 }
-            } else if (e.code === 'KeyZ') {
+            } else if (e.code === 'KeyZ' || e.key.toLowerCase() === 'z') {
                 e.preventDefault();
                 const { toggleZenMode } = useReaderStore.getState();
                 toggleZenMode();

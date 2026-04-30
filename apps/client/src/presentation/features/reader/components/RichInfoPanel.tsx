@@ -216,11 +216,13 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
                                 <Tabs value={activeTabId} onValueChange={onTabChange} className="w-full">
                                     <ScrollArea
                                         className="w-full whitespace-nowrap pb-2"
+                                        style={{ overscrollBehaviorX: 'contain' }}
                                         onWheel={(e) => {
-                                            if (e.deltaY !== 0) {
+                                            const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+                                            if (delta !== 0) {
                                                 const viewport = e.currentTarget.querySelector('[data-radix-scroll-area-viewport]');
                                                 if (viewport) {
-                                                    viewport.scrollLeft += e.deltaY;
+                                                    viewport.scrollLeft += delta * 2.5;
                                                     e.preventDefault();
                                                 }
                                             }

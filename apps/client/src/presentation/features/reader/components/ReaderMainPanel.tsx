@@ -157,11 +157,11 @@ export function ReaderMainPanel() {
 
     return (
         <>
-            <MotionCard 
+            <MotionCard
                 animate={{
                     height: isReading ? '100%' : 'auto',
                 }}
-                transition={{ 
+                transition={{
                     height: { duration: 0.6, ease: premiumEase },
                 }}
                 className={`flex-1 w-full ${isReading ? 'min-h-0' : 'min-h-[600px]'} border-none shadow-sm glass overflow-hidden flex flex-col`}
@@ -259,7 +259,7 @@ export function ReaderMainPanel() {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="fixed bottom-4 right-4 z-[400] opacity-50 hover:opacity-100 transition-opacity bg-background/50 backdrop-blur-sm rounded-full border shadow-lg"
+                                    className="fixed top-4 right-4 z-[400] opacity-50 hover:opacity-100 transition-opacity bg-background/50 backdrop-blur-sm rounded-full border shadow-lg"
                                     onClick={() => useReaderStore.getState().toggleZenMode()}
                                     title="Exit Zen Mode (Shortcut: Z)"
                                 >
