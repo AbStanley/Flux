@@ -68,10 +68,15 @@ export function FluxContentApp() {
     const showUniversalSubs = !isYouTube && !!selectedVideo && settings.fluxEnabled;
 
     const onYouTubeOverlayHover = useCallback((hovering: boolean) => {
+        if (isHoveringRef.current === hovering) return;
         isHoveringRef.current = hovering;
+        
         if (hovering) {
             wasPlayingBeforeHover.current = getIsPlaying();
             pauseVideo();
+            // Clear any existing text selection when entering the overlay
+            // to avoid 'ghost' popups from previous selections
+            window.getSelection()?.removeAllRanges();
         } else if (wasPlayingBeforeHover.current) {
             playVideo();
         }

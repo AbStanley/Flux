@@ -117,6 +117,15 @@ export const YouTubeSubtitleOverlay = ({
                 onMouseEnter={handleOverlayEnter}
                 onMouseLeave={handleOverlayLeave}
                 onMouseDown={handleMouseDown}
+                onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    // Clear if clicking the overlay container or the translation area
+                    // But NOT if clicking navigation buttons or tokens (tokens already stopProp)
+                    if (target.classList.contains('flux-youtube-overlay') || 
+                        target.closest('.flux-youtube-translation-area')) {
+                        hover.clearHover();
+                    }
+                }}
                 style={overlayStyles}
             >
                 {hasPrev && <SubtitleNavigationButton direction="prev" onClick={onPrev} theme={theme} />}
@@ -153,7 +162,9 @@ export const YouTubeSubtitleOverlay = ({
                 </div>
 
                 {/* Full Translation — always reserved space, content fades in/out */}
-                <div style={{
+                <div 
+                    className="flux-youtube-translation-area"
+                    style={{
                     fontSize: '18px', color: fullError ? theme.error : theme.textSecondary,
                     fontWeight: 500, padding: '8px 24px', textAlign: 'center',
                     width: '100%', maxWidth: '85%', borderTop: `1px solid ${theme.border}`,
@@ -211,7 +222,7 @@ export const YouTubeSubtitleOverlay = ({
             {hover.hoveredWord && (
                 <div style={{ position: 'fixed', top: hover.hoveredWord.y, left: hover.hoveredWord.x, zIndex: 2147483647 }}>
                     <FluxMinimalPopup
-                        result={result} loading={loading} error={error}
+                        result={result} loading={loading} isDebouncing={hover.isDebouncing} error={error}
                         targetLang={targetLang} onLangChange={onTargetLangChange}
                         sourceLang={sourceLang} onSourceLangChange={onSourceLangChange}
                         onSwapLanguages={handleSwapLanguages}

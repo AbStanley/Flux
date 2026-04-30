@@ -6,6 +6,7 @@ import { LANGUAGES, type FluxTheme } from '../constants';
 interface FluxMinimalPopupProps {
     result: string;
     loading: boolean;
+    isDebouncing?: boolean;
     error?: string | null;
     targetLang: string;
     onLangChange: (lang: string) => void;
@@ -23,6 +24,7 @@ interface FluxMinimalPopupProps {
 export function FluxMinimalPopup({
     result,
     loading,
+    isDebouncing,
     error,
     targetLang,
     onLangChange,
@@ -83,7 +85,7 @@ export function FluxMinimalPopup({
                 marginBottom: '4px',
                 minHeight: '24px'
             }}>
-                {loading ? (
+                {(loading || isDebouncing) ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.7 }}>
                         <span className="animate-spin">⟳</span> Translating...
                     </span>
