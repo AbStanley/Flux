@@ -36,25 +36,25 @@ export function WordListSkeleton({ isMobile }: WordListSkeletonProps) {
                     <TableCell className="w-[50px] py-6 text-center">
                         <Skeleton className="h-8 w-8 rounded-full mx-auto" />
                     </TableCell>
-                    <TableCell className="min-w-[150px] py-6 pl-6">
+                    <TableCell className="w-[140px] py-6 pl-6">
                         <div className="space-y-2">
                             <Skeleton className="h-5 w-3/4" />
                             <Skeleton className="h-3 w-1/2" />
                         </div>
                     </TableCell>
-                    <TableCell className="min-w-[250px] py-6">
+                    <TableCell className="py-6">
                         <Skeleton className="h-10 w-full" />
                     </TableCell>
-                    <TableCell className="min-w-[130px] py-6">
+                    <TableCell className="w-[140px] py-6">
                         <Skeleton className="h-4 w-20" />
                     </TableCell>
-                    <TableCell className="min-w-[180px] py-6">
+                    <TableCell className="w-[200px] py-6">
                         <div className="space-y-2">
                             <Skeleton className="h-3 w-3/4" />
                             <Skeleton className="h-3 w-1/2" />
                         </div>
                     </TableCell>
-                    <TableCell className="w-[140px] py-6 pr-6 text-right">
+                    <TableCell className="w-[130px] py-6 pr-6 text-right">
                         <div className="flex justify-end gap-2">
                             <Skeleton className="h-8 w-8 rounded-md" />
                             <Skeleton className="h-8 w-8 rounded-md" />

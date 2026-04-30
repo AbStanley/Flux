@@ -4,10 +4,9 @@ import { getStoredApiUrl } from "../settings/settings.store";
 export async function getAuthToken(): Promise<string | null> {
   // In extension context, read from chrome.storage.local
   const isExtension =
-    typeof chrome !== "undefined" &&
-    chrome?.runtime?.id &&
-    chrome?.storage?.local;
-  if (isExtension) {
+    typeof window !== "undefined" &&
+    window.location.protocol === "chrome-extension:";
+  if (isExtension && chrome?.storage?.local) {
     return new Promise((resolve) => {
       chrome.storage.local.get(["flux_auth_token"], (result) => {
         const data = result as { flux_auth_token?: string };
@@ -61,6 +60,7 @@ export class ApiClient {
 
     // Inject JWT token from storage
     const token = await getAuthToken();
+    console.log(`[Flux Network Probe] Token present: ${!!token}`);
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -68,7 +68,8 @@ export class ApiClient {
     };
 
     // Check for extension context to avoid CORS issues and reach localhost from browser
-    if (typeof chrome !== "undefined" && chrome?.runtime?.id) {
+    const isExtension = typeof window !== "undefined" && window.location.protocol === "chrome-extension:";
+    if (isExtension && chrome?.runtime?.id) {
       console.log(`[Flux Debug] ApiClient: Proxying ${method} ${url}`);
       return new Promise<T>((resolve, reject) => {
         let parsedBody: unknown = undefined;
@@ -134,23 +135,35 @@ export class ApiClient {
 
     if (!response.ok) {
       if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/register')) {
-        const hadToken = !!localStorage.getItem("flux_auth_token");
-        localStorage.removeItem("flux_auth_token");
+        const tokenAtError = await getAuthToken();
         
-        if (this.onUnauthorized) {
-          this.onUnauthorized();
+        if (tokenAtError) {
+          // Only clear and logout if we actually thought we had a valid session
+          localStorage.removeItem("flux_auth_token");
+          if (this.onUnauthorized) {
+            this.onUnauthorized();
+          }
+          throw new Error("Session expired. Please log in again.");
+        } else {
+          // No token was sent, so just inform the user/app without clearing anything
+          throw new Error("Login required. Please sign in first.");
         }
-
-        throw new Error(
-          hadToken
-            ? "Session expired. Please log in again."
-            : "Login required. Please sign in first.",
-        );
       }
       const text = await response.text();
-      throw new Error(
-        `API Error: ${response.status} ${text || response.statusText}`,
-      );
+      let errorMessage = text || response.statusText;
+      
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.message) {
+          errorMessage = Array.isArray(parsed.message) 
+            ? parsed.message[0] 
+            : parsed.message;
+        }
+      } catch {
+        // Not JSON or no message, stick with statusText
+      }
+
+      throw new Error(errorMessage);
     }
 
     if (response.status === 204) {

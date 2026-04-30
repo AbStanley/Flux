@@ -11,12 +11,6 @@ export interface AuthUser {
     email: string;
 }
 
-function getStoredUser(): AuthUser | null {
-    try {
-        const raw = localStorage.getItem(USER_KEY);
-        return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-}
 
 function setStoredUser(user: AuthUser | null) {
     if (user) {
@@ -95,32 +89,60 @@ export const useAuthStore = create<AuthState>((set) => ({
             }
         });
 
-        // In extension context, sync from chrome.storage.local first
+        let token: string | null = null;
+
+        // 1. Try Extension Storage first
         if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
             try {
                 const result = await new Promise<Record<string, unknown>>((resolve) => {
                     chrome.storage.local.get(['flux_auth_token', 'flux_user'], (r) => resolve(r));
                 });
                 if (result.flux_auth_token) {
-                    const token = result.flux_auth_token as string;
-                    const user = (result.flux_user as AuthUser) || null;
-                    // Sync to localStorage so the rest of the app works
-                    authApi.setStoredToken(token);
-                    if (user) setStoredUser(user);
-                    set({ token, user, isAuthenticated: true, isLoading: false, rememberedUsers: getRememberedUsers() });
-                    return;
+                    token = result.flux_auth_token as string;
                 }
-            } catch { /* fall through to localStorage */ }
+            } catch { /* ignore */ }
         }
 
-        const token = authApi.getStoredToken();
-        const user = getStoredUser();
+        // 2. Fallback to LocalStorage
+        if (!token) {
+            token = authApi.getStoredToken();
+        }
+
+        // 3. Mandatory Verification
         if (token) {
-            set({ token, user, isAuthenticated: true, isLoading: false, rememberedUsers: getRememberedUsers() });
-            // Verify session is still valid in the background
-            authApi.getMe().catch(() => {
-                // onUnauthorized callback will handle the logout if this returns 401
-            });
+            try {
+                // Verify against server
+                const verifiedUser = await authApi.getMe();
+                
+                // Sync back to storage
+                authApi.setStoredToken(token);
+                setStoredUser(verifiedUser);
+                if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
+                    chrome.storage.local.set({ flux_auth_token: token, flux_user: verifiedUser });
+                }
+
+                set({ 
+                    token, 
+                    user: verifiedUser, 
+                    isAuthenticated: true, 
+                    isLoading: false, 
+                    rememberedUsers: getRememberedUsers() 
+                });
+            } catch (err) {
+                console.error('[Auth] Verification failed:', err);
+                authApi.clearStoredToken();
+                setStoredUser(null);
+                if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
+                    chrome.storage.local.remove(['flux_auth_token', 'flux_user']);
+                }
+                set({ 
+                    token: null, 
+                    user: null, 
+                    isAuthenticated: false, 
+                    isLoading: false, 
+                    rememberedUsers: getRememberedUsers() 
+                });
+            }
         } else {
             set({ isLoading: false, rememberedUsers: getRememberedUsers() });
         }

@@ -11,8 +11,7 @@ export const getApiBaseUrl = (): string => {
     }
 
     // Chrome Extension Check
-    const isExtension = (typeof window !== 'undefined' && window.location.protocol === 'chrome-extension:') ||
-        (typeof chrome !== 'undefined' && !!chrome.runtime?.id);
+    const isExtension = typeof window !== 'undefined' && window.location.protocol === 'chrome-extension:';
 
     if (isExtension) {
         // Fallback to https://localhost if env var is missing OR empty

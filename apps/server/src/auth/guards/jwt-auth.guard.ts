@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
+import { firstValueFrom, Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
@@ -24,28 +25,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // WebSocket auth is handled by Socket.IO middleware at connection time
     if (context.getType() === 'ws') return true;
 
-    // Try JWT auth first
-    try {
-      const result = await (super.canActivate(context) as Promise<boolean>);
-      if (result) return true;
-    } catch {
-      // JWT failed — check if localhost (dev mode fallback)
+    // Try JWT auth
+    const result = super.canActivate(context);
+    if (result instanceof Observable) {
+      return firstValueFrom(result);
     }
-
-    // Allow localhost in development as fallback when JWT fails
-    const request = context.switchToHttp().getRequest<{
-      ip?: string;
-      connection?: { remoteAddress?: string };
-    }>();
-    const clientIp = request.ip || request.connection?.remoteAddress || '';
-    const isLocalhost =
-      clientIp === '127.0.0.1' ||
-      clientIp === '::1' ||
-      clientIp === '::ffff:127.0.0.1';
-
-    if (isLocalhost) return true;
-
-    throw new UnauthorizedException('Authentication required');
+    return result as Promise<boolean> | boolean;
   }
 
   handleRequest<TUser>(err: Error | null, user: TUser | false): TUser {

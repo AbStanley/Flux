@@ -1,7 +1,7 @@
 import { useRef, useCallback } from 'react';
 import { type Word } from '../../../../infrastructure/api/words';
 import { getLanguageCode } from '../utils/languageUtils';
-import { ScrollArea } from '../../../components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '../../../components/ui/scroll-area';
 import { useGameStore } from '../../learning-mode/store/useGameStore';
 import { useViewStore } from '../../navigation/store/useViewStore';
 import { AppView } from '../../navigation/types';
@@ -43,25 +43,43 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
     const mobileObserver = useRef<IntersectionObserver | null>(null);
 
     const desktopWordElementRef = useCallback((node: HTMLDivElement | null) => {
-        if (isLoading) return;
+        if (isLoading || !hasMore) return;
         if (desktopObserver.current) desktopObserver.current.disconnect();
+
         if (node) {
             const scrollContainer = node.closest('[data-radix-scroll-area-viewport]') || null;
             desktopObserver.current = new IntersectionObserver(
-                (entries) => { if (entries[0].isIntersecting && hasMore) onLoadMore?.(); },
-                { root: scrollContainer, rootMargin: '200px' }
+                (entries) => {
+                    if (entries[0].isIntersecting && hasMore && !isLoading) {
+                        onLoadMore?.();
+                    }
+                },
+                {
+                    root: scrollContainer,
+                    rootMargin: '100px', // Reduced margin to be less aggressive
+                    threshold: 0.1
+                }
             );
             desktopObserver.current.observe(node);
         }
     }, [isLoading, hasMore, onLoadMore]);
 
     const mobileWordElementRef = useCallback((node: HTMLDivElement | null) => {
-        if (isLoading) return;
+        if (isLoading || !hasMore) return;
         if (mobileObserver.current) mobileObserver.current.disconnect();
+
         if (node) {
             mobileObserver.current = new IntersectionObserver(
-                (entries) => { if (entries[0].isIntersecting && hasMore) onLoadMore?.(); },
-                { root: null, rootMargin: '200px' }
+                (entries) => {
+                    if (entries[0].isIntersecting && hasMore && !isLoading) {
+                        onLoadMore?.();
+                    }
+                },
+                {
+                    root: null,
+                    rootMargin: '100px',
+                    threshold: 0.1
+                }
             );
             mobileObserver.current.observe(node);
         }
@@ -70,8 +88,8 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
     const isEmpty = words.length === 0 && !isLoading;
 
     return (
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden transition-all hover:shadow-md min-h-[500px] flex flex-col">
-            <ScrollArea className="hidden md:block flex-1">
+        <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden transition-all hover:shadow-md h-[600px] md:h-[calc(100vh-400px)] min-h-[400px] flex flex-col">
+            <ScrollArea className="hidden md:block h-full w-full">
                 <AnimatePresence mode="wait">
                     <WordTableDesktop
                         words={words} isLoading={!!isLoading} isEmpty={isEmpty}
@@ -81,6 +99,7 @@ export function WordList({ words, onEdit, onDelete, emptyMessage = "No items fou
                         sentinelRef={desktopWordElementRef}
                     />
                 </AnimatePresence>
+                <ScrollBar orientation="horizontal" />
             </ScrollArea>
 
             <div className="block md:hidden flex-1 overflow-y-auto">

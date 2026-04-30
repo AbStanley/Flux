@@ -39,3 +39,67 @@ export const getLanguageCode = (languageName?: string): string => {
 
     return languageMap[lowerName] || 'en-US';
 };
+
+export const getLanguageAbbreviation = (name?: string): string => {
+    if (!name) return '??';
+    const codes: Record<string, string> = {
+        'spanish': 'ESP',
+        'english': 'ENG',
+        'french': 'FRA',
+        'german': 'GER',
+        'italian': 'ITA',
+        'portuguese': 'POR',
+        'russian': 'RUS',
+        'japanese': 'JPN',
+        'chinese': 'CHN',
+        'chinese (simplified)': 'CHN',
+        'chinese (traditional)': 'TWN',
+        'dutch': 'NLD',
+        'polish': 'POL',
+        'turkish': 'TUR',
+        'arabic': 'ARA',
+        'hindi': 'HIN',
+        'swedish': 'SWE',
+        'danish': 'DNK',
+        'norwegian': 'NOR',
+        'finnish': 'FIN',
+        'greek': 'GRC',
+        'hebrew': 'HEB',
+        'thai': 'THA',
+        'vietnamese': 'VNM',
+        'indonesian': 'IDN',
+    };
+    return codes[name.toLowerCase().trim()] || name.slice(0, 3).toUpperCase();
+};
+
+export const getLanguageFlag = (name?: string): string => {
+    if (!name) return '🏳️';
+    const flags: Record<string, string> = {
+        'spanish': '🇪🇸',
+        'english': '🇺🇸',
+        'french': '🇫🇷',
+        'german': '🇩🇪',
+        'italian': '🇮🇹',
+        'portuguese': '🇵🇹',
+        'russian': '🇷🇺',
+        'japanese': '🇯🇵',
+        'chinese': '🇨🇳',
+        'chinese (simplified)': '🇨🇳',
+        'chinese (traditional)': '🇹🇼',
+        'dutch': '🇳🇱',
+        'polish': '🇵🇱',
+        'turkish': '🇹🇷',
+        'arabic': '🇸🇦',
+        'hindi': '🇮🇳',
+        'swedish': '🇸🇪',
+        'danish': '🇩🇰',
+        'norwegian': '🇳🇴',
+        'finnish': '🇫🇮',
+        'greek': '🇬🇷',
+        'hebrew': '🇮🇱',
+        'thai': '🇹🇭',
+        'vietnamese': '🇻🇳',
+        'indonesian': '🇮🇩',
+    };
+    return flags[name.toLowerCase().trim()] || '🌐';
+};

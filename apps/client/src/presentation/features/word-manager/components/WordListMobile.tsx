@@ -1,8 +1,7 @@
 import { motion } from 'framer-motion';
-import { Volume2, Gamepad2, Edit, Trash2, Globe, BookOpen, Quote, ArrowRight } from 'lucide-react';
+import { Volume2, Gamepad2, Edit, Trash2, BookOpen, Quote, ArrowRight } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { type Word } from '../../../../infrastructure/api/words';
-import { getLanguageCode } from '../utils/languageUtils';
 import { SrsBadge } from './SrsBadge';
 import { WordListSkeleton } from './WordListSkeleton';
 import { WordListEmptyState } from './WordListEmptyState';
@@ -55,10 +54,9 @@ export function WordListMobile({
 
                                     {(word.sourceLanguage || word.targetLanguage) && (
                                         <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                                            <Globe className="w-3 h-3" />
-                                            <span>{getLanguageCode(word.sourceLanguage).toUpperCase()}</span>
+                                            <span>{word.sourceLanguage}</span>
                                             <ArrowRight className="w-3 h-3 opacity-50" />
-                                            <span>{getLanguageCode(word.targetLanguage).toUpperCase()}</span>
+                                            <span>{word.targetLanguage}</span>
                                         </div>
                                     )}
                                     <SrsBadge word={word} />

@@ -71,7 +71,13 @@ export function useSessionAutoSave() {
 
         debounceRef.current = setTimeout(() => {
             const totalPages = Math.ceil(tokens.length / PAGE_SIZE);
-            readingSessionsApi.update(sessionId, { currentPage, totalPages }).catch(console.error);
+            readingSessionsApi.update(sessionId, { currentPage, totalPages }).catch(err => {
+                // If session is not found, clear it from the store to stop further update attempts
+                if (err.message?.includes('404') || err.statusCode === 404) {
+                    useReaderStore.getState().setSession(null, null);
+                }
+                console.error('Failed to update session:', err);
+            });
         }, 1000);
 
         return () => {
