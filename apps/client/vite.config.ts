@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
       }),
       VitePWA({
         registerType: "autoUpdate",
+        injectRegister: null,
         includeAssets: ["flux-logo.png"],
         manifest: {
           name: "Flux - Language Learning",
@@ -54,6 +55,10 @@ export default defineConfig(({ mode }) => {
               },
             },
           ],
+        },
+        devOptions: {
+          enabled: true,
+          type: "module",
         },
       }),
     ],

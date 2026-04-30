@@ -79,73 +79,74 @@ export default function FluxExtensionPopup() {
         );
     }
 
-    if (!isAuthenticated) {
-        return (
-            <PopupLoginView
-                email={storage.email}
-                onEmailChange={storage.setEmail}
-                password={password}
-                onPasswordChange={setPassword}
-                onLogin={handleLogin}
-                authError={authError}
-                authLoading={authLoading}
-                onSettingsClick={() => setShowSettings(true)}
-                rememberedUsers={storage.rememberedUsers}
-                onForgetUser={storage.forgetUser}
-            />
-        );
-    }
-
     return (
         <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            height: '100%', padding: '20px', backgroundColor: theme.bgSolid, color: theme.text,
+            minHeight: '450px', padding: '20px', backgroundColor: theme.bgSolid, color: theme.text,
             textAlign: 'center', position: 'relative', transition: 'background-color 0.3s, color 0.3s',
         }}>
-            {/* Settings Gear */}
-            <button
-                onClick={() => setShowSettings(true)}
-                style={{
-                    position: 'absolute', top: '20px', right: '20px', background: 'none',
-                    border: 'none', color: theme.textSecondary, cursor: 'pointer', padding: '4px',
-                }}
-                title="Settings"
-            >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                    <circle cx="12" cy="12" r="3" />
-                </svg>
-            </button>
+            {!isAuthenticated ? (
+                <PopupLoginView
+                    email={storage.email}
+                    onEmailChange={storage.setEmail}
+                    password={password}
+                    onPasswordChange={setPassword}
+                    onLogin={handleLogin}
+                    authError={authError}
+                    authLoading={authLoading}
+                    onSettingsClick={() => setShowSettings(true)}
+                    rememberedUsers={storage.rememberedUsers}
+                    onForgetUser={storage.forgetUser}
+                />
+            ) : (
+                <>
+                    {/* Settings Gear */}
+                    <button
+                        onClick={() => setShowSettings(true)}
+                        style={{
+                            position: 'absolute', top: '20px', right: '20px', background: 'none',
+                            border: 'none', color: theme.textSecondary, cursor: 'pointer', padding: '4px',
+                        }}
+                        title="Settings"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
 
-            <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <img src="/flux-logo.png" alt="Flux Logo" style={{ width: '40px', height: '40px' }} />
-                <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Flux Reader</h2>
-            </div>
+                    <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img src="/flux-logo.png" alt="Flux Logo" style={{ width: '40px', height: '40px' }} />
+                        <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Flux Reader</h2>
+                    </div>
 
-            <p style={{ margin: '0 0 20px', fontSize: '0.9rem', color: theme.textSecondary }}>
-                Welcome, {user?.email}
-            </p>
+                    <p style={{ margin: '0 0 20px', fontSize: '0.9rem', color: theme.textSecondary }}>
+                        Welcome, {user?.email}
+                    </p>
 
-            <button
-                onClick={openSidePanel}
-                style={{
-                    marginTop: '8px', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: 'white',
-                    borderRadius: '12px', border: 'none', width: '100%', fontWeight: 600,
-                    cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-            >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <line x1="15" y1="3" x2="15" y2="21" />
-                </svg>
-                Open Side Panel
-            </button>
+                    <button
+                        onClick={openSidePanel}
+                        style={{
+                            marginTop: '8px', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: 'white',
+                            borderRadius: '12px', border: 'none', width: '100%', fontWeight: 600,
+                            cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <line x1="15" y1="3" x2="15" y2="21" />
+                        </svg>
+                        Open Side Panel
+                    </button>
+                </>
+            )}
 
-            {/* Enable toggle */}
+            {/* Enable toggle - Always visible at bottom */}
             <div style={{
+                marginTop: isAuthenticated ? '12px' : '0px',
                 display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px',
                 backgroundColor: theme.surface, borderRadius: '12px', border: `1px solid ${theme.border}`,
                 width: '100%', boxSizing: 'border-box', transition: 'background-color 0.3s',
@@ -167,90 +168,94 @@ export default function FluxExtensionPopup() {
                 </button>
             </div>
 
-            {/* Theme picker */}
-            <div style={{
-                marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px',
-                backgroundColor: theme.surface, borderRadius: '12px', border: `1px solid ${theme.border}`,
-                transition: 'background-color 0.3s', width: '100%', boxSizing: 'border-box',
-            }}>
-                <span style={{ flex: 1, textAlign: 'left', fontWeight: 500, fontSize: '0.9rem' }}>Theme</span>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                    {Object.values(THEMES).map(t => (
-                        <button
-                            key={t.id}
-                            onClick={() => storage.persistTheme(t.id)}
-                            title={t.name}
-                            style={{
-                                width: '20px', height: '20px', borderRadius: '50%', background: t.dot,
-                                border: storage.themeId === t.id ? `2px solid ${theme.accent}` : '2px solid rgba(255, 255, 255, 0.15)',
-                                cursor: 'pointer', padding: 0,
-                                boxShadow: storage.themeId === t.id ? `0 0 8px ${theme.accent}` : 'none',
-                                transition: 'all 0.2s',
-                            }}
-                        />
-                    ))}
-                </div>
-            </div>
+            {isAuthenticated && (
+                <>
+                    {/* Theme picker */}
+                    <div style={{
+                        marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px',
+                        backgroundColor: theme.surface, borderRadius: '12px', border: `1px solid ${theme.border}`,
+                        transition: 'background-color 0.3s', width: '100%', boxSizing: 'border-box',
+                    }}>
+                        <span style={{ flex: 1, textAlign: 'left', fontWeight: 500, fontSize: '0.9rem' }}>Theme</span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            {Object.values(THEMES).map(t => (
+                                <button
+                                    key={t.id}
+                                    onClick={() => storage.persistTheme(t.id)}
+                                    title={t.name}
+                                    style={{
+                                        width: '20px', height: '20px', borderRadius: '50%', background: t.dot,
+                                        border: storage.themeId === t.id ? `2px solid ${theme.accent}` : '2px solid rgba(255, 255, 255, 0.15)',
+                                        cursor: 'pointer', padding: 0,
+                                        boxShadow: storage.themeId === t.id ? `0 0 8px ${theme.accent}` : 'none',
+                                        transition: 'all 0.2s',
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    </div>
 
-            {/* Model selector */}
-            {availableModels.length > 0 && (
-                <div style={{
-                    marginTop: '8px', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px',
-                    backgroundColor: theme.surface, borderRadius: '12px', border: `1px solid ${theme.border}`,
-                    transition: 'background-color 0.3s', width: '100%', boxSizing: 'border-box',
-                }}>
-                    <span style={{ textAlign: 'left', fontWeight: 500, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Model</span>
-                    <select
-                        value={storage.selectedModel || availableModels[0]}
-                        onChange={(e) => storage.persistModel(e.target.value)}
+                    {/* Model selector */}
+                    {availableModels.length > 0 && (
+                        <div style={{
+                            marginTop: '8px', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px',
+                            backgroundColor: theme.surface, borderRadius: '12px', border: `1px solid ${theme.border}`,
+                            transition: 'background-color 0.3s', width: '100%', boxSizing: 'border-box',
+                        }}>
+                            <span style={{ textAlign: 'left', fontWeight: 500, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Model</span>
+                            <select
+                                value={storage.selectedModel || availableModels[0]}
+                                onChange={(e) => storage.persistModel(e.target.value)}
+                                style={{
+                                    flex: 1, background: theme.surfaceActive, color: theme.text,
+                                    border: `1px solid ${theme.border}`, borderRadius: '8px', padding: '6px 8px',
+                                    fontSize: '0.8rem', outline: 'none', cursor: 'pointer', minWidth: 0,
+                                }}
+                            >
+                                {availableModels.map(m => (
+                                    <option key={m} value={m} style={{ backgroundColor: theme.bgSolid }}>{m}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    <button
+                        onClick={scanSubtitles}
                         style={{
-                            flex: 1, background: theme.surfaceActive, color: theme.text,
-                            border: `1px solid ${theme.border}`, borderRadius: '8px', padding: '6px 8px',
-                            fontSize: '0.8rem', outline: 'none', cursor: 'pointer', minWidth: 0,
+                            marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            gap: '10px', padding: '12px 20px', backgroundColor: theme.surface, color: theme.text,
+                            borderRadius: '12px', border: `1px solid ${theme.border}`, width: '100%', fontWeight: 600,
+                            cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
                         }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
                     >
-                        {availableModels.map(m => (
-                            <option key={m} value={m} style={{ backgroundColor: theme.bgSolid }}>{m}</option>
-                        ))}
-                    </select>
-                </div>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="2" y="6" width="20" height="12" rx="2" />
+                            <path d="M6 14h2M10 14h8" />
+                        </svg>
+                        Scan Videos for Subtitles
+                    </button>
+
+                    <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: theme.textSecondary }}>
+                            {storage.enabled ? 'Flux is active on all pages.' : 'Flux is disabled.'}
+                        </p>
+                        <button
+                            onClick={logout}
+                            style={{
+                                background: 'none', border: 'none', color: theme.textSecondary,
+                                cursor: 'pointer', fontSize: '0.75rem', padding: '4px 8px',
+                                borderRadius: '6px', transition: 'color 0.2s',
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = theme.error)}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = theme.textSecondary)}
+                        >
+                            Log out
+                        </button>
+                    </div>
+                </>
             )}
-
-            <button
-                onClick={scanSubtitles}
-                style={{
-                    marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    gap: '10px', padding: '12px 20px', backgroundColor: theme.surface, color: theme.text,
-                    borderRadius: '12px', border: `1px solid ${theme.border}`, width: '100%', fontWeight: 600,
-                    cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-            >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="6" width="20" height="12" rx="2" />
-                    <path d="M6 14h2M10 14h8" />
-                </svg>
-                Scan Videos for Subtitles
-            </button>
-
-            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: theme.textSecondary }}>
-                    {storage.enabled ? 'Flux is active on all pages.' : 'Flux is disabled.'}
-                </p>
-                <button
-                    onClick={logout}
-                    style={{
-                        background: 'none', border: 'none', color: theme.textSecondary,
-                        cursor: 'pointer', fontSize: '0.75rem', padding: '4px 8px',
-                        borderRadius: '6px', transition: 'color 0.2s',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = theme.error)}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = theme.textSecondary)}
-                >
-                    Log out
-                </button>
-            </div>
         </div>
     );
 }

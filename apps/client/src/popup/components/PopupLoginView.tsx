@@ -34,14 +34,17 @@ export function PopupLoginView({
     const passwordRef = useRef<HTMLInputElement>(null);
     const emailRef = useRef<HTMLInputElement>(null);
 
+    // Clean focus management without timeouts
     useEffect(() => {
         if (mode === 'login') {
-            setTimeout(() => {
+            const timer = requestAnimationFrame(() => {
                 if (email) passwordRef.current?.focus();
                 else emailRef.current?.focus();
-            }, 50);
+            });
+            return () => cancelAnimationFrame(timer);
         }
-    }, [mode, email]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode]);
 
     const handlePickUser = (userEmail: string) => {
         onEmailChange(userEmail);
@@ -54,18 +57,13 @@ export function PopupLoginView({
         if (hasRemembered) setMode('pick');
     };
 
-    const base: React.CSSProperties = {
-        display: 'flex', flexDirection: 'column', height: '100%', padding: '20px',
-        backgroundColor: '#0f172a', color: '#f8fafc', position: 'relative',
-    };
-
     const settingsBtn: React.CSSProperties = {
         position: 'absolute', top: '16px', right: '16px', background: 'none',
         border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px',
     };
 
     return (
-        <div style={base}>
+        <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
             <button onClick={onSettingsClick} style={settingsBtn} title="Settings">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />

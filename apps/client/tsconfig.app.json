@@ -12,7 +12,8 @@
     "module": "ESNext",
     "types": [
       "vite/client",
-      "chrome"
+      "chrome",
+      "vite-plugin-pwa/client"
     ],
     "skipLibCheck": true,
     /* Bundler mode */
