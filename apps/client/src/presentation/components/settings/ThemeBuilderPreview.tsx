@@ -3,7 +3,7 @@ import type { DerivedTokens } from '@/lib/color-derive';
 import { customThemeToFluxTheme } from '@/lib/color-derive';
 import { hslToHex } from '@/lib/color-utils';
 import { ThemePreviewPopup } from './ThemePreviewPopup';
-import { Volume2, Search, RefreshCcw, Save } from 'lucide-react';
+import { Volume2, Search, RefreshCcw, Save, Youtube, MousePointer2 } from 'lucide-react';
 
 interface Props { tokens: DerivedTokens; name: string; activeToken?: string | null; onHoverToken?: (t: string | null) => void; onClickToken?: (t: string) => void; }
 
@@ -150,12 +150,7 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                 </div>
             </div>
 
-            {/* ── 3. Extension Translation Popover ── */}
-            <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8 }}>
-                <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>EXTENSION TRANSLATION POPOVER</p>
-                <ThemePreviewPopup theme={fluxTheme} activeToken={activeToken} onHoverToken={onHoverToken} onClickToken={onClickToken} />
-            </div>
-            {/* ── 4. Rich Details & Markdown ── */}
+            {/* ── 3. Rich Details & Markdown ── */}
             <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8 }}>
                 <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>RICH DETAILS & MARKDOWN</p>
                 <div style={{ background: bg, padding: '12px', borderRadius: 8, border: `1px solid ${bd}`, ...hoverStyle('background') }}
@@ -177,6 +172,77 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                     </div>
                 </div>
             </div>
+
+            {/* ── 4. EXTENSION SPECIFIC PREVIEWS (GROUPED AT BOTTOM) ── */}
+            <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: ac }} />
+                    <span style={{ fontSize: 9, fontWeight: 800, color: mtFg, letterSpacing: '0.05em' }}>BROWSER EXTENSION EXPERIENCE</span>
+                </div>
+
+                {/* A. YouTube Subtitles Preview */}
+                <div style={{ 
+                    background: '#000', padding: 12, position: 'relative', minHeight: 90, 
+                    display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center',
+                    borderRadius: 8, border: `1px solid ${bd}`, overflow: 'hidden'
+                }}>
+                    <div style={{ position: 'absolute', top: 6, left: 8, display: 'flex', alignItems: 'center', gap: 4, color: 'white', opacity: 0.6 }}>
+                        <Youtube size={12} fill="red" stroke="none" />
+                        <span style={{ fontSize: 8 }}>YouTube Player</span>
+                    </div>
+                    
+                    {/* Subtitle Overlay Mockup - FULLY CLICKABLE */}
+                    <div style={{ 
+                        background: fluxTheme.bg, color: fluxTheme.text, padding: '8px 16px', borderRadius: 12, 
+                        border: `1px solid ${fluxTheme.border}`, backdropFilter: 'blur(10px)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)', maxWidth: '90%', textAlign: 'center',
+                        animation: 'pulse 2s infinite ease-in-out',
+                        ...hoverStyle('background')
+                    }}
+                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                    onMouseLeave={() => onHoverToken?.(null)}
+                    onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 2 }}>
+                            <span style={{ color: fluxTheme.accent, fontWeight: 700, ...hoverStyle('primary') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }}
+                                  onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                                  onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Ich</span>
+                            <span>habe</span>
+                            <span style={{ borderBottom: `2px solid ${fluxTheme.accent}`, ...hoverStyle('primary') }}
+                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }}
+                                  onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                                  onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>gelesen</span>
+                        </div>
+                        <div style={{ fontSize: 9, color: fluxTheme.textSecondary, opacity: 0.8, ...hoverStyle('muted-foreground') }}
+                              onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
+                              onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                              onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>
+                            I have read
+                        </div>
+                    </div>
+                </div>
+
+                {/* B. Extension Translation Popover */}
+                <div style={{ background: cd, padding: '12px 10px', borderRadius: 8, border: `1px solid ${bd}`, ...hoverStyle('card') }}
+                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }}
+                     onMouseLeave={() => onHoverToken?.(null)}
+                     onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <p style={{ color: mtFg, fontSize: 8, fontWeight: 700 }}>TRANSLATION OVERLAY</p>
+                        <MousePointer2 size={10} style={{ color: pr }} />
+                    </div>
+                    <ThemePreviewPopup theme={fluxTheme} activeToken={activeToken} onHoverToken={onHoverToken} onClickToken={onClickToken} />
+                </div>
+            </div>
+
+            <style>{`
+                @keyframes pulse {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.01); }
+                    100% { transform: scale(1); }
+                }
+            `}</style>
         </div>
     );
 }

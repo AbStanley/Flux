@@ -8,6 +8,7 @@ interface StorageResult {
     fluxModel?: string;
     fluxTheme?: string;
     fluxEnabled?: boolean;
+    fluxCustomThemes?: any[];
     [key: string]: unknown;
 }
 
@@ -24,6 +25,7 @@ const STORAGE_KEYS = [
     'fluxModel',
     'fluxTheme',
     'fluxPopupCollapsed',
+    'fluxCustomThemes',
 ] as const;
 
 function persistToStorage(data: Record<string, unknown>) {
@@ -39,6 +41,7 @@ export function useChromeSettings(aiService: AIServiceLike) {
     const [selectedModel, setSelectedModel] = useState('');
     const [availableModels, setAvailableModels] = useState<string[]>([]);
     const [popupCollapsed, setPopupCollapsed] = useState(false);
+    const [customThemes, setCustomThemes] = useState<any[]>([]);
 
     // Fetch available models on mount
     useEffect(() => {
@@ -59,11 +62,13 @@ export function useChromeSettings(aiService: AIServiceLike) {
             if (result.fluxModel) setSelectedModel(result.fluxModel as string);
             if (result.fluxTheme) setThemeId(result.fluxTheme as string);
             if (result.fluxPopupCollapsed !== undefined) setPopupCollapsed(result.fluxPopupCollapsed as boolean);
+            if (Array.isArray(result.fluxCustomThemes)) setCustomThemes(result.fluxCustomThemes);
         });
 
         const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
             if (changes.fluxEnabled) setFluxEnabled(changes.fluxEnabled.newValue as boolean);
             if (changes.fluxTheme) setThemeId(changes.fluxTheme.newValue as string);
+            if (changes.fluxCustomThemes) setCustomThemes(changes.fluxCustomThemes.newValue as any[]);
             if (changes.fluxModel) {
                 const model = changes.fluxModel.newValue as string;
                 setSelectedModel(model);
@@ -125,6 +130,7 @@ export function useChromeSettings(aiService: AIServiceLike) {
         selectedModel,
         availableModels,
         popupCollapsed,
+        customThemes,
 
         persistAutoSave,
         persistSourceLang,

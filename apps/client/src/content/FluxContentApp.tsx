@@ -30,10 +30,9 @@ export function FluxContentApp() {
     const { notification, isSaving, setIsSaving, showNotification } = useNotification();
 
     // Resolve FluxTheme: built-in lookup first, then custom theme bridge, then default
-    const customThemes = useSettingsStore((s) => s.customThemes);
     const theme: FluxTheme = (() => {
         if (settings.themeId.startsWith('custom-')) {
-            const custom = customThemes.find(t => t.id === settings.themeId);
+            const custom = settings.customThemes.find(t => t.id === settings.themeId);
             if (custom) return customThemeToFluxTheme(custom);
         }
         return THEMES[settings.themeId] ?? THEMES[DEFAULT_THEME];

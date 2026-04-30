@@ -36,24 +36,32 @@ export function ThemeProvider({
     const [theme, setThemeState] = useState<Theme>(
         () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
     )
-    const customThemes = useSettingsStore(state => state.customThemes);
+    const [extCustomThemes, setExtCustomThemes] = useState<any[]>([]);
+    const customThemesFromStore = useSettingsStore(state => state.customThemes);
+    
+    // Use store themes if available (side panel), otherwise use synced themes (extension context)
+    const customThemes = customThemesFromStore.length > 0 ? customThemesFromStore : extCustomThemes;
 
     // Sync theme from extension popup → side panel
     useEffect(() => {
-        const isExtension = window.location.protocol === 'chrome-extension:';
-        if (!isExtension || !window.chrome?.storage?.onChanged) return;
+        if (!window.chrome?.storage?.local) return;
 
-        // Load initial theme from extension storage
-        window.chrome.storage.local.get(['fluxTheme'], (result: Record<string, unknown>) => {
+        // Load initial theme AND custom themes from extension storage
+        window.chrome.storage.local.get(['fluxTheme', 'fluxCustomThemes'], (result: Record<string, unknown>) => {
             const extTheme = result.fluxTheme as string | undefined;
             if (extTheme) {
                 const mapped = extTheme.startsWith('custom-') ? extTheme : (EXTENSION_TO_WEBAPP_THEME[extTheme] || extTheme);
                 localStorage.setItem(storageKey, mapped);
                 setThemeState(mapped);
             }
+
+            const storedCustom = result.fluxCustomThemes as any[];
+            if (storedCustom) {
+                setExtCustomThemes(storedCustom);
+            }
         });
 
-        // Listen for theme changes from extension popup
+        // Listen for theme changes from extension popup/content scripts
         const handleChange = (changes: Record<string, { newValue?: unknown }>) => {
             if (changes.fluxTheme?.newValue) {
                 const extTheme = changes.fluxTheme.newValue as string;
@@ -61,10 +69,20 @@ export function ThemeProvider({
                 localStorage.setItem(storageKey, mapped);
                 setThemeState(mapped);
             }
+            if (changes.fluxCustomThemes?.newValue) {
+                setExtCustomThemes(changes.fluxCustomThemes.newValue as any[]);
+            }
         };
         window.chrome.storage.onChanged.addListener(handleChange);
         return () => window.chrome.storage.onChanged.removeListener(handleChange);
     }, [storageKey]);
+
+    // Sync custom themes array TO extension storage whenever they change (only from side panel)
+    useEffect(() => {
+        if (window.chrome?.storage?.local && customThemesFromStore.length > 0) {
+            window.chrome.storage.local.set({ fluxCustomThemes: customThemesFromStore });
+        }
+    }, [customThemesFromStore]);
 
     useEffect(() => {
         const root = window.document.documentElement
@@ -111,6 +129,11 @@ export function ThemeProvider({
         setTheme: (newTheme: Theme) => {
             localStorage.setItem(storageKey, newTheme)
             setThemeState(newTheme)
+            
+            // PROPAGATE to extension storage so popup and overlay update too
+            if (window.chrome?.storage?.local) {
+                window.chrome.storage.local.set({ fluxTheme: newTheme });
+            }
         },
     }
 
@@ -120,4 +143,3 @@ export function ThemeProvider({
         </ThemeProviderContext.Provider>
     )
 }
-

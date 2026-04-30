@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Save, Sliders, Sparkles, Download, Upload, RotateCcw } from 'lucide-react';
+import { Save, Sliders, Sparkles, Download, Upload, RotateCcw, Eye } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -112,6 +112,7 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
     const [mode, setMode] = useState<Mode>('simple');
     const [hoveredToken, setHoveredToken] = useState<string | null>(null);
     const [clickedToken, setClickedToken] = useState<string | null>(null);
+    const [showPreviewMobile, setShowPreviewMobile] = useState(false);
 
     // Reset when dialog opens / edit target changes
     const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
@@ -121,6 +122,7 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
         setName(initial.name); setTokens(initial.tokens); setMode('simple');
         setHoveredToken(null);
         setClickedToken(null);
+        setShowPreviewMobile(false);
     }
 
     // Simple mode: 5 seed colors that auto-derive all tokens
@@ -223,41 +225,54 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
             // to prevent accidental data loss.
         }}>
             <DialogContent
-                className="max-w-4xl h-[85vh] max-h-[800px] min-h-[500px] flex flex-col gap-0 p-0 sm:rounded-2xl overflow-hidden"
+                className="max-w-4xl h-[90vh] md:h-[85vh] max-h-[850px] min-h-[500px] flex flex-col gap-0 p-0 sm:rounded-2xl overflow-hidden"
                 hideClose={true}
                 aria-describedby={undefined}
                 onPointerDownOutside={(e) => e.preventDefault()}
                 onEscapeKeyDown={(e) => e.preventDefault()}
             >
-                <DialogHeader className="px-5 pt-5 pb-3 border-b flex flex-row items-center justify-between">
-                    <DialogTitle>{editThemeId ? 'Edit Theme' : 'Create New Theme'}</DialogTitle>
-                    <div className="flex items-center gap-2 pr-6">
-                        <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => fileInputRef.current?.click()} title="Import Theme">
-                            <Upload className="w-3 h-3 mr-1" /> Import
+                <DialogHeader className="px-4 md:px-5 pt-5 pb-3 border-b flex flex-row items-center justify-between gap-4">
+                    <DialogTitle className="truncate text-base md:text-xl">
+                        {editThemeId ? 'Edit Theme' : 'New Theme'}
+                    </DialogTitle>
+                    <div className="flex items-center gap-2 pr-2">
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] md:text-xs px-2" onClick={() => fileInputRef.current?.click()}>
+                            <Upload className="w-3 h-3 mr-1 hidden sm:inline" /> Import
                         </Button>
                         <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleImport} />
 
-                        <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={handleExport} title="Export Theme">
-                            <Download className="w-3 h-3 mr-1" /> Export
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] md:text-xs px-2" onClick={handleExport}>
+                            <Download className="w-3 h-3 mr-1 hidden sm:inline" /> Export
+                        </Button>
+                        
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`md:hidden h-7 w-7 p-0 ${showPreviewMobile ? 'bg-primary text-primary-foreground' : ''}`}
+                            onClick={() => setShowPreviewMobile(!showPreviewMobile)}
+                        >
+                            <Eye className="w-4 h-4" />
                         </Button>
                     </div>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+                <div className="flex-1 overflow-hidden flex flex-col md:flex-row relative">
                     {/* Left Column: Form controls */}
-                    <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 border-b md:border-b-0 md:border-r border-border">
+                    <div className={`flex-1 overflow-y-auto px-4 md:px-5 py-4 space-y-4 border-b md:border-b-0 md:border-r border-border transition-opacity ${showPreviewMobile ? 'opacity-0 md:opacity-100 pointer-events-none md:pointer-events-auto' : 'opacity-100'}`}>
                         {/* Name + mode toggle */}
-                        <div className="flex gap-3 items-center flex-wrap">
-                            <Label htmlFor="theme-name" className="whitespace-nowrap text-sm">Theme Name</Label>
-                            <Input id="theme-name" value={name} onChange={e => setName(e.target.value)}
-                                placeholder="e.g. Midnight Teal" className="max-w-xs flex-1" />
-                            <div className="flex gap-1 ml-auto border rounded-lg p-0.5">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                            <div className="flex-1 flex items-center gap-3">
+                                <Label htmlFor="theme-name" className="whitespace-nowrap text-xs md:text-sm">Name</Label>
+                                <Input id="theme-name" value={name} onChange={e => setName(e.target.value)}
+                                    placeholder="e.g. Midnight Teal" className="flex-1 h-9" />
+                            </div>
+                            <div className="flex gap-1 border rounded-lg p-0.5 self-end sm:self-auto bg-muted/20">
                                 <button onClick={() => setMode('simple')}
-                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${mode === 'simple' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] md:text-xs font-medium transition-all ${mode === 'simple' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                                     <Sparkles className="w-3 h-3" /> Simple
                                 </button>
                                 <button onClick={() => setMode('full')}
-                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${mode === 'full' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] md:text-xs font-medium transition-all ${mode === 'full' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                                     <Sliders className="w-3 h-3" /> Full
                                 </button>
                             </div>
@@ -265,13 +280,13 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
 
                         {/* Preset row */}
                         <div>
-                            <p className="text-[11px] text-muted-foreground mb-1.5">
-                                Start from — {mode === 'full' ? 'loads exact original values' : 'loads seed colors for auto-derivation'}
+                            <p className="text-[10px] text-muted-foreground mb-1.5 uppercase tracking-wider font-bold">
+                                Quick Presets
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                                 {THEME_PRESETS.map(p => (
                                     <button key={p.id} onClick={() => handlePreset(p.id, p.seeds)}
-                                        className="text-xs px-2.5 py-1 rounded-full border border-border hover:border-primary/60 hover:bg-primary/5 transition-all">
+                                        className="text-[10px] md:text-xs px-2.5 py-1 rounded-full border border-border hover:border-primary/60 hover:bg-primary/5 transition-all">
                                         {p.label}
                                     </button>
                                 ))}
@@ -279,40 +294,55 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                         </div>
 
                         {/* Editors */}
-                        {mode === 'simple' ? (
-                            <div className="grid grid-cols-1 gap-2">
-                                {SEED_FIELDS.map(({ key, label, hint }) => (
-                                    <ColorPickerRow
-                                        key={key}
-                                        label={label}
-                                        hint={hint}
-                                        color={seeds[key]}
-                                        onChange={(val) => handleSeedChange(key, val)}
-                                    />
-                                ))}
-                            </div>
-                        ) : (
-                            <ThemeBuilderAdvanced tokens={tokens} onChange={handleTokenChange} activeToken={hoveredToken} clickedToken={clickedToken} onHoverToken={setHoveredToken} />
-                        )}
+                        <div className="pt-2">
+                            {mode === 'simple' ? (
+                                <div className="grid grid-cols-1 gap-2">
+                                    {SEED_FIELDS.map(({ key, label, hint }) => (
+                                        <ColorPickerRow
+                                            key={key}
+                                            label={label}
+                                            hint={hint}
+                                            color={seeds[key]}
+                                            onChange={(val) => handleSeedChange(key, val)}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <ThemeBuilderAdvanced tokens={tokens} onChange={handleTokenChange} activeToken={hoveredToken} clickedToken={clickedToken} onHoverToken={setHoveredToken} />
+                            )}
+                        </div>
                     </div>
 
-                    {/* Right Column: Sticky preview */}
-                    <div className="w-full md:w-[320px] lg:w-[380px] bg-muted/10 overflow-y-auto flex-shrink-0">
-                        <div className="p-5 sticky top-0">
-                            <p className="text-xs font-medium text-muted-foreground mb-2">Live Preview (Hover or click elements)</p>
-                            <ThemeBuilderPreview tokens={tokens} name={name} activeToken={hoveredToken} onHoverToken={setHoveredToken} onClickToken={handlePreviewClick} />
+                    {/* Right Column: Sticky preview - Fixed/Overlay on mobile if toggled */}
+                    <div className={`
+                        w-full md:w-[320px] lg:w-[380px] bg-muted/5 flex-shrink-0
+                        absolute md:relative inset-0 md:inset-auto z-10 md:z-auto
+                        transition-transform duration-300 ease-in-out md:translate-x-0
+                        ${showPreviewMobile ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
+                    `}>
+                        <div className="h-full overflow-y-auto bg-background md:bg-transparent p-4 md:p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Live Preview</p>
+                                <Button variant="ghost" size="sm" className="md:hidden h-7 w-7 p-0" onClick={() => setShowPreviewMobile(false)}>
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            </div>
+                            <div className="rounded-xl shadow-2xl md:shadow-none border md:border-0 overflow-hidden">
+                                <ThemeBuilderPreview tokens={tokens} name={name} activeToken={hoveredToken} onHoverToken={setHoveredToken} onClickToken={handlePreviewClick} />
+                            </div>
+                            <p className="mt-4 text-[10px] text-muted-foreground text-center italic">Tip: Click preview elements to edit their colors directly.</p>
                         </div>
                     </div>
                 </div>
 
-                <DialogFooter className="px-5 py-4 border-t gap-2 sm:justify-between bg-background">
+                <DialogFooter className="px-4 md:px-5 py-4 border-t gap-2 flex-col sm:flex-row sm:justify-between bg-background">
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-                        <Button variant="ghost" onClick={handleReset} className="text-muted-foreground hover:text-destructive">
+                        <Button variant="outline" onClick={handleCancel} className="flex-1 sm:flex-none">Cancel</Button>
+                        <Button variant="ghost" onClick={handleReset} className="text-muted-foreground hover:text-destructive hidden sm:flex">
                             <RotateCcw className="w-4 h-4 mr-1.5" /> Reset
                         </Button>
                     </div>
-                    <Button onClick={handleSave} disabled={!name.trim()}>
+                    <Button onClick={handleSave} disabled={!name.trim()} className="flex-1 sm:flex-none">
                         <Save className="w-4 h-4 mr-2" /> Save & Apply
                     </Button>
                 </DialogFooter>

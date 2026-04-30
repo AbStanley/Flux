@@ -159,8 +159,6 @@ export function deriveTokens(seeds: SeedColors): DerivedTokens {
     };
 }
 
-// ─── Preset seed extraction ──────────────────────────────────────────────────
-
 /**
  * Extract the 5 seed colours from a full token map (for editing existing themes).
  */
@@ -246,8 +244,8 @@ export function customThemeToFluxTheme(theme: CustomTheme): FluxTheme {
         name:         theme.name,
         id:           theme.id,
         dot:          hslToHex(tokens.background),
-        bg:           hslToRgba(tokens.popover, 0.80),
-        bgSolid:      hslToHex(tokens.popover),
+        bg:           hslToRgba(tokens.background, 0.85),
+        bgSolid:      hslToHex(tokens.background),
         surface:      hslToHex(tokens.card),
         surfaceActive: hslToHex(tokens.secondary),
         text:         hslToHex(tokens.foreground),
@@ -262,4 +260,3 @@ export function customThemeToFluxTheme(theme: CustomTheme): FluxTheme {
         info:         hslToHex(tokens.primary),
     };
 }
-

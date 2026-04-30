@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import type { FluxTheme } from '../../content/constants';
 
 interface Props {
     email: string;
@@ -11,6 +12,7 @@ interface Props {
     onSettingsClick: () => void;
     rememberedUsers: string[];
     onForgetUser: (email: string) => void;
+    theme: FluxTheme;
 }
 
 function getInitials(email: string): string {
@@ -27,14 +29,13 @@ function getColor(email: string): string {
 export function PopupLoginView({
     email, onEmailChange, password, onPasswordChange,
     onLogin, authError, authLoading, onSettingsClick,
-    rememberedUsers, onForgetUser,
+    rememberedUsers, onForgetUser, theme,
 }: Props) {
     const hasRemembered = rememberedUsers.length > 0;
     const [mode, setMode] = useState<'pick' | 'login'>(hasRemembered ? 'pick' : 'login');
     const passwordRef = useRef<HTMLInputElement>(null);
     const emailRef = useRef<HTMLInputElement>(null);
 
-    // Clean focus management without timeouts
     useEffect(() => {
         if (mode === 'login') {
             const timer = requestAnimationFrame(() => {
@@ -59,7 +60,7 @@ export function PopupLoginView({
 
     const settingsBtn: React.CSSProperties = {
         position: 'absolute', top: '16px', right: '16px', background: 'none',
-        border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px',
+        border: 'none', color: theme.textSecondary, cursor: 'pointer', padding: '4px',
     };
 
     return (
@@ -74,14 +75,14 @@ export function PopupLoginView({
             {/* Logo */}
             <div style={{ textAlign: 'center', marginTop: '16px', marginBottom: '24px' }}>
                 <img src="/flux-logo.png" alt="Flux" style={{ width: '48px', height: '48px', margin: '0 auto 8px' }} />
-                <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700 }}>Flux</h2>
-                <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '0.8rem' }}>Your learning assistant</p>
+                <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700, color: theme.text }}>Flux</h2>
+                <p style={{ margin: '4px 0 0', color: theme.textSecondary, fontSize: '0.8rem' }}>Your learning assistant</p>
             </div>
 
             {/* User picker */}
             {mode === 'pick' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                    <p style={{ color: '#94a3b8', fontSize: '0.8rem', textAlign: 'center', margin: '0 0 4px' }}>
+                    <p style={{ color: theme.textSecondary, fontSize: '0.8rem', textAlign: 'center', margin: '0 0 4px' }}>
                         Choose an account
                     </p>
                     {rememberedUsers.map((userEmail) => (
@@ -91,12 +92,12 @@ export function PopupLoginView({
                             onClick={() => handlePickUser(userEmail)}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
-                                borderRadius: '10px', border: '1px solid #334155', backgroundColor: '#1e293b',
-                                color: '#f8fafc', cursor: 'pointer', textAlign: 'left', width: '100%',
+                                borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: theme.surface,
+                                color: theme.text, cursor: 'pointer', textAlign: 'left', width: '100%',
                                 transition: 'border-color 0.2s',
                             }}
-                            onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#3b82f6')}
-                            onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#334155')}
+                            onMouseEnter={(e) => (e.currentTarget.style.borderColor = theme.accent)}
+                            onMouseLeave={(e) => (e.currentTarget.style.borderColor = theme.border)}
                         >
                             <div style={{
                                 width: '36px', height: '36px', borderRadius: '50%', backgroundColor: getColor(userEmail),
@@ -110,7 +111,7 @@ export function PopupLoginView({
                             </span>
                             <span
                                 onClick={(e) => { e.stopPropagation(); onForgetUser(userEmail); }}
-                                style={{ color: '#64748b', cursor: 'pointer', fontSize: '14px', padding: '2px 4px', lineHeight: 1 }}
+                                style={{ color: theme.textSecondary, cursor: 'pointer', fontSize: '14px', padding: '2px 4px', lineHeight: 1 }}
                                 title="Remove"
                             >
                                 &times;
@@ -122,12 +123,12 @@ export function PopupLoginView({
                         type="button"
                         onClick={() => { onEmailChange(''); setMode('login'); }}
                         style={{
-                            padding: '10px', borderRadius: '10px', border: '1px dashed #334155',
-                            backgroundColor: 'transparent', color: '#94a3b8', cursor: 'pointer',
+                            padding: '10px', borderRadius: '10px', border: `1px dashed ${theme.border}`,
+                            backgroundColor: 'transparent', color: theme.textSecondary, cursor: 'pointer',
                             fontSize: '0.8rem', transition: 'border-color 0.2s',
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#3b82f6')}
-                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#334155')}
+                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = theme.accent)}
+                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = theme.border)}
                     >
                         Use another account
                     </button>
@@ -142,7 +143,7 @@ export function PopupLoginView({
                             type="button"
                             onClick={handleBack}
                             style={{
-                                background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer',
+                                background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer',
                                 fontSize: '0.8rem', textAlign: 'left', padding: 0, marginBottom: '4px',
                             }}
                         >
@@ -154,7 +155,7 @@ export function PopupLoginView({
                     {email && rememberedUsers.includes(email) && (
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
-                            borderRadius: '10px', border: '1px solid #334155', backgroundColor: '#1e293b',
+                            borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: theme.surface,
                         }}>
                             <div style={{
                                 width: '32px', height: '32px', minWidth: '32px', borderRadius: '50%', backgroundColor: getColor(email),
@@ -163,7 +164,7 @@ export function PopupLoginView({
                             }}>
                                 {getInitials(email)}
                             </div>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{email}</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 500, color: theme.text }}>{email}</span>
                         </div>
                     )}
 
@@ -178,8 +179,8 @@ export function PopupLoginView({
                                 onChange={(e) => onEmailChange(e.target.value)}
                                 required
                                 style={{
-                                    padding: '10px 12px', borderRadius: '8px', border: '1px solid #334155',
-                                    backgroundColor: '#1e293b', color: 'white', outline: 'none', fontSize: '0.9rem',
+                                    padding: '10px 12px', borderRadius: '8px', border: `1px solid ${theme.border}`,
+                                    backgroundColor: theme.surface, color: theme.text, outline: 'none', fontSize: '0.9rem',
                                 }}
                             />
                         )}
@@ -192,13 +193,13 @@ export function PopupLoginView({
                             onChange={(e) => onPasswordChange(e.target.value)}
                             required
                             style={{
-                                padding: '10px 12px', borderRadius: '8px', border: '1px solid #334155',
-                                backgroundColor: '#1e293b', color: 'white', outline: 'none', fontSize: '0.9rem',
+                                padding: '10px 12px', borderRadius: '8px', border: `1px solid ${theme.border}`,
+                                backgroundColor: theme.surface, color: theme.text, outline: 'none', fontSize: '0.9rem',
                             }}
                         />
 
                         {authError && (
-                            <div style={{ color: '#f87171', fontSize: '0.8rem', textAlign: 'center' }}>
+                            <div style={{ color: theme.error, fontSize: '0.8rem', textAlign: 'center' }}>
                                 {authError}
                             </div>
                         )}
@@ -207,7 +208,7 @@ export function PopupLoginView({
                             type="submit"
                             disabled={authLoading}
                             style={{
-                                padding: '10px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px',
+                                padding: '10px', backgroundColor: theme.accent, color: 'white', borderRadius: '8px',
                                 border: 'none', fontWeight: 600, cursor: authLoading ? 'not-allowed' : 'pointer',
                                 opacity: authLoading ? 0.6 : 1, fontSize: '0.9rem',
                             }}

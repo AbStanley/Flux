@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSettingsStore } from '../infrastructure/settings/settings.store';
 import { useExtensionAuthStore } from '../infrastructure/auth/extension-auth.store';
-import { THEMES, DEFAULT_THEME } from '../content/constants';
+import { THEMES, DEFAULT_THEME, type FluxTheme } from '../content/constants';
 import { useChromeStorage } from './hooks/useChromeStorage';
 import { useConnectionTest } from './hooks/useConnectionTest';
 import { useAvailableModels } from './hooks/useAvailableModels';
 import { PopupLoginView } from './components/PopupLoginView';
 import { PopupSettingsView } from './components/PopupSettingsView';
+import { customThemeToFluxTheme } from '../lib/color-derive';
 
 export default function FluxExtensionPopup() {
     const [showSettings, setShowSettings] = useState(false);
@@ -28,7 +29,18 @@ export default function FluxExtensionPopup() {
 
     useEffect(() => { loadSettings(); loadAuth(); }, [loadSettings, loadAuth]);
 
-    const theme = THEMES[storage.themeId] || THEMES[DEFAULT_THEME];
+    // Compute all available themes (built-in + custom from storage)
+    const availableThemes = useMemo(() => {
+        const merged: Record<string, FluxTheme> = { ...THEMES };
+        if (storage.customThemes) {
+            storage.customThemes.forEach(ct => {
+                merged[ct.id] = customThemeToFluxTheme(ct);
+            });
+        }
+        return merged;
+    }, [storage.customThemes]);
+
+    const theme = availableThemes[storage.themeId] || availableThemes[DEFAULT_THEME] || THEMES[DEFAULT_THEME];
 
     const handleSaveSettings = async () => {
         await setApiUrl(tempUrl);
@@ -75,6 +87,7 @@ export default function FluxExtensionPopup() {
                 isAuthenticated={isAuthenticated}
                 userEmail={user?.email}
                 onLogout={logout}
+                theme={theme}
             />
         );
     }
@@ -84,6 +97,7 @@ export default function FluxExtensionPopup() {
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             minHeight: '450px', padding: '20px', backgroundColor: theme.bgSolid, color: theme.text,
             textAlign: 'center', position: 'relative', transition: 'background-color 0.3s, color 0.3s',
+            width: '100%', boxSizing: 'border-box'
         }}>
             {!isAuthenticated ? (
                 <PopupLoginView
@@ -97,6 +111,7 @@ export default function FluxExtensionPopup() {
                     onSettingsClick={() => setShowSettings(true)}
                     rememberedUsers={storage.rememberedUsers}
                     onForgetUser={storage.forgetUser}
+                    theme={theme}
                 />
             ) : (
                 <>
@@ -170,15 +185,22 @@ export default function FluxExtensionPopup() {
 
             {isAuthenticated && (
                 <>
-                    {/* Theme picker */}
+                    {/* Theme picker with horizontal scroll */}
                     <div style={{
                         marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px',
                         backgroundColor: theme.surface, borderRadius: '12px', border: `1px solid ${theme.border}`,
                         transition: 'background-color 0.3s', width: '100%', boxSizing: 'border-box',
                     }}>
                         <span style={{ flex: 1, textAlign: 'left', fontWeight: 500, fontSize: '0.9rem' }}>Theme</span>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                            {Object.values(THEMES).map(t => (
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '8px', 
+                            overflowX: 'auto', 
+                            padding: '4px 2px',
+                            maxWidth: '180px',
+                            scrollbarWidth: 'none',
+                        }}>
+                            {Object.values(availableThemes).map(t => (
                                 <button
                                     key={t.id}
                                     onClick={() => storage.persistTheme(t.id)}
@@ -186,7 +208,7 @@ export default function FluxExtensionPopup() {
                                     style={{
                                         width: '20px', height: '20px', borderRadius: '50%', background: t.dot,
                                         border: storage.themeId === t.id ? `2px solid ${theme.accent}` : '2px solid rgba(255, 255, 255, 0.15)',
-                                        cursor: 'pointer', padding: 0,
+                                        cursor: 'pointer', padding: 0, flexShrink: 0,
                                         boxShadow: storage.themeId === t.id ? `0 0 8px ${theme.accent}` : 'none',
                                         transition: 'all 0.2s',
                                     }}

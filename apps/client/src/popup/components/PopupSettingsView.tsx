@@ -1,3 +1,5 @@
+import type { FluxTheme } from '../../content/constants';
+
 interface Props {
     onBack: () => void;
     tempUrl: string;
@@ -9,22 +11,23 @@ interface Props {
     isAuthenticated: boolean;
     userEmail?: string;
     onLogout: () => void;
+    theme: FluxTheme;
 }
 
 export function PopupSettingsView({
     onBack, tempUrl, onTempUrlChange, onSave,
     testStatus, testMessage, onTestConnection,
-    isAuthenticated, userEmail, onLogout,
+    isAuthenticated, userEmail, onLogout, theme,
 }: Props) {
     return (
         <div style={{
             display: 'flex', flexDirection: 'column', height: '100%',
-            padding: '20px', backgroundColor: '#0f172a', color: '#f8fafc', textAlign: 'left',
+            padding: '20px', backgroundColor: theme.bgSolid, color: theme.text, textAlign: 'left',
         }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
                 <button
                     onClick={onBack}
-                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0, marginRight: '10px' }}
+                    style={{ background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer', padding: 0, marginRight: '10px' }}
                 >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -34,13 +37,13 @@ export function PopupSettingsView({
             </div>
 
             {isAuthenticated && (
-                <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#1e293b', borderRadius: '8px' }}>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>Logged in as:</p>
+                <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: theme.surface, borderRadius: '8px', border: `1px solid ${theme.border}` }}>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: theme.textSecondary }}>Logged in as:</p>
                     <p style={{ margin: '4px 0 10px', fontWeight: 600 }}>{userEmail}</p>
                     <button
                         onClick={onLogout}
                         style={{
-                            width: '100%', padding: '6px', backgroundColor: '#ef4444', color: 'white',
+                            width: '100%', padding: '6px', backgroundColor: theme.error, color: 'white',
                             borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.8rem',
                         }}
                     >
@@ -50,7 +53,7 @@ export function PopupSettingsView({
             )}
 
             <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#94a3b8' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: theme.textSecondary }}>
                     Server URL
                 </label>
                 <input
@@ -59,11 +62,11 @@ export function PopupSettingsView({
                     onChange={(e) => onTempUrlChange(e.target.value)}
                     placeholder="http://localhost"
                     style={{
-                        width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #334155',
-                        backgroundColor: '#1e293b', color: 'white', outline: 'none', boxSizing: 'border-box',
+                        width: '100%', padding: '10px', borderRadius: '8px', border: `1px solid ${theme.border}`,
+                        backgroundColor: theme.surface, color: theme.text, outline: 'none', boxSizing: 'border-box',
                     }}
                 />
-                <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px' }}>
+                <p style={{ fontSize: '0.75rem', color: theme.textDim, marginTop: '6px' }}>
                     Leave empty to use default.
                 </p>
             </div>
@@ -73,7 +76,7 @@ export function PopupSettingsView({
                     onClick={onTestConnection}
                     disabled={testStatus === 'testing'}
                     style={{
-                        flex: 1, padding: '10px', backgroundColor: '#475569', color: 'white',
+                        flex: 1, padding: '10px', backgroundColor: theme.textSecondary, color: 'white',
                         borderRadius: '8px', border: 'none', fontWeight: 600,
                         cursor: testStatus === 'testing' ? 'not-allowed' : 'pointer',
                     }}
@@ -83,7 +86,7 @@ export function PopupSettingsView({
                 <button
                     onClick={onSave}
                     style={{
-                        flex: 2, padding: '10px', backgroundColor: '#3b82f6', color: 'white',
+                        flex: 2, padding: '10px', backgroundColor: theme.accent, color: 'white',
                         borderRadius: '8px', border: 'none', fontWeight: 600, cursor: 'pointer',
                     }}
                 >
@@ -94,7 +97,7 @@ export function PopupSettingsView({
             {testMessage && (
                 <p style={{
                     marginTop: '15px', fontSize: '0.85rem', textAlign: 'center',
-                    color: testStatus === 'success' ? '#4ade80' : '#f87171',
+                    color: testStatus === 'success' ? theme.success : theme.error,
                 }}>
                     {testMessage}
                 </p>

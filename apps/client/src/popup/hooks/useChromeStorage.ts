@@ -15,6 +15,7 @@ interface PopupStorageState {
     persistModel: (model: string) => void;
     persistEmail: (email: string) => void;
     forgetUser: (email: string) => void;
+    customThemes: any[];
 }
 
 export function useChromeStorage(defaultTheme: string): PopupStorageState {
@@ -23,6 +24,7 @@ export function useChromeStorage(defaultTheme: string): PopupStorageState {
     const [selectedModel, setSelectedModel] = useState('');
     const [email, setEmail] = useState('');
     const [rememberedUsers, setRememberedUsers] = useState<string[]>([]);
+    const [customThemes, setCustomThemes] = useState<any[]>([]);
     const loaded = useRef(false);
 
     useEffect(() => {
@@ -30,16 +32,29 @@ export function useChromeStorage(defaultTheme: string): PopupStorageState {
         loaded.current = true;
         if (window.chrome?.storage?.local) {
             window.chrome.storage.local.get(
-                ['fluxEnabled', 'flux_last_email', 'fluxTheme', 'fluxModel', 'flux_remembered_users'],
+                ['fluxEnabled', 'flux_last_email', 'fluxTheme', 'fluxModel', 'flux_remembered_users', 'fluxCustomThemes'],
                 (result) => {
                     if (result.fluxEnabled !== undefined) setEnabled(result.fluxEnabled as boolean);
                     if (result.flux_last_email) setEmail(result.flux_last_email as string);
                     if (result.fluxTheme) setThemeId(result.fluxTheme as string);
                     if (result.fluxModel) setSelectedModel(result.fluxModel as string);
                     if (Array.isArray(result.flux_remembered_users)) setRememberedUsers(result.flux_remembered_users as string[]);
+                    if (Array.isArray(result.fluxCustomThemes)) setCustomThemes(result.fluxCustomThemes);
                 },
             );
         }
+
+        // Listen for changes (e.g. if custom themes are added in side panel)
+        const handleChanges = (changes: Record<string, { newValue?: unknown }>) => {
+            if (changes.fluxCustomThemes?.newValue) {
+                setCustomThemes(changes.fluxCustomThemes.newValue as any[]);
+            }
+            if (changes.fluxTheme?.newValue) {
+                setThemeId(changes.fluxTheme.newValue as string);
+            }
+        };
+        window.chrome.storage.onChanged.addListener(handleChanges);
+        return () => window.chrome.storage.onChanged.removeListener(handleChanges);
     }, []);
 
     const persistTheme = (id: string) => {
@@ -83,5 +98,6 @@ export function useChromeStorage(defaultTheme: string): PopupStorageState {
         persistModel,
         persistEmail,
         forgetUser,
+        customThemes,
     };
 }

@@ -3,7 +3,7 @@ import { useWordsStore } from './store/useWordsStore';
 import { WordList } from './components/WordList';
 import { EditWordDialog } from './components/EditWordDialog';
 import { Button } from '../../components/ui/button';
-import { Plus, Download, FileDown, Search, Filter } from 'lucide-react';
+import { Plus, Download, FileDown, Search } from 'lucide-react';
 import { type CreateWordRequest, type Word, wordsApi } from '../../../infrastructure/api/words';
 import { exportToCSV, exportToAnki } from './utils/exportUtils';
 import { Input } from '../../components/ui/input';
@@ -171,57 +171,55 @@ export function WordManager() {
                 </div>
 
                 {/* Search + Filters */}
-                <div className="flex flex-col lg:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
-                    <div className="relative flex-1">
+                <div className="flex flex-col xl:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
+                    <div className="relative flex-1 min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search entry, definition, context, examples..."
+                            placeholder="Search vocabulary..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 bg-background/50 border-muted-foreground/20 focus-visible:ring-primary/50 transition-all"
+                            className="pl-9 bg-background/50 border-muted-foreground/20 focus-visible:ring-primary/50 transition-all w-full"
                         />
                     </div>
 
-                    <div className="flex flex-wrap lg:flex-nowrap gap-3 items-center">
-                        <Filter className="h-4 w-4 text-muted-foreground hidden lg:block" />
+                    <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center w-full xl:w-auto">
+                        <div className="grid grid-cols-2 sm:flex sm:flex-nowrap gap-2 w-full">
+                            <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
+                                <SelectTrigger className="bg-background/50 h-9 text-xs sm:w-[130px]">
+                                    <SelectValue placeholder="Source" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Source</SelectItem>
+                                    {uniqueSourceLangs.map(lang => (
+                                        <SelectItem key={`source-${lang}`} value={lang}>{lang}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
 
-                        <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                            <SelectTrigger className="w-full lg:w-[140px] bg-background/50 h-9">
-                                <SelectValue placeholder="Source Lang" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Source</SelectItem>
-                                {uniqueSourceLangs.map(lang => (
-                                    <SelectItem key={`source-${lang}`} value={lang}>{lang}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                                <SelectTrigger className="bg-background/50 h-9 text-xs sm:w-[130px]">
+                                    <SelectValue placeholder="Target" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Target</SelectItem>
+                                    {uniqueTargetLangs.map(lang => (
+                                        <SelectItem key={`target-${lang}`} value={lang}>{lang}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
 
-                        <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                            <SelectTrigger className="w-full lg:w-[140px] bg-background/50 h-9">
-                                <SelectValue placeholder="Target Lang" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Target</SelectItem>
-                                {uniqueTargetLangs.map(lang => (
-                                    <SelectItem key={`target-${lang}`} value={lang}>{lang}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        <Select value={sortOption} onValueChange={setSortOption}>
-                            <SelectTrigger className="w-full lg:w-[170px] bg-background/50 h-9">
-                                <SelectValue placeholder="Sort by" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="date_desc">Newest First</SelectItem>
-                                <SelectItem value="date_asc">Oldest First</SelectItem>
-                                <SelectItem value="text_asc">Entry (A-Z)</SelectItem>
-                                <SelectItem value="text_desc">Entry (Z-A)</SelectItem>
-                                <SelectItem value="definition_asc">Definition (A-Z)</SelectItem>
-                                <SelectItem value="definition_desc">Definition (Z-A)</SelectItem>
-                            </SelectContent>
-                        </Select>
+                            <Select value={sortOption} onValueChange={setSortOption}>
+                                <SelectTrigger className="bg-background/50 h-9 text-xs col-span-2 sm:w-[160px]">
+                                    <SelectValue placeholder="Sort" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="date_desc">Newest First</SelectItem>
+                                    <SelectItem value="date_asc">Oldest First</SelectItem>
+                                    <SelectItem value="text_asc">Entry (A-Z)</SelectItem>
+                                    <SelectItem value="text_desc">Entry (Z-A)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </div>
 
