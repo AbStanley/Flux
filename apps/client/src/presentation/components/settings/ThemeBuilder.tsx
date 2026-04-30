@@ -72,7 +72,7 @@ function ColorPickerRow({ label, hint, color, onChange }: { label: string; hint:
 }
 
 const SEED_FIELDS: { key: keyof SeedColors; label: string; hint: string }[] = [
-    { key: 'background', label: 'Background', hint: 'Main page colour' },
+    { key: 'background', label: 'Page Background', hint: 'Main page and overall app background' },
     { key: 'foreground', label: 'Text', hint: 'Body text on background' },
     { key: 'primary', label: 'Accent', hint: 'Buttons & highlights' },
     { key: 'card', label: 'Card Surface', hint: 'Panels & cards' },

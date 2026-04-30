@@ -107,9 +107,17 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                     {/* Sidebar popover example */}
                     <div style={{ width: 90, display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <div style={{ background: pk, border: `1px solid ${bd}`, borderRadius: 6, padding: 6, color: pkFg, ...hoverStyle('popover') }}
-                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
-                            <p style={{ fontWeight: 600, marginBottom: 3 }}>Popover</p>
-                            <p style={{ color: mtFg, fontSize: 9 }}>Dropdown menus use this surface color.</p>
+                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }} 
+                             onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} 
+                             onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
+                            <p style={{ fontWeight: 600, marginBottom: 3, ...hoverStyle('popover-foreground') }}
+                               onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover-foreground'); }}
+                               onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
+                               onClick={(e) => { e.stopPropagation(); onClickToken?.('popover-foreground'); }}>Popover</p>
+                            <p style={{ color: mtFg, fontSize: 9, ...hoverStyle('muted-foreground') }}
+                               onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
+                               onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
+                               onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>Dropdown menus use this surface color.</p>
                         </div>
                         <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                             {[bg, cd, pr, ac, ds, sc].map((c, i) => (
@@ -141,7 +149,10 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                         </div>
                     </div>
 
-                    <span style={{ color: mtFg }}>The student opened the book and began to read. The word </span>
+                    <span style={{ color: mtFg, ...hoverStyle('muted-foreground') }}
+                          onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
+                          onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                          onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>The student opened the book and began to read. The word </span>
                     <span style={{ color: link, borderBottom: `2px solid ${link}`, paddingBottom: 1, fontWeight: 600, ...hoverStyle('link-color') }}
                           onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
                         ephemeral
@@ -191,32 +202,39 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                         <span style={{ fontSize: 8 }}>YouTube Player</span>
                     </div>
                     
-                    {/* Subtitle Overlay Mockup - FULLY CLICKABLE */}
+                    {/* Subtitle Overlay Mockup - Map to POPOVER */}
                     <div style={{ 
                         background: fluxTheme.bg, color: fluxTheme.text, padding: '8px 16px', borderRadius: 12, 
                         border: `1px solid ${fluxTheme.border}`, backdropFilter: 'blur(10px)',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                         boxShadow: '0 10px 30px rgba(0,0,0,0.5)', maxWidth: '90%', textAlign: 'center',
                         animation: 'pulse 2s infinite ease-in-out',
-                        ...hoverStyle('background')
+                        ...hoverStyle('popover')
                     }}
-                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
                     onMouseLeave={() => onHoverToken?.(null)}
-                    onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
+                    onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
                         <div style={{ display: 'flex', gap: 8, marginBottom: 2 }}>
-                            <span style={{ color: fluxTheme.accent, fontWeight: 700, ...hoverStyle('primary') }}
+                            <span style={{ 
+                                color: fluxTheme.accent, 
+                                background: fluxTheme.accentGlow,
+                                padding: '1px 4px',
+                                borderRadius: 4,
+                                fontWeight: 700, 
+                                ...hoverStyle('primary') 
+                            }}
                                   onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }}
-                                  onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                                  onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
                                   onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Ich</span>
                             <span>habe</span>
                             <span style={{ borderBottom: `2px solid ${fluxTheme.accent}`, ...hoverStyle('primary') }}
                                   onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }}
-                                  onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                                  onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
                                   onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>gelesen</span>
                         </div>
                         <div style={{ fontSize: 9, color: fluxTheme.textSecondary, opacity: 0.8, ...hoverStyle('muted-foreground') }}
                               onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
-                              onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                              onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
                               onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>
                             I have read
                         </div>

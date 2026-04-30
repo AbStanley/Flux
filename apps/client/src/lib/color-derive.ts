@@ -104,7 +104,8 @@ export function deriveTokens(seeds: SeedColors): DerivedTokens {
 
     // Muted — de-saturated card variant
     const muted = desaturate(shiftL(cd, -2), 0.15);
-    const mutedFg = autoFg(muted, shiftL(fg, 20), shiftL(fg, -20));
+    // Increase contrast shift for muted foreground to prevent conflicts with colorful backgrounds
+    const mutedFg = autoFg(muted, shiftL(fg, 40), shiftL(fg, -30));
 
     // Accent — slight tint of primary layered over background
     const [ph, ps] = parseHsl(pr);
@@ -166,9 +167,9 @@ export function seedsFromTokens(tokens: DerivedTokens): SeedColors {
     return {
         background: hslToHex(tokens.background),
         foreground: hslToHex(tokens.foreground),
-        primary:    hslToHex(tokens.primary),
-        card:       hslToHex(tokens.card),
-        border:     hslToHex(tokens.border),
+        primary: hslToHex(tokens.primary),
+        card: hslToHex(tokens.card),
+        border: hslToHex(tokens.border),
     };
 }
 
@@ -241,22 +242,22 @@ export function customThemeToFluxTheme(theme: CustomTheme): FluxTheme {
     const borderAlpha = isDark ? 0.22 : 0.30;
 
     return {
-        name:         theme.name,
-        id:           theme.id,
-        dot:          hslToHex(tokens.background),
-        bg:           hslToRgba(tokens.background, 0.85),
-        bgSolid:      hslToHex(tokens.background),
-        surface:      hslToHex(tokens.card),
+        name: theme.name,
+        id: theme.id,
+        dot: hslToHex(tokens.background),
+        bg: hslToRgba(tokens.popover, 0.85),
+        bgSolid: hslToHex(tokens.background),
+        surface: hslToHex(tokens.card),
         surfaceActive: hslToHex(tokens.secondary),
-        text:         hslToHex(tokens.foreground),
+        text: hslToHex(tokens.foreground),
         textSecondary: hslToHex(tokens['muted-foreground']),
-        textDim:      hslToRgba(tokens['muted-foreground'], 0.50),
-        accent:       hslToHex(tokens.primary),
-        accentGlow:   hslToRgba(tokens.primary, 0.20),
-        border:       hslToRgba(tokens.border, borderAlpha),
-        borderLight:  hslToRgba(tokens.border, borderAlpha * 0.5),
-        error:        hslToHex(tokens.destructive),
-        success:      hslToHex(tokens.success ?? (isDark ? '142 65% 52%' : '142 55% 32%')),
-        info:         hslToHex(tokens.primary),
+        textDim: hslToRgba(tokens['muted-foreground'], 0.50),
+        accent: hslToHex(tokens.primary),
+        accentGlow: hslToRgba(tokens.primary, 0.20),
+        border: hslToRgba(tokens.border, borderAlpha),
+        borderLight: hslToRgba(tokens.border, borderAlpha * 0.5),
+        error: hslToHex(tokens.destructive),
+        success: hslToHex(tokens.success ?? (isDark ? '142 65% 52%' : '142 55% 32%')),
+        info: hslToHex(tokens.primary),
     };
 }

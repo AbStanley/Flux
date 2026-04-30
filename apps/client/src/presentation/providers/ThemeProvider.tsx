@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { ThemeProviderContext } from "./ThemeProviderContext"
-import { useSettingsStore } from "../features/settings/store/useSettingsStore"
+import { useSettingsStore, type CustomTheme } from "../features/settings/store/useSettingsStore"
 
 export type Theme = "dark" | "nordic" | "light" | "cream" | "sunset" | "rose-pine" | "evergreen" | "moonlight" | "system" | string
 
@@ -36,7 +36,7 @@ export function ThemeProvider({
     const [theme, setThemeState] = useState<Theme>(
         () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
     )
-    const [extCustomThemes, setExtCustomThemes] = useState<any[]>([]);
+    const [extCustomThemes, setExtCustomThemes] = useState<CustomTheme[]>([]);
     const customThemesFromStore = useSettingsStore(state => state.customThemes);
     
     // Use store themes if available (side panel), otherwise use synced themes (extension context)
@@ -55,14 +55,14 @@ export function ThemeProvider({
                 setThemeState(mapped);
             }
 
-            const storedCustom = result.fluxCustomThemes as any[];
+            const storedCustom = result.fluxCustomThemes as CustomTheme[] | undefined;
             if (storedCustom) {
                 setExtCustomThemes(storedCustom);
             }
         });
 
         // Listen for theme changes from extension popup/content scripts
-        const handleChange = (changes: Record<string, { newValue?: unknown }>) => {
+        const handleChange = (changes: Record<string, chrome.storage.StorageChange>) => {
             if (changes.fluxTheme?.newValue) {
                 const extTheme = changes.fluxTheme.newValue as string;
                 const mapped = extTheme.startsWith('custom-') ? extTheme : (EXTENSION_TO_WEBAPP_THEME[extTheme] || extTheme);
@@ -70,7 +70,7 @@ export function ThemeProvider({
                 setThemeState(mapped);
             }
             if (changes.fluxCustomThemes?.newValue) {
-                setExtCustomThemes(changes.fluxCustomThemes.newValue as any[]);
+                setExtCustomThemes(changes.fluxCustomThemes.newValue as CustomTheme[]);
             }
         };
         window.chrome.storage.onChanged.addListener(handleChange);
