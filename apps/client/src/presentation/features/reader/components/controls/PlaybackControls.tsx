@@ -24,13 +24,13 @@ export function PlaybackControls({
             <Button
                 variant="outline"
                 size="icon"
-                className={`${isMini ? 'h-8 w-8' : 'h-10 w-10'} rounded-full`}
+                className={`${isMini ? 'h-8 w-8' : 'h-9 w-9'} rounded-full`}
                 onClick={onPlayPause}
             >
                 {isPlaying ? (
-                    <Pause className={`${isMini ? 'h-4 w-4' : 'h-5 w-5'} fill-current`} />
+                    <Pause className={`${isMini ? 'h-4 w-4' : 'h-4 w-4'} fill-current`} />
                 ) : (
-                    <Play className={`${isMini ? 'h-4 w-4' : 'h-5 w-5'} fill-current ml-0.5`} />
+                    <Play className={`${isMini ? 'h-4 w-4' : 'h-4 w-4'} fill-current ml-0.5`} />
                 )}
             </Button>
 

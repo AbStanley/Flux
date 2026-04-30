@@ -17,7 +17,7 @@ export function ReaderView() {
     const isZenMode = useReaderStore(state => state.isZenMode);
     const isRichInfoOpen = useTranslationStore(state => state.isRichInfoOpen);
     
-    const isSidebarOpen = !isZenMode && (activePanel === 'SAVED_WORDS' || isRichInfoOpen);
+    const isSidebarOpen = (activePanel === 'SAVED_WORDS' || isRichInfoOpen);
 
     useSessionAutoSave();
     useGlobalShortcuts();
@@ -36,21 +36,19 @@ export function ReaderView() {
             <MotionDiv className="flex-1 flex flex-col min-h-0">
                 <ReaderMainPanel />
             </MotionDiv>
-            {!isZenMode && (
-                <MotionDiv
-                    animate={{
-                        opacity: isSidebarOpen ? 1 : 0,
-                        x: isSidebarOpen ? 0 : 80,
-                    }}
-                    transition={{ duration: 0.5, ease: premiumEase }}
-                    className="flex flex-col"
-                    style={{
-                        visibility: isSidebarOpen ? 'visible' : 'hidden',
-                    }}
-                >
-                    {activePanel === 'SAVED_WORDS' ? <SavedWordsPanel /> : <ReaderSidebar />}
-                </MotionDiv>
-            )}
+            <MotionDiv
+                animate={{
+                    opacity: isSidebarOpen ? 1 : 0,
+                    x: isSidebarOpen ? 0 : 80,
+                }}
+                transition={{ duration: 0.5, ease: premiumEase }}
+                className="flex flex-col"
+                style={{
+                    visibility: isSidebarOpen ? 'visible' : 'hidden',
+                }}
+            >
+                {activePanel === 'SAVED_WORDS' ? <SavedWordsPanel /> : <ReaderSidebar />}
+            </MotionDiv>
         </MotionDiv>
     );
 };

@@ -164,12 +164,12 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
     }
 
     return (
-        <div className={`relative w-full p-2 md:p-4 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-4 ${vertical
+        <div className={`relative w-full p-1 md:p-2 border-border/40 bg-background/95 backdrop-blur z-40 flex gap-2 ${vertical
             ? 'flex-col border rounded-xl shadow-sm'
             : 'flex-col border-b'
             }`}>
 
-            <div className={`flex gap-4 items-center justify-between w-full ${vertical ? 'flex-col items-stretch' : 'flex-col md:flex-row'}`}>
+            <div className={`flex gap-2 items-center justify-between w-full ${vertical ? 'flex-col items-stretch' : 'flex-col md:flex-row'}`}>
                 {/* Left Group: Playback & Selection */}
                 <div className={`flex items-center gap-2 ${vertical ? 'justify-between' : ''}`}>
                     <PlaybackControls
@@ -191,7 +191,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                 </div>
 
                 {/* Right Group: Voice Settings & Collapse Button */}
-                <div className={`flex items-center gap-4 flex-1 w-full justify-end ${vertical ? 'flex-col items-stretch' : 'md:w-auto overflow-hidden'}`}>
+                <div className={`flex items-center gap-2 flex-1 w-full justify-end ${vertical ? 'flex-col items-stretch' : 'md:w-auto overflow-hidden'}`}>
 
 
                     <VoiceSettings
@@ -250,15 +250,15 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                     size="icon"
                     onClick={() => useTranslationStore.getState().toggleRichInfo()}
                     className={cn(
-                        "h-9 w-9 rounded-full transition-all",
+                        "h-8 w-8 rounded-full transition-all",
                         isRichInfoOpen ? "text-primary bg-primary/10" : "text-muted-foreground"
                     )}
                     title="Toggle Details Panel"
                 >
                     {isRichInfoOpen ? (
-                        <PanelRightClose className="h-5 w-5" />
+                        <PanelRightClose className="h-4 w-4" />
                     ) : (
-                        <PanelRightOpen className="h-5 w-5" />
+                        <PanelRightOpen className="h-4 w-4" />
                     )}
                 </Button>
 
@@ -268,10 +268,10 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                     variant="ghost"
                     size="icon"
                     onClick={toggleZenMode}
-                    className="h-9 w-9 rounded-full text-muted-foreground"
+                    className="h-8 w-8 rounded-full text-muted-foreground"
                     title="Enter Zen Mode (Shortcut: Z)"
                 >
-                    <Maximize2 className="h-5 w-5" />
+                    <Maximize2 className="h-4 w-4" />
                 </Button>
             </div>
         </div >

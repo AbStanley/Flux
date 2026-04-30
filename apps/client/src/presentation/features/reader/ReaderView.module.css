@@ -4,8 +4,8 @@
     color: hsl(var(--foreground));
     white-space: pre-wrap;
     width: 100%;
-    padding: 3rem;
-    padding-bottom: 3rem;
+    padding: 2rem;
+    padding-bottom: 2rem;
     /* Prevent layout thrashing during transitions */
     will-change: auto;
 }

@@ -25,7 +25,7 @@ export const FocusLayout: React.FC<FocusLayoutProps> = ({
     return (
         <MotionDiv 
             animate={{
-                gap: isReading ? 0 : '1rem',
+                gap: isReading ? '0.5rem' : '1rem',
             }}
             transition={{ duration: 0.5, ease: premiumEase }}
             className={cn(
@@ -66,7 +66,7 @@ export const FocusLayout: React.FC<FocusLayoutProps> = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0, transition: { duration: 0.4, ease: premiumEase } }}
                         transition={{ duration: 0.6, ease: premiumEase }}
-                        className="w-full flex-1 flex flex-col gap-2 overflow-hidden z-10 h-full"
+                        className="w-full flex-1 flex flex-col gap-1 overflow-hidden z-10 h-full"
                     >
                         <MotionDiv
                             initial={{ opacity: 0, x: -30 }}
@@ -75,8 +75,9 @@ export const FocusLayout: React.FC<FocusLayoutProps> = ({
                         >
                             <Button
                                 variant="ghost"
+                                size="sm"
                                 onClick={onBackToConfig}
-                                className="self-start mb-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 gap-2 pl-2 pr-4"
+                                className="self-start mb-0 hover:bg-neutral-100 dark:hover:bg-neutral-800 gap-2 pl-2 pr-4"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 <span className="hidden sm:inline">Back to Configuration</span>

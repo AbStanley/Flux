@@ -286,7 +286,7 @@ export function ReaderMainPanel() {
                         variants={paginationV}
                         initial="hidden"
                         animate="visible"
-                        className="border-t bg-background/95 backdrop-blur-md px-4 py-3 flex-shrink-0 z-[250] shadow-sm"
+                        className="border-t bg-background/95 backdrop-blur-md px-4 py-1.5 flex-shrink-0 z-[250] shadow-sm"
                     >
                         <ReaderPagination
                             currentPage={currentPage}
