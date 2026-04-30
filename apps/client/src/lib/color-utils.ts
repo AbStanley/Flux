@@ -72,3 +72,65 @@ export function hslToHex(hslString: string): string {
 
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
+
+export type HarmonyMode = 'complementary' | 'triadic' | 'analogous' | 'split-complementary' | 'tetradic' | 'monochromatic';
+
+export interface ColorHarmony {
+    label: string;
+    colors: string[];
+}
+
+/**
+ * Generates various color harmonies based on a seed HEX color.
+ */
+export function getColorHarmonies(hex: string): ColorHarmony[] {
+    const hsl = hexToHsl(hex);
+    const [h, s, l] = hsl.replace(/%/g, '').split(' ').map(parseFloat);
+
+    const shift = (hue: number) => (hue + 360) % 360;
+
+    return [
+        {
+            label: 'Complementary',
+            colors: [hslToHex(`${shift(h + 180)} ${s}% ${l}%`)]
+        },
+        {
+            label: 'Triadic',
+            colors: [
+                hslToHex(`${shift(h + 120)} ${s}% ${l}%`),
+                hslToHex(`${shift(h + 240)} ${s}% ${l}%`)
+            ]
+        },
+        {
+            label: 'Analogous',
+            colors: [
+                hslToHex(`${shift(h - 30)} ${s}% ${l}%`),
+                hslToHex(`${shift(h + 30)} ${s}% ${l}%`)
+            ]
+        },
+        {
+            label: 'Split-Comp',
+            colors: [
+                hslToHex(`${shift(h + 150)} ${s}% ${l}%`),
+                hslToHex(`${shift(h + 210)} ${s}% ${l}%`)
+            ]
+        },
+        {
+            label: 'Square',
+            colors: [
+                hslToHex(`${shift(h + 90)} ${s}% ${l}%`),
+                hslToHex(`${shift(h + 180)} ${s}% ${l}%`),
+                hslToHex(`${shift(h + 270)} ${s}% ${l}%`)
+            ]
+        },
+        {
+            label: 'Tints',
+            colors: [
+                hslToHex(`${h} ${s}% ${Math.min(l + 15, 95)}%`),
+                hslToHex(`${h} ${s}% ${Math.min(l + 30, 98)}%`),
+                hslToHex(`${h} ${s}% ${Math.max(l - 15, 5)}%`),
+                hslToHex(`${h} ${s}% ${Math.max(l - 30, 2)}%`)
+            ]
+        }
+    ];
+}

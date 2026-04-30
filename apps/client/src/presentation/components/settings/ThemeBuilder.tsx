@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Save, Sliders, Sparkles, Download, Upload, RotateCcw, Eye } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -12,60 +12,89 @@ import { THEME_PRESETS } from '@/lib/color-derive';
 import { BUILT_IN_THEME_TOKENS } from '@/lib/theme-presets';
 import { ThemeBuilderAdvanced } from './ThemeBuilderAdvanced';
 import { ThemeBuilderPreview } from './ThemeBuilderPreview';
-import { Check, X } from 'lucide-react';
+import { Check, X, Copy } from 'lucide-react';
 
 type Mode = 'simple' | 'full';
 
 function ColorPickerRow({ label, hint, color, onChange }: { label: string; hint: string; color: string; onChange: (c: string) => void }) {
     const [originalColor, setOriginalColor] = useState(color);
     const [isEditing, setIsEditing] = useState(false);
+    const [inputValue, setInputValue] = useState(color);
 
-    const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    useEffect(() => {
+        setInputValue(color);
+    }, [color]);
+
+    const handleColorChange = (newColor: string) => {
         if (!isEditing) {
             setOriginalColor(color);
             setIsEditing(true);
         }
-        onChange(e.target.value);
+        onChange(newColor);
+    };
+
+    const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setInputValue(val);
+        if (/^#[0-9A-Fa-f]{6}$|^#[0-9A-Fa-f]{3}$/.test(val)) {
+            handleColorChange(val);
+        }
     };
 
     const confirm = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         setIsEditing(false);
     };
 
     const cancel = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         onChange(originalColor);
+        setInputValue(originalColor);
         setIsEditing(false);
+    };
+
+    const copyToClipboard = (e: React.MouseEvent) => {
+        e.preventDefault(); e.stopPropagation();
+        navigator.clipboard.writeText(color);
     };
 
     const hasChanged = isEditing && color !== originalColor;
 
     return (
-        <div className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors group ${hasChanged ? 'border-primary shadow-sm bg-primary/5' : 'border-border bg-card/50 hover:border-primary/50'}`}>
+        <div className={`flex items-center gap-3 p-2 rounded-lg border transition-all group ${hasChanged ? 'border-primary shadow-md bg-primary/5' : 'border-border bg-card/40 hover:border-primary/40'}`}>
             <label className="relative flex-shrink-0 cursor-pointer" title="Click to pick color">
-                <div className="w-9 h-9 rounded-md border border-border shadow-sm group-hover:scale-105 transition-transform"
+                <div className="w-10 h-10 rounded-lg border border-border/50 shadow-sm group-hover:scale-105 transition-transform"
                     style={{ background: color }} />
-                <input type="color" value={color} onChange={handleColorChange} onClick={() => { if (!isEditing) setOriginalColor(color); setIsEditing(true); }}
+                <input type="color" value={color} onChange={(e) => handleColorChange(e.target.value)} onClick={() => { if (!isEditing) setOriginalColor(color); setIsEditing(true); }}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
             </label>
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{label}</p>
-                <p className="text-xs text-muted-foreground">{hint}</p>
+            
+            <div className="flex-1 min-w-0" title={hint}>
+                <p className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{label}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                    <Input 
+                        value={inputValue} 
+                        onChange={handleTextChange}
+                        onFocus={() => { if (!isEditing) setOriginalColor(color); setIsEditing(true); }}
+                        className="h-7 text-xs font-mono w-24 px-2 bg-background/50 border-none focus-visible:ring-1 focus-visible:ring-primary/30"
+                    />
+                    {!hasChanged && (
+                        <button onClick={copyToClipboard} className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all" title="Copy HEX">
+                            <Copy className="w-3 h-3 text-muted-foreground" />
+                        </button>
+                    )}
+                </div>
             </div>
-            {hasChanged ? (
-                <div className="flex gap-1 animate-in fade-in zoom-in duration-200">
-                    <button onClick={confirm} className="p-1.5 rounded bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors cursor-pointer" title="Keep new color">
-                        <Check className="w-4 h-4" />
+
+            {hasChanged && (
+                <div className="flex gap-1 animate-in fade-in slide-in-from-right-2 duration-200">
+                    <button onClick={confirm} className="p-1.5 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-sm transition-colors cursor-pointer" title="Keep new color">
+                        <Check className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={cancel} className="p-1.5 rounded bg-red-500/20 text-red-600 hover:bg-red-500/30 transition-colors cursor-pointer" title="Discard and revert">
-                        <X className="w-4 h-4" />
+                    <button onClick={cancel} className="p-1.5 rounded-full bg-destructive text-white hover:bg-destructive/90 shadow-sm transition-colors cursor-pointer" title="Discard">
+                        <X className="w-3.5 h-3.5" />
                     </button>
                 </div>
-            ) : (
-                <span className="text-xs font-mono text-muted-foreground">{color}</span>
             )}
         </div>
     );
@@ -296,7 +325,7 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                         {/* Editors */}
                         <div className="pt-2">
                             {mode === 'simple' ? (
-                                <div className="grid grid-cols-1 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {SEED_FIELDS.map(({ key, label, hint }) => (
                                         <ColorPickerRow
                                             key={key}
@@ -327,10 +356,10 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                                     <X className="w-4 h-4" />
                                 </Button>
                             </div>
+                            <p className="mb-3 text-[10px] text-muted-foreground text-center italic">Tip: Click preview elements to edit their colors directly.</p>
                             <div className="rounded-xl shadow-2xl md:shadow-none border md:border-0 overflow-hidden">
                                 <ThemeBuilderPreview tokens={tokens} name={name} activeToken={hoveredToken} onHoverToken={setHoveredToken} onClickToken={handlePreviewClick} />
                             </div>
-                            <p className="mt-4 text-[10px] text-muted-foreground text-center italic">Tip: Click preview elements to edit their colors directly.</p>
                         </div>
                     </div>
                 </div>
