@@ -68,9 +68,11 @@ export function WordTableDesktop({
                                             <Volume2 className="w-4 h-4" />
                                         </Button>
                                     </TableCell>
-                                    <TableCell className="font-semibold text-base py-4 pl-6 align-top">
+                                    <TableCell className="font-semibold text-base py-4 pl-6 align-top" title={word.text}>
                                         <div className="flex flex-col gap-1">
-                                            <span className="group-hover:text-primary transition-colors">{word.text}</span>
+                                            <div className="group-hover:text-primary transition-colors line-clamp-2 leading-tight break-all">
+                                                {word.text}
+                                            </div>
                                             {word.pronunciation && (
                                                 <span className="text-xs text-muted-foreground font-normal font-mono">
                                                     /{word.pronunciation}/
@@ -79,12 +81,12 @@ export function WordTableDesktop({
                                             <SrsBadge word={word} />
                                         </div>
                                     </TableCell>
-                                    <TableCell className="align-top py-4">
-                                        <div className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                                    <TableCell className="align-top py-4" title={word.definition || ''}>
+                                        <div className="text-sm text-muted-foreground leading-relaxed line-clamp-2 break-words">
                                             {word.definition || <span className="italic text-muted-foreground/50">No definition</span>}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="align-top py-4">
+                                    <TableCell className="align-top py-4" title={`${word.sourceLanguage || ''} -> ${word.targetLanguage || ''}`}>
                                         {(word.sourceLanguage || word.targetLanguage) ? (
                                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider bg-muted/40 px-2 py-1.5 rounded-lg w-fit border border-muted-foreground/5 shadow-inner">
                                                 <div className="flex items-center gap-1">
@@ -101,12 +103,12 @@ export function WordTableDesktop({
                                             <span className="text-muted-foreground/30 text-xs">-</span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="align-top py-4 overflow-hidden">
+                                    <TableCell className="align-top py-4 overflow-hidden" title={`${word.sourceTitle || ''}\n${word.context || ''}`}>
                                         <div className="flex flex-col gap-1.5 w-full">
                                             {word.sourceTitle && (
                                                 <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
                                                     <BookOpen className="w-3 h-3 mt-0.5 shrink-0" />
-                                                    <span className="truncate w-full" title={word.sourceTitle}>
+                                                    <span className="truncate w-full">
                                                         {word.sourceTitle}
                                                     </span>
                                                 </div>
@@ -114,7 +116,7 @@ export function WordTableDesktop({
                                             {word.context && (
                                                 <div className="flex items-start gap-1.5 text-xs text-muted-foreground/80 italic">
                                                     <Quote className="w-3 h-3 mt-0.5 shrink-0" />
-                                                    <span className="truncate w-full" title={word.context}>
+                                                    <span className="truncate w-full">
                                                         "{word.context.trim()}"
                                                     </span>
                                                 </div>

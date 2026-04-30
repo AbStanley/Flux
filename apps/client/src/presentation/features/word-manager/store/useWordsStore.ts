@@ -157,39 +157,38 @@ export const useWordsStore = create<WordsState>((set, get) => ({
     updateWord: async (id, data) => {
         set({ error: null });
 
-        // We need to know the original word type to handle type switching (word -> phrase)
-        const { wordsState, phrasesState } = get();
-        const existingInWords = wordsState.items.find(w => w.id === id);
-        const existingInPhrases = phrasesState.items.find(w => w.id === id);
-        const originalType = existingInWords ? 'word' : existingInPhrases ? 'phrase' : null;
-
-        if (!originalType) return {} as Word;
-
-        let dataToUpdate = { ...data };
-        let newType: 'word' | 'phrase' = originalType;
-
-        if (data.text) {
-            newType = data.text.trim().split(/\s+/).length > 1 ? 'phrase' : 'word';
-            dataToUpdate = { ...dataToUpdate, type: newType };
-        }
-
         try {
-            const updatedWord = await wordsApi.update(id, dataToUpdate);
+            const updatedWord = await wordsApi.update(id, data);
+            const newType = updatedWord.type || 'word';
+            const newKey = newType === 'word' ? 'wordsState' : 'phrasesState';
 
             set(state => {
-                if (newType === originalType) {
-                    const key = newType === 'word' ? 'wordsState' : 'phrasesState';
+                // Find where it was originally
+                const inWords = state.wordsState.items.some(w => w.id === id);
+                const inPhrases = state.phrasesState.items.some(w => w.id === id);
+                const originalType = inWords ? 'word' : inPhrases ? 'phrase' : null;
+
+                // Case 1: Type didn't change (or it wasn't found in lists)
+                if (originalType === newType || !originalType) {
+                    const key = originalType ? (originalType === 'word' ? 'wordsState' : 'phrasesState') : newKey;
+                    
+                    // If it was in the list, update it. If not, add it to the top.
+                    const alreadyInList = state[key].items.some(w => w.id === id);
+                    
                     return {
                         [key]: {
                             ...state[key],
-                            items: state[key].items.map(w => w.id === id ? updatedWord : w)
+                            items: alreadyInList 
+                                ? state[key].items.map(w => w.id === id ? updatedWord : w)
+                                : [updatedWord, ...state[key].items],
+                            total: alreadyInList ? state[key].total : state[key].total + 1
                         }
                     };
                 }
 
+                // Case 2: Type changed (Word <-> Phrase)
                 const oldKey = originalType === 'word' ? 'wordsState' : 'phrasesState';
-                const newKey = newType === 'word' ? 'wordsState' : 'phrasesState';
-
+                
                 return {
                     [oldKey]: {
                         ...state[oldKey],
