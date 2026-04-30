@@ -97,7 +97,7 @@ export function FluxContentApp() {
             });
             showNotification('Saved successfully!', 'success', 3000);
             // Notify side panel to refresh word list
-            window.chrome?.runtime?.sendMessage?.({ type: 'WORD_SAVED' });
+            await window.chrome?.runtime?.sendMessage?.({ type: 'WORD_SAVED' });
         } catch (err) {
             console.error('[Flux] Failed to save word:', err);
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';

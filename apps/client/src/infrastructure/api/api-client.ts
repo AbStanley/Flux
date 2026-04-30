@@ -2,11 +2,10 @@ import { getApiBaseUrl } from "./base-url";
 import { getStoredApiUrl } from "../settings/settings.store";
 
 export async function getAuthToken(): Promise<string | null> {
-  // In extension context, read from chrome.storage.local
-  const isExtension =
-    typeof window !== "undefined" &&
-    window.location.protocol === "chrome-extension:";
-  if (isExtension && chrome?.storage?.local) {
+  // Use extension storage if we are in an extension context (popup OR content script)
+  const isExtensionContext = typeof chrome !== "undefined" && !!chrome.runtime?.id;
+  
+  if (isExtensionContext && chrome?.storage?.local) {
     return new Promise((resolve) => {
       chrome.storage.local.get(["flux_auth_token"], (result) => {
         const data = result as { flux_auth_token?: string };
@@ -14,7 +13,8 @@ export async function getAuthToken(): Promise<string | null> {
       });
     });
   }
-  // Web app: read from localStorage
+  
+  // Web app fallback: read from localStorage
   return localStorage.getItem("flux_auth_token");
 }
 
@@ -67,9 +67,10 @@ export class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    // Check for extension context to avoid CORS issues and reach localhost from browser
-    const isExtension = typeof window !== "undefined" && window.location.protocol === "chrome-extension:";
-    if (isExtension && chrome?.runtime?.id) {
+    // Use extension proxy if we are in an extension context (popup OR content script)
+    // This allows content scripts on HTTPS pages to reach HTTP localhost via background script
+    const isExtensionContext = typeof chrome !== "undefined" && !!chrome.runtime?.id;
+    if (isExtensionContext) {
       console.log(`[Flux Debug] ApiClient: Proxying ${method} ${url}`);
       return new Promise<T>((resolve, reject) => {
         let parsedBody: unknown = undefined;
