@@ -21,8 +21,8 @@ export function ReaderInput({
         <div className={cn("relative")}>
             <Textarea
                 placeholder="Paste text here, or generate..."
-                className={cn("h-[120px] overflow-y-auto font-mono text-base shadow-sm resize-none focus-visible:ring-primary bg-[var(--reader-textarea-bg)] border-border/50 transition-[border-color,box-shadow,background-color] duration-300",
-                    (text.length > 0 || isGenerating) && "h-[280px] sm:h-[320px]"
+                className={cn("min-h-[80px] h-[80px] overflow-y-auto font-mono text-base shadow-sm resize-y focus-visible:ring-primary bg-[var(--reader-textarea-bg)] border-border/50 transition-[border-color,box-shadow,background-color] duration-300",
+                    (text.length > 0 || isGenerating) && "min-h-[120px] max-h-[400px]"
                 )}
                 value={text}
                 onChange={onChange}
