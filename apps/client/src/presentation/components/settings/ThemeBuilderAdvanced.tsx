@@ -31,9 +31,12 @@ function TokenRow({ tokenKey, label, hint, hsl, onChange, isActive, isClicked, o
     const [inputValue, setInputValue] = useState(hex);
     const rowRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+    const [prevHex, setPrevHex] = useState(hex);
+
+    if (hex !== prevHex) {
+        setPrevHex(hex);
         setInputValue(hex);
-    }, [hex]);
+    }
 
     useEffect(() => {
         if (isClicked && rowRef.current) {

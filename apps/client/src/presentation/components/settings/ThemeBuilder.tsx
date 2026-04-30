@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Save, Sliders, Sparkles, Download, Upload, RotateCcw, Eye } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -21,9 +21,12 @@ function ColorPickerRow({ label, hint, color, onChange }: { label: string; hint:
     const [isEditing, setIsEditing] = useState(false);
     const [inputValue, setInputValue] = useState(color);
 
-    useEffect(() => {
+    const [prevColor, setPrevColor] = useState(color);
+
+    if (color !== prevColor) {
+        setPrevColor(color);
         setInputValue(color);
-    }, [color]);
+    }
 
     const handleColorChange = (newColor: string) => {
         if (!isEditing) {
@@ -68,12 +71,12 @@ function ColorPickerRow({ label, hint, color, onChange }: { label: string; hint:
                 <input type="color" value={color} onChange={(e) => handleColorChange(e.target.value)} onClick={() => { if (!isEditing) setOriginalColor(color); setIsEditing(true); }}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
             </label>
-            
+
             <div className="flex-1 min-w-0" title={hint}>
                 <p className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{label}</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                    <Input 
-                        value={inputValue} 
+                    <Input
+                        value={inputValue}
                         onChange={handleTextChange}
                         onFocus={() => { if (!isEditing) setOriginalColor(color); setIsEditing(true); }}
                         className="h-7 text-xs font-mono w-24 px-2 bg-background/50 border-none focus-visible:ring-1 focus-visible:ring-primary/30"
@@ -273,10 +276,10 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                         <Button variant="outline" size="sm" className="h-7 text-[10px] md:text-xs px-2" onClick={handleExport}>
                             <Download className="w-3 h-3 mr-1 hidden sm:inline" /> Export
                         </Button>
-                        
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
+
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             className={`md:hidden h-7 w-7 p-0 ${showPreviewMobile ? 'bg-primary text-primary-foreground' : ''}`}
                             onClick={() => setShowPreviewMobile(!showPreviewMobile)}
                         >
