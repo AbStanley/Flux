@@ -15,21 +15,21 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
         id: 'preview', name, colors: tokens,
     }), [tokens, name]);
 
-    const bg   = hsl(tokens.background);
-    const fg   = hsl(tokens.foreground);
-    const pr   = hsl(tokens.primary);
+    const bg = hsl(tokens.background);
+    const fg = hsl(tokens.foreground);
+    const pr = hsl(tokens.primary);
     const prFg = hsl(tokens['primary-foreground']);
-    const cd   = hsl(tokens.card);
+    const cd = hsl(tokens.card);
     const cdFg = hsl(tokens['card-foreground']);
-    const bd   = hsl(tokens.border);
-    const mt   = hsl(tokens.muted);
+    const bd = hsl(tokens.border);
+    const mt = hsl(tokens.muted);
     const mtFg = hsl(tokens['muted-foreground']);
-    const ac   = hsl(tokens.accent);
+    const ac = hsl(tokens.accent);
     const acFg = hsl(tokens['accent-foreground']);
-    const ds   = hsl(tokens.destructive);
+    const ds = hsl(tokens.destructive);
     const dsFg = hsl(tokens['destructive-foreground']);
-    const sc   = hsl(tokens.success ?? '142 60% 40%');
-    const pk   = hsl(tokens.popover);
+    const sc = hsl(tokens.success ?? '142 60% 40%');
+    const pk = hsl(tokens.popover);
     const pkFg = hsl(tokens['popover-foreground']);
     const inBg = hsl(tokens['input-background']);
     const link = hsl(tokens['link-color']);
@@ -39,15 +39,15 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
 
     return (
         <div className="rounded-xl overflow-hidden border text-[10px] select-none transition-all" style={{ borderColor: bd, ...hoverStyle('background') }}
-             onMouseEnter={() => onHoverToken?.('background')} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
+            onMouseEnter={() => onHoverToken?.('background')} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
 
             {/* ── 1. App UI ── */}
             <div style={{ background: bg, color: fg }}>
                 {/* Nav */}
                 <div style={{ background: cd, borderBottom: `1px solid ${bd}`, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', ...hoverStyle('card') }}
-                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
+                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
                     <div style={{ width: 18, height: 18, borderRadius: '50%', background: pr, color: prFg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, ...hoverStyle('primary') }}
-                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>F</div>
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>F</div>
                     <span style={{ fontWeight: 600, color: cdFg }}>Flux Reader — {name || 'My Theme'}</span>
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                         <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 10, background: pr, color: prFg }}>Reader</span>
@@ -60,64 +60,64 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                 <div style={{ display: 'flex', gap: 8, padding: 8 }}>
                     {/* Card */}
                     <div style={{ flex: 1, background: cd, border: `1px solid ${bd}`, borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column', gap: 6, ...hoverStyle('card') }}
-                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
                         <p style={{ fontWeight: 700, color: cdFg }}>Word Manager</p>
 
                         {/* Vocab row with language tag + Due chip */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', borderBottom: `1px solid ${bd}` }}>
                             <span style={{ fontWeight: 600, color: cdFg, ...hoverStyle('link-color'), paddingBottom: 1, borderBottom: `2px solid ${link}` }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>ephemeral</span>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>ephemeral</span>
                             <span style={{ fontSize: 9, color: mtFg, padding: '1px 5px', background: mt, borderRadius: 10, ...hoverStyle('muted') }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted'); }}>EN → ES</span>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted'); }}>EN → ES</span>
                             <span style={{ fontSize: 9, color: dsFg, padding: '1px 5px', background: ds, borderRadius: 10, marginLeft: 'auto', ...hoverStyle('destructive') }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>Due</span>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>Due</span>
                         </div>
 
                         {/* Input */}
                         <div style={{ background: inBg, border: `1px solid ${bd}`, borderRadius: 5, padding: '3px 7px', color: mtFg, ...hoverStyle('input-background') }}
-                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('input-background'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('input-background'); }}>
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('input-background'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('input-background'); }}>
                             Search vocabulary...
                         </div>
 
                         {/* Buttons */}
                         <div style={{ display: 'flex', gap: 5 }}>
                             <span style={{ background: pr, color: prFg, borderRadius: 5, padding: '3px 8px', fontWeight: 600, ...hoverStyle('primary') }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Save</span>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Save</span>
                             <span style={{ background: mt, color: mtFg, borderRadius: 5, padding: '3px 8px', ...hoverStyle('muted') }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted'); }}>Cancel</span>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted'); }}>Cancel</span>
                             <span style={{ background: ds, color: dsFg, borderRadius: 5, padding: '3px 8px', marginLeft: 'auto', ...hoverStyle('destructive') }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>Delete</span>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>Delete</span>
                         </div>
 
                         {/* Chat chips row */}
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                             <span style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.destructive)}22`, color: ds, border: `1px solid ${ds}44`, ...hoverStyle('destructive') }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>
                                 <s>grammer</s> → grammar
                             </span>
                             <span style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.success ?? '142 60% 40%')}22`, color: sc, border: `1px solid ${sc}44`, ...hoverStyle('success') }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('success'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('success'); }}>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('success'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('success'); }}>
                                 ✓ Looks good
                             </span>
                             <span style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.success ?? '142 60% 40%')}22`, color: sc, ...hoverStyle('success') }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('success'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('success'); }}>3× reviewed</span>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('success'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('success'); }}>3× reviewed</span>
                         </div>
                     </div>
 
                     {/* Sidebar popover example */}
                     <div style={{ width: 90, display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <div style={{ background: pk, border: `1px solid ${bd}`, borderRadius: 6, padding: 6, color: pkFg, ...hoverStyle('popover') }}
-                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }} 
-                             onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} 
-                             onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
+                            onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                            onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
                             <p style={{ fontWeight: 600, marginBottom: 3, ...hoverStyle('popover-foreground') }}
-                               onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover-foreground'); }}
-                               onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
-                               onClick={(e) => { e.stopPropagation(); onClickToken?.('popover-foreground'); }}>Popover</p>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover-foreground'); }}
+                                onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
+                                onClick={(e) => { e.stopPropagation(); onClickToken?.('popover-foreground'); }}>Popover</p>
                             <p style={{ color: mtFg, fontSize: 9, ...hoverStyle('muted-foreground') }}
-                               onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
-                               onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
-                               onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>Dropdown menus use this surface color.</p>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
+                                onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
+                                onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>Dropdown menus use this surface color.</p>
                         </div>
                         <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                             {[bg, cd, pr, ac, ds, sc].map((c, i) => (
@@ -132,17 +132,17 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
             <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8 }}>
                 <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>READING PAGE: INLINE POPUP</p>
                 <div style={{ background: bg, padding: '20px 12px 12px', borderRadius: 8, border: `1px solid ${bd}`, position: 'relative', ...hoverStyle('background') }}
-                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
-                    
+                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
+
                     {/* Inline Selection Popup (ReaderPopup style) */}
-                    <div style={{ 
-                        position: 'absolute', top: -4, left: 12, 
-                        background: link, color: prFg, padding: '4px 8px', borderRadius: 6, 
+                    <div style={{
+                        position: 'absolute', top: -4, left: 12,
+                        background: link, color: prFg, padding: '4px 8px', borderRadius: 6,
                         display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600,
                         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                        ...hoverStyle('link-color') 
+                        ...hoverStyle('link-color')
                     }}
-                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
                         <span>was</span>
                         <div style={{ display: 'flex', gap: 2, opacity: 0.9 }}>
                             <Volume2 size={12} /> <Search size={12} /> <RefreshCcw size={12} /> <Save size={12} />
@@ -150,11 +150,11 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                     </div>
 
                     <span style={{ color: mtFg, ...hoverStyle('muted-foreground') }}
-                          onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
-                          onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
-                          onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>The student opened the book and began to read. The word </span>
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
+                        onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                        onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>The student opened the book and began to read. The word </span>
                     <span style={{ color: link, borderBottom: `2px solid ${link}`, paddingBottom: 1, fontWeight: 600, ...hoverStyle('link-color') }}
-                          onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
                         ephemeral
                     </span>
                     <span style={{ color: mtFg }}> caught their attention.</span>
@@ -165,19 +165,19 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
             <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8 }}>
                 <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>RICH DETAILS & MARKDOWN</p>
                 <div style={{ background: bg, padding: '12px', borderRadius: 8, border: `1px solid ${bd}`, ...hoverStyle('background') }}
-                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
-                    
+                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
+
                     <p style={{ fontWeight: 700, color: pr, marginBottom: 6, ...hoverStyle('primary') }}
-                       onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Structure Analysis</p>
-                    
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Structure Analysis</p>
+
                     <div style={{ paddingLeft: 8, borderLeft: `2px solid ${pr}`, display: 'flex', flexDirection: 'column', gap: 4, ...hoverStyle('primary') }}
-                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>
                         <div style={{ fontStyle: 'italic', color: fg, fontSize: 11, ...hoverStyle('foreground') }}
-                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('foreground'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('foreground'); }}>
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('foreground'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('foreground'); }}>
                             Ich habe das Buch gelesen.
                         </div>
                         <div style={{ color: mtFg, fontSize: 11, ...hoverStyle('muted-foreground') }}
-                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>
                             I have read that book.
                         </div>
                     </div>
@@ -192,8 +192,8 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                 </div>
 
                 {/* A. YouTube Subtitles Preview */}
-                <div style={{ 
-                    background: '#000', padding: 12, position: 'relative', minHeight: 90, 
+                <div style={{
+                    background: '#000', padding: 12, position: 'relative', minHeight: 90,
                     display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center',
                     borderRadius: 8, border: `1px solid ${bd}`, overflow: 'hidden'
                 }}>
@@ -201,41 +201,42 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                         <Youtube size={12} fill="red" stroke="none" />
                         <span style={{ fontSize: 8 }}>YouTube Player</span>
                     </div>
-                    
+
                     {/* Subtitle Overlay Mockup - Map to POPOVER */}
-                    <div style={{ 
-                        background: fluxTheme.bg, color: fluxTheme.text, padding: '8px 16px', borderRadius: 12, 
-                        border: `1px solid ${fluxTheme.border}`, backdropFilter: 'blur(10px)',
+                    <div style={{
+                        background: fluxTheme.bgSolid, color: fluxTheme.text, padding: '8px 16px', borderRadius: 16,
+                        border: `1px solid ${fluxTheme.border}`,
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)', maxWidth: '90%', textAlign: 'center',
+                        boxShadow: `0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px ${fluxTheme.borderLight}`,
+                        maxWidth: '85%', textAlign: 'center',
                         animation: 'pulse 2s infinite ease-in-out',
                         ...hoverStyle('popover')
                     }}
-                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
-                    onMouseLeave={() => onHoverToken?.(null)}
-                    onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
+                        onMouseLeave={() => onHoverToken?.(null)}
+                        onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
                         <div style={{ display: 'flex', gap: 8, marginBottom: 2 }}>
-                            <span style={{ 
-                                color: fluxTheme.accent, 
+                            <span style={{
+                                color: fluxTheme.accent,
                                 background: fluxTheme.accentGlow,
                                 padding: '1px 4px',
                                 borderRadius: 4,
-                                fontWeight: 700, 
-                                ...hoverStyle('primary') 
+                                fontWeight: 700,
+                                ...hoverStyle('primary')
                             }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }}
-                                  onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
-                                  onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Ich</span>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }}
+                                onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
+                                onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Ich</span>
                             <span>habe</span>
                             <span style={{ borderBottom: `2px solid ${fluxTheme.accent}`, ...hoverStyle('primary') }}
-                                  onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }}
-                                  onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
-                                  onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>gelesen</span>
+                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }}
+                                onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
+                                onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>gelesen</span>
                         </div>
                         <div style={{ fontSize: 9, color: fluxTheme.textSecondary, opacity: 0.8, ...hoverStyle('muted-foreground') }}
-                              onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
-                              onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
-                              onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
+                            onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
+                            onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>
                             I have read
                         </div>
                     </div>
@@ -243,9 +244,9 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
 
                 {/* B. Extension Translation Popover */}
                 <div style={{ background: cd, padding: '12px 10px', borderRadius: 8, border: `1px solid ${bd}`, ...hoverStyle('card') }}
-                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }}
-                     onMouseLeave={() => onHoverToken?.(null)}
-                     onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
+                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }}
+                    onMouseLeave={() => onHoverToken?.(null)}
+                    onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                         <p style={{ color: mtFg, fontSize: 8, fontWeight: 700 }}>TRANSLATION OVERLAY</p>
                         <MousePointer2 size={10} style={{ color: pr }} />

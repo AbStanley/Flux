@@ -31,19 +31,31 @@ export function FluxIconButton({
             title={title}
             disabled={disabled}
             style={{
-                background: active ? (theme?.surfaceActive ?? '#475569') : (theme?.surface ?? '#334155'),
-                color: active ? (theme?.text ?? 'white') : (theme?.textSecondary ?? '#94a3b8'),
+                background: active ? (theme?.accent ?? '#3b82f6') : 'transparent',
+                color: active ? (theme?.bgSolid ?? 'white') : (theme?.textSecondary ?? '#94a3b8'),
                 border: 'none',
-                borderRadius: '6px',
-                padding: '6px',
+                borderRadius: '5px',
+                padding: '3px 8px',
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minWidth: '28px',
+                fontSize: '10px',
+                fontWeight: '700',
                 opacity: disabled ? 0.5 : 1,
-                transition: 'all 0.2s',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                whiteSpace: 'nowrap',
                 ...style
+            }}
+            onMouseEnter={(e) => {
+                if (disabled || active) return;
+                e.currentTarget.style.background = theme?.borderLight || 'rgba(0,0,0,0.05)';
+                e.currentTarget.style.color = theme?.text || 'black';
+            }}
+            onMouseLeave={(e) => {
+                if (active) return;
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = theme?.textSecondary || '#94a3b8';
             }}
         >
             {children}

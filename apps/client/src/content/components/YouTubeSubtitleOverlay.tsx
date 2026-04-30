@@ -41,7 +41,7 @@ export const YouTubeSubtitleOverlay = ({
 
     const { selectionMode } = useReaderStore();
     const { pos, isDragging, handleMouseDown } = useDraggable({ initialPos: { x: window.innerWidth / 2, y: window.innerHeight * 0.85 } });
-    const { size, handleResizeMouseDown } = useResizable({ initialSize: { width: 800, height: 160 } });
+    const { size, handleResizeMouseDown } = useResizable({ initialSize: { width: 800, height: 120 } });
 
     const tokens = useMemo(() => cue?.text.split(/(\s+)/) || [], [cue]);
     const isSentenceMode = selectionMode === SelectionMode.Sentence;
@@ -95,10 +95,10 @@ export const YouTubeSubtitleOverlay = ({
         top: pos.y, left: pos.x,
         width: size.width, height: 'auto', minHeight: size.height,
         transform: isDragging ? 'translate(-50%, -50%) scale(1.02)' : 'translate(-50%, -50%) scale(1)',
-        backgroundColor: theme.bg.replace(/[\d.]+\)$/, '0.95)'),
+        backgroundColor: theme.bgSolid,
         backdropFilter: 'blur(16px)', color: theme.text,
-        padding: '24px 72px 24px', borderRadius: '24px',
-        fontSize: '32px', fontWeight: 600, zIndex: 2147483646,
+        padding: '16px 48px', borderRadius: '20px',
+        fontSize: '28px', fontWeight: 600, zIndex: 2147483646,
         textAlign: 'center', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'flex-start', gap: '0px',
         cursor: isDragging ? 'grabbing' : 'grab',
@@ -154,10 +154,10 @@ export const YouTubeSubtitleOverlay = ({
 
                 {/* Full Translation — always reserved space, content fades in/out */}
                 <div style={{
-                    fontSize: '20px', color: fullError ? theme.error : theme.textSecondary,
+                    fontSize: '18px', color: fullError ? theme.error : theme.textSecondary,
                     fontWeight: 500, padding: '8px 24px', textAlign: 'center',
                     width: '100%', maxWidth: '85%', borderTop: `1px solid ${theme.border}`,
-                    minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    minHeight: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     opacity: (fullResult || fullLoading || fullError) ? 1 : 0,
                     transition: 'opacity 0.2s ease',
                 }}>

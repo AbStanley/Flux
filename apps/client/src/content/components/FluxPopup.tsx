@@ -198,7 +198,7 @@ export function FluxPopup({
         WebkitBackdropFilter: 'blur(16px)',
         color: theme.text,
         width: `${UI_CONSTANTS.POPUP_WIDTH}px`,
-        padding: '20px',
+        padding: '0',
         borderRadius: '20px',
         boxShadow: isDragging
             ? `0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px ${theme.border}`
@@ -229,7 +229,7 @@ export function FluxPopup({
             onMouseDown={e => e.stopPropagation()}
         >
             <div style={popupStyles}>
-                <div onMouseDown={handleMouseDown}>
+                <div onMouseDown={handleMouseDown} style={{ padding: '16px 20px 8px' }}>
                     <FluxHeader
                         onClose={onClose}
                         onPinToggle={handlePinToggle}
@@ -242,34 +242,44 @@ export function FluxPopup({
                 </div>
 
                 {/* Translation result first — most important content */}
-                <FluxContent
-                    loading={loading}
-                    error={error}
-                    result={result}
-                    theme={theme}
-                />
+                <div style={{ padding: '0 20px 12px' }}>
+                    <FluxContent
+                        loading={loading}
+                        error={error}
+                        result={result}
+                        theme={theme}
+                    />
+                </div>
 
-                <FluxControls
-                    mode={mode}
-                    targetLang={targetLang}
-                    sourceLang={sourceLang}
-                    result={result}
-                    selection={selection}
-                    onModeChange={onModeChange}
-                    onLangChange={onLangChange}
-                    onSourceLangChange={onSourceLangChange}
-                    onSwapLanguages={onSwapLanguages}
-                    onAction={onAction}
-                    autoSave={autoSave}
-                    onAutoSaveChange={onAutoSaveChange}
-                    isSaving={isSaving}
-                    theme={theme}
-                    themeId={themeId}
-                    onThemeChange={onThemeChange}
-                    model={model}
-                    availableModels={availableModels}
-                    onModelChange={onModelChange}
-                />
+                <div style={{ 
+                    background: theme.surface, 
+                    borderTop: `1px solid ${theme.borderLight}`, 
+                    padding: '12px 20px 16px',
+                    borderBottomLeftRadius: '20px',
+                    borderBottomRightRadius: '20px'
+                }}>
+                    <FluxControls
+                        mode={mode}
+                        targetLang={targetLang}
+                        sourceLang={sourceLang}
+                        result={result}
+                        selection={selection}
+                        onModeChange={onModeChange}
+                        onLangChange={onLangChange}
+                        onSourceLangChange={onSourceLangChange}
+                        onSwapLanguages={onSwapLanguages}
+                        onAction={onAction}
+                        autoSave={autoSave}
+                        onAutoSaveChange={onAutoSaveChange}
+                        isSaving={isSaving}
+                        theme={theme}
+                        themeId={themeId}
+                        onThemeChange={onThemeChange}
+                        model={model}
+                        availableModels={availableModels}
+                        onModelChange={onModelChange}
+                    />
+                </div>
             </div>
         </div>
     );

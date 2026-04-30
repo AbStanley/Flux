@@ -5,6 +5,7 @@ import { useFluxMessaging } from '../hooks/useFluxMessaging';
 import { FluxIconButton } from './ui/FluxIconButton';
 import { FluxSelect } from './ui/FluxSelect';
 import { FluxButton } from './ui/FluxButton';
+import { Copy, BookOpen, Zap, Check } from 'lucide-react';
 
 interface FluxControlsProps {
     mode: Mode;
@@ -65,14 +66,13 @@ export function FluxControls({
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ background: theme.surface, borderRadius: '6px', padding: '2px', display: 'flex' }}>
+                <div style={{ background: theme.bgSolid, borderRadius: '7px', padding: '2px', display: 'flex', gap: '2px' }}>
                     <FluxIconButton
                         onClick={() => onModeChange('EXPLAIN')}
                         active={mode === 'EXPLAIN'}
                         theme={theme}
-                        style={{ padding: '4px 8px', fontSize: '0.85em' }}
                     >
                         Explain
                     </FluxIconButton>
@@ -80,107 +80,123 @@ export function FluxControls({
                         onClick={() => onModeChange('TRANSLATE')}
                         active={mode === 'TRANSLATE'}
                         theme={theme}
-                        style={{ padding: '4px 8px', fontSize: '0.85em' }}
                     >
                         Translate
                     </FluxIconButton>
                 </div>
 
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <FluxIconButton onClick={handleCopy} title="Copy Result" theme={theme}>
-                        {copied ? (
-                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: theme.success }}>✓</span>
-                        ) : (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        )}
-                    </FluxIconButton>
+                    <button 
+                        onClick={handleCopy} 
+                        style={{ 
+                            background: 'transparent', border: 'none', color: copied ? theme.success : theme.textSecondary,
+                            padding: '6px', cursor: 'pointer', transition: 'all 0.2s', borderRadius: '6px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = theme.borderLight}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        title="Copy Result"
+                    >
+                        {copied ? <Check size={14} strokeWidth={3} /> : <Copy size={14} strokeWidth={2.5} />}
+                    </button>
 
-                    <FluxIconButton onClick={handleSave} title="Read in Flux" theme={theme}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                    </FluxIconButton>
+                    <button 
+                        onClick={handleSave}
+                        style={{ 
+                            background: 'transparent', border: 'none', color: theme.textSecondary,
+                            padding: '6px', cursor: 'pointer', transition: 'all 0.2s', borderRadius: '6px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = theme.borderLight}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        title="Read in Flux"
+                    >
+                        <BookOpen size={14} strokeWidth={2.5} />
+                    </button>
 
-                    <FluxIconButton
+                    <button
                         onClick={() => onAutoSaveChange(!autoSave)}
                         title={autoSave ? "Auto-Save On" : "Auto-Save Off"}
-                        theme={theme}
                         style={{
                             background: isSaving ? theme.success : (autoSave ? theme.accentGlow : 'transparent'),
-                            color: isSaving ? 'white' : (autoSave ? theme.accent : theme.textSecondary),
-                            border: autoSave ? `1px solid ${theme.accent}` : '1px solid transparent',
-                            marginLeft: '4px',
-                            boxShadow: autoSave ? `0 0 8px ${theme.accentGlow}` : 'none'
+                            color: isSaving ? theme.bgSolid : (autoSave ? theme.accent : theme.textSecondary),
+                            border: 'none',
+                            padding: '6px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!autoSave && !isSaving) e.currentTarget.style.background = theme.borderLight;
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!autoSave && !isSaving) e.currentTarget.style.background = 'transparent';
                         }}
                     >
-                        {isSaving ? (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                        ) : (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-                            </svg>
-                        )}
-                    </FluxIconButton>
-
+                        {isSaving ? <Check size={14} strokeWidth={3} /> : <Zap size={14} strokeWidth={2.5} fill={autoSave ? "currentColor" : "none"} />}
+                    </button>
                 </div>
             </div>
 
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                <FluxSelect
-                    value={sourceLang || 'Auto'}
-                    onChange={(val) => onSourceLangChange && onSourceLangChange(val)}
-                    options={['Auto', ...LANGUAGES]}
-                    title="Source Language"
-                    theme={theme}
-                    style={{ flex: 1, minWidth: 0, paddingRight: '4px' }}
-                />
-
-                <FluxIconButton
-                    onClick={() => onSwapLanguages?.()}
-                    title="Swap Languages"
-                    theme={theme}
-                    style={{
-                        padding: '4px',
-                        color: theme.textSecondary,
-                        fontSize: '14px',
-                        minWidth: '24px'
-                    }}
-                >
-                    ⇄
-                </FluxIconButton>
-
-                <FluxSelect
-                    value={targetLang}
-                    onChange={onLangChange}
-                    options={LANGUAGES}
-                    title="Target Language"
-                    theme={theme}
-                    style={{ flex: 1, minWidth: 0, paddingRight: '4px' }}
-                />
+                <div style={{ flex: 1, minWidth: 0, background: theme.bgSolid, borderRadius: '8px', padding: '1px 8px', border: `1px solid ${theme.border}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <FluxSelect
+                            value={sourceLang || 'Auto'}
+                            onChange={(val) => onSourceLangChange && onSourceLangChange(val)}
+                            options={['Auto', ...LANGUAGES]}
+                            theme={theme}
+                            style={{ background: 'transparent', border: 'none', padding: '4px 0', fontSize: '11px', flex: 1 }}
+                        />
+                        <button 
+                            onClick={() => onSwapLanguages?.()}
+                            title="Swap Languages"
+                            style={{ 
+                                background: 'transparent', border: 'none', color: theme.textDim, fontSize: '12px', 
+                                padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center' 
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
+                            onMouseLeave={(e) => e.currentTarget.style.color = theme.textDim}
+                        >
+                            →
+                        </button>
+                        <FluxSelect
+                            value={targetLang}
+                            onChange={onLangChange}
+                            options={LANGUAGES}
+                            theme={theme}
+                            style={{ background: 'transparent', border: 'none', padding: '4px 0', fontSize: '11px', flex: 1 }}
+                        />
+                    </div>
+                </div>
 
                 <FluxButton
                     onClick={onAction}
                     theme={theme}
                     style={{
-                        padding: '8px 12px',
-                        minWidth: '42px',
-                        borderRadius: '10px'
+                        padding: '6px 14px',
+                        borderRadius: '8px'
                     }}
                 >
                     Go
                 </FluxButton>
             </div>
 
-            {/* Model selector */}
+            {/* Model selector - very subtle */}
             {availableModels.length > 0 && (
-                <FluxSelect
-                    value={model || availableModels[0]}
-                    onChange={onModelChange}
-                    options={availableModels}
-                    title="AI Model"
-                    theme={theme}
-                    style={{ fontSize: '11px' }}
-                />
+                <div style={{ borderTop: `1px solid ${theme.borderLight}`, paddingTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '9px', color: theme.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>AI Model</span>
+                    <FluxSelect
+                        value={model || availableModels[0]}
+                        onChange={onModelChange}
+                        options={availableModels}
+                        theme={theme}
+                        style={{ fontSize: '10px', background: 'transparent', border: 'none', padding: '2px 0', textAlign: 'right' }}
+                    />
+                </div>
             )}
         </div>
     );

@@ -1,4 +1,5 @@
 import type { FluxTheme } from '../constants';
+import { Save } from 'lucide-react';
 
 interface FluxHeaderProps {
     onClose: () => void;
@@ -31,9 +32,6 @@ export function FluxHeader({
                 marginBottom: '4px',
                 userSelect: 'none'
             }}
-            onMouseDown={() => {
-                // Dragging is handled by the parent FluxPopup on the container div
-            }}
         >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{
@@ -45,18 +43,18 @@ export function FluxHeader({
                     transition: 'all 0.3s ease'
                 }} />
                 <span style={{
-                    fontSize: '11px',
+                    fontSize: '10px',
                     fontWeight: '700',
                     textTransform: 'uppercase',
                     letterSpacing: '1px',
-                    color: theme.textDim
+                    color: theme.textSecondary
                 }}>
                     Flux
                 </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            {/* Save to Deck Icon */}
+                {/* Save to Deck Icon - Using requested Lucide version */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onSave(); }}
                     title="Add to Deck"
@@ -75,14 +73,10 @@ export function FluxHeader({
                     onMouseEnter={(e) => e.currentTarget.style.background = theme.accentGlow}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                 >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v13a2 2 0 0 1-2 2z"></path>
-                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                        <polyline points="7 3 7 8 15 8"></polyline>
-                    </svg>
+                    <Save size={14} strokeWidth={2.5} />
                 </button>
 
-                {/* Collapse Toggle */}
+                {/* Collapse Toggle - Reverted to original SVG */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onCollapseToggle(); }}
                     title={isCollapsed ? "Expand" : "Collapse"}
@@ -108,7 +102,7 @@ export function FluxHeader({
                     </svg>
                 </button>
 
-                {/* Pin Toggle */}
+                {/* Pin Toggle - Reverted to original SVG */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onPinToggle(); }}
                     style={{
@@ -130,6 +124,7 @@ export function FluxHeader({
                     </svg>
                 </button>
 
+                {/* Close Button - Reverted to original ✕ */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onClose(); }}
                     style={{

@@ -245,7 +245,7 @@ export function customThemeToFluxTheme(theme: CustomTheme): FluxTheme {
         name: theme.name,
         id: theme.id,
         dot: hslToHex(tokens.background),
-        bg: hslToRgba(tokens.popover, 0.85),
+        bg: hslToHex(tokens.background),
         bgSolid: hslToHex(tokens.background),
         surface: hslToHex(tokens.card),
         surfaceActive: hslToHex(tokens.secondary),

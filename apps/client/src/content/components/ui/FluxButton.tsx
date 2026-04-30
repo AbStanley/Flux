@@ -19,22 +19,24 @@ export function FluxButton({
     theme,
 }: FluxButtonProps) {
     const getVariantStyles = (): React.CSSProperties => {
+        if (!theme) return {};
         switch (variant) {
             case 'primary':
                 return {
-                    background: theme?.accent ?? '#3b82f6',
-                    color: 'white',
-                    boxShadow: `0 4px 6px -1px ${theme?.accentGlow ?? 'rgba(59, 130, 246, 0.3)'}`,
+                    background: theme.accent,
+                    color: theme.bgSolid,
+                    boxShadow: `0 4px 12px ${theme.accentGlow}`,
                 };
             case 'secondary':
                 return {
-                    background: theme?.surface ?? '#334155',
-                    color: theme?.textSecondary ?? '#94a3b8',
+                    background: theme.surface,
+                    color: theme.text,
+                    border: `1px solid ${theme.border}`,
                 };
             case 'ghost':
                 return {
                     background: 'transparent',
-                    color: theme?.textSecondary ?? '#94a3b8',
+                    color: theme.textSecondary,
                 };
             default:
                 return {};
@@ -52,15 +54,33 @@ export function FluxButton({
             disabled={disabled}
             style={{
                 border: 'none',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 padding: '8px 16px',
-                fontSize: '0.9em',
+                fontSize: '11px',
                 cursor: disabled ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold',
-                transition: 'all 0.2s',
+                fontWeight: '700',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 opacity: disabled ? 0.5 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
                 ...getVariantStyles(),
                 ...style
+            }}
+            onMouseEnter={(e) => {
+                if (disabled) return;
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                if (variant === 'primary') e.currentTarget.style.filter = 'brightness(1.1)';
+                else e.currentTarget.style.background = theme?.surfaceActive || theme?.surface || '';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.filter = 'none';
+                if (variant !== 'primary') {
+                    const styles = getVariantStyles();
+                    e.currentTarget.style.background = (styles.background as string) || '';
+                }
             }}
         >
             {children}
