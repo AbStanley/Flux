@@ -158,8 +158,8 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
                         onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
                         onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>The student opened the book and began to read. The word </span>
-                    <span style={{ fontWeight: 600, color: linkFg, borderBottom: `2px solid ${link}`, paddingBottom: 1, ...hoverStyle('link-color') }}
-                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>ephemeral</span>
+                    <span style={{ fontWeight: 600, color: linkFg, borderBottom: `2px solid ${link}`, paddingBottom: 1, ...hoverStyle('link-foreground') }}
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-foreground'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-foreground'); }}>ephemeral</span>
                     <span style={{ color: mtFg, ...hoverStyle('muted-foreground') }}
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
                         onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
