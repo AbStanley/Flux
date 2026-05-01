@@ -56,6 +56,7 @@ const CORE_TENSES: Readonly<Record<string, readonly string[]>> = {
   french: ['Présent', 'Passé composé', 'Imparfait', 'Futur'],
   german: ['Präsens', 'Präteritum', 'Perfekt', 'Futur'],
   russian: ['Настоящее', 'Прошедшее', 'Будущее'],
+  ukrainian: ['Теперішній', 'Минулий', 'Майбутній'],
 };
 
 @Injectable()

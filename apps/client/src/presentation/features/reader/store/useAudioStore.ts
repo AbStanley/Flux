@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { WebSpeechAudioService } from '../../../../infrastructure/audio/WebSpeechAudioService';
 import { useReaderStore } from './useReaderStore';
+import { LANGUAGE_CODE_MAP as CORE_MAP } from '@/core/constants/languages';
+
 
 
 interface AudioState {
@@ -243,17 +245,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     }
 }));
 
-const LANGUAGE_CODE_MAP: Record<string, string> = {
-    "Spanish": "es",
-    "English": "en",
-    "French": "fr",
-    "German": "de",
-    "Italian": "it",
-    "Japanese": "ja",
-    "Russian": "ru",
-    "Chinese": "zh",
-    "Portuguese": "pt",
-    "Korean": "ko",
-    // Add more as needed
-};
+const LANGUAGE_CODE_MAP = CORE_MAP;
+
+
 

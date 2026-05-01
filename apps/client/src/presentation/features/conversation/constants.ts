@@ -1,8 +1,9 @@
-export const LANGUAGES = [
-    'Spanish', 'English', 'French', 'German', 'Italian', 'Portuguese',
-    'Russian', 'Chinese', 'Japanese', 'Korean', 'Arabic', 'Hindi',
-    'Dutch', 'Swedish', 'Polish', 'Turkish', 'Greek', 'Hebrew',
-];
+import { 
+    ALL_LANGUAGES, 
+    SPEECH_CODE_MAP 
+} from '@/core/constants/languages';
+
+export const LANGUAGES = ALL_LANGUAGES.filter(l => l.speechCode).map(l => l.name);
 
 export const LEVELS = [
     { value: 'beginner', label: 'Beginner', description: 'Simple words, short sentences' },
@@ -11,13 +12,7 @@ export const LEVELS = [
 ];
 
 /** Map language names to BCP-47 codes for Speech Recognition */
-export const LANGUAGE_CODES: Record<string, string> = {
-    Spanish: 'es-ES', English: 'en-US', French: 'fr-FR', German: 'de-DE',
-    Italian: 'it-IT', Portuguese: 'pt-BR', Russian: 'ru-RU', Chinese: 'zh-CN',
-    Japanese: 'ja-JP', Korean: 'ko-KR', Arabic: 'ar-SA', Hindi: 'hi-IN',
-    Dutch: 'nl-NL', Swedish: 'sv-SE', Polish: 'pl-PL', Turkish: 'tr-TR',
-    Greek: 'el-GR', Hebrew: 'he-IL',
-};
+export const LANGUAGE_CODES = SPEECH_CODE_MAP;
 
 export const TOPICS = [
     { value: '', label: 'Free conversation' },

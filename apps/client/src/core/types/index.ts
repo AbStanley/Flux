@@ -26,7 +26,8 @@ export const Language = {
     Russian: 'ru',
     Chinese: 'zh',
     Japanese: 'ja',
-    Korean: 'ko'
+    Korean: 'ko',
+    Ukrainian: 'uk'
 } as const;
 
 export type Language = typeof Language[keyof typeof Language];

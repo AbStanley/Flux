@@ -1,7 +1,7 @@
-export const LANGUAGES = [
-    'English', 'Spanish', 'Russian', 'French', 'German', 'Italian',
-    'Portuguese', 'Japanese', 'Chinese',
-];
+import { LANGUAGES as CORE_LANGUAGES } from '@/core/constants/languages';
+
+export const LANGUAGES = CORE_LANGUAGES;
+
 
 export const UI_CONSTANTS = {
     POPUP_WIDTH: 320,
