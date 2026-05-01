@@ -91,3 +91,14 @@ export function cleanAndParseJson<T>(text: string): T {
     throw new Error(`Failed to parse JSON from response: "${snippet}"`);
   }
 }
+
+/**
+ * Cleans a text selection by trimming whitespace and stripping leading/trailing
+ * punctuation, unless it's a multi-line block or very long sentence.
+ */
+export function cleanSelection(text: string): string {
+  if (!text) return '';
+  const isBlock = text.length > 100 || text.includes('\n');
+  if (isBlock) return text;
+  return text.trim().replace(/^[\p{P}\s]+|[\p{P}\s]+$/gu, '');
+}

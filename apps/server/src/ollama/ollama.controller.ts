@@ -11,6 +11,7 @@ import {
 } from './interfaces/ollama.interfaces';
 import { GenerateContentDto } from './dto/generate-content.dto';
 import { Public } from '../auth/decorators/public.decorator';
+import { cleanSelection } from './utils/ollama-utils';
 
 @Public()
 @Controller('api')
@@ -118,6 +119,7 @@ export class OllamaController {
       model?: string;
     },
   ) {
+    body.text = cleanSelection(body.text);
     return await this.ollamaService.translateText(body);
   }
 
@@ -131,6 +133,7 @@ export class OllamaController {
       model?: string;
     },
   ) {
+    body.text = cleanSelection(body.text);
     return await this.ollamaService.explainText(body);
   }
 
@@ -147,6 +150,7 @@ export class OllamaController {
     },
     @Res() res: Response,
   ) {
+    body.text = cleanSelection(body.text);
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
       const stream = await this.ollamaService.getRichTranslationStream(body);

@@ -71,6 +71,7 @@ export class OllamaTranslationService {
     sourceLanguage?: string;
     model?: string;
   }): Promise<{ response: string; sourceLanguage?: string }> {
+    const isBlock = params.text.length > 100 || params.text.includes('\n');
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getTranslatePrompt(
       params.text,
@@ -79,16 +80,22 @@ export class OllamaTranslationService {
       params.sourceLanguage,
     );
     const isAuto = !params.sourceLanguage || params.sourceLanguage === 'Auto';
-
     const { response } = await this.ollamaClient.generate(
       model,
       prompt,
       false,
       isAuto ? 'json' : undefined,
-      { num_predict: 256, temperature: 0 },
+      {
+        num_predict: isBlock ? 512 : 64,
+        temperature: 0,
+        stop: isBlock ? undefined : ['\n'],
+      },
     );
 
-    if (!isAuto) return { response: cleanResponse(response) };
+    if (!isAuto) {
+      const cleaned = cleanResponse(response, { multiline: isBlock });
+      return { response: this.trimContextBleed(cleaned, params.text) };
+    }
 
     try {
       const parsed = cleanAndParseJson<{
@@ -96,13 +103,70 @@ export class OllamaTranslationService {
         translation: string;
       }>(response);
       return {
-        response: parsed.translation,
+        response: this.trimContextBleed(parsed.translation, params.text),
         sourceLanguage: parsed.detectedLanguage,
       };
     } catch (e) {
       this.logger.error('Failed to parse auto-translation JSON:', e);
-      return { response: cleanResponse(response) };
+      const cleaned = cleanResponse(response, { multiline: isBlock });
+      return { response: this.trimContextBleed(cleaned, params.text) };
     }
+  }
+
+  /**
+   * Aggressively strip common context-bleed prefixes (like "Something " or "Algo ")
+   * when the input was a single word but the model included surrounding context.
+   */
+  private trimContextBleed(translation: string, original: string): string {
+    const isSingleWord = !original.trim().includes(' ');
+    if (!isSingleWord || !translation) return translation;
+
+    const lowerOriginal = original.toLowerCase();
+    const prefixes = [
+      'algo ',
+      'un ',
+      'una ',
+      'el ',
+      'la ',
+      'lo ',
+      'muy ',
+      'something ',
+      'a ',
+      'the ',
+      'very ',
+      'it is ',
+      'es ',
+      'c\'est ',
+      'sehr ',
+      'un peu ',
+      'a bit ',
+    ];
+
+    let cleaned = translation;
+    let foundPrefix = true;
+
+    while (foundPrefix) {
+      foundPrefix = false;
+      const lowerCleaned = cleaned.toLowerCase();
+      for (const prefix of prefixes) {
+        // If the translation starts with the prefix but the original didn't
+        if (
+          lowerCleaned.startsWith(prefix) &&
+          !lowerOriginal.startsWith(prefix.trim())
+        ) {
+          cleaned = cleaned.slice(prefix.length).trim();
+          foundPrefix = true;
+          break;
+        }
+      }
+    }
+
+    // Restore capitalized first letter if original was capitalized
+    if (original[0] === original[0].toUpperCase() && cleaned[0]) {
+      cleaned = cleaned[0].toUpperCase() + cleaned.slice(1);
+    }
+
+    return cleaned;
   }
 
   async explainText(params: {

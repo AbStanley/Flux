@@ -48,6 +48,7 @@ export class OllamaClientService {
       temperature?: number;
       top_k?: number;
       top_p?: number;
+      stop?: string[];
     },
   ): Promise<
     S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse

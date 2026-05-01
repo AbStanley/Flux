@@ -10,30 +10,23 @@ export const getTranslatePrompt = (
   const isBlock = text.length > 100 || text.includes('\n');
 
   if (isAuto) {
-    return `Role: Professional Translator and Language Detector.
-Task: Translate the segment "${text}" into ${targetLanguage} AND detect the source language.
-
-Context Information:
-- Full Sentence: "${context || 'None'}"
-- Segment to Translate: "${text}"
-
-Instructions:
-1. Analyze the "Full Sentence" to determine the exact meaning of "${text}".
-2. Translate ONLY "${text}". Do NOT translate the surrounding sentence.
-3. Detect the source language name (e.g., "Spanish", "French", "Japanese").
-4. Output ONLY a JSON object with two keys: "detectedLanguage" and "translation".
-5. CRITICALLY IMPORTANT: Output ONLY the JSON. No conversational filler.
-
-Expected JSON Output:
+    return `[CONTEXT] ${context || 'None'}
+[TO_TRANSLATE] ${text}
+[TARGET_LANGUAGE] ${targetLanguage}
+[TASK] Translate ONLY "${text}" and detect source language.
+[RULES]
+1. No extra words from context.
+2. Return JSON ONLY.
+[JSON_FORMAT]
 {
-  "detectedLanguage": "...",
-  "translation": "..."
+  "detectedLanguage": "string",
+  "translation": "string"
 }`;
   }
 
   if (isBlock) {
     return `Role: Professional Translator.
-Task: Translate the following text ${fromLang}into ${targetLanguage}.
+Task: Translate the following text ${fromLang} into ${targetLanguage}.
 
 Instructions:
 1. Translate the full text faithfully.
@@ -45,26 +38,14 @@ Text to Translate:
 "${text}"`;
   }
 
-  const prompt = `Role: Context-Aware Dictionary.
-Task: Translate the segment "${text}" ${fromLang} into ${targetLanguage}.
-
-Context Information:
-- Full Sentence: "${context || 'None'}"
-- Segment to Translate: "${text}"
-
-Instructions:
-1. Analyze the "Full Sentence" to determine the exact meaning of "${text}" in this specific use case.
-2. Translate ONLY the segment "${text}". Do NOT translate the surrounding sentence.
-3. CRITICALLY IMPORTANT: Output ONLY the final translated text.
-   - NO "The translation is..."
-   - NO "In this context..."
-   - NO quotes around the result.
-   - NO bullet points.
-   - NO explanations.
-   - STRICTLY PROHIBITED: Do NOT provide a list of multiple meanings.
-   - Output ONLY the most accurate single translation for this specific context.
-
-Result:`;
+  const prompt = `[CONTEXT] ${context || 'None'}
+[TO_TRANSLATE] ${text}
+[TARGET_LANGUAGE] ${targetLanguage}
+[RULES]
+1. Translate ONLY "${text}".
+2. DO NOT include translations of surrounding words from the context.
+3. DO NOT add words like "Algo", "Something", or "The" if not in the original text.
+[RESULT]`;
 
   return prompt;
 };
@@ -112,13 +93,12 @@ Reply with ONE JSON object in this exact shape:
     "explanation":  "<${targetLanguage}, one full sentence about how the word functions in THIS sentence>"
   },
   "examples":     [ {"sentence":"<${srcLang} ONLY>","translation":"<${targetLanguage} ONLY>"}, 2-3 entries — REQUIRED ],
-  "alternatives": [ "<${targetLanguage}>", 1-2 entries — REQUIRED ]${
-    isSentence
+  "alternatives": [ "<${targetLanguage}>", 1-2 entries — REQUIRED ]${isSentence
       ? `,
   "syntaxAnalysis": "<${targetLanguage}, 1-2 sentences describing structure>",
   "grammarRules":   [ "<${targetLanguage}, one grammar point>", 2-4 entries ]`
       : ''
-  }
+    }
 }
 
 Rules:
@@ -128,6 +108,8 @@ Rules:
 - "examples": each "sentence" entirely in ${srcLang}, each "translation" entirely in ${targetLanguage}. Never swap. If scripts differ, the two fields MUST use different scripts.
 - Examples should show "${text}" used in natural, varied ${srcLang} contexts — not all the same sense.
 ${isSentence ? `- Multi-word input: type="sentence", isVerb=false.` : ''}
+- Translate ONLY the specific segment "${text}". DO NOT include translations of surrounding words from the context sentence in the "translation" field. 
+  Example: Context: "Das ist etwas Besonderes" | Segment: "Besonderes" | Result: "especial" (NOT "algo especial").
 
 Output JSON only. No markdown, no preamble. Do NOT include a "conjugations" field — conjugation tables are fetched separately when the user requests them.`;
 };

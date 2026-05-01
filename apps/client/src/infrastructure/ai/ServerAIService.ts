@@ -24,6 +24,14 @@ export class ServerAIService implements IAIService {
 
 
 
+  private cleanSelection(text: string): string {
+    if (!text) return "";
+    const isBlock = text.length > 100 || text.includes("\n");
+    if (isBlock) return text;
+    // Strip leading/trailing punctuation and whitespace
+    return text.trim().replace(/^[^\p{L}\p{N}\s]+|[^\p{L}\p{N}\s]+$/gu, "");
+  }
+
   async generateText(
     prompt: string,
 
@@ -43,8 +51,9 @@ export class ServerAIService implements IAIService {
     context?: string,
     sourceLanguage?: string,
   ): Promise<string | { response: string; sourceLanguage?: string }> {
+    const cleanedText = this.cleanSelection(text);
     const data = await defaultClient.post<string | { response: string; sourceLanguage?: string }>('/api/translate', {
-      text,
+      text: cleanedText,
       targetLanguage,
       context,
       sourceLanguage,
@@ -64,8 +73,9 @@ export class ServerAIService implements IAIService {
     context?: string,
     sourceLanguage?: string,
   ): Promise<string> {
+    const cleanedText = this.cleanSelection(text);
     const data = await defaultClient.post<string | { response: string }>('/api/explain', {
-      text,
+      text: cleanedText,
       targetLanguage,
       context,
       sourceLanguage,
@@ -81,8 +91,9 @@ export class ServerAIService implements IAIService {
     context?: string,
     sourceLanguage?: string,
   ): Promise<RichTranslationResult> {
+    const cleanedText = this.cleanSelection(text);
     return defaultClient.post<RichTranslationResult>('/api/rich-translation', {
-      text,
+      text: cleanedText,
       targetLanguage,
       context,
       sourceLanguage,
@@ -204,8 +215,9 @@ export class ServerAIService implements IAIService {
     },
   ): Promise<RichTranslationResult> {
     const targetLanguage = opts.targetLanguage ?? "en";
+    const cleanedText = this.cleanSelection(text);
     const body = JSON.stringify({
-      text,
+      text: cleanedText,
       targetLanguage,
       context: opts.context,
       sourceLanguage: opts.sourceLanguage,
