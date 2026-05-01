@@ -79,6 +79,7 @@ export interface DerivedTokens {
     success: string;
     'success-foreground': string;
     'link-color': string;
+    'link-foreground': string;
 }
 
 /**
@@ -157,6 +158,7 @@ export function deriveTokens(seeds: SeedColors): DerivedTokens {
         success: bl > 60 ? '142 55% 32%' : '142 65% 52%',
         'success-foreground': '0 0% 100%',
         'link-color': bl > 60 ? pr : '142 65% 52%', // Default to primary for light, success/emerald for dark
+        'link-foreground': autoFg(bl > 60 ? pr : '142 65% 52%', '0 0% 8%', '0 0% 98%'),
     };
 }
 
@@ -258,6 +260,8 @@ export function customThemeToFluxTheme(theme: CustomTheme): FluxTheme {
         borderLight: hslToRgba(tokens.border, borderAlpha * 0.5),
         error: hslToHex(tokens.destructive),
         success: hslToHex(tokens.success ?? (isDark ? '142 65% 52%' : '142 55% 32%')),
-        info: hslToHex(tokens.primary),
+        info: hslToHex(tokens['link-color'] ?? tokens.primary),
+        link: hslToHex(tokens['link-color'] ?? tokens.primary),
+        linkFg: hslToHex(tokens['link-foreground'] ?? (isDark ? '0 0% 98%' : '0 0% 8%')),
     };
 }

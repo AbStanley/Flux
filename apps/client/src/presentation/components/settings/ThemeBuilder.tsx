@@ -180,7 +180,13 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
     };
 
     const handleTokenChange = (key: keyof DerivedTokens, hsl: string) => {
-        setTokens(prev => ({ ...prev, [key]: hsl }));
+        setTokens(prev => {
+            const next = { ...prev, [key]: hsl };
+            if (key === 'link-color') {
+                next['link-foreground'] = autoFg(hsl, '0 0% 8%', '0 0% 98%');
+            }
+            return next;
+        });
     };
 
     // Preset: always load exact CSS values; seeds in Simple mode are extracted from them

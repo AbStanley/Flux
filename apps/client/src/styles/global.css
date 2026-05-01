@@ -92,6 +92,7 @@ html, body, #root {
 
     /* Custom Premium Colors */
     --link-color: 193 100% 33%;
+    --link-foreground: 0 0% 100%;
     --input-background: var(--background);
     /* Default inputs to match background */
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
@@ -142,6 +143,7 @@ html, body, #root {
     /* Custom Premium Colors */
     --link-color: 142 70% 50%;
     /* Emerald-400 */
+    --link-foreground: 0 0% 98%;
     --success: 142 70% 50%;
     --success-foreground: 220 30% 12%;
   }
@@ -193,6 +195,7 @@ html, body, #root {
 
     /* Custom Premium Colors */
     --link-color: 200 80% 70%;
+    --link-foreground: 220 15% 10%;
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
     --success: 142 60% 55%;
     --success-foreground: 220 15% 10%;
@@ -246,6 +249,7 @@ html, body, #root {
 
     /* Custom Premium Colors */
     --link-color: 36 70% 42%;
+    --link-foreground: 0 0% 100%;
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
     --success: 142 55% 32%;
     --success-foreground: 0 0% 100%;
@@ -309,6 +313,7 @@ html, body, #root {
     /* Custom Premium Colors */
     --link-color: 203 80% 35%;
     /* Navy-ish */
+    --link-foreground: 0 0% 100%;
     --reader-textarea-bg: hsl(43 60% 94%);
     /* Opaque light cream for Sunset */
     --success: 142 55% 32%;
@@ -362,6 +367,7 @@ html, body, #root {
 
     --link-color: 189 43% 73%;
     /* foam */
+    --link-foreground: 249 22% 12%;
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
     --success: 142 60% 55%;
     --success-foreground: 249 22% 12%;
@@ -410,6 +416,7 @@ html, body, #root {
     --chart-5: 40 60% 55%;
 
     --link-color: 158 50% 35%;
+    --link-foreground: 0 0% 100%;
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
     --success: 142 55% 32%;
     --success-foreground: 0 0% 100%;
@@ -460,6 +467,7 @@ html, body, #root {
     --chart-5: 340 55% 65%;
 
     --link-color: 185 70% 65%;
+    --link-foreground: 232 30% 10%;
     --reader-textarea-bg: hsl(var(--secondary) / 0.3);
     --success: 142 60% 55%;
     --success-foreground: 232 30% 10%;

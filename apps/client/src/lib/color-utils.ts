@@ -47,6 +47,7 @@ export function hexToHsl(hex: string): string {
  * Example: "193 100% 33%" -> "#0081a7"
  */
 export function hslToHex(hslString: string): string {
+    if (!hslString) return '#000000';
     // Remove % and split
     const [hStr, sStr, lStr] = hslString.replace(/%/g, '').split(' ');
     const h = parseFloat(hStr);

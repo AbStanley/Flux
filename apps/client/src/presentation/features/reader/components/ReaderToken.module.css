@@ -20,9 +20,7 @@
 .selected {
     background-color: transparent;
     border-bottom-color: hsl(var(--link-color));
-    /* Just change color */
-    color: hsl(var(--link-color));
-    /* font-weight: 500; <-- REMOVED to prevent layout shift */
+    color: hsl(var(--link-foreground));
     vertical-align: baseline;
 }
 

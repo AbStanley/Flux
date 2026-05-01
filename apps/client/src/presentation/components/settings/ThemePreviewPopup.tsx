@@ -152,7 +152,7 @@ export function ThemePreviewPopup({ theme: t, activeToken, onHoverToken, onClick
                       onClick={(e) => { e.stopPropagation(); onClickToken?.('success'); }}
                 >✓ Saved to vocabulary</span>
                 <span style={{ color: t.textDim }}>·</span>
-                <span style={{ color: t.info, textDecoration: 'underline', ...hoverStyle('link-color') }}
+                <span style={{ color: t.link, textDecoration: 'underline', ...hoverStyle('link-color') }}
                       onMouseEnter={() => onHoverToken?.('link-color')}
                       onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}
                 >Open in Flux</span>

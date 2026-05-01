@@ -29,6 +29,8 @@ export interface FluxTheme {
     success: string;
     info: string;
     dot: string;
+    link: string;
+    linkFg: string;
 }
 
 export const THEMES: Record<string, FluxTheme> = {
@@ -40,6 +42,7 @@ export const THEMES: Record<string, FluxTheme> = {
         accent: '#3b82f6', accentGlow: 'rgba(59, 130, 246, 0.2)',
         border: 'rgba(255, 255, 255, 0.1)', borderLight: 'rgba(255, 255, 255, 0.05)',
         error: '#f87171', success: '#4ade80', info: '#bae6fd',
+        link: '#3b82f6', linkFg: '#ffffff',
     },
     nordic: {
         name: 'Nordic', id: 'nordic', dot: '#5e81ac',
@@ -49,6 +52,7 @@ export const THEMES: Record<string, FluxTheme> = {
         accent: '#5e81ac', accentGlow: 'rgba(94, 129, 172, 0.25)',
         border: 'rgba(94, 129, 172, 0.2)', borderLight: 'rgba(94, 129, 172, 0.1)',
         error: '#bf616a', success: '#a3be8c', info: '#81a1c1',
+        link: '#88c0d0', linkFg: '#2e3440',
     },
     ivory: {
         name: 'Ivory', id: 'ivory', dot: '#f5f0e8',
@@ -58,6 +62,7 @@ export const THEMES: Record<string, FluxTheme> = {
         accent: '#d4a853', accentGlow: 'rgba(212, 168, 83, 0.2)',
         border: 'rgba(212, 168, 83, 0.15)', borderLight: 'rgba(212, 168, 83, 0.08)',
         error: '#e07461', success: '#8fad6a', info: '#d4a853',
+        link: '#d4a853', linkFg: '#ffffff',
     },
     sunset: {
         name: 'Sunset', id: 'sunset', dot: '#1a1025',
@@ -67,6 +72,7 @@ export const THEMES: Record<string, FluxTheme> = {
         accent: '#f97316', accentGlow: 'rgba(249, 115, 22, 0.2)',
         border: 'rgba(250, 240, 255, 0.12)', borderLight: 'rgba(250, 240, 255, 0.06)',
         error: '#fb7185', success: '#4ade80', info: '#fbbf24',
+        link: '#f97316', linkFg: '#ffffff',
     },
     'rose-pine': {
         name: 'Rose Pine', id: 'rose-pine', dot: '#191724',
@@ -76,6 +82,7 @@ export const THEMES: Record<string, FluxTheme> = {
         accent: '#ebbcba', accentGlow: 'rgba(235, 188, 186, 0.2)',
         border: 'rgba(144, 140, 170, 0.15)', borderLight: 'rgba(144, 140, 170, 0.08)',
         error: '#eb6f92', success: '#9ccfd8', info: '#c4a7e7',
+        link: '#9ccfd8', linkFg: '#191724',
     },
     evergreen: {
         name: 'Evergreen', id: 'evergreen', dot: '#f0f5f0',
@@ -85,6 +92,7 @@ export const THEMES: Record<string, FluxTheme> = {
         accent: '#4a7c59', accentGlow: 'rgba(74, 124, 89, 0.15)',
         border: 'rgba(74, 124, 89, 0.12)', borderLight: 'rgba(74, 124, 89, 0.06)',
         error: '#c05a5a', success: '#5a8c5a', info: '#5a7ca0',
+        link: '#4a7c59', linkFg: '#ffffff',
     },
     moonlight: {
         name: 'Moonlight', id: 'moonlight', dot: '#161a2e',
@@ -94,6 +102,7 @@ export const THEMES: Record<string, FluxTheme> = {
         accent: '#65d9ef', accentGlow: 'rgba(101, 217, 239, 0.2)',
         border: 'rgba(101, 217, 239, 0.12)', borderLight: 'rgba(101, 217, 239, 0.06)',
         error: '#ff5c57', success: '#5af78e', info: '#57c7ff',
+        link: '#65d9ef', linkFg: '#161a2e',
     },
     light: {
         name: 'Light', id: 'light', dot: '#f8fafc',
@@ -103,6 +112,7 @@ export const THEMES: Record<string, FluxTheme> = {
         accent: '#3b82f6', accentGlow: 'rgba(59, 130, 246, 0.1)',
         border: 'rgba(0, 0, 0, 0.08)', borderLight: 'rgba(0, 0, 0, 0.04)',
         error: '#ef4444', success: '#22c55e', info: '#3b82f6',
+        link: '#3b82f6', linkFg: '#ffffff',
     }
 };
 

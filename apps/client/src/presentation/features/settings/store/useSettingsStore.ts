@@ -42,6 +42,10 @@ export interface CustomTheme {
         'input-background': string;
         'reader-textarea-bg': string;
         ring: string;
+        success: string;
+        'success-foreground': string;
+        'link-color': string;
+        'link-foreground': string;
     };
 }
 
