@@ -77,9 +77,18 @@ export function ChatScreen() {
         el.style.overflowY = el.scrollHeight > MAX_INPUT_HEIGHT ? 'auto' : 'hidden';
     }, [input]);
 
+    useEffect(() => {
+        if (!isStreaming && !isListening) {
+            inputRef.current?.focus();
+        }
+    }, [isStreaming, isListening]);
+
     const handleSend = () => {
         const text = input.trim();
-        if (!text || isStreaming) return;
+        if (!text || isStreaming) {
+            inputRef.current?.focus();
+            return;
+        }
         setInput('');
         sendMessage(text);
     };
@@ -94,10 +103,15 @@ export function ChatScreen() {
     const increaseFontSize = () => setConfig({ fontSize: Math.min(fontSize + 1, 24) });
     const decreaseFontSize = () => setConfig({ fontSize: Math.max(fontSize - 1, 10) });
 
+    const handleReset = () => {
+        reset();
+        inputRef.current?.focus();
+    };
+
     const visibleMessages = messages.filter((m) => m.role !== 'system');
 
     return (
-        <div className="flex flex-col h-[min(calc(100dvh-65px),700px)]">
+        <div className="flex mt-3 flex-col h-[calc(100dvh-110px)] border rounded-2xl shadow-sm bg-card overflow-hidden transition-all duration-300">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b">
                 <div className="flex items-center gap-2">
@@ -132,7 +146,7 @@ export function ChatScreen() {
                     </div>
 
                     <ThemeToggle />
-                    <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5 h-8">
+                    <Button variant="ghost" size="sm" onClick={handleReset} className="gap-1.5 h-8">
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span className="hidden xs:inline">New</span>
                     </Button>
