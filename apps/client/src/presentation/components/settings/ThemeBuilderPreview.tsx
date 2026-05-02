@@ -34,6 +34,7 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
     const inBg = hsl(tokens['input-background']);
     const link = hsl(tokens['link-color']);
     const linkFg = hsl(tokens['link-foreground']);
+    const selectionFg = hsl(tokens['selection-foreground']);
 
     const isToken = (k: string) => activeToken === k;
     const hoverStyle = (k: string) => isToken(k) ? { outline: `2px solid ${pr}`, outlineOffset: -1, zIndex: 10, cursor: 'pointer' } : { cursor: 'pointer' };
@@ -158,8 +159,8 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
                         onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
                         onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>The student opened the book and began to read. The word </span>
-                    <span style={{ fontWeight: 600, color: linkFg, borderBottom: `2px solid ${link}`, paddingBottom: 1, ...hoverStyle('link-foreground') }}
-                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-foreground'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-foreground'); }}>ephemeral</span>
+                    <span style={{ fontWeight: 600, color: selectionFg, borderBottom: `2px solid ${link}`, paddingBottom: 1, ...hoverStyle('selection-foreground') }}
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('selection-foreground'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('selection-foreground'); }}>ephemeral</span>
                     <span style={{ color: mtFg, ...hoverStyle('muted-foreground') }}
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
                         onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}

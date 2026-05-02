@@ -46,6 +46,7 @@ export interface CustomTheme {
         'success-foreground': string;
         'link-color': string;
         'link-foreground': string;
+        'selection-foreground': string;
     };
 }
 

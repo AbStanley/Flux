@@ -20,6 +20,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '214 32% 98%', 'reader-textarea-bg': '210 16% 97%',
         ring: '193 100% 33%', success: '142 60% 36%', 'success-foreground': '0 0% 100%',
         'link-color': '193 100% 33%', 'link-foreground': '0 0% 98%',
+        'selection-foreground': '220 13% 20%',
     },
     dark: {
         background: '220 30% 12%', foreground: '210 20% 98%',
@@ -34,6 +35,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '215 25% 20%', 'reader-textarea-bg': '215 25% 14%',
         ring: '224 76% 60%', success: '142 70% 50%', 'success-foreground': '220 30% 12%',
         'link-color': '142 70% 50%', 'link-foreground': '0 0% 98%',
+        'selection-foreground': '210 20% 98%',
     },
     nordic: {
         background: '220 15% 13%', foreground: '210 15% 92%',
@@ -48,6 +50,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '220 12% 22%', 'reader-textarea-bg': '220 12% 15%',
         ring: '200 80% 65%', success: '142 60% 55%', 'success-foreground': '220 15% 10%',
         'link-color': '200 80% 70%', 'link-foreground': '0 0% 8%',
+        'selection-foreground': '210 15% 92%',
     },
     cream: {
         background: '43 47% 92%', foreground: '30 25% 18%',
@@ -62,6 +65,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '220 60% 60%', 'reader-textarea-bg': '40 60% 96%',
         ring: '36 90% 50%', success: '142 55% 32%', 'success-foreground': '0 0% 100%',
         'link-color': '36 70% 42%', 'link-foreground': '0 0% 98%',
+        'selection-foreground': '30 25% 18%',
     },
     sunset: {
         background: '43 47% 90%', foreground: '203 100% 14%',
@@ -76,6 +80,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '43 60% 96%', 'reader-textarea-bg': '43 60% 94%',
         ring: '31 100% 48%', success: '142 55% 32%', 'success-foreground': '0 0% 100%',
         'link-color': '203 80% 35%', 'link-foreground': '0 0% 98%',
+        'selection-foreground': '203 100% 14%',
     },
     'rose-pine': {
         background: '249 22% 12%', foreground: '245 7% 81%',
@@ -90,6 +95,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '249 15% 20%', 'reader-textarea-bg': '249 15% 14%',
         ring: '2 55% 70%', success: '142 60% 55%', 'success-foreground': '249 22% 12%',
         'link-color': '189 43% 73%', 'link-foreground': '0 0% 8%',
+        'selection-foreground': '245 7% 81%',
     },
     evergreen: {
         background: '150 15% 96%', foreground: '160 20% 18%',
@@ -104,6 +110,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '150 15% 96%', 'reader-textarea-bg': '148 20% 92%',
         ring: '158 40% 42%', success: '142 55% 32%', 'success-foreground': '0 0% 100%',
         'link-color': '158 50% 35%', 'link-foreground': '0 0% 98%',
+        'selection-foreground': '160 20% 18%',
     },
     moonlight: {
         background: '232 30% 10%', foreground: '225 15% 85%',
@@ -118,6 +125,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '232 22% 18%', 'reader-textarea-bg': '232 22% 12%',
         ring: '185 70% 60%', success: '142 60% 55%', 'success-foreground': '232 30% 10%',
         'link-color': '185 70% 65%', 'link-foreground': '0 0% 8%',
+        'selection-foreground': '225 15% 85%',
     },
 };
 
@@ -164,7 +172,8 @@ export const TOKEN_GROUPS: TokenGroup[] = [
             { key: 'success',                 label: 'Success Color',      hint: 'Confirmations, "Looks good" chip' },
             { key: 'success-foreground',      label: 'Success Text',       hint: 'Text on success-colored elements' },
             { key: 'link-color',              label: 'Selected Words',     hint: 'Underline and popup background for selections' },
-            { key: 'link-foreground',         label: 'Selected Words Text', hint: 'Color of the text inside the selection popup' },
+            { key: 'link-foreground',         label: 'Selection Popup Text', hint: 'Color of the text inside the selection popup' },
+            { key: 'selection-foreground',    label: 'Selected Word (Reader)', hint: 'Color of the highlighted word in the reading text' },
         ],
     },
     {
