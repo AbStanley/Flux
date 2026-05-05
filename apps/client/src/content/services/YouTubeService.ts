@@ -96,7 +96,12 @@ export class YouTubeService {
                         data: { url: jsonUrl }
                     }, (response: ProxyResponse) => {
                         if (chrome.runtime.lastError) {
-                            reject(new Error(chrome.runtime.lastError.message));
+                            const msg = chrome.runtime.lastError.message || "";
+                            if (msg.includes("context invalidated")) {
+                                reject(new Error("Extension updated. Please refresh the page."));
+                            } else {
+                                reject(new Error(msg));
+                            }
                         } else if (!response.success) {
                             reject(new Error(response.error || 'Proxy request failed'));
                         } else {
@@ -143,7 +148,12 @@ export class YouTubeService {
                     data: { url }
                 }, (response: ProxyResponse) => {
                     if (chrome.runtime.lastError) {
-                        reject(new Error(chrome.runtime.lastError.message));
+                        const msg = chrome.runtime.lastError.message || "";
+                        if (msg.includes("context invalidated")) {
+                            reject(new Error("Extension updated. Please refresh the page."));
+                        } else {
+                            reject(new Error(msg));
+                        }
                     } else if (!response.success) {
                         reject(new Error(response.error || 'Proxy request failed'));
                     } else {

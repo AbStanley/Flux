@@ -7,10 +7,20 @@ export async function getAuthToken(): Promise<string | null> {
   
   if (isExtensionContext && chrome?.storage?.local) {
     return new Promise((resolve) => {
-      chrome.storage.local.get(["flux_auth_token"], (result) => {
-        const data = result as { flux_auth_token?: string };
-        resolve(data.flux_auth_token || null);
-      });
+      try {
+        chrome.storage.local.get(["flux_auth_token"], (result) => {
+          if (chrome.runtime.lastError) {
+            console.warn("[Flux Debug] getAuthToken: storage error:", chrome.runtime.lastError.message);
+            resolve(null);
+            return;
+          }
+          const data = result as { flux_auth_token?: string };
+          resolve(data.flux_auth_token || null);
+        });
+      } catch (e) {
+        console.warn("[Flux Debug] getAuthToken: failed to access storage:", e);
+        resolve(null);
+      }
     });
   }
   
@@ -67,10 +77,14 @@ export class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    // Use extension proxy if we are in an extension context (popup OR content script)
-    // This allows content scripts on HTTPS pages to reach HTTP localhost via background script
-    const isExtensionContext = typeof chrome !== "undefined" && !!chrome.runtime?.id;
-    if (isExtensionContext) {
+    // Use extension proxy ONLY if we are in a content script
+    // Popup and SidePanel are already in extension context and can fetch directly
+    const isContentScript = typeof chrome !== "undefined" && 
+                           !!chrome.runtime?.id && 
+                           typeof window !== "undefined" && 
+                           window.location.protocol !== "chrome-extension:";
+
+    if (isContentScript) {
       console.log(`[Flux Debug] ApiClient: Proxying ${method} ${url}`);
       return new Promise<T>((resolve, reject) => {
         let parsedBody: unknown = undefined;
@@ -86,43 +100,55 @@ export class ApiClient {
           }
         }
 
-        chrome.runtime.sendMessage(
-          {
-            type: "PROXY_REQUEST",
-            data: {
-              url,
-              method,
-              headers,
-              body: parsedBody,
+        try {
+          chrome.runtime.sendMessage(
+            {
+              type: "PROXY_REQUEST",
+              data: {
+                url,
+                method,
+                headers,
+                body: parsedBody,
+              },
             },
-          },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              console.error(
-                "[Flux Debug] ApiClient: Extension error:",
-                chrome.runtime.lastError.message,
-              );
-              reject(new Error(chrome.runtime.lastError.message));
-            } else if (!response) {
-              console.error(
-                "[Flux Debug] ApiClient: No response from background script",
-              );
-              reject(new Error("No response from background script"));
-            } else if (!response.success) {
-              console.error(
-                "[Flux Debug] ApiClient: Proxy failure:",
-                response.error,
-              );
-              reject(new Error(response.error || "Proxy request failed"));
-            } else {
-              console.log(
-                "[Flux Debug] ApiClient: Proxy success",
-                response.data,
-              );
-              resolve(response.data as T);
-            }
-          },
-        );
+            (response) => {
+              if (chrome.runtime.lastError) {
+                const msg = chrome.runtime.lastError.message || "";
+                console.error("[Flux Debug] ApiClient: Extension error:", msg);
+                
+                if (msg.includes("context invalidated")) {
+                  reject(new Error("Extension updated. Please refresh the page to continue."));
+                } else {
+                  reject(new Error(msg));
+                }
+              } else if (!response) {
+                console.error(
+                  "[Flux Debug] ApiClient: No response from background script",
+                );
+                reject(new Error("No response from background script"));
+              } else if (!response.success) {
+                console.error(
+                  "[Flux Debug] ApiClient: Proxy failure:",
+                  response.error,
+                );
+                reject(new Error(response.error || "Proxy request failed"));
+              } else {
+                console.log(
+                  "[Flux Debug] ApiClient: Proxy success",
+                  response.data,
+                );
+                resolve(response.data as T);
+              }
+            },
+          );
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (msg.includes("context invalidated")) {
+             reject(new Error("Extension updated. Please refresh the page to continue."));
+          } else {
+             reject(new Error(msg));
+          }
+        }
       });
     }
 

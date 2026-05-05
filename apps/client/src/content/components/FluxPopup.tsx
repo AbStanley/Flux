@@ -164,7 +164,16 @@ export function FluxPopup({
                         borderTop: `1px solid ${theme.border}`,
                     }}>
                         {[
-                            { title: 'Save to vocabulary', color: theme.accent, onClick: () => handleInternalSave(), icon: <><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /><line x1="12" y1="7" x2="12" y2="13" /><line x1="9" y1="10" x2="15" y2="10" /></> },
+                            { 
+                                title: 'Save to vocabulary', 
+                                color: isSaving ? theme.success : theme.accent, 
+                                onClick: () => handleInternalSave(), 
+                                icon: isSaving ? (
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                ) : (
+                                    <><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /><line x1="12" y1="7" x2="12" y2="13" /><line x1="9" y1="10" x2="15" y2="10" /></>
+                                )
+                            },
                             { title: 'Expand', color: theme.textSecondary, onClick: () => { setIsPinned(false); onPinChange?.(false); setIsCollapsed(false); }, icon: <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /> },
                             { title: 'Close', color: theme.textSecondary, onClick: () => onClose(), icon: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></> },
                         ].map((btn) => (
@@ -237,6 +246,7 @@ export function FluxPopup({
                         isPinned={isPinned}
                         isCollapsed={false}
                         onCollapseToggle={() => setIsCollapsed(true)}
+                        isSaving={isSaving}
                         theme={theme}
                     />
                 </div>

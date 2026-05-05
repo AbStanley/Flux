@@ -8,6 +8,7 @@ interface FluxHeaderProps {
     isPinned: boolean;
     isCollapsed: boolean;
     onCollapseToggle: () => void;
+    isSaving?: boolean;
     theme: FluxTheme;
 }
 
@@ -18,6 +19,7 @@ export function FluxHeader({
     isPinned,
     isCollapsed,
     onCollapseToggle,
+    isSaving,
     theme,
 }: FluxHeaderProps) {
     return (
@@ -59,9 +61,9 @@ export function FluxHeader({
                     onClick={(e) => { e.stopPropagation(); onSave(); }}
                     title="Add to Deck"
                     style={{
-                        background: 'none',
+                        background: isSaving ? theme.success : 'none',
                         border: 'none',
-                        color: theme.accent,
+                        color: isSaving ? theme.bgSolid : theme.accent,
                         cursor: 'pointer',
                         padding: '4px',
                         borderRadius: '6px',
@@ -70,10 +72,16 @@ export function FluxHeader({
                         justifyContent: 'center',
                         transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = theme.accentGlow}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                    onMouseEnter={(e) => { if (!isSaving) e.currentTarget.style.background = theme.accentGlow; }}
+                    onMouseLeave={(e) => { if (!isSaving) e.currentTarget.style.background = 'none'; }}
                 >
-                    <Save size={14} strokeWidth={2.5} />
+                    {isSaving ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    ) : (
+                        <Save size={14} strokeWidth={2.5} />
+                    )}
                 </button>
 
                 {/* Collapse Toggle - Reverted to original SVG */}

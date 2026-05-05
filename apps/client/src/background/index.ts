@@ -90,13 +90,15 @@ async function handleProxyRequest(config: ProxyConfig): Promise<unknown> {
         const fetchOptions: RequestInit = {
             method,
             headers,
-            body: body ? JSON.stringify(body) : undefined,
+            body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
             credentials: 'include'
         };
 
         const response = await fetch(url, fetchOptions);
-        console.log('[Background] Response status:', response.status);
-        console.log('[Background] Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
+        console.log(`[Background] Response from ${url}:`, response.status, response.statusText);
+        
+        const responseHeaders = Object.fromEntries(response.headers.entries());
+        console.log('[Background] Response headers:', JSON.stringify(responseHeaders));
 
         if (!response.ok) {
             if (response.status === 401) {
