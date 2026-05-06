@@ -7,7 +7,7 @@ import { useSettingsStore } from '../../settings/store/useSettingsStore';
 import { wordsApi } from '@/infrastructure/api/words';
 
 export interface GameConfig {
-    mode: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'story' | 'cloze';
+    mode: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'story' | 'cloze' | 'conjugation';
     source: 'db' | 'anki' | 'ai';
     timerEnabled: boolean;
     mixMode?: boolean;
@@ -24,6 +24,8 @@ export interface GameConfig {
     aiModel?: string;
     aiHost?: string;
     aiLevel?: 'beginner' | 'intermediate' | 'advanced';
+    aiVerb?: string;
+    aiTense?: string;
 }
 
 interface GameState {
@@ -58,11 +60,13 @@ interface GameState {
     setTime: (time: number) => void;
     setRecentDistractorIds: (ids: string[]) => void;
     syncProgress: () => Promise<void>;
+    fetchMoreItems: () => Promise<void>;
 
     // Language cache for UI
     availableLangs: string[];
     languageGraph: Record<string, string[]>;
     isLoadingLangs: boolean;
+    _isFetchingMore?: boolean;
 }
 
 
@@ -168,7 +172,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         const params: GameContentParams = {
             source: config.source,
             config: {
-                limit: config.source === 'ai' ? 10 : 30,
+                limit: config.source === 'ai' ? 5 : 30,
                 gameMode: config.mode,
                 timerEnabled: config.timerEnabled,
                 language: {
@@ -189,7 +193,9 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
                 aiTopic: config.aiTopic,
                 aiModel: settings.llmModel || config.aiModel,
                 aiHost: settings.aiHost || config.aiHost,
-                aiLevel: config.aiLevel
+                aiLevel: config.aiLevel,
+                aiVerb: config.aiVerb,
+                aiTense: config.aiTense
             }
         };
 
@@ -268,7 +274,7 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
     },
 
     nextItem: () => {
-        const { currentIndex, items, health, status, endGame } = get();
+        const { currentIndex, items, health, status, endGame, config } = get();
         if (status !== 'playing') return;
 
         if (health <= 0) {
@@ -278,8 +284,56 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
 
         if (currentIndex < items.length - 1) {
             set({ currentIndex: currentIndex + 1, timeLeft: 100, isTimerPaused: false });
+            
+            // Prefetch next chunk if we're near the end
+            if (currentIndex + 1 >= items.length - 3 && config.source === 'ai') {
+                get().fetchMoreItems();
+            }
         } else {
             endGame();
+        }
+    },
+
+    fetchMoreItems: async () => {
+        const { config, status } = get();
+        if (status !== 'playing' || config.source !== 'ai') return;
+        
+        // Prevent concurrent fetches
+        if (get()._isFetchingMore) return;
+        set({ _isFetchingMore: true });
+
+        const settings = useSettingsStore.getState();
+        const params: GameContentParams = {
+            source: config.source,
+            config: {
+                limit: 5,
+                gameMode: config.mode,
+                timerEnabled: config.timerEnabled,
+                language: {
+                    source: config.sourceLang !== 'all' ? config.sourceLang : undefined,
+                    target: config.targetLang !== 'all' ? config.targetLang : undefined
+                },
+                strictDirection: config.strictDirection,
+                aiTopic: config.aiTopic,
+                aiModel: settings.llmModel || config.aiModel,
+                aiHost: settings.aiHost || config.aiHost,
+                aiLevel: config.aiLevel,
+                aiVerb: config.aiVerb,
+                aiTense: config.aiTense
+            }
+        };
+
+        try {
+            await gameContentService.getItems(params, (newItem) => {
+                const currentItems = get().items;
+                if (!currentItems.find(i => i.id === newItem.id)) {
+                    set((state) => ({ items: [...state.items, newItem] }));
+                }
+            });
+        } catch (e) {
+            console.error('[GameStore] Failed to prefetch items:', e);
+        } finally {
+            set({ _isFetchingMore: false });
         }
     },
 

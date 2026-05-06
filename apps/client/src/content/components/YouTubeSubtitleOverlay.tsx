@@ -130,6 +130,7 @@ export const YouTubeSubtitleOverlay = ({
             >
                 {hasPrev && <SubtitleNavigationButton direction="prev" onClick={onPrev} theme={theme} />}
 
+
                 {/* Subtitle Tokens — vertically centered in upper area */}
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                     <div

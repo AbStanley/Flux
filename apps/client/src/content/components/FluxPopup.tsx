@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Mode } from '../hooks/useAIHandler';
 import { FluxHeader } from './FluxHeader';
 import { FluxControls } from './FluxControls';
 import { FluxContent } from './FluxContent';
 import { useDraggable } from '../hooks/useDraggable';
 import { UI_CONSTANTS, type FluxTheme } from '../constants';
+import { Check, Save } from 'lucide-react';
 import { useFluxMessaging } from '../hooks/useFluxMessaging';
 
 interface FluxPopupProps {
@@ -37,6 +38,7 @@ interface FluxPopupProps {
     onModelChange: (model: string) => void;
     collapsed: boolean;
     onCollapsedChange: (collapsed: boolean) => void;
+    isPinned: boolean;
 }
 
 export function FluxPopup({
@@ -69,15 +71,15 @@ export function FluxPopup({
     onModelChange,
     collapsed: isCollapsed,
     onCollapsedChange: setIsCollapsed,
+    isPinned,
 }: FluxPopupProps) {
-    const [isPinned, setIsPinned] = useState(false);
     const { selectAndOpen } = useFluxMessaging();
+    const popupRef = useRef<HTMLDivElement>(null);
 
     const { pos, setPos, isDragging, handleMouseDown } = useDraggable({
         initialPos: { x: selection.x, y: selection.y },
         onDragStart: () => {
             if (!isPinned) {
-                setIsPinned(true);
                 onPinChange?.(true);
             }
         }
@@ -93,10 +95,13 @@ export function FluxPopup({
     }
 
     const handlePinToggle = useCallback(() => {
-        const next = !isPinned;
-        setIsPinned(next);
-        onPinChange?.(next);
-    }, [isPinned, onPinChange]);
+        if (!isPinned && popupRef.current) {
+            // Capturing the current screen position to prevent jumping if the user has scrolled
+            const rect = popupRef.current.getBoundingClientRect();
+            setPos({ x: rect.left, y: rect.top });
+        }
+        onPinChange?.(!isPinned);
+    }, [isPinned, onPinChange, setPos]);
 
     const handleInternalSave = useCallback(() => {
         if (onSave) {
@@ -137,6 +142,20 @@ export function FluxPopup({
                 }}
                 onMouseDown={e => e.stopPropagation()}
             >
+                {loading && (
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.info} 50%, ${theme.accent} 100%)`,
+                        backgroundSize: '200% 100%',
+                        animation: 'flux-loading-bar 1.5s infinite linear',
+                        borderRadius: '12px 12px 0 0',
+                        zIndex: 2,
+                    }} />
+                )}
                 <div
                     style={{
                         backgroundColor: theme.bgSolid,
@@ -153,8 +172,18 @@ export function FluxPopup({
                     }}
                 >
                     {/* Translation text */}
-                    <div style={{ padding: '10px 14px', maxHeight: '200px', overflowY: 'auto', fontWeight: 500 }}>
-                        {loading ? '...' : error ? 'Error' : result || '—'}
+                    <div style={{ padding: '10px 14px', maxHeight: '200px', overflowY: 'auto', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {loading && (
+                            <div className="animate-spin" style={{ 
+                                width: '14px', 
+                                height: '14px', 
+                                border: `2px solid ${theme.accent}`, 
+                                borderTopColor: 'transparent', 
+                                borderRadius: '50%',
+                                flexShrink: 0
+                            }}></div>
+                        )}
+                        <span>{error ? 'Error' : (loading ? 'Processing...' : result || '—')}</span>
                     </div>
 
                     {/* Action bar */}
@@ -164,30 +193,36 @@ export function FluxPopup({
                         borderTop: `1px solid ${theme.border}`,
                     }}>
                         {[
-                            { 
-                                title: 'Save to vocabulary', 
-                                color: isSaving ? theme.success : theme.accent, 
-                                onClick: () => handleInternalSave(), 
+                            {
+                                title: 'Save to vocabulary',
+                                color: isSaving ? theme.success : theme.accent,
+                                onClick: () => handleInternalSave(),
+                                disabled: loading || isSaving,
                                 icon: isSaving ? (
-                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                    <Check strokeWidth={3} />
                                 ) : (
-                                    <><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /><line x1="12" y1="7" x2="12" y2="13" /><line x1="9" y1="10" x2="15" y2="10" /></>
+                                    <Save strokeWidth={2.5} />
                                 )
                             },
-                            { title: 'Expand', color: theme.textSecondary, onClick: () => { setIsPinned(false); onPinChange?.(false); setIsCollapsed(false); }, icon: <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /> },
+                            { title: 'Expand', color: theme.textSecondary, onClick: () => { setIsCollapsed(false); }, icon: <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /> },
                             { title: 'Close', color: theme.textSecondary, onClick: () => onClose(), icon: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></> },
                         ].map((btn) => (
                             <button
                                 key={btn.title}
                                 onClick={(e) => { e.stopPropagation(); btn.onClick(); }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                disabled={(btn as any).disabled}
                                 title={btn.title}
                                 style={{
                                     background: 'none', border: 'none', color: btn.color,
-                                    cursor: 'pointer', padding: '4px', display: 'flex',
+                                    cursor: (btn as any).disabled ? 'not-allowed' : 'pointer', 
+                                    opacity: (btn as any).disabled ? 0.4 : 1,
+                                    padding: '4px', display: 'flex',
                                     alignItems: 'center', justifyContent: 'center',
                                     width: '24px', height: '24px', borderRadius: '6px',
+                                    transition: 'all 0.2s'
                                 }}
-                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.surface)}
+                                onMouseEnter={(e) => { if (!(btn as any).disabled) e.currentTarget.style.backgroundColor = theme.surface }}
                                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                             >
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -224,6 +259,7 @@ export function FluxPopup({
 
     return (
         <div
+            ref={popupRef}
             onMouseEnter={onMouseEnter}
             onMouseLeave={() => {
                 if (!isPinned) onMouseLeave();
@@ -238,6 +274,33 @@ export function FluxPopup({
             onMouseDown={e => e.stopPropagation()}
         >
             <div style={popupStyles}>
+                {/* Global loading bar */}
+                {loading && (
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '3px',
+                        background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.info} 50%, ${theme.accent} 100%)`,
+                        backgroundSize: '200% 100%',
+                        animation: 'flux-loading-bar 1.5s infinite linear',
+                        borderTopLeftRadius: '20px',
+                        borderTopRightRadius: '20px',
+                        zIndex: 10,
+                    }} />
+                )}
+
+                {/* Animation keyframes */}
+                <style>
+                    {`
+                        @keyframes flux-loading-bar {
+                            0% { background-position: 200% 0; }
+                            100% { background-position: -200% 0; }
+                        }
+                    `}
+                </style>
+
                 <div onMouseDown={handleMouseDown} style={{ padding: '16px 20px 8px' }}>
                     <FluxHeader
                         onClose={onClose}
@@ -247,6 +310,8 @@ export function FluxPopup({
                         isCollapsed={false}
                         onCollapseToggle={() => setIsCollapsed(true)}
                         isSaving={isSaving}
+                        result={result}
+                        loading={loading}
                         theme={theme}
                     />
                 </div>
@@ -261,9 +326,9 @@ export function FluxPopup({
                     />
                 </div>
 
-                <div style={{ 
-                    background: theme.surface, 
-                    borderTop: `1px solid ${theme.borderLight}`, 
+                <div style={{
+                    background: theme.surface,
+                    borderTop: `1px solid ${theme.borderLight}`,
                     padding: '12px 20px 16px',
                     borderBottomLeftRadius: '20px',
                     borderBottomRightRadius: '20px'

@@ -40,6 +40,17 @@ function buildClozeData(item: { question: string; answer: string; context?: stri
     const qRegex = new RegExp(`\\b${escapeRegex(item.question)}\\b`, 'i');
     const aRegex = new RegExp(`\\b${escapeRegex(item.answer)}\\b`, 'i');
 
+    const bracketMatch = ctx.match(/\[(.*?)\]/);
+    if (bracketMatch) {
+        return {
+            sentence: ctx.replace(/\[.*?\]/, '_____'),
+            wordToGuess: bracketMatch[1],
+            hint: item.question,
+            hintLang: item.lang?.source ?? '',
+            sentenceLang: item.lang?.target ?? '',
+        };
+    }
+
     const questionInContext = qRegex.test(ctx);
     const answerInContext = aRegex.test(ctx);
 

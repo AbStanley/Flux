@@ -190,10 +190,24 @@ export const AiSetup = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-muted-foreground">Topic</label>
-                            <Input value={config.aiTopic || ''} onChange={(e) => updateConfig({ aiTopic: e.target.value })} placeholder="e.g., Business, Travel..." className="bg-[var(--input-background)]" />
-                        </div>
+                        {config.mode !== 'conjugation' && (
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-muted-foreground">Topic</label>
+                                <Input value={config.aiTopic || ''} onChange={(e) => updateConfig({ aiTopic: e.target.value })} placeholder="e.g., Business, Travel..." className="bg-[var(--input-background)]" />
+                            </div>
+                        )}
+                        {config.mode === 'conjugation' && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-muted-foreground">Verb (optional)</label>
+                                    <Input value={config.aiVerb || ''} onChange={(e) => updateConfig({ aiVerb: e.target.value })} placeholder="Leave blank for random" className="bg-[var(--input-background)]" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-muted-foreground">Tense (optional)</label>
+                                    <Input value={config.aiTense || ''} onChange={(e) => updateConfig({ aiTense: e.target.value })} placeholder="e.g. Present, Past..." className="bg-[var(--input-background)]" />
+                                </div>
+                            </>
+                        )}
                         <div>
                             <label className="block text-sm font-medium mb-1 text-muted-foreground">Level</label>
                             <Select value={config.aiLevel || 'intermediate'} onValueChange={(val: 'beginner' | 'intermediate' | 'advanced') => updateConfig({ aiLevel: val })}>

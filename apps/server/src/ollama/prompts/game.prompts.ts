@@ -7,7 +7,9 @@ export const getGameContentPrompt = (
   limit: number = 10,
   _isStreaming: boolean = false,
   sourceLangCode: string = 'en-US',
-  targetLangCode: string = 'es-ES'
+  targetLangCode: string = 'es-ES',
+  verb?: string,
+  tense?: string
 ): string => {
   const isStoryMode = mode === 'story';
   const contextInstruction =
@@ -56,10 +58,38 @@ export const getGameContentPrompt = (
          { "question": "The cat sleeps on the sofa.", "answer": "El gato duerme en el sofá.", "target_lang_code": "${targetLangCode}", "source_lang_code": "${sourceLangCode}", "context": "Simple present.", "type": "phrase" }
      ]
       `;
+  } else if (mode === 'conjugation') {
+    const verbInstruction = verb ? `Verb to conjugate: "${verb}"` : `Choose 5 random verbs.`;
+    const tenseInstruction = tense ? `Tense: "${tense}"` : `Choose random tenses or standard ones.`;
+    
+    return `
+      Generate ${limit} verb conjugation exercises for a language learning game.
+      Language: ${targetLang}
+      Difficulty Level: ${level}
+      ${verbInstruction}
+      ${tenseInstruction}
+
+      For each verb, generate sentences using all pronouns (e.g., I, you, he/she, we, they) in ${targetLang}.
+      
+      ${baseInstruction}
+      Each object must have:
+      - "target_text": ONLY the conjugated verb in ${targetLang}. DO NOT include the pronoun in this field. (e.g., "como", NOT "yo como").
+      - "target_lang_code": ALWAYS "${targetLangCode}"
+      - "source_translation": The infinitive, tense, and pronoun in ${sourceLang} (e.g., "to eat (Present) - I").
+      - "source_lang_code": ALWAYS "${sourceLangCode}"
+      - "context": A short, simple sentence in ${targetLang} where the conjugated verb is enclosed in square brackets (e.g., "Yo [como] una manzana.").
+      - "type": "word"
+
+      Example (Translating from Spanish to English):
+      [
+          { "target_text": "como", "target_lang_code": "${targetLangCode}", "source_translation": "to eat (Present) - I", "source_lang_code": "${sourceLangCode}", "context": "Yo [como] una manzana.", "type": "word" },
+          { "target_text": "comes", "target_lang_code": "${targetLangCode}", "source_translation": "to eat (Present) - You", "source_lang_code": "${sourceLangCode}", "context": "Tú [comes] una manzana.", "type": "word" }
+      ]
+      `;
   } else {
     // Default / Multiple Choice
     return `
-      TRANSLATION DIRECTION: Translate from ${targetLang} to ${sourceLang}.
+      TRANSLATION DIRECTION: Translate from ${sourceLang} to ${targetLang}.
       
       Generate ${limit} items for a language learning game.
       Topic: "${topic}"
@@ -68,18 +98,18 @@ export const getGameContentPrompt = (
 
       ${baseInstruction}
       Each object must have:
-      - "target_text": The word or phrase in ${targetLang}.
-      - "target_lang_code": ALWAYS "${targetLangCode}"
-      - "source_translation": The exact translation in ${sourceLang}.
+      - "source_translation": The exact phrase or word in ${sourceLang}.
       - "source_lang_code": ALWAYS "${sourceLangCode}"
+      - "target_text": The translation in ${targetLang}.
+      - "target_lang_code": ALWAYS "${targetLangCode}"
       - "context": A short example sentence using the word in ${targetLang}.
       - "type": "word" or "phrase".
 
       CRITICAL CONSTRAINTS:
       1. FIELD NAMES: You MUST use "target_text" and "source_translation". DO NOT use "question" or "answer".
       2. LANGUAGES: 
-         - "target_text" MUST be in ${targetLang}.
-         - "source_translation" MUST be in ${sourceLang} (Translation).
+         - "source_translation" MUST be in ${sourceLang} (Original).
+         - "target_text" MUST be in ${targetLang} (Translation).
       3. LANGUAGE CODES: 
          - Set "target_lang_code" to "${targetLangCode}".
          - Set "source_lang_code" to "${sourceLangCode}".

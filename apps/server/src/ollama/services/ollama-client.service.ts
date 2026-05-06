@@ -19,19 +19,22 @@ export class OllamaClientService {
     model: string,
     messages: Message[],
     stream?: S,
+    signal?: AbortSignal,
   ): Promise<S extends true ? AsyncIterable<ChatResponse> : ChatResponse> {
     const action = `chat with model ${model}`;
     if (stream) {
       return this.execute(
-        () => this.ollama.chat({ model, messages, stream: true }),
+        (client) => client.chat({ model, messages, stream: true }),
         action,
+        signal,
       ) as unknown as Promise<
         S extends true ? AsyncIterable<ChatResponse> : ChatResponse
       >;
     }
     return this.execute(
-      () => this.ollama.chat({ model, messages, stream: false }),
+      (client) => client.chat({ model, messages, stream: false }),
       action,
+      signal,
     ) as unknown as Promise<
       S extends true ? AsyncIterable<ChatResponse> : ChatResponse
     >;
@@ -50,6 +53,7 @@ export class OllamaClientService {
       top_p?: number;
       stop?: string[];
     },
+    signal?: AbortSignal,
   ): Promise<
     S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
   > {
@@ -64,24 +68,38 @@ export class OllamaClientService {
 
     if (stream) {
       return this.execute(
-        () => this.ollama.generate({ ...baseRequest, stream: true }),
+        (client) => client.generate({ ...baseRequest, stream: true }),
         action,
+        signal,
       ) as unknown as Promise<
         S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
       >;
     }
     return this.execute(
-      () => this.ollama.generate({ ...baseRequest, stream: false }),
+      (client) => client.generate({ ...baseRequest, stream: false }),
       action,
+      signal,
     ) as unknown as Promise<
       S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
     >;
   }
 
-  private async execute<T>(fn: () => Promise<T>, action: string): Promise<T> {
+  private async execute<T>(
+    fn: (client: Ollama) => Promise<T>,
+    action: string,
+    signal?: AbortSignal,
+  ): Promise<T> {
     try {
       this.logger.log(`Ollama request: ${action}`);
-      return await fn();
+      const client = signal 
+        ? new Ollama({ 
+            host: this.ollamaHost, 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            fetch: (url: any, init: any) => fetch(url, { ...init, signal }) 
+          }) 
+        : this.ollama;
+        
+      return await fn(client);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
       this.logger.error(`Ollama Error [${action}]: ${msg}`, error);
@@ -102,7 +120,7 @@ export class OllamaClientService {
   async listTags() {
     try {
       this.logger.log(`Attempting to list tags from ${this.ollamaHost}`);
-      return await this.execute(() => this.ollama.list(), 'list tags');
+      return await this.execute((client) => client.list(), 'list tags');
     } catch (e) {
       this.logger.error(`Failed to list tags from ${this.ollamaHost}`, e);
       throw e;
@@ -115,8 +133,8 @@ export class OllamaClientService {
     AsyncIterable<{ status: string; total?: number; completed?: number }>
   > {
     return this.execute(
-      () =>
-        this.ollama.pull({ model, stream: true }) as unknown as Promise<
+      (client) =>
+        client.pull({ model, stream: true }) as unknown as Promise<
           AsyncIterable<{ status: string; total?: number; completed?: number }>
         >,
       `pull model ${model}`,
@@ -125,8 +143,8 @@ export class OllamaClientService {
 
   async deleteModel(model: string): Promise<{ status: string }> {
     return this.execute(
-      () =>
-        this.ollama.delete({ model }) as unknown as Promise<{
+      (client) =>
+        client.delete({ model }) as unknown as Promise<{
           status: string;
         }>,
       `delete model ${model}`,

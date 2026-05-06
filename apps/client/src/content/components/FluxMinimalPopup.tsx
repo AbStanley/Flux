@@ -2,6 +2,8 @@ import { useRef } from 'react';
 import { FluxSelect } from './ui/FluxSelect';
 import { FluxIconButton } from './ui/FluxIconButton';
 import { LANGUAGES, type FluxTheme } from '../constants';
+import { ArrowLeftRight, Save, Check } from 'lucide-react';
+
 
 interface FluxMinimalPopupProps {
     result: string;
@@ -125,10 +127,13 @@ export function FluxMinimalPopup({
                             padding: '4px',
                             color: textSec,
                             fontSize: '12px',
-                            minWidth: '20px'
+                            minWidth: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                         }}
                     >
-                        ⇄
+                        <ArrowLeftRight size={14} strokeWidth={2.5} />
                     </FluxIconButton>
                     <FluxSelect
                         value={targetLang}
@@ -160,17 +165,11 @@ export function FluxMinimalPopup({
                     >
                         {isSaved ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: successColor }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
+                                <Check size={16} strokeWidth={3} />
                                 <span style={{ fontSize: '12px', fontWeight: 600 }}>Saved</span>
                             </div>
                         ) : (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                                <line x1="12" y1="7" x2="12" y2="13" />
-                                <line x1="9" y1="10" x2="15" y2="10" />
-                            </svg>
+                            <Save size={16} strokeWidth={2.5} />
                         )}
                     </FluxIconButton>
                 )}

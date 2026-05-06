@@ -15,6 +15,7 @@ export class OllamaGrammarService {
     sourceLanguage: string;
     targetLanguage: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<GrammarAnalysisResponse> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = GRAMMAR_ANALYSIS_PROMPT(
@@ -34,6 +35,7 @@ export class OllamaGrammarService {
           num_ctx: 4096,
           num_predict: 2048,
         },
+        params.signal,
       );
 
       const result = cleanAndParseJson<GrammarAnalysisResponse>(

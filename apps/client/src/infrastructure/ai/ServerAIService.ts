@@ -42,7 +42,7 @@ export class ServerAIService implements IAIService {
       stream: false,
     });
 
-    return typeof data === 'string' ? data : data.response;
+    return typeof data === 'string' ? data : (data as { response?: string; message?: string })?.response ?? (data as { response?: string; message?: string })?.message ?? JSON.stringify(data);
   }
 
   async translateText(
@@ -50,6 +50,7 @@ export class ServerAIService implements IAIService {
     targetLanguage: string = "en",
     context?: string,
     sourceLanguage?: string,
+    signal?: AbortSignal,
   ): Promise<string | { response: string; sourceLanguage?: string }> {
     const cleanedText = this.cleanSelection(text);
     const data = await defaultClient.post<string | { response: string; sourceLanguage?: string }>('/api/translate', {
@@ -58,13 +59,13 @@ export class ServerAIService implements IAIService {
       context,
       sourceLanguage,
       model: this.model,
-    });
+    }, signal);
 
     if (typeof data === 'object' && data !== null && 'sourceLanguage' in data) {
       return data;
     }
 
-    return typeof data === 'string' ? data : (data as { response: string }).response || JSON.stringify(data);
+    return typeof data === 'string' ? data : (data as { response?: string; message?: string })?.response ?? (data as { response?: string; message?: string })?.message ?? JSON.stringify(data);
   }
 
   async explainText(
@@ -72,6 +73,7 @@ export class ServerAIService implements IAIService {
     targetLanguage: string = "en",
     context?: string,
     sourceLanguage?: string,
+    signal?: AbortSignal,
   ): Promise<string> {
     const cleanedText = this.cleanSelection(text);
     const data = await defaultClient.post<string | { response: string }>('/api/explain', {
@@ -80,9 +82,9 @@ export class ServerAIService implements IAIService {
       context,
       sourceLanguage,
       model: this.model,
-    });
+    }, signal);
 
-    return typeof data === 'string' ? data : (data as { response: string }).response || JSON.stringify(data);
+    return typeof data === 'string' ? data : (data as { response?: string; message?: string })?.response ?? (data as { response?: string; message?: string })?.message ?? JSON.stringify(data);
   }
 
   async getRichTranslation(
@@ -90,6 +92,7 @@ export class ServerAIService implements IAIService {
     targetLanguage: string = "en",
     context?: string,
     sourceLanguage?: string,
+    signal?: AbortSignal,
   ): Promise<RichTranslationResult> {
     const cleanedText = this.cleanSelection(text);
     return defaultClient.post<RichTranslationResult>('/api/rich-translation', {
@@ -98,18 +101,19 @@ export class ServerAIService implements IAIService {
       context,
       sourceLanguage,
       model: this.model,
-    });
+    }, signal);
   }
 
   async getConjugations(
     infinitive: string,
     sourceLanguage: string,
+    signal?: AbortSignal,
   ): Promise<RichConjugationsResult> {
     return defaultClient.post<RichConjugationsResult>('/api/rich-translation/conjugations', {
       infinitive,
       sourceLanguage,
       model: this.model,
-    });
+    }, signal);
   }
 
   /**
@@ -350,6 +354,8 @@ export class ServerAIService implements IAIService {
     limit?: number;
     sourceLangCode?: string;
     targetLangCode?: string;
+    verb?: string;
+    tense?: string;
   }): Promise<Array<{ 
     question?: string; 
     answer?: string; 
@@ -408,6 +414,8 @@ export class ServerAIService implements IAIService {
     sourceLanguage: string;
     targetLanguage: string;
     limit?: number;
+    verb?: string;
+    tense?: string;
   }): AsyncIterable<{ question?: string; answer?: string; target_text?: string; source_translation?: string; target_lang_code?: string; source_lang_code?: string; context?: string; type?: 'word' | 'phrase' }> {
     const items = await this.generateGameContent(params);
     for (const item of items) {

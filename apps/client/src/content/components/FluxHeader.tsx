@@ -1,5 +1,5 @@
 import type { FluxTheme } from '../constants';
-import { Save } from 'lucide-react';
+import { Check, Save, Pin, Minimize2, X } from 'lucide-react';
 
 interface FluxHeaderProps {
     onClose: () => void;
@@ -9,6 +9,8 @@ interface FluxHeaderProps {
     isCollapsed: boolean;
     onCollapseToggle: () => void;
     isSaving?: boolean;
+    result?: string;
+    loading?: boolean;
     theme: FluxTheme;
 }
 
@@ -20,6 +22,8 @@ export function FluxHeader({
     isCollapsed,
     onCollapseToggle,
     isSaving,
+    result,
+    loading,
     theme,
 }: FluxHeaderProps) {
     return (
@@ -59,12 +63,15 @@ export function FluxHeader({
                 {/* Save to Deck Icon - Using requested Lucide version */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onSave(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    disabled={!result || loading || isSaving}
                     title="Add to Deck"
                     style={{
                         background: isSaving ? theme.success : 'none',
                         border: 'none',
                         color: isSaving ? theme.bgSolid : theme.accent,
-                        cursor: 'pointer',
+                        cursor: (!result || loading || isSaving) ? 'not-allowed' : 'pointer',
+                        opacity: (!result || loading || isSaving) ? 0.4 : 1,
                         padding: '4px',
                         borderRadius: '6px',
                         display: 'flex',
@@ -72,21 +79,16 @@ export function FluxHeader({
                         justifyContent: 'center',
                         transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => { if (!isSaving) e.currentTarget.style.background = theme.accentGlow; }}
+                    onMouseEnter={(e) => { if (!isSaving && result && !loading) e.currentTarget.style.background = theme.accentGlow; }}
                     onMouseLeave={(e) => { if (!isSaving) e.currentTarget.style.background = 'none'; }}
                 >
-                    {isSaving ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                    ) : (
-                        <Save size={14} strokeWidth={2.5} />
-                    )}
+                    {isSaving ? <Check size={14} strokeWidth={3} /> : <Save size={14} strokeWidth={2.5} />}
                 </button>
 
                 {/* Collapse Toggle - Reverted to original SVG */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onCollapseToggle(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
                     title={isCollapsed ? "Expand" : "Collapse"}
                     style={{
                         background: isCollapsed ? theme.accentGlow : 'none',
@@ -101,18 +103,13 @@ export function FluxHeader({
                         transition: 'all 0.2s'
                     }}
                 >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        {isCollapsed ? (
-                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                        ) : (
-                            <path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7" />
-                        )}
-                    </svg>
+                    <Minimize2 size={14} strokeWidth={2.5} />
                 </button>
 
                 {/* Pin Toggle - Reverted to original SVG */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onPinToggle(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
                     style={{
                         background: isPinned ? theme.accentGlow : 'none',
                         border: 'none',
@@ -126,15 +123,13 @@ export function FluxHeader({
                         transition: 'all 0.2s'
                     }}
                 >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
+                    <Pin size={14} strokeWidth={2.5} />
                 </button>
 
                 {/* Close Button - Reverted to original ✕ */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onClose(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
                     style={{
                         background: 'none',
                         border: 'none',
@@ -152,7 +147,7 @@ export function FluxHeader({
                     onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
                     onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
                 >
-                    ✕
+                    <X size={14} strokeWidth={2.5} />
                 </button>
             </div>
         </div>

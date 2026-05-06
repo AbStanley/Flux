@@ -35,7 +35,7 @@ export interface GameContentParams {
             target?: string;
         }
         /** Only fetch items capable of this game mode? */
-        gameMode?: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'story' | 'cloze';
+        gameMode?: 'multiple-choice' | 'build-word' | 'dictation' | 'scramble' | 'story' | 'cloze' | 'conjugation';
         timerEnabled?: boolean;
         strictDirection?: boolean;
 
@@ -48,6 +48,8 @@ export interface GameContentParams {
         aiModel?: string;
         aiHost?: string;
         aiLevel?: 'beginner' | 'intermediate' | 'advanced';
+        aiVerb?: string;
+        aiTense?: string;
     };
 }
 

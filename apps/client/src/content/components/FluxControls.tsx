@@ -5,7 +5,7 @@ import { useFluxMessaging } from '../hooks/useFluxMessaging';
 import { FluxIconButton } from './ui/FluxIconButton';
 import { FluxSelect } from './ui/FluxSelect';
 import { FluxButton } from './ui/FluxButton';
-import { Copy, BookOpen, Zap, Check } from 'lucide-react';
+import { Copy, BookOpen, Zap, Check, ArrowLeftRight } from 'lucide-react';
 
 interface FluxControlsProps {
     mode: Mode;
@@ -86,9 +86,9 @@ export function FluxControls({
                 </div>
 
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <button 
-                        onClick={handleCopy} 
-                        style={{ 
+                    <button
+                        onClick={handleCopy}
+                        style={{
                             background: 'transparent', border: 'none', color: copied ? theme.success : theme.textSecondary,
                             padding: '6px', cursor: 'pointer', transition: 'all 0.2s', borderRadius: '6px',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -100,9 +100,9 @@ export function FluxControls({
                         {copied ? <Check size={14} strokeWidth={3} /> : <Copy size={14} strokeWidth={2.5} />}
                     </button>
 
-                    <button 
+                    <button
                         onClick={handleSave}
-                        style={{ 
+                        style={{
                             background: 'transparent', border: 'none', color: theme.textSecondary,
                             padding: '6px', cursor: 'pointer', transition: 'all 0.2s', borderRadius: '6px',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -151,17 +151,17 @@ export function FluxControls({
                             theme={theme}
                             style={{ background: 'transparent', border: 'none', padding: '4px 0', fontSize: '11px', flex: 1 }}
                         />
-                        <button 
+                        <button
                             onClick={() => onSwapLanguages?.()}
                             title="Swap Languages"
-                            style={{ 
-                                background: 'transparent', border: 'none', color: theme.textDim, fontSize: '12px', 
-                                padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center' 
+                            style={{
+                                background: 'transparent', border: 'none', color: theme.textDim, fontSize: '12px',
+                                padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center'
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
                             onMouseLeave={(e) => e.currentTarget.style.color = theme.textDim}
                         >
-                            →
+                            <ArrowLeftRight size={14} strokeWidth={2.5} />
                         </button>
                         <FluxSelect
                             value={targetLang}

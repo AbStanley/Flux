@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DEFAULT_THEME } from '../constants';
-import type { CustomTheme } from '../../presentation/features/settings/store/useSettingsStore';
+import { useSettingsStore, type CustomTheme } from '../../presentation/features/settings/store/useSettingsStore';
 
 
 interface StorageResult {
@@ -61,7 +61,12 @@ export function useChromeSettings(aiService: AIServiceLike) {
             if (result.fluxSourceLang) setSourceLang(result.fluxSourceLang as string);
             if (result.fluxTargetLang) setTargetLang(result.fluxTargetLang as string);
             if (result.fluxEnabled !== undefined) setFluxEnabled(result.fluxEnabled as boolean);
-            if (result.fluxModel) setSelectedModel(result.fluxModel as string);
+            if (result.fluxModel) {
+                const model = result.fluxModel as string;
+                setSelectedModel(model);
+                aiService.setModel(model);
+                useSettingsStore.getState().setLlmModel(model);
+            }
             if (result.fluxTheme) setThemeId(result.fluxTheme as string);
             if (result.fluxPopupCollapsed !== undefined) setPopupCollapsed(result.fluxPopupCollapsed as boolean);
             if (Array.isArray(result.fluxCustomThemes)) setCustomThemes(result.fluxCustomThemes);

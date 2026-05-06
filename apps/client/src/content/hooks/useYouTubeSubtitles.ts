@@ -12,28 +12,15 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
 
     // Detect YouTube page and fetch global cues
     useEffect(() => {
-        let retryCount = 0;
-        const maxRetries = 3;
-
         const checkPage = async () => {
             const isWatchPage = YouTubeService.isYouTubeWatchPage();
             setIsActive(isWatchPage);
 
             if (isWatchPage) {
                 const videoId = YouTubeService.getVideoId();
-                if (videoId && (videoId !== lastVideoId.current || allCues.length === 0)) {
+                if (videoId && videoId !== lastVideoId.current) {
                     lastVideoId.current = videoId;
-                    console.log(`[Flux] Fetching subtitles for video: ${videoId}`);
-                    const fetchedCues = await YouTubeService.getSubtitles();
-
-                    if (fetchedCues.length > 0) {
-                        setAllCues(fetchedCues);
-                        retryCount = 0;
-                    } else if (retryCount < maxRetries) {
-                        retryCount++;
-                        console.log(`[Flux] No subtitles found, retrying... (${retryCount}/${maxRetries})`);
-                        setTimeout(checkPage, 2000);
-                    }
+                    setAllCues([]); // Transcript support removed, rely on DOM fallback
                 }
                 if (fluxEnabled) {
                     YouTubeService.hideNativeSubtitles();

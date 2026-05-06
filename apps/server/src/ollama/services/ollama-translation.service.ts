@@ -71,6 +71,7 @@ export class OllamaTranslationService {
     context?: string;
     sourceLanguage?: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<{ response: string; sourceLanguage?: string }> {
     const isBlock = params.text.length > 100 || params.text.includes('\n');
     const model = await this.ollamaClient.ensureModel(params.model);
@@ -91,6 +92,7 @@ export class OllamaTranslationService {
         temperature: 0,
         stop: isBlock ? undefined : ['\n'],
       },
+      params.signal,
     );
 
     if (!isAuto) {
@@ -175,6 +177,7 @@ export class OllamaTranslationService {
     targetLanguage: string;
     context?: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<string> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getExplainPrompt(
@@ -182,7 +185,7 @@ export class OllamaTranslationService {
       params.targetLanguage,
       params.context,
     );
-    const { response } = await this.ollamaClient.generate(model, prompt, false);
+    const { response } = await this.ollamaClient.generate(model, prompt, false, undefined, undefined, params.signal);
     return cleanResponse(response);
   }
 
@@ -192,6 +195,7 @@ export class OllamaTranslationService {
     context?: string;
     sourceLanguage?: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<RichTranslation> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const rich = await this.fetchRichTranslation(params, model);
@@ -216,6 +220,7 @@ export class OllamaTranslationService {
     context?: string;
     sourceLanguage?: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<AsyncIterable<GenerateResponse>> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getRichTranslationPrompt(
@@ -228,7 +233,7 @@ export class OllamaTranslationService {
       num_ctx: 2048,
       num_predict: 768,
       temperature: 0,
-    });
+    }, params.signal);
   }
 
   /**
@@ -240,6 +245,7 @@ export class OllamaTranslationService {
     infinitive: string;
     sourceLanguage: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<RichConjugations> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const verb = params.infinitive.trim();
@@ -248,7 +254,7 @@ export class OllamaTranslationService {
 
     const results = await Promise.all(
       tenses.map((tense) =>
-        this.fetchTenseRows(verb, params.sourceLanguage, tense, model),
+        this.fetchTenseRows(verb, params.sourceLanguage, tense, model, params.signal),
       ),
     );
 
@@ -275,6 +281,7 @@ export class OllamaTranslationService {
     infinitive: string;
     sourceLanguage: string;
     model?: string;
+    signal?: AbortSignal;
   }): AsyncGenerator<{
     tense: string;
     rows: Array<{ pronoun: string; conjugation: string }>;
@@ -292,7 +299,8 @@ export class OllamaTranslationService {
     let notify: (() => void) | null = null;
 
     for (const tense of tenses) {
-      this.fetchTenseRows(verb, params.sourceLanguage, tense, model)
+      if (params.signal?.aborted) break;
+      this.fetchTenseRows(verb, params.sourceLanguage, tense, model, params.signal)
         .then((rows) => {
           queue.push({ tense, rows });
         })
@@ -364,6 +372,7 @@ export class OllamaTranslationService {
       targetLanguage: string;
       context?: string;
       sourceLanguage?: string;
+      signal?: AbortSignal;
     },
     model: string,
   ): Promise<RichObj> {
@@ -379,6 +388,7 @@ export class OllamaTranslationService {
       false,
       'json',
       { num_ctx: 2048, num_predict: 768, temperature: 0 },
+      params.signal,
     );
     try {
       return cleanAndParseJson<RichObj>(response);
@@ -426,6 +436,7 @@ export class OllamaTranslationService {
     sourceLanguage: string,
     tense: string,
     model: string,
+    signal?: AbortSignal,
   ): Promise<unknown[] | null> {
     try {
       const { response } = await this.ollamaClient.generate(
@@ -434,6 +445,7 @@ export class OllamaTranslationService {
         false,
         'json',
         { num_predict: 256, temperature: 0 },
+        signal,
       );
       const preview =
         typeof response === 'string'

@@ -15,11 +15,11 @@ export class AiContentStrategy implements IContentStrategy {
     }
 
     async fetchItems(config: GameContentParams['config'], onItem?: (item: GameItem) => void): Promise<GameItem[]> {
-        if (!config?.aiTopic) {
+        if (config?.gameMode !== 'conjugation' && !config?.aiTopic) {
             throw new Error("Topic is required for AI strategy.");
         }
 
-        const topic = config.aiTopic;
+        const topic = config.aiTopic || 'Verbs';
         const level = config.aiLevel || 'intermediate';
         // In this app's convention (from AiSetup.tsx and DB strategy):
         // sourceLang = Foreign/Learning language
@@ -48,7 +48,9 @@ export class AiContentStrategy implements IContentStrategy {
                 targetLanguage: learningLang,
                 sourceLangCode: nativeLangCode,
                 targetLangCode: learningLangCode,
-                limit
+                limit,
+                verb: config.aiVerb,
+                tense: config.aiTense
             });
 
             console.log(`[AiStrategy] Received ${rawItems.length} items from AI.`);
