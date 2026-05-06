@@ -5,7 +5,7 @@ import { FluxControls } from './FluxControls';
 import { FluxContent } from './FluxContent';
 import { useDraggable } from '../hooks/useDraggable';
 import { UI_CONSTANTS, type FluxTheme } from '../constants';
-import { Check, Save } from 'lucide-react';
+import { Check, Maximize2, Save, X } from 'lucide-react';
 import { useFluxMessaging } from '../hooks/useFluxMessaging';
 
 interface FluxPopupProps {
@@ -174,11 +174,11 @@ export function FluxPopup({
                     {/* Translation text */}
                     <div style={{ padding: '10px 14px', maxHeight: '200px', overflowY: 'auto', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {loading && (
-                            <div className="animate-spin" style={{ 
-                                width: '14px', 
-                                height: '14px', 
-                                border: `2px solid ${theme.accent}`, 
-                                borderTopColor: 'transparent', 
+                            <div className="animate-spin" style={{
+                                width: '14px',
+                                height: '14px',
+                                border: `2px solid ${theme.accent}`,
+                                borderTopColor: 'transparent',
                                 borderRadius: '50%',
                                 flexShrink: 0
                             }}></div>
@@ -192,42 +192,54 @@ export function FluxPopup({
                         gap: '2px', padding: '4px 8px',
                         borderTop: `1px solid ${theme.border}`,
                     }}>
-                        {[
-                            {
-                                title: 'Save to vocabulary',
-                                color: isSaving ? theme.success : theme.accent,
-                                onClick: () => handleInternalSave(),
-                                disabled: loading || isSaving,
-                                icon: isSaving ? (
-                                    <Check strokeWidth={3} />
-                                ) : (
-                                    <Save strokeWidth={2.5} />
-                                )
-                            },
-                            { title: 'Expand', color: theme.textSecondary, onClick: () => { setIsCollapsed(false); }, icon: <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /> },
-                            { title: 'Close', color: theme.textSecondary, onClick: () => onClose(), icon: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></> },
-                        ].map((btn) => (
+                        {(
+                            [
+                                {
+                                    title: 'Save to vocabulary',
+                                    color: isSaving ? theme.success : theme.accent,
+                                    onClick: () => handleInternalSave(),
+                                    disabled: loading || isSaving,
+                                    icon: isSaving ? (
+                                        <Check size={13} strokeWidth={3} />
+                                    ) : (
+                                        <Save size={13} strokeWidth={2.5} />
+                                    )
+                                },
+                                {
+                                    title: 'Expand',
+                                    color: theme.textSecondary,
+                                    onClick: () => { setIsCollapsed(false); },
+                                    disabled: false,
+                                    icon: <Maximize2 size={13} strokeWidth={2.5} />
+                                },
+                                {
+                                    title: 'Close',
+                                    color: theme.textSecondary,
+                                    onClick: () => onClose(),
+                                    disabled: false,
+                                    icon: <X size={13} strokeWidth={2.5} />
+                                },
+                            ] as Array<{ title: string; color: string; onClick: () => void; disabled: boolean; icon: React.ReactNode }>
+                        ).map((btn) => (
                             <button
                                 key={btn.title}
                                 onClick={(e) => { e.stopPropagation(); btn.onClick(); }}
                                 onMouseDown={(e) => e.stopPropagation()}
-                                disabled={(btn as any).disabled}
+                                disabled={btn.disabled}
                                 title={btn.title}
                                 style={{
                                     background: 'none', border: 'none', color: btn.color,
-                                    cursor: (btn as any).disabled ? 'not-allowed' : 'pointer', 
-                                    opacity: (btn as any).disabled ? 0.4 : 1,
+                                    cursor: btn.disabled ? 'not-allowed' : 'pointer',
+                                    opacity: btn.disabled ? 0.4 : 1,
                                     padding: '4px', display: 'flex',
                                     alignItems: 'center', justifyContent: 'center',
                                     width: '24px', height: '24px', borderRadius: '6px',
                                     transition: 'all 0.2s'
                                 }}
-                                onMouseEnter={(e) => { if (!(btn as any).disabled) e.currentTarget.style.backgroundColor = theme.surface }}
+                                onMouseEnter={(e) => { if (!btn.disabled) e.currentTarget.style.backgroundColor = theme.surface }}
                                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                             >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    {btn.icon}
-                                </svg>
+                                {btn.icon}
                             </button>
                         ))}
                     </div>
