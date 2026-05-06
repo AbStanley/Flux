@@ -153,7 +153,7 @@ export class OllamaGenerationService {
       false,
       undefined,
       {
-        temperature: 0.8,
+        temperature: params.mode === 'conjugation' ? 0.3 : 0.7,
         top_p: 0.9,
         top_k: 40,
       },
@@ -197,7 +197,7 @@ export class OllamaGenerationService {
       true,
       undefined,
       {
-        temperature: 0.8,
+        temperature: params.mode === 'conjugation' ? 0.3 : 0.7,
         top_p: 0.9,
         top_k: 40,
       },

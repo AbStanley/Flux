@@ -109,9 +109,9 @@ export const AiSetup = () => {
                 <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
                         <LanguageSelector
-                            label="Foreign Language 🌍"
-                            value={config.sourceLang}
-                            onChange={(val) => updateConfig({ sourceLang: val })}
+                            label="Foreign Language (Target) 🌍"
+                            value={config.targetLang}
+                            onChange={(val) => updateConfig({ targetLang: val })}
                             disabled={loading || isLoadingLangs}
                             options={availableLangs}
                         />
@@ -123,9 +123,9 @@ export const AiSetup = () => {
                             </Button>
                         </div>
                         <LanguageSelector
-                            label="Native Language 🏠"
-                            value={config.targetLang}
-                            onChange={(val) => updateConfig({ targetLang: val })}
+                            label="Native Language (Reference) 🏠"
+                            value={config.sourceLang}
+                            onChange={(val) => updateConfig({ sourceLang: val })}
                             disabled={loading || isLoadingLangs}
                             options={availableLangs}
                         />
@@ -200,11 +200,11 @@ export const AiSetup = () => {
                             <>
                                 <div>
                                     <label className="block text-sm font-medium mb-1 text-muted-foreground">Verb (optional)</label>
-                                    <Input value={config.aiVerb || ''} onChange={(e) => updateConfig({ aiVerb: e.target.value })} placeholder="Leave blank for random" className="bg-[var(--input-background)]" />
+                                    <Input value={config.aiVerb || ''} onChange={(e) => updateConfig({ aiVerb: e.target.value })} placeholder="e.g. eat, hablar" className="bg-[var(--input-background)]" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1 text-muted-foreground">Tense (optional)</label>
-                                    <Input value={config.aiTense || ''} onChange={(e) => updateConfig({ aiTense: e.target.value })} placeholder="e.g. Present, Past..." className="bg-[var(--input-background)]" />
+                                    <Input value={config.aiTense || ''} onChange={(e) => updateConfig({ aiTense: e.target.value })} placeholder="e.g. Past Simple, Present Continuous" className="bg-[var(--input-background)]" />
                                 </div>
                             </>
                         )}

@@ -356,6 +356,7 @@ export class ServerAIService implements IAIService {
     targetLangCode?: string;
     verb?: string;
     tense?: string;
+    stream?: boolean;
   }): Promise<Array<{ 
     question?: string; 
     answer?: string; 
@@ -369,7 +370,7 @@ export class ServerAIService implements IAIService {
     const data = await defaultClient.post<string | unknown>('/api/generate-game-content', {
       ...params,
       model: this.model,
-      stream: false,
+      stream: params.stream ?? false,
     });
 
     // The backend might return a raw string (the JSON) or already parsed JSON object
@@ -406,7 +407,6 @@ export class ServerAIService implements IAIService {
     }
   }
 
-  // Deprecated: Keeping for interface compatibility but strategy will use non-streaming
   async *generateGameContentStream(params: {
     topic: string;
     level: string;
@@ -414,12 +414,97 @@ export class ServerAIService implements IAIService {
     sourceLanguage: string;
     targetLanguage: string;
     limit?: number;
+    sourceLangCode?: string;
+    targetLangCode?: string;
     verb?: string;
     tense?: string;
-  }): AsyncIterable<{ question?: string; answer?: string; target_text?: string; source_translation?: string; target_lang_code?: string; source_lang_code?: string; context?: string; type?: 'word' | 'phrase' }> {
-    const items = await this.generateGameContent(params);
-    for (const item of items) {
-      yield item;
+    signal?: AbortSignal;
+  }): AsyncIterable<{
+    question?: string;
+    answer?: string;
+    target_text?: string;
+    source_translation?: string;
+    target_lang_code?: string;
+    source_lang_code?: string;
+    context?: string;
+    type?: 'word' | 'phrase';
+  }> {
+    const body = JSON.stringify({
+      ...params,
+      model: this.model,
+      stream: true,
+    });
+
+    try {
+      const baseUrl = await defaultClient.getActiveBaseUrl();
+      const url = `${baseUrl}/api/generate-game-content`;
+      const token = await getAuthToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers,
+        body,
+        signal: params.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        throw new Error(`Stream request failed: ${res.status}`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let accumulatedResponse = "";
+      const yieldedIds = new Set<string>();
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const chunk = JSON.parse(trimmed) as { response?: string; done?: boolean };
+            if (chunk.response) {
+              accumulatedResponse += chunk.response;
+              
+              // Search for completed JSON objects {...} in the accumulated response
+              const matches = accumulatedResponse.matchAll(/\{(?:[^{}]|(\{(?:[^{}]|(\{[^{}]*\}))*\}))*\}/g);
+              for (const match of matches) {
+                try {
+                  const jsonStr = match[0];
+                  const item = JSON.parse(jsonStr);
+                  
+                  // Create a unique hash/id for this item to avoid yielding duplicates
+                  const itemId = JSON.stringify(item);
+                  if (!yieldedIds.has(itemId)) {
+                    yieldedIds.add(itemId);
+                    if ((item.question && item.answer) || (item.target_text && item.source_translation)) {
+                      yield item;
+                    }
+                  }
+                } catch { /* Partial object, wait for more */ }
+              }
+            }
+          } catch { /* ignore */ }
+        }
+      }
+
+    } catch (err) {
+      console.warn("[ServerAIService] game stream failed, falling back:", err);
+      const items = await this.generateGameContent(params);
+      for (const item of items) {
+        yield item;
+      }
     }
   }
 }

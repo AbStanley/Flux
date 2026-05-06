@@ -21,11 +21,11 @@ export class AiContentStrategy implements IContentStrategy {
 
         const topic = config.aiTopic || 'Verbs';
         const level = config.aiLevel || 'intermediate';
-        // In this app's convention (from AiSetup.tsx and DB strategy):
-        // sourceLang = Foreign/Learning language
-        // targetLang = Native/Translation language
-        const learningLang = this.getLanguageName(config.language?.source || 'Spanish');
-        const nativeLang = this.getLanguageName(config.language?.target || 'English');
+        // Corrected mapping to match AiSetup.tsx:
+        // config.language.target = Foreign/Practice language
+        // config.language.source = Native/Reference language
+        const learningLang = this.getLanguageName(config.language?.target || 'English');
+        const nativeLang = this.getLanguageName(config.language?.source || 'Spanish');
 
         const limit = config.limit || 10;
         const mode = config.gameMode || 'multiple-choice';
@@ -40,7 +40,7 @@ export class AiContentStrategy implements IContentStrategy {
 
         const items: GameItem[] = [];
         try {
-            const rawItems = await serverAIService.generateGameContent({
+            const stream = serverAIService.generateGameContentStream({
                 topic,
                 level,
                 mode,
@@ -53,11 +53,8 @@ export class AiContentStrategy implements IContentStrategy {
                 tense: config.aiTense
             });
 
-            console.log(`[AiStrategy] Received ${rawItems.length} items from AI.`);
-            console.log("[AiStrategy] Raw AI items:", rawItems);
-
             let index = 0;
-            for (const rawItem of rawItems) {
+            for await (const rawItem of stream) {
                 const ri = rawItem as Record<string, unknown>;
                 const q = ri.source_translation as string || ri.question as string;
                 const a = ri.target_text as string || ri.answer as string;
@@ -77,17 +74,14 @@ export class AiContentStrategy implements IContentStrategy {
                     }
                 };
 
-                // Validate
                 if (item.question && item.answer && item.question.toLowerCase().trim() !== item.answer.toLowerCase().trim()) {
                     items.push(item);
                     onItem?.(item);
-                } else {
-                    console.warn(`[AiStrategy] Filtered item because question and answer are identical or empty in both languages: "${item.question}" vs "${item.answer}"`);
                 }
             }
 
             if (items.length === 0) {
-                throw new Error(`AI generated ${rawItems.length} items, but they were all invalid (likely identical in both languages). Try a different model like 'llama3' or check your source/target language settings.`);
+                throw new Error(`AI failed to generate valid items.`);
             }
 
             return items;

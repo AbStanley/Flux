@@ -49,7 +49,7 @@ export const getGameContentPrompt = (
       - "question": The full sentence in ${sourceLang} (for reference/hint).
       - "answer": The full sentence in ${targetLang} (this will be scrambled).
       - "target_lang_code": ALWAYS "${targetLangCode}"
-      - "source_lang_code": ALWAYS "${sourceLangCode}"
+      - "source_lang_code": "${sourceLangCode}"
       - "context": A brief explanation of grammar or context if needed.
       - "type": "phrase"
 
@@ -59,32 +59,26 @@ export const getGameContentPrompt = (
      ]
       `;
   } else if (mode === 'conjugation') {
-    const verbInstruction = verb ? `Verb to conjugate: "${verb}"` : `Choose 5 random verbs.`;
-    const tenseInstruction = tense ? `Tense: "${tense}"` : `Choose random tenses or standard ones.`;
-    
+    const verbInstruction = verb ? `Verb: "${verb}"` : `Use 5 DIFFERENT common verbs (no repeats).`;
+    const tenseInstruction = tense ? `Tense: "${tense}"` : `Mix Tenses: "Present Simple", "Past Simple", "Future".`;
+
     return `
-      Generate ${limit} verb conjugation exercises for a language learning game.
-      Language: ${targetLang}
-      Difficulty Level: ${level}
+      Generate 5 verb exercises for ${targetLang}.
       ${verbInstruction}
       ${tenseInstruction}
-
-      For each verb, generate sentences using all pronouns (e.g., I, you, he/she, we, they) in ${targetLang}.
       
-      ${baseInstruction}
-      Each object must have:
-      - "target_text": ONLY the conjugated verb in ${targetLang}. DO NOT include the pronoun in this field. (e.g., "como", NOT "yo como").
-      - "target_lang_code": ALWAYS "${targetLangCode}"
-      - "source_translation": The infinitive, tense, and pronoun in ${sourceLang} (e.g., "to eat (Present) - I").
-      - "source_lang_code": ALWAYS "${sourceLangCode}"
-      - "context": A short, simple sentence in ${targetLang} where the conjugated verb is enclosed in square brackets (e.g., "Yo [como] una manzana.").
+      CRITICAL: Use specific tense names in source_translation. DO NOT just say "Past" if you mean "Preterite" or "Imperfect"
+      
+      Fields:
+      - "target_text": conjugated verb in ${targetLang}
+      - "source_translation": "to [infinitive] ([Specific Tense]) - [Pronoun]" in ${sourceLang}
+      - "context": "Sentence in ${targetLang} with [verb] in brackets"
+      - "target_lang_code": "${targetLangCode}"
+      - "source_lang_code": "${sourceLangCode}"
       - "type": "word"
 
-      Example (Translating from Spanish to English):
-      [
-          { "target_text": "como", "target_lang_code": "${targetLangCode}", "source_translation": "to eat (Present) - I", "source_lang_code": "${sourceLangCode}", "context": "Yo [como] una manzana.", "type": "word" },
-          { "target_text": "comes", "target_lang_code": "${targetLangCode}", "source_translation": "to eat (Present) - You", "source_lang_code": "${sourceLangCode}", "context": "Tú [comes] una manzana.", "type": "word" }
-      ]
+      Example:
+      { "target_text": "ran", "source_translation": "to run (Past Simple) - I", "context": "Yesterday, I [ran] to the park." }
       `;
   } else {
     // Default / Multiple Choice

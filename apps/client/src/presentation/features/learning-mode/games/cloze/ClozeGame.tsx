@@ -199,15 +199,36 @@ export function ClozeGame() {
                         <p className="text-xs uppercase tracking-wider text-muted-foreground">
                             {cloze.hintLang && `${cloze.hintLang} · `}Translation
                         </p>
-                        <h2 className="text-3xl md:text-4xl font-black text-primary">
-                            {cloze.hint}
-                        </h2>
+                        <div className="flex flex-col items-center">
+                            {cloze.hint.includes('(') && cloze.hint.includes(')') ? (
+                                <>
+                                    <h2 className="text-3xl md:text-4xl font-black text-primary">
+                                        {cloze.hint.split('(')[0].trim()}
+                                    </h2>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-sm font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary/70 border border-primary/20">
+                                            {cloze.hint.match(/\((.*?)\)/)?.[1]}
+                                        </span>
+                                        {cloze.hint.includes('-') && (
+                                            <span className="text-sm font-medium text-muted-foreground/80 italic">
+                                                — {cloze.hint.split('-')[1].trim()}
+                                            </span>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <h2 className="text-3xl md:text-4xl font-black text-primary">
+                                    {cloze.hint}
+                                </h2>
+                            )}
+                        </div>
                     </div>
 
                     {/* Context sentence with blank */}
                     <div className="border-t pt-4 w-full text-center">
                         <p className="text-sm uppercase tracking-wider text-muted-foreground mb-3">
-                            {cloze.sentenceLang && `${cloze.sentenceLang} · `}Fill in the missing word
+                            {cloze.sentenceLang && `${cloze.sentenceLang} · `}
+                            {config.mode === 'conjugation' ? 'Conjugate the verb' : 'Fill in the missing word'}
                         </p>
                         <p className="text-xl md:text-2xl font-semibold leading-relaxed">
                             {cloze.sentence.split('_____').map((part, i, arr) => (
