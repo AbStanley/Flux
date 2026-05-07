@@ -3,7 +3,7 @@ import type { DerivedTokens } from '@/lib/color-derive';
 import { customThemeToFluxTheme } from '@/lib/color-derive';
 import { hslToHex } from '@/lib/color-utils';
 import { ThemePreviewPopup } from './ThemePreviewPopup';
-import { Volume2, Search, RefreshCcw, Save, Youtube, MousePointer2 } from 'lucide-react';
+import { Volume2, Search, RefreshCcw, Save, Youtube } from 'lucide-react';
 
 interface Props { tokens: DerivedTokens; name: string; activeToken?: string | null; onHoverToken?: (t: string | null) => void; onClickToken?: (t: string) => void; }
 
@@ -91,16 +91,18 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
 
                         {/* Chat chips row */}
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                            <span style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.destructive)}22`, color: ds, border: `1px solid ${ds}44`, ...hoverStyle('destructive') }}
+                            <div style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.destructive)}22`, color: ds, border: `1px solid ${ds}44`, display: 'flex', gap: 4, alignItems: 'center', ...hoverStyle('destructive') }}
                                 onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('destructive'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('destructive'); }}>
-                                <s>grammer</s> → grammar
-                            </span>
+                                <span style={{ textDecoration: 'line-through', opacity: 0.8 }}>gramm<span style={{ background: `${hslToHex(tokens.destructive)}44`, padding: '0 1px', borderRadius: 2 }}>e</span>r</span>
+                                <span style={{ opacity: 0.4 }}>→</span>
+                                <span style={{ fontWeight: 700 }}>
+                                    gramm<span style={{ background: `${hslToHex(tokens.destructive)}33`, padding: '0 1px', borderRadius: 2 }}>a</span>r
+                                </span>
+                            </div>
                             <span style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.success ?? '142 60% 40%')}22`, color: sc, border: `1px solid ${sc}44`, ...hoverStyle('success') }}
                                 onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('success'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('success'); }}>
                                 ✓ Looks good
                             </span>
-                            <span style={{ padding: '2px 6px', borderRadius: 4, background: `${hslToHex(tokens.success ?? '142 60% 40%')}22`, color: sc, ...hoverStyle('success') }}
-                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('success'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('success'); }}>3× reviewed</span>
                         </div>
                     </div>
 
@@ -247,10 +249,6 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }}
                     onMouseLeave={() => onHoverToken?.(null)}
                     onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <p style={{ color: mtFg, fontSize: 8, fontWeight: 700 }}>TRANSLATION OVERLAY</p>
-                        <MousePointer2 size={10} style={{ color: pr }} />
-                    </div>
                     <ThemePreviewPopup theme={fluxTheme} activeToken={activeToken} onHoverToken={onHoverToken} onClickToken={onClickToken} />
                 </div>
             </div>
