@@ -280,13 +280,13 @@ export const TOKEN_GROUPS: TokenGroup[] = [
         ],
     },
     {
-        label: 'Charts', emoji: '📊',
+        label: 'Charts & Progress', emoji: '📊',
         tokens: [
-            { key: 'chart-trend',         label: 'Data Trend (Main)',  hint: 'Primary color for charts and graphs' },
-            { key: 'chart-growth',        label: 'Growth / Positve',   hint: 'Secondary color for charts and graphs' },
-            { key: 'chart-alert',         label: 'Alert / Warning',    hint: 'Tertiary color for charts and graphs' },
-            { key: 'chart-success',       label: 'Success / Goal',     hint: 'Quaternary color for charts and graphs' },
-            { key: 'chart-muted',         label: 'Muted Data',         hint: 'Quinary color for charts and graphs' },
+            { key: 'chart-trend',         label: 'Primary Progress',   hint: 'Heatmaps, main progress bars, and "Easy" SRS ratings' },
+            { key: 'chart-growth',        label: 'Metrics & Caution',  hint: 'Due items count, "Hard" SRS ratings, and timer warnings' },
+            { key: 'chart-alert',         label: 'Errors & Critical',  hint: 'Wrong answers, low health, and "Again" SRS ratings' },
+            { key: 'chart-success',       label: 'Success & Goals',    hint: 'Correct answers, learned words count, and "Good" SRS ratings' },
+            { key: 'chart-muted',         label: 'Secondary Data',     hint: 'De-emphasized metrics and background chart elements' },
         ],
     },
 ];
