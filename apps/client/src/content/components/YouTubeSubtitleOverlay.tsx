@@ -233,6 +233,7 @@ export const YouTubeSubtitleOverlay = ({
                         onSwapLanguages={handleSwapLanguages}
                         onSave={() => { if (hover.hoveredWord) handleSaveWord(hover.hoveredWord.text, result || undefined); }}
                         isSaved={isSaved} saveError={saveError} theme={theme}
+                        textToPlay={hover.hoveredWord?.text}
                         onMouseEnter={() => { hover.setIsPopupHovered(true); if (hover.timerRef.current) clearTimeout(hover.timerRef.current); }}
                         onMouseLeave={() => { hover.setIsPopupHovered(false); hover.onWordLeave(); }}
                     />

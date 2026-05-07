@@ -2,7 +2,8 @@ import { useRef } from 'react';
 import { FluxSelect } from './ui/FluxSelect';
 import { FluxIconButton } from './ui/FluxIconButton';
 import { LANGUAGES, type FluxTheme } from '../constants';
-import { ArrowLeftRight, Save, Check } from 'lucide-react';
+import { ArrowLeftRight, Save, Check, Volume2 } from 'lucide-react';
+import { SPEECH_CODE_MAP } from '../../core/constants/languages';
 
 
 interface FluxMinimalPopupProps {
@@ -21,6 +22,7 @@ interface FluxMinimalPopupProps {
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
     theme?: FluxTheme;
+    textToPlay?: string;
 }
 
 export function FluxMinimalPopup({
@@ -39,6 +41,7 @@ export function FluxMinimalPopup({
     onMouseEnter,
     onMouseLeave,
     theme,
+    textToPlay,
 }: FluxMinimalPopupProps) {
     const popupRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +52,19 @@ export function FluxMinimalPopup({
     const border = theme?.border ?? 'rgba(255, 255, 255, 0.1)';
     const errColor = theme?.error ?? '#ef4444';
     const successColor = theme?.success ?? '#4ade80';
+
+    const handlePlayAudio = () => {
+        const text = result || textToPlay;
+        if (!text) return;
+
+        const langToUse = result ? targetLang : (sourceLang === 'auto' ? 'English' : (sourceLang || 'English'));
+        const speechCode = SPEECH_CODE_MAP[langToUse as keyof typeof SPEECH_CODE_MAP] || 'en-US';
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = speechCode;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    };
 
     return (
         <div
@@ -149,6 +165,22 @@ export function FluxMinimalPopup({
                             maxWidth: '80px'
                         }}
                     />
+                    <FluxIconButton
+                        onClick={handlePlayAudio}
+                        title="Listen"
+                        theme={theme}
+                        style={{
+                            padding: '4px',
+                            color: textSec,
+                            fontSize: '12px',
+                            minWidth: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <Volume2 size={14} strokeWidth={2.5} />
+                    </FluxIconButton>
                 </div>
 
                 {result && !loading && !isDebouncing && (
