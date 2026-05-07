@@ -45,13 +45,21 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                 {/* Nav */}
                 <div style={{ background: cd, borderBottom: `1px solid ${bd}`, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', ...hoverStyle('card') }}
                     onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: pr, color: prFg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, ...hoverStyle('primary') }}
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: pr, color: prFg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, flexShrink: 0, ...hoverStyle('primary') }}
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>F</div>
-                    <span style={{ fontWeight: 600, color: cdFg }}>Flux Reader — {name || 'My Theme'}</span>
-                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-                        <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 10, background: pr, color: prFg }}>Reader</span>
-                        <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 10, background: ac, color: acFg }}>Vocab</span>
-                        <span style={{ fontSize: 9, color: mtFg }}>AI Chat</span>
+                    <span style={{ fontWeight: 600, color: cdFg, ...hoverStyle('card-foreground') }}
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card-foreground'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('card-foreground'); }}>
+                        Flux Reader — {name || 'My Theme'}
+                    </span>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 5, alignItems: 'center' }}>
+                        <span style={{ fontSize: 8, padding: '1px 5px', borderRadius: 4, border: `1px solid ${bd}`, color: mtFg, ...hoverStyle('border') }}
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('border'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('border'); }}>Border</span>
+                        <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 10, background: pr, color: prFg, ...hoverStyle('primary') }}
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Reader</span>
+                        <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 10, background: ac, color: acFg, ...hoverStyle('accent') }}
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('accent'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('accent'); }}>Vocab</span>
+                        <span style={{ fontSize: 9, color: mtFg, ...hoverStyle('muted-foreground') }}
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>AI Chat</span>
                     </div>
                 </div>
 
@@ -60,7 +68,8 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                     {/* Card */}
                     <div style={{ flex: 1, background: cd, border: `1px solid ${bd}`, borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column', gap: 6, ...hoverStyle('card') }}
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('card'); }}>
-                        <p style={{ fontWeight: 700, color: cdFg }}>Word Manager</p>
+                        <p style={{ fontWeight: 700, color: cdFg, ...hoverStyle('card-foreground') }}
+                            onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('card-foreground'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('card-foreground'); }}>Word Manager</p>
 
                         {/* Vocab row with language tag + Due chip */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', borderBottom: `1px solid ${bd}` }}>
@@ -73,9 +82,9 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                         </div>
 
                         {/* Input */}
-                        <div style={{ background: inBg, border: `1px solid ${bd}`, borderRadius: 5, padding: '3px 7px', color: mtFg, ...hoverStyle('input-background') }}
+                        <div style={{ background: inBg, border: `1px solid ${hsl(tokens.input)}`, borderRadius: 5, padding: '3px 7px', color: mtFg, ...hoverStyle('input-background') }}
                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('input-background'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('card'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('input-background'); }}>
-                            Search vocabulary...
+                            <span style={{ ...hoverStyle('input') }} onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('input'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('input-background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('input'); }}>Search vocabulary...</span>
                         </div>
 
                         {/* Buttons */}
@@ -112,7 +121,7 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
                             onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
                             onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
-                            
+
                             <p style={{ fontWeight: 800, fontSize: 7, marginBottom: 4, textTransform: 'uppercase', opacity: 0.6 }}>Activity</p>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2, marginBottom: 4 }}>
                                 {[0.3, 0.6, 0.1, 0.9, 0.4, 0.2, 0.7, 0.0, 0.5, 0.8].map((v, i) => (
@@ -176,8 +185,8 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
             {/* ── 2. Reading Page Hover & Inline Popup ── */}
             <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8 }}>
                 <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>READING PAGE: INLINE POPUP</p>
-                <div style={{ background: bg, padding: '20px 12px 12px', borderRadius: 8, border: `1px solid ${bd}`, position: 'relative', ...hoverStyle('background') }}
-                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
+                <div style={{ background: hsl(tokens['reader-textarea-bg']), padding: '20px 12px 12px', borderRadius: 8, border: `1px solid ${bd}`, position: 'relative', ...hoverStyle('reader-textarea-bg') }}
+                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('reader-textarea-bg'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.(null) }} onClick={(e) => { e.stopPropagation(); onClickToken?.('reader-textarea-bg'); }}>
 
                     {/* Inline Selection Popup (ReaderPopup style) */}
                     <div style={{
@@ -197,7 +206,10 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                     <span style={{ color: mtFg, ...hoverStyle('muted-foreground') }}
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
                         onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
-                        onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>The student opened the book and began to read. The word </span>
+                        onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>The student opened the book and began to </span>
+                    <span style={{ background: ac, color: acFg, borderRadius: 2, padding: '0 2px', ...hoverStyle('accent') }}
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('accent'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('accent'); }}>read</span>
+                    <span style={{ color: mtFg }}>. The word </span>
                     <span style={{ color: link, borderBottom: `2px solid ${link}`, paddingBottom: 1, fontWeight: 600, ...hoverStyle('link-color') }}
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
                         ephemeral
@@ -210,7 +222,7 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
             <div style={{ background: mt, borderTop: `1px solid ${bd}`, padding: 8 }}>
                 <p style={{ color: mtFg, fontSize: 9, marginBottom: 5, fontWeight: 600 }}>RICH DETAILS & MARKDOWN</p>
                 <div style={{ background: bg, padding: '12px', borderRadius: 8, border: `1px solid ${bd}`, ...hoverStyle('background') }}
-                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
+                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.(null) }} onClick={(e) => { e.stopPropagation(); onClickToken?.('background'); }}>
 
                     <p style={{ fontWeight: 700, color: pr, marginBottom: 6, ...hoverStyle('primary') }}
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>Structure Analysis</p>
