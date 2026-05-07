@@ -108,18 +108,37 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
 
                     {/* Sidebar popover example */}
                     <div style={{ width: 90, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <div style={{ background: pk, border: `1px solid ${bd}`, borderRadius: 6, padding: 6, color: pkFg, ...hoverStyle('popover') }}
+                        <div style={{ background: pk, border: `1px solid ${bd}`, borderRadius: 6, padding: '8px 6px', color: pkFg, ...hoverStyle('popover') }}
                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
                             onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
                             onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
-                            <p style={{ fontWeight: 600, marginBottom: 3, ...hoverStyle('popover-foreground') }}
-                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover-foreground'); }}
-                                onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
-                                onClick={(e) => { e.stopPropagation(); onClickToken?.('popover-foreground'); }}>Popover</p>
-                            <p style={{ color: mtFg, fontSize: 9, ...hoverStyle('muted-foreground') }}
-                                onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
-                                onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
-                                onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>Dropdown menus use this surface color.</p>
+                            
+                            <p style={{ fontWeight: 800, fontSize: 8, marginBottom: 6, textTransform: 'uppercase', opacity: 0.6 }}>Progress</p>
+                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 30, marginBottom: 4 }}>
+                                {[
+                                    { key: 'chart-trend', h: 40 },
+                                    { key: 'chart-growth', h: 70 },
+                                    { key: 'chart-alert', h: 50 },
+                                    { key: 'chart-success', h: 90 },
+                                    { key: 'chart-muted', h: 60 }
+                                ].map(item => (
+                                    <div key={item.key}
+                                        style={{
+                                            flex: 1,
+                                            height: `${item.h}%`,
+                                            background: hsl(tokens[item.key as keyof DerivedTokens]),
+                                            borderRadius: '2px 2px 0 0',
+                                            ...hoverStyle(item.key)
+                                        }}
+                                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.(item.key); }}
+                                        onMouseLeave={() => onHoverToken?.('popover')}
+                                        onClick={(e) => { e.stopPropagation(); onClickToken?.(item.key); }}
+                                    />
+                                ))}
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 7, opacity: 0.5 }}>
+                                <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span>
+                            </div>
                         </div>
                         <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                             {[bg, cd, pr, ac, ds, sc].map((c, i) => (

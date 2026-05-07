@@ -54,11 +54,11 @@ export default {
   				foreground: 'hsl(var(--success-foreground))'
   			},
   			chart: {
-  				'1': 'hsl(var(--chart-1))',
-  				'2': 'hsl(var(--chart-2))',
-  				'3': 'hsl(var(--chart-3))',
-  				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
+  				trend: 'hsl(var(--chart-trend))',
+  				growth: 'hsl(var(--chart-growth))',
+  				alert: 'hsl(var(--chart-alert))',
+  				success: 'hsl(var(--chart-success))',
+  				muted: 'hsl(var(--chart-muted))'
   			}
   		},
   		keyframes: {

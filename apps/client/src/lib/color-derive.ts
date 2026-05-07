@@ -79,6 +79,11 @@ export interface DerivedTokens {
     success: string;
     'success-foreground': string;
     'link-color': string;
+    'chart-trend': string;
+    'chart-growth': string;
+    'chart-alert': string;
+    'chart-success': string;
+    'chart-muted': string;
 }
 
 /**
@@ -132,6 +137,8 @@ export function deriveTokens(seeds: SeedColors): DerivedTokens {
     const destructive = bl > 60 ? '0 72% 51%' : '0 55% 58%';
     const destructiveFg = '0 0% 98%';
 
+    const success = bl > 60 ? '142 55% 32%' : '142 65% 52%';
+
     return {
         background: bg,
         foreground: fg,
@@ -154,9 +161,14 @@ export function deriveTokens(seeds: SeedColors): DerivedTokens {
         'input-background': inputBg,
         'reader-textarea-bg': readerBg,
         ring,
-        success: bl > 60 ? '142 55% 32%' : '142 65% 52%',
+        success,
         'success-foreground': '0 0% 100%',
         'link-color': bl > 60 ? pr : '142 65% 52%', // Default to primary for light, success/emerald for dark
+        'chart-trend': pr,
+        'chart-growth': accent,
+        'chart-alert': destructive,
+        'chart-success': success,
+        'chart-muted': secondary,
     };
 }
 

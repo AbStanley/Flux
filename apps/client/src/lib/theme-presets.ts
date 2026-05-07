@@ -20,6 +20,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '214 32% 98%', 'reader-textarea-bg': '210 16% 97%',
         ring: '193 100% 33%', success: '142 60% 36%', 'success-foreground': '0 0% 100%',
         'link-color': '193 100% 33%',
+        'chart-trend': '193 100% 33%', 'chart-growth': '210 16% 93%', 'chart-alert': '0 72% 51%', 'chart-success': '142 60% 36%', 'chart-muted': '210 16% 93%',
     },
     dark: {
         background: '220 30% 12%', foreground: '210 20% 98%',
@@ -34,6 +35,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '215 25% 20%', 'reader-textarea-bg': '215 25% 14%',
         ring: '224 76% 60%', success: '142 70% 50%', 'success-foreground': '220 30% 12%',
         'link-color': '142 70% 50%',
+        'chart-trend': '224 76% 60%', 'chart-growth': '215 25% 20%', 'chart-alert': '0 50% 55%', 'chart-success': '142 70% 50%', 'chart-muted': '215 25% 20%',
     },
     nordic: {
         background: '220 15% 13%', foreground: '210 15% 92%',
@@ -48,6 +50,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '220 12% 22%', 'reader-textarea-bg': '220 12% 15%',
         ring: '200 80% 65%', success: '142 60% 55%', 'success-foreground': '220 15% 10%',
         'link-color': '200 80% 70%',
+        'chart-trend': '200 80% 65%', 'chart-growth': '200 40% 30%', 'chart-alert': '0 45% 58%', 'chart-success': '142 60% 55%', 'chart-muted': '220 12% 22%',
     },
     cream: {
         background: '43 47% 92%', foreground: '30 25% 18%',
@@ -59,9 +62,10 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         accent: '38 45% 78%', 'accent-foreground': '30 25% 15%',
         destructive: '0 70% 48%', 'destructive-foreground': '42 50% 95%',
         border: '40 30% 75%', input: '42 38% 85%',
-        'input-background': '220 60% 60%', 'reader-textarea-bg': '40 60% 96%',
+        'input-background': '43 47% 92%', 'reader-textarea-bg': '40 60% 96%',
         ring: '36 90% 50%', success: '142 55% 32%', 'success-foreground': '0 0% 100%',
         'link-color': '36 70% 42%',
+        'chart-trend': '36 90% 50%', 'chart-growth': '38 45% 78%', 'chart-alert': '0 70% 48%', 'chart-success': '142 55% 32%', 'chart-muted': '40 60% 96%',
     },
     sunset: {
         background: '43 47% 90%', foreground: '203 100% 14%',
@@ -76,6 +80,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '43 60% 96%', 'reader-textarea-bg': '43 60% 94%',
         ring: '31 100% 48%', success: '142 55% 32%', 'success-foreground': '0 0% 100%',
         'link-color': '203 80% 35%',
+        'chart-trend': '31 100% 48%', 'chart-growth': '40 80% 65%', 'chart-alert': '355 83% 50%', 'chart-success': '142 55% 32%', 'chart-muted': '40 80% 65%',
     },
     'rose-pine': {
         background: '249 22% 12%', foreground: '245 7% 81%',
@@ -90,6 +95,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '249 15% 20%', 'reader-textarea-bg': '249 15% 14%',
         ring: '2 55% 70%', success: '142 60% 55%', 'success-foreground': '249 22% 12%',
         'link-color': '189 43% 73%',
+        'chart-trend': '2 55% 70%', 'chart-growth': '35 88% 72%', 'chart-alert': '343 60% 60%', 'chart-success': '142 60% 55%', 'chart-muted': '249 15% 20%',
     },
     evergreen: {
         background: '150 15% 96%', foreground: '160 20% 18%',
@@ -104,6 +110,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '150 15% 96%', 'reader-textarea-bg': '148 20% 92%',
         ring: '158 40% 42%', success: '142 55% 32%', 'success-foreground': '0 0% 100%',
         'link-color': '158 50% 35%',
+        'chart-trend': '158 40% 42%', 'chart-growth': '148 20% 88%', 'chart-alert': '0 65% 48%', 'chart-success': '142 55% 32%', 'chart-muted': '148 20% 88%',
     },
     ember: {
         background: '210 55% 8%', foreground: '35 12% 90%',
@@ -118,6 +125,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '210 28% 15%', 'reader-textarea-bg': '210 50% 9%',
         ring: '31 100% 48%', success: '152 45% 48%', 'success-foreground': '0 0% 100%',
         'link-color': '31 100% 52%',
+        'chart-trend': '31 100% 48%', 'chart-growth': '40 92% 62%', 'chart-alert': '0 69% 50%', 'chart-success': '152 45% 48%', 'chart-muted': '210 30% 15%',
     },
     harvest: {
         background: '40 35% 94%', foreground: '92 20% 18%',
@@ -132,6 +140,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '40 35% 94%', 'reader-textarea-bg': '42 40% 92%',
         ring: '0 78% 62%', success: '92 35% 36%', 'success-foreground': '0 0% 100%',
         'link-color': '33 100% 50%',
+        'chart-trend': '0 78% 62%', 'chart-growth': '33 80% 60%', 'chart-alert': '0 78% 55%', 'chart-success': '92 35% 36%', 'chart-muted': '45 50% 85%',
     },
     ultraviolet: {
         background: '270 30% 99%', foreground: '254 50% 20%',
@@ -146,6 +155,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '270 25% 99%', 'reader-textarea-bg': '264 22% 97%',
         ring: '12 100% 62%', success: '142 55% 35%', 'success-foreground': '0 0% 100%',
         'link-color': '271 40% 40%',
+        'chart-trend': '12 100% 62%', 'chart-growth': '40 100% 68%', 'chart-alert': '0 65% 50%', 'chart-success': '142 55% 35%', 'chart-muted': '264 20% 94%',
     },
     sandcastle: {
         background: '45 50% 97%', foreground: '206 40% 22%',
@@ -160,6 +170,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '45 40% 97%', 'reader-textarea-bg': '42 30% 95%',
         ring: '206 45% 55%', success: '142 50% 35%', 'success-foreground': '0 0% 100%',
         'link-color': '206 50% 45%',
+        'chart-trend': '206 45% 55%', 'chart-growth': '28 75% 55%', 'chart-alert': '0 65% 50%', 'chart-success': '142 50% 35%', 'chart-muted': '42 28% 92%',
     },
     sage: {
         background: '40 45% 97%', foreground: '93 22% 22%',
@@ -174,6 +185,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '40 35% 97%', 'reader-textarea-bg': '42 28% 95%',
         ring: '93 28% 38%', success: '84 30% 40%', 'success-foreground': '0 0% 100%',
         'link-color': '93 32% 32%',
+        'chart-trend': '93 28% 38%', 'chart-growth': '84 24% 62%', 'chart-alert': '0 60% 48%', 'chart-success': '84 30% 40%', 'chart-muted': '42 22% 92%',
     },
     bauhaus: {
         background: '36 55% 97%', foreground: '201 80% 16%',
@@ -188,6 +200,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '36 45% 97%', 'reader-textarea-bg': '35 30% 95%',
         ring: '31 100% 48%', success: '142 55% 35%', 'success-foreground': '0 0% 100%',
         'link-color': '201 80% 30%',
+        'chart-trend': '31 100% 48%', 'chart-growth': '40 92% 62%', 'chart-alert': '0 69% 50%', 'chart-success': '142 55% 35%', 'chart-muted': '35 25% 92%',
     },
     espresso: {
         background: '32 100% 97%', foreground: '6 27% 20%',
@@ -202,6 +215,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
         'input-background': '32 80% 96%', 'reader-textarea-bg': '30 45% 94%',
         ring: '23 40% 39%', success: '142 45% 35%', 'success-foreground': '0 0% 100%',
         'link-color': '23 50% 35%',
+        'chart-trend': '23 40% 39%', 'chart-growth': '28 47% 54%', 'chart-alert': '0 60% 45%', 'chart-success': '142 45% 35%', 'chart-muted': '30 35% 88%',
     },
 };
 
@@ -212,52 +226,67 @@ export interface TokenGroup { label: string; emoji: string; tokens: TokenMeta[] 
 
 export const TOKEN_GROUPS: TokenGroup[] = [
     {
-        label: 'Foundation', emoji: '🎨',
+        label: 'Foundation', emoji: '🏗️',
         tokens: [
-            { key: 'background',          label: 'Page Background',  hint: 'Main background of all pages' },
-            { key: 'foreground',          label: 'Body Text',         hint: 'Main text on the background' },
-            { key: 'primary',             label: 'Accent Color',      hint: 'Buttons, links, active highlights' },
-            { key: 'primary-foreground',  label: 'Accent Text',       hint: 'Text on accent-colored elements' },
+            { key: 'background',          label: 'App Background',     hint: 'Main background color of the app' },
+            { key: 'foreground',          label: 'Main Text',          hint: 'Primary text color for readability' },
         ],
     },
     {
-        label: 'Surfaces', emoji: '📦',
+        label: 'Surfaces', emoji: '🗂️',
         tokens: [
-            { key: 'card',                label: 'Card Background',   hint: 'Panels and content cards' },
-            { key: 'card-foreground',     label: 'Card Text',         hint: 'Text inside cards' },
-            { key: 'popover',             label: 'Popup Background',  hint: 'Dropdowns and dialog surfaces' },
-            { key: 'popover-foreground',  label: 'Popup Text',        hint: 'Text inside popups' },
-            { key: 'secondary',           label: 'Secondary BG',      hint: 'Secondary buttons and tab bars' },
-            { key: 'secondary-foreground', label: 'Secondary Text',   hint: 'Text on secondary elements' },
+            { key: 'card',                label: 'Card / Surface',     hint: 'Background for panels, cards, and sidebar' },
+            { key: 'card-foreground',     label: 'Surface Text',       hint: 'Text color when inside cards/panels' },
+            { key: 'muted',               label: 'Muted Surface',      hint: 'Subtle background for secondary elements' },
+            { key: 'muted-foreground',    label: 'Muted Text',         hint: 'Subtle text color for hints or labels' },
         ],
     },
     {
-        label: 'States', emoji: '✨',
+        label: 'Interactive (Hover)', emoji: '✨',
         tokens: [
-            { key: 'muted',               label: 'Muted Background',  hint: 'Disabled and subtle areas' },
-            { key: 'muted-foreground',    label: 'Muted Text',        hint: 'Hints, placeholders, secondary text' },
-            { key: 'accent',              label: 'Hover Background',  hint: 'Background when hovering items' },
-            { key: 'accent-foreground',   label: 'Hover Text',        hint: 'Text color when hovering items' },
+            { key: 'accent',              label: 'Hover Background',   hint: 'Background color when hovering elements' },
+            { key: 'accent-foreground',   label: 'Hover Text',         hint: 'Text color when hovering elements' },
+            { key: 'link-color',          label: 'Selected Highlight', hint: 'Color for clickable text and reading selections' },
         ],
     },
     {
-        label: 'Semantic', emoji: '⚠️',
+        label: 'Popups & Overlays', emoji: '🗨️',
         tokens: [
-            { key: 'destructive',             label: 'Error / Danger',    hint: 'Delete buttons, error states, Due chip' },
-            { key: 'destructive-foreground',  label: 'Error Text',         hint: 'Text on error-colored elements' },
-            { key: 'success',                 label: 'Success Color',      hint: 'Confirmations, "Looks good" chip' },
-            { key: 'success-foreground',      label: 'Success Text',       hint: 'Text on success-colored elements' },
-            { key: 'link-color',              label: 'Selected Words',     hint: 'Underline and popup for reading selections' },
+            { key: 'popover',             label: 'Popup Background',   hint: 'Background for dropdowns and tooltips' },
+            { key: 'popover-foreground',  label: 'Popup Text',         hint: 'Text color inside popups and menus' },
+            { key: 'secondary',           label: 'Utility Background', hint: 'Secondary surfaces like tab bars' },
+            { key: 'secondary-foreground', label: 'Utility Text',       hint: 'Text on utility surfaces' },
         ],
     },
     {
-        label: 'Layout', emoji: '🔲',
+        label: 'States', emoji: '🚦',
         tokens: [
-            { key: 'border',              label: 'Borders & Dividers', hint: 'Lines separating sections' },
-            { key: 'input',               label: 'Input Border',       hint: 'Border around input fields' },
-            { key: 'input-background',    label: 'Input Background',   hint: 'Fill of text input fields' },
+            { key: 'primary',             label: 'Primary Action',     hint: 'Brand color for buttons and main icons' },
+            { key: 'primary-foreground',  label: 'Action Text',        hint: 'Text color on top of primary buttons' },
+            { key: 'success',             label: 'Success State',      hint: 'Color for "saved" states or positive feedback' },
+            { key: 'success-foreground', label: 'Success Text',       hint: 'Text color on top of success backgrounds' },
+            { key: 'destructive',         label: 'Error / Danger',     hint: 'Color for delete buttons or error states' },
+            { key: 'destructive-foreground', label: 'Error Text',        hint: 'Text color on top of error backgrounds' },
+        ],
+    },
+    {
+        label: 'Layout & Details', emoji: '📏',
+        tokens: [
+            { key: 'border',              label: 'Global Borders',     hint: 'Lines separating sections' },
+            { key: 'input',               label: 'Input Border',       hint: 'Border color for text fields' },
+            { key: 'input-background',    label: 'Input Fill',         hint: 'Background color of text input fields' },
             { key: 'reader-textarea-bg',  label: 'Reader Area',        hint: 'Background of the reading text zone' },
-            { key: 'ring',                label: 'Focus Ring',         hint: 'Outline when an element is focused' },
+            { key: 'ring',                label: 'Focus Ring',         hint: 'Outline color when an element is focused' },
+        ],
+    },
+    {
+        label: 'Charts', emoji: '📊',
+        tokens: [
+            { key: 'chart-trend',         label: 'Data Trend (Main)',  hint: 'Primary color for charts and graphs' },
+            { key: 'chart-growth',        label: 'Growth / Positve',   hint: 'Secondary color for charts and graphs' },
+            { key: 'chart-alert',         label: 'Alert / Warning',    hint: 'Tertiary color for charts and graphs' },
+            { key: 'chart-success',       label: 'Success / Goal',     hint: 'Quaternary color for charts and graphs' },
+            { key: 'chart-muted',         label: 'Muted Data',         hint: 'Quinary color for charts and graphs' },
         ],
     },
 ];

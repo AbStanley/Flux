@@ -42,6 +42,14 @@ export interface CustomTheme {
         'input-background': string;
         'reader-textarea-bg': string;
         ring: string;
+        success: string;
+        'success-foreground': string;
+        'link-color': string;
+        'chart-trend': string;
+        'chart-growth': string;
+        'chart-alert': string;
+        'chart-success': string;
+        'chart-muted': string;
     };
 }
 
