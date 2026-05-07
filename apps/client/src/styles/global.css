@@ -208,10 +208,10 @@ html, body, #root {
     /* Slightly warmer cards */
     --card-foreground: 30 25% 15%;
 
-    --popover: 30 35% 28%;
-    /* Dark warm brown for readable white text */
-    --popover-foreground: 0 0% 98%;
-    /* White text in translation popups */
+    --popover: 40 35% 85%;
+    /* Light warm parchment matching cards */
+    --popover-foreground: 30 25% 18%;
+    /* Dark warm brown text for readability */
 
     --primary: 36 90% 50%;
     /* #fcbf49 - warm gold */

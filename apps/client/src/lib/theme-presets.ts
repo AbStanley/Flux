@@ -52,7 +52,7 @@ export const BUILT_IN_THEME_TOKENS: ThemeTokenMap = {
     cream: {
         background: '43 47% 92%', foreground: '30 25% 18%',
         card: '40 45% 88%', 'card-foreground': '30 25% 15%',
-        popover: '30 35% 28%', 'popover-foreground': '0 0% 98%',
+        popover: '40 35% 85%', 'popover-foreground': '30 25% 18%',
         primary: '36 90% 50%', 'primary-foreground': '0 0% 100%',
         secondary: '40 60% 96%', 'secondary-foreground': '30 25% 18%',
         muted: '42 35% 85%', 'muted-foreground': '30 20% 42%',
