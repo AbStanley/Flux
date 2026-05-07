@@ -226,7 +226,7 @@ export const THEME_PRESETS: { id: string; label: string; seeds: SeedColors }[] =
     {
         id: 'sunset',
         label: '🌅 Sunset',
-        seeds: { background: '#1a1025', foreground: '#faf0ff', primary: '#f97316', card: '#2d1b3d', border: '#3d2952' },
+        seeds: { background: '#fff9f0', foreground: '#5c3a2a', primary: '#f97316', card: '#fdf2e4', border: '#f7e2c8' },
     },
     {
         id: 'harvest',
@@ -282,19 +282,20 @@ export function customThemeToFluxTheme(theme: CustomTheme): FluxTheme {
     const isDark = bgL < 52;
 
     const borderAlpha = isDark ? 0.22 : 0.30;
-    const bgAlpha = isDark ? 0.94 : 0.98; // Less transparency for light themes to avoid "washed out" look
 
     return {
         name: theme.name,
         id: theme.id,
         dot: hslToHex(tokens.primary),
-        bg: hslToRgba(tokens.popover, bgAlpha),
-        bgSolid: hslToHex(tokens.popover),
-        surface: hslToHex(tokens.background),
+        bg: hslToRgba(tokens.popover, 0.94),
+        bgSolid: hslToHex(tokens.background),
+        surface: hslToHex(tokens.card),
         surfaceActive: hslToHex(tokens.secondary),
-        text: hslToHex(tokens['popover-foreground']),
+        muted: hslToHex(tokens.muted),
+        mutedForeground: hslToHex(tokens['muted-foreground']),
+        text: hslToHex(tokens.foreground),
         textSecondary: hslToHex(tokens['muted-foreground']),
-        textDim: hslToRgba(tokens['popover-foreground'], 0.40),
+        textDim: hslToRgba(tokens.foreground, 0.40),
         accent: hslToHex(tokens.primary),
         accentForeground: hslToHex(tokens['primary-foreground']),
         accentGlow: hslToRgba(tokens.primary, 0.15),

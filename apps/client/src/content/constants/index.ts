@@ -18,6 +18,8 @@ export interface FluxTheme {
     bgSolid: string;
     surface: string;
     surfaceActive: string;
+    muted: string;
+    mutedForeground: string;
     text: string;
     textSecondary: string;
     textDim: string;

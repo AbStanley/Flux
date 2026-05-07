@@ -95,9 +95,11 @@ export default function FluxExtensionPopup() {
     return (
         <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            minHeight: '450px', padding: '20px', backgroundColor: theme.bgSolid, color: theme.text,
+            minHeight: '450px', padding: '24px', 
+            backgroundColor: theme.bgSolid,
+            color: theme.text,
             textAlign: 'center', position: 'relative', transition: 'background-color 0.3s, color 0.3s',
-            width: '100%', boxSizing: 'border-box'
+            width: '100%', boxSizing: 'border-box',
         }}>
             {!isAuthenticated ? (
                 <PopupLoginView

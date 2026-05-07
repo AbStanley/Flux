@@ -32,7 +32,7 @@ export function FluxIconButton({
             disabled={disabled}
             style={{
                 background: active ? (theme?.accent ?? '#3b82f6') : 'transparent',
-                color: active ? (theme?.bgSolid ?? 'white') : (theme?.textSecondary ?? '#94a3b8'),
+                color: active ? (theme?.accentForeground ?? 'white') : (theme?.mutedForeground ?? '#94a3b8'),
                 border: 'none',
                 borderRadius: '5px',
                 padding: '3px 8px',
@@ -41,7 +41,7 @@ export function FluxIconButton({
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '10px',
-                fontWeight: '700',
+                fontWeight: '600',
                 opacity: disabled ? 0.5 : 1,
                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 whiteSpace: 'nowrap',
@@ -49,13 +49,13 @@ export function FluxIconButton({
             }}
             onMouseEnter={(e) => {
                 if (disabled || active) return;
-                e.currentTarget.style.background = theme?.borderLight || 'rgba(0,0,0,0.05)';
+                e.currentTarget.style.background = theme?.muted || 'rgba(0,0,0,0.05)';
                 e.currentTarget.style.color = theme?.text || 'black';
             }}
             onMouseLeave={(e) => {
                 if (active) return;
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = theme?.textSecondary || '#94a3b8';
+                e.currentTarget.style.color = theme?.mutedForeground || '#94a3b8';
             }}
         >
             {children}

@@ -158,7 +158,9 @@ export function FluxPopup({
                 )}
                 <div
                     style={{
-                        backgroundColor: theme.bgSolid,
+                        backgroundColor: theme.bg,
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)',
                         color: theme.text,
                         borderRadius: '12px',
                         boxShadow: `0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px ${theme.border}`,
@@ -166,7 +168,6 @@ export function FluxPopup({
                         lineHeight: '1.5',
                         width: 'max-content',
                         maxWidth: 'min(480px, 90vw)',
-                        backdropFilter: 'blur(12px)',
                         border: `1px solid ${theme.border}`,
                         overflow: 'hidden',
                     }}
@@ -189,8 +190,9 @@ export function FluxPopup({
                     {/* Action bar */}
                     <div style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                        gap: '2px', padding: '4px 8px',
-                        borderTop: `1px solid ${theme.border}`,
+                        gap: '4px', padding: '6px 10px',
+                        borderTop: `1px solid ${theme.borderLight}`,
+                        background: `${theme.surface}e6`,
                     }}>
                         {(
                             [
@@ -200,9 +202,9 @@ export function FluxPopup({
                                     onClick: () => handleInternalSave(),
                                     disabled: loading || isSaving,
                                     icon: isSaving ? (
-                                        <Check size={13} strokeWidth={3} />
+                                        <Check size={12} strokeWidth={3} />
                                     ) : (
-                                        <Save size={13} strokeWidth={2.5} />
+                                        <Save size={12} strokeWidth={2.5} />
                                     )
                                 },
                                 {
@@ -210,14 +212,14 @@ export function FluxPopup({
                                     color: theme.textSecondary,
                                     onClick: () => { setIsCollapsed(false); },
                                     disabled: false,
-                                    icon: <Maximize2 size={13} strokeWidth={2.5} />
+                                    icon: <Maximize2 size={12} strokeWidth={2.5} />
                                 },
                                 {
                                     title: 'Close',
                                     color: theme.textSecondary,
                                     onClick: () => onClose(),
                                     disabled: false,
-                                    icon: <X size={13} strokeWidth={2.5} />
+                                    icon: <X size={12} strokeWidth={2.5} />
                                 },
                             ] as Array<{ title: string; color: string; onClick: () => void; disabled: boolean; icon: React.ReactNode }>
                         ).map((btn) => (
@@ -228,16 +230,16 @@ export function FluxPopup({
                                 disabled={btn.disabled}
                                 title={btn.title}
                                 style={{
-                                    background: 'none', border: 'none', color: btn.color,
+                                    background: theme.borderLight, border: `1px solid ${theme.borderLight}`, color: btn.color,
                                     cursor: btn.disabled ? 'not-allowed' : 'pointer',
                                     opacity: btn.disabled ? 0.4 : 1,
                                     padding: '4px', display: 'flex',
                                     alignItems: 'center', justifyContent: 'center',
-                                    width: '24px', height: '24px', borderRadius: '6px',
+                                    width: '24px', height: '24px', borderRadius: '50%',
                                     transition: 'all 0.2s'
                                 }}
-                                onMouseEnter={(e) => { if (!btn.disabled) e.currentTarget.style.backgroundColor = theme.surface }}
-                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                                onMouseEnter={(e) => { if (!btn.disabled) { e.currentTarget.style.backgroundColor = theme.surface; e.currentTarget.style.borderColor = theme.border; } }}
+                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = theme.borderLight; e.currentTarget.style.borderColor = theme.borderLight; }}
                             >
                                 {btn.icon}
                             </button>
@@ -249,16 +251,16 @@ export function FluxPopup({
     }
 
     const popupStyles: React.CSSProperties = {
-        backgroundColor: theme.bg,
+        background: theme.bg,
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         color: theme.text,
         width: `${UI_CONSTANTS.POPUP_WIDTH}px`,
         padding: '0',
-        borderRadius: '20px',
+        borderRadius: '16px',
         boxShadow: isDragging
-            ? `0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px ${theme.border}`
-            : `0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px ${theme.border}`,
+            ? `0 20px 40px -12px rgba(0,0,0,0.45), 0 0 0 1px ${theme.border}`
+            : `0 12px 32px rgba(0,0,0,0.35), 0 0 0 1px ${theme.border}`,
         fontSize: '13px',
         lineHeight: '1.6',
         display: 'flex',
@@ -266,7 +268,8 @@ export function FluxPopup({
         gap: '16px',
         border: `1px solid ${theme.border}`,
         transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-        transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        overflow: 'hidden'
     };
 
     return (
@@ -285,7 +288,7 @@ export function FluxPopup({
             }}
             onMouseDown={e => e.stopPropagation()}
         >
-            <div style={popupStyles}>
+            <div style={{ ...popupStyles, background: theme.bg }}>
                 {/* Global loading bar */}
                 {loading && (
                     <div style={{
@@ -339,11 +342,9 @@ export function FluxPopup({
                 </div>
 
                 <div style={{
-                    background: theme.surface,
+                    background: `${theme.surface}e6`, // 90% opacity to let blur through
                     borderTop: `1px solid ${theme.borderLight}`,
                     padding: '12px 20px 16px',
-                    borderBottomLeftRadius: '20px',
-                    borderBottomRightRadius: '20px'
                 }}>
                     <FluxControls
                         mode={mode}
