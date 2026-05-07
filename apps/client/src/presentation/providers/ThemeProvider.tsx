@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { ThemeProviderContext } from "./ThemeProviderContext"
 import { useSettingsStore, type CustomTheme } from "../features/settings/store/useSettingsStore"
 
-export type Theme = "dark" | "nordic" | "light" | "cream" | "sunset" | "rose-pine" | "evergreen" | "moonlight" | "system" | string
+export type Theme = "dark" | "nordic" | "light" | "cream" | "sunset" | "rose-pine" | "evergreen" | "ember" | "system" | string
 
 type ThemeProviderProps = {
     children: React.ReactNode
@@ -25,7 +25,13 @@ const EXTENSION_TO_WEBAPP_THEME: Record<string, Theme> = {
     cream: "cream",
     'rose-pine': "rose-pine",
     evergreen: "evergreen",
-    moonlight: "moonlight",
+    ember: "ember",
+    harvest: "harvest",
+    ultraviolet: "ultraviolet",
+    sandcastle: "sandcastle",
+    sage: "sage",
+    bauhaus: "bauhaus",
+    espresso: "espresso",
 }
 
 export function ThemeProvider({
@@ -95,7 +101,7 @@ export function ThemeProvider({
             document.head.appendChild(styleTag)
         }
 
-        root.classList.remove("light", "dark", "nordic", "cream", "sunset", "rose-pine", "evergreen", "moonlight")
+        root.classList.remove("light", "dark", "nordic", "cream", "sunset", "rose-pine", "evergreen", "ember", "harvest", "ultraviolet", "sandcastle", "sage", "bauhaus", "espresso")
         // Clear custom styles
         styleTag.textContent = "";
 

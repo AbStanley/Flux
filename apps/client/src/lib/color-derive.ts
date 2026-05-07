@@ -207,14 +207,44 @@ export const THEME_PRESETS: { id: string; label: string; seeds: SeedColors }[] =
         seeds: { background: '#f0f5f0', foreground: '#243c30', primary: '#4a9970', card: '#e8f0e8', border: '#c0d4c0' },
     },
     {
-        id: 'moonlight',
-        label: '🔭 Moonlight',
-        seeds: { background: '#161a2e', foreground: '#c8d0e0', primary: '#5ecfdc', card: '#1b2036', border: '#2a3256' },
+        id: 'ember',
+        label: '🔥 Ember',
+        seeds: { background: '#0a1525', foreground: '#e2d8c8', primary: '#F77F00', card: '#122035', border: '#1e3048' },
     },
     {
         id: 'sunset',
         label: '🌅 Sunset',
         seeds: { background: '#eae2b7', foreground: '#003049', primary: '#f77f00', card: '#dfd8a8', border: '#c8bf90' },
+    },
+    {
+        id: 'harvest',
+        label: '🍂 Harvest',
+        seeds: { background: '#efe2c7', foreground: '#2e3d22', primary: '#EA5252', card: '#e6d8b8', border: '#c8b78e' },
+    },
+    {
+        id: 'ultraviolet',
+        label: '🔮 Ultraviolet',
+        seeds: { background: '#faf8ff', foreground: '#281c52', primary: '#FF653F', card: '#f0ecf8', border: '#ddd8e8' },
+    },
+    {
+        id: 'sandcastle',
+        label: '🏖️ Sandcastle',
+        seeds: { background: '#faf7ef', foreground: '#2d4a5a', primary: '#5a8eb5', card: '#f0ece2', border: '#d8d0c2' },
+    },
+    {
+        id: 'sage',
+        label: '🌿 Sage',
+        seeds: { background: '#f8f5ec', foreground: '#3a4d2e', primary: '#546B41', card: '#ede8dc', border: '#d5cebe' },
+    },
+    {
+        id: 'bauhaus',
+        label: '🎨 Bauhaus',
+        seeds: { background: '#faf6ef', foreground: '#0a3050', primary: '#F77F00', card: '#f0ebe0', border: '#d8d0c2' },
+    },
+    {
+        id: 'espresso',
+        label: '☕ Espresso',
+        seeds: { background: '#fff8f0', foreground: '#4B2E2B', primary: '#8C5A3C', card: '#f0e0d0', border: '#c8b8a8' },
     },
 ];
 
