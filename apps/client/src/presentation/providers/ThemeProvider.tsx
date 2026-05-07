@@ -15,24 +15,7 @@ export type ThemeProviderState = {
     setTheme: (theme: Theme) => void
 }
 
-/** Map extension theme IDs to web app theme names */
-const EXTENSION_TO_WEBAPP_THEME: Record<string, Theme> = {
-    dark: "dark",
-    ivory: "cream",
-    nordic: "nordic",
-    sunset: "sunset",
-    light: "light",
-    cream: "cream",
-    'rose-pine': "rose-pine",
-    evergreen: "evergreen",
-    ember: "ember",
-    harvest: "harvest",
-    ultraviolet: "ultraviolet",
-    sandcastle: "sandcastle",
-    sage: "sage",
-    bauhaus: "bauhaus",
-    espresso: "espresso",
-}
+
 
 export function ThemeProvider({
     children,
@@ -56,9 +39,8 @@ export function ThemeProvider({
         window.chrome.storage.local.get(['fluxTheme', 'fluxCustomThemes'], (result: Record<string, unknown>) => {
             const extTheme = result.fluxTheme as string | undefined;
             if (extTheme) {
-                const mapped = extTheme.startsWith('custom-') ? extTheme : (EXTENSION_TO_WEBAPP_THEME[extTheme] || extTheme);
-                localStorage.setItem(storageKey, mapped);
-                setThemeState(mapped);
+                localStorage.setItem(storageKey, extTheme);
+                setThemeState(extTheme);
             }
 
             const storedCustom = result.fluxCustomThemes as CustomTheme[] | undefined;
@@ -71,9 +53,8 @@ export function ThemeProvider({
         const handleChange = (changes: Record<string, chrome.storage.StorageChange>) => {
             if (changes.fluxTheme?.newValue) {
                 const extTheme = changes.fluxTheme.newValue as string;
-                const mapped = extTheme.startsWith('custom-') ? extTheme : (EXTENSION_TO_WEBAPP_THEME[extTheme] || extTheme);
-                localStorage.setItem(storageKey, mapped);
-                setThemeState(mapped);
+                localStorage.setItem(storageKey, extTheme);
+                setThemeState(extTheme);
             }
             if (changes.fluxCustomThemes?.newValue) {
                 setExtCustomThemes(changes.fluxCustomThemes.newValue as CustomTheme[]);
