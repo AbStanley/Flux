@@ -126,6 +126,8 @@ export const useSettingsStore = create<SettingsState>()(
                 customThemes: state.customThemes.map((t) => (t.id === theme.id ? theme : t)),
             })),
         }),
-        { name: 'flux-reader-settings' }
+        {
+            name: 'flux-reader-settings',
+        }
     )
 );

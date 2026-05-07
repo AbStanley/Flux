@@ -7,14 +7,13 @@ import { Volume2, Search, RefreshCcw, Save, Youtube } from 'lucide-react';
 
 interface Props { tokens: DerivedTokens; name: string; activeToken?: string | null; onHoverToken?: (t: string | null) => void; onClickToken?: (t: string) => void; }
 
-function hsl(token: string) { return `hsl(${token})`; }
-
 export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, onClickToken }: Props) {
     // Derive the FluxTheme used by the extension popup / overlays
     const fluxTheme = useMemo(() => customThemeToFluxTheme({
         id: 'preview', name, colors: tokens,
     }), [tokens, name]);
 
+    const hsl = (h: string) => `hsl(${h})`;
     const bg = hsl(tokens.background);
     const fg = hsl(tokens.foreground);
     const pr = hsl(tokens.primary);
@@ -107,38 +106,63 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
                     </div>
 
                     {/* Sidebar popover example */}
-                    <div style={{ width: 90, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div style={{ width: 110, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {/* Mini Activity Heatmap */}
                         <div style={{ background: pk, border: `1px solid ${bd}`, borderRadius: 6, padding: '8px 6px', color: pkFg, ...hoverStyle('popover') }}
                             onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('popover'); }}
                             onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
                             onClick={(e) => { e.stopPropagation(); onClickToken?.('popover'); }}>
                             
-                            <p style={{ fontWeight: 800, fontSize: 8, marginBottom: 6, textTransform: 'uppercase', opacity: 0.6 }}>Progress</p>
-                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 30, marginBottom: 4 }}>
-                                {[
-                                    { key: 'chart-trend', h: 40 },
-                                    { key: 'chart-growth', h: 70 },
-                                    { key: 'chart-alert', h: 50 },
-                                    { key: 'chart-success', h: 90 },
-                                    { key: 'chart-muted', h: 60 }
-                                ].map(item => (
-                                    <div key={item.key}
+                            <p style={{ fontWeight: 800, fontSize: 7, marginBottom: 4, textTransform: 'uppercase', opacity: 0.6 }}>Activity</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2, marginBottom: 4 }}>
+                                {[0.3, 0.6, 0.1, 0.9, 0.4, 0.2, 0.7, 0.0, 0.5, 0.8].map((v, i) => (
+                                    <div key={i}
                                         style={{
-                                            flex: 1,
-                                            height: `${item.h}%`,
-                                            background: hsl(tokens[item.key as keyof DerivedTokens]),
-                                            borderRadius: '2px 2px 0 0',
-                                            ...hoverStyle(item.key)
+                                            aspectRatio: '1/1',
+                                            background: v === 0 ? 'transparent' : hsl(tokens['chart-trend']),
+                                            opacity: v || 0.1,
+                                            borderRadius: 2,
+                                            border: `1px solid ${bd}`,
+                                            ...hoverStyle('chart-trend')
                                         }}
-                                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.(item.key); }}
+                                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('chart-trend'); }}
                                         onMouseLeave={() => onHoverToken?.('popover')}
-                                        onClick={(e) => { e.stopPropagation(); onClickToken?.(item.key); }}
+                                        onClick={(e) => { e.stopPropagation(); onClickToken?.('chart-trend'); }}
                                     />
                                 ))}
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 7, opacity: 0.5 }}>
-                                <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span>
-                            </div>
+                        </div>
+
+                        {/* Mini SRS Rating Buttons */}
+                        <div style={{ display: 'flex', gap: 2 }}>
+                            {[
+                                { key: 'chart-alert', label: 'Again' },
+                                { key: 'chart-growth', label: 'Hard' },
+                                { key: 'chart-success', label: 'Good' },
+                                { key: 'chart-trend', label: 'Easy' }
+                            ].map(item => (
+                                <div key={item.key}
+                                    style={{
+                                        flex: 1,
+                                        height: 18,
+                                        background: `${hslToHex(tokens[item.key as keyof DerivedTokens])}15`,
+                                        border: `1px solid ${hslToHex(tokens[item.key as keyof DerivedTokens])}33`,
+                                        borderRadius: 3,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: 6,
+                                        fontWeight: 700,
+                                        color: hsl(tokens[item.key as keyof DerivedTokens]),
+                                        ...hoverStyle(item.key)
+                                    }}
+                                    onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.(item.key); }}
+                                    onMouseLeave={() => onHoverToken?.('background')}
+                                    onClick={(e) => { e.stopPropagation(); onClickToken?.(item.key); }}
+                                >
+                                    {item.label}
+                                </div>
+                            ))}
                         </div>
                         <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                             {[bg, cd, pr, ac, ds, sc].map((c, i) => (

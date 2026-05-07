@@ -88,6 +88,7 @@ html, body, #root {
     --chart-trend: 12 76% 61%;
     --chart-growth: 173 58% 39%;
     --chart-alert: 220 70% 50%;
+    --chart-success: 142 60% 36%;
     --chart-muted: 27 87% 67%;
 
     /* Custom Premium Colors */

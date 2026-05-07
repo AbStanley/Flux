@@ -34,10 +34,10 @@ export const SentenceSlots: React.FC<SentenceSlotsProps> = ({
                         slot.isFilled && slot.status === 'none' && "border-primary/50 bg-primary/10 text-foreground hover:scale-105",
 
                         // Correct
-                        (slot.status === 'correct' || isComplete) && "border-chart-success bg-chart-success/20 text-green-400",
+                        (slot.status === 'correct' || isComplete) && "border-chart-success bg-chart-success/20 text-chart-success",
 
                         // Wrong
-                        slot.status === 'wrong' && "border-chart-alert bg-chart-alert/20 text-red-400 animate-shake",
+                        slot.status === 'wrong' && "border-chart-alert bg-chart-alert/20 text-chart-alert animate-shake",
 
                         // Revealed
                         slot.status === 'revealed' && "border-blue-500 bg-blue-500/20 text-blue-400",
