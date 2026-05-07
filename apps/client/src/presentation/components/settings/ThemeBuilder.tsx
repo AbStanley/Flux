@@ -134,12 +134,13 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
     const initial = useMemo(() => {
         if (editThemeId) {
             const ex = customThemes.find(t => t.id === editThemeId);
-            if (ex) return { name: ex.name, tokens: ex.colors as DerivedTokens };
+            if (ex) return { name: ex.name, emoji: ex.emoji || '🎨', tokens: ex.colors as DerivedTokens };
         }
-        return { name: 'My Theme', tokens: BUILT_IN_THEME_TOKENS.light };
+        return { name: 'My Theme', emoji: '🎨', tokens: BUILT_IN_THEME_TOKENS.light };
     }, [editThemeId, customThemes]);
 
     const [name, setName] = useState(initial.name);
+    const [emoji, setEmoji] = useState(initial.emoji);
     const [tokens, setTokens] = useState<DerivedTokens>(initial.tokens);
     const [mode, setMode] = useState<Mode>('simple');
     const [hoveredToken, setHoveredToken] = useState<string | null>(null);
@@ -151,7 +152,9 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
     const [prevEditId, setPrevEditId] = useState(editThemeId);
     if (isOpen !== prevIsOpen || editThemeId !== prevEditId) {
         setPrevIsOpen(isOpen); setPrevEditId(editThemeId);
-        setName(initial.name); setTokens(initial.tokens); setMode('simple');
+        setName(initial.name); 
+        setEmoji(initial.emoji);
+        setTokens(initial.tokens); setMode('simple');
         setHoveredToken(null);
         setClickedToken(null);
         setShowPreviewMobile(false);
@@ -195,7 +198,7 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
     };
 
     const handleExport = () => {
-        const blob = new Blob([JSON.stringify({ name, colors: tokens }, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify({ name, emoji, colors: tokens }, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -215,6 +218,7 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                 const imported = JSON.parse(event.target?.result as string);
                 if (imported.colors && imported.name) {
                     setName(imported.name || 'Imported Theme');
+                    setEmoji(imported.emoji || '🎨');
                     setTokens(imported.colors);
                     setMode('full'); // Imported themes might have advanced tweaks
                 } else {
@@ -234,6 +238,7 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
         const newTheme: CustomTheme = {
             id: editThemeId || `custom-${generateId()}`,
             name: name.trim(),
+            emoji: emoji || '🎨',
             colors: tokens,
         };
         if (editThemeId) updateCustomTheme(newTheme); else addCustomTheme(newTheme);
@@ -293,10 +298,23 @@ export function ThemeBuilder({ isOpen, onClose, editThemeId }: ThemeBuilderProps
                     <div className={`flex-1 overflow-y-auto px-4 md:px-5 py-4 space-y-4 border-b md:border-b-0 md:border-r border-border transition-opacity ${showPreviewMobile ? 'opacity-0 md:opacity-100 pointer-events-none md:pointer-events-auto' : 'opacity-100'}`}>
                         {/* Name + mode toggle */}
                         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-                            <div className="flex-1 flex items-center gap-3">
+                            <div className="flex-1 flex items-center gap-2">
                                 <Label htmlFor="theme-name" className="whitespace-nowrap text-xs md:text-sm">Name</Label>
-                                <Input id="theme-name" value={name} onChange={e => setName(e.target.value)}
-                                    placeholder="e.g. Midnight Teal" className="flex-1 h-9" />
+                                <Input
+                                    id="theme-name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="h-8 md:h-9"
+                                    placeholder="Theme Name..."
+                                />
+                                <Input
+                                    id="theme-emoji"
+                                    value={emoji}
+                                    onChange={(e) => setEmoji(e.target.value)}
+                                    className="h-8 md:h-9 w-10 md:w-12 text-center px-1"
+                                    placeholder="🎨"
+                                    maxLength={2}
+                                />
                             </div>
                             <div className="flex gap-1 border rounded-lg p-0.5 self-end sm:self-auto bg-muted/20">
                                 <button onClick={() => setMode('simple')}

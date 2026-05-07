@@ -20,6 +20,7 @@ export type SrsRevealAudioMode = 'none' | 'source' | 'target' | 'both';
 export interface CustomTheme {
     id: string; // 'custom-<uuid>'
     name: string;
+    emoji?: string;
     colors: {
         background: string;
         foreground: string;
