@@ -326,28 +326,28 @@ export function SrsReviewPage() {
                         label="Again"
                         sublabel={formatInterval(previewSm2Interval(1, word.srsEaseFactor, word.srsInterval, word.srsRepetitions))}
                         quality={1}
-                        color="bg-red-500/10 hover:bg-red-500/20 text-red-600 border-red-500/30"
+                        color="bg-chart-alert/10 hover:bg-chart-alert/20 text-chart-alert border-chart-alert/30"
                         onClick={() => submitReview(1)}
                     />
                     <RatingButton
                         label="Hard"
                         sublabel={formatInterval(previewSm2Interval(3, word.srsEaseFactor, word.srsInterval, word.srsRepetitions))}
                         quality={3}
-                        color="bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 border-orange-500/30"
+                        color="bg-chart-growth/10 hover:bg-chart-growth/20 text-chart-growth border-chart-growth/30"
                         onClick={() => submitReview(3)}
                     />
                     <RatingButton
                         label="Good"
                         sublabel={formatInterval(previewSm2Interval(4, word.srsEaseFactor, word.srsInterval, word.srsRepetitions))}
                         quality={4}
-                        color="bg-green-500/10 hover:bg-green-500/20 text-green-600 border-green-500/30"
+                        color="bg-chart-success/10 hover:bg-chart-success/20 text-chart-success border-chart-success/30"
                         onClick={() => submitReview(4)}
                     />
                     <RatingButton
                         label="Easy"
                         sublabel={formatInterval(previewSm2Interval(5, word.srsEaseFactor, word.srsInterval, word.srsRepetitions))}
                         quality={5}
-                        color="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border-blue-500/30"
+                        color="bg-chart-trend/10 hover:bg-chart-trend/20 text-chart-trend border-chart-trend/30"
                         onClick={() => submitReview(5)}
                     />
                 </div>

@@ -239,8 +239,8 @@ export function ClozeGame() {
                                             "inline-block min-w-[80px] border-b-4 mx-1 px-2 pb-1 font-black",
                                             showAnswer
                                                 ? isCorrect
-                                                    ? "border-green-500 text-green-500"
-                                                    : "border-red-500 text-red-500"
+                                                    ? "border-chart-success text-chart-success"
+                                                    : "border-chart-alert text-chart-alert"
                                                 : "border-primary/40 text-primary/70"
                                         )}>
                                             {showAnswer ? cloze.wordToGuess : (input || answerHint || '\u00A0')}
@@ -280,8 +280,8 @@ export function ClozeGame() {
                         "w-full text-center text-2xl font-bold py-4 px-6 rounded-xl border-2 bg-background outline-none transition-all",
                         isProcessing
                             ? isCorrect
-                                ? "border-green-500 bg-green-500/10"
-                                : "border-red-500 bg-red-500/10"
+                                ? "border-chart-success bg-chart-success/10"
+                                : "border-chart-alert bg-chart-alert/10"
                             : "border-border focus:border-primary"
                     )}
                 />
@@ -318,7 +318,7 @@ export function ClozeGame() {
 
                 {showAnswer && !isCorrect && (
                     <p className="text-center text-lg animate-in fade-in slide-in-from-bottom-2">
-                        Correct: <span className="font-bold text-green-500">{cloze.wordToGuess}</span>
+                        Correct: <span className="font-bold text-chart-success">{cloze.wordToGuess}</span>
                     </p>
                 )}
             </div>

@@ -84,7 +84,7 @@ export function GameShell({ children }: GameShellProps) {
                         className={cn(
                             "h-full ease-linear",
                             timeLeft >= maxTime ? "transition-none" : "transition-all duration-100",
-                            timeProgress > 50 ? "bg-primary" : timeProgress > 20 ? "bg-orange-500" : "bg-red-500"
+                            timeProgress > 50 ? "bg-chart-trend" : timeProgress > 20 ? "bg-chart-growth" : "bg-chart-alert"
                         )}
                         style={{ width: `${timeProgress}%` }}
                     />
@@ -117,7 +117,7 @@ export function GameShell({ children }: GameShellProps) {
                         {/* Timer Numeric Display */}
                         {timerEnabled && (
                             <div className={cn("flex items-center gap-1.5 font-bold tabular-nums text-sm transition-colors",
-                                timeProgress <= 30 ? "text-red-500 animate-pulse" : "text-muted-foreground"
+                                timeProgress <= 30 ? "text-chart-alert animate-pulse" : "text-muted-foreground"
                             )}>
                                 <Timer className="w-3 h-3" />
                                 {Math.ceil(timeLeft / 10)}s
@@ -127,7 +127,7 @@ export function GameShell({ children }: GameShellProps) {
 
                     <div className="flex items-center justify-end gap-1">
                         {streak > 1 && (
-                            <div className="hidden sm:flex items-center gap-1 font-bold tabular-nums text-sm text-orange-500 animate-pulse mr-2">
+                            <div className="hidden sm:flex items-center gap-1 font-bold tabular-nums text-sm text-chart-growth animate-pulse mr-2">
                                 <Flame className="w-4 h-4" />
                                 {streak}
                             </div>
@@ -136,7 +136,7 @@ export function GameShell({ children }: GameShellProps) {
                             {Array.from({ length: maxHealth }).map((_, i) => (
                                 <Heart
                                     key={i}
-                                    className={`w-5 h-5 transition-all duration-300 ${i < health ? 'fill-red-500 text-red-500' : 'text-muted-foreground/30 scale-75'}`}
+                                    className={`w-5 h-5 transition-all duration-300 ${i < health ? 'fill-chart-alert text-chart-alert' : 'text-muted-foreground/30 scale-75'}`}
                                 />
                             ))}
                         </div>
