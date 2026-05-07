@@ -22,6 +22,7 @@ export interface FluxTheme {
     textSecondary: string;
     textDim: string;
     accent: string;
+    accentForeground: string;
     accentGlow: string;
     border: string;
     borderLight: string;

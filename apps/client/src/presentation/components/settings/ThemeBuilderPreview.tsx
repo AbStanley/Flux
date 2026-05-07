@@ -3,7 +3,7 @@ import type { DerivedTokens } from '@/lib/color-derive';
 import { customThemeToFluxTheme } from '@/lib/color-derive';
 import { hslToHex } from '@/lib/color-utils';
 import { ThemePreviewPopup } from './ThemePreviewPopup';
-import { Volume2, Search, RefreshCcw, Save, Youtube } from 'lucide-react';
+import { Zap, Youtube } from 'lucide-react';
 
 interface Props { tokens: DerivedTokens; name: string; activeToken?: string | null; onHoverToken?: (t: string | null) => void; onClickToken?: (t: string) => void; }
 
@@ -190,31 +190,43 @@ export function ThemeBuilderPreview({ tokens, name, activeToken, onHoverToken, o
 
                     {/* Inline Selection Popup (ReaderPopup style) */}
                     <div style={{
-                        position: 'absolute', top: -4, left: 12,
-                        background: link, color: prFg, padding: '4px 8px', borderRadius: 6,
-                        display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600,
-                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                        ...hoverStyle('link-color')
+                        position: 'absolute', top: -30, left: 140,
+                        background: ac, color: acFg, padding: '4px 10px', borderRadius: 8,
+                        display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700,
+                        boxShadow: `0 4px 12px ${ac}44, 0 0 0 1px ${bd}`,
+                        zIndex: 10,
+                        ...hoverStyle('primary')
                     }}
-                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
-                        <span>was</span>
-                        <div style={{ display: 'flex', gap: 2, opacity: 0.9 }}>
-                            <Volume2 size={12} /> <Search size={12} /> <RefreshCcw size={12} /> <Save size={12} />
-                        </div>
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('primary'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('primary'); }}>
+                        <Zap size={12} fill="currentColor" />
+                        <span>Vocab Saved</span>
                     </div>
 
                     <span style={{ color: mtFg, ...hoverStyle('muted-foreground') }}
                         onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
                         onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
                         onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}>The student opened the book and began to </span>
-                    <span style={{ background: ac, color: acFg, borderRadius: 2, padding: '0 2px', ...hoverStyle('accent') }}
-                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('accent'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('accent'); }}>read</span>
-                    <span style={{ color: mtFg }}>. The word </span>
+                    <span style={{ 
+                        background: `${ac}22`, 
+                        color: ac, 
+                        borderRadius: 4, 
+                        padding: '0 4px', 
+                        borderBottom: `2px solid ${ac}`,
+                        fontWeight: 600,
+                        ...hoverStyle('accent') 
+                    }}
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('accent'); }}
+                        onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                        onClick={(e) => { e.stopPropagation(); onClickToken?.('accent'); }}>lesen</span>
+                    <span style={{ color: mtFg, ...hoverStyle('muted-foreground') }}
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('muted-foreground'); }}
+                        onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }}
+                        onClick={(e) => { e.stopPropagation(); onClickToken?.('muted-foreground'); }}> the sentence. The word </span>
                     <span style={{ color: link, borderBottom: `2px solid ${link}`, paddingBottom: 1, fontWeight: 600, ...hoverStyle('link-color') }}
-                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={(e) => { e.stopPropagation(); onHoverToken?.('background'); }} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
-                        ephemeral
+                        onMouseEnter={(e) => { e.stopPropagation(); onHoverToken?.('link-color'); }} onMouseLeave={() => onHoverToken?.(null)} onClick={(e) => { e.stopPropagation(); onClickToken?.('link-color'); }}>
+                        "lesen"
                     </span>
-                    <span style={{ color: mtFg }}> caught their attention.</span>
+                    <span style={{ color: mtFg }}> appears frequently.</span>
                 </div>
             </div>
 

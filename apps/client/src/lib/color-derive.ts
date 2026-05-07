@@ -196,7 +196,7 @@ export const THEME_PRESETS: { id: string; label: string; seeds: SeedColors }[] =
     {
         id: 'dark',
         label: '🌙 Dark',
-        seeds: { background: '#171d2e', foreground: '#f5f8ff', primary: '#f5f8ff', card: '#1e2538', border: '#2a3040' },
+        seeds: { background: '#0f172a', foreground: '#f8fafc', primary: '#3b82f6', card: '#1e293b', border: '#334155' },
     },
     {
         id: 'nordic',
@@ -206,7 +206,7 @@ export const THEME_PRESETS: { id: string; label: string; seeds: SeedColors }[] =
     {
         id: 'cream',
         label: '📜 Cream',
-        seeds: { background: '#eae2b7', foreground: '#3a2a18', primary: '#fcbf49', card: '#dfd8b0', border: '#c8bf90' },
+        seeds: { background: '#fdfcf0', foreground: '#433422', primary: '#c09030', card: '#f9f5df', border: '#e6dfbc' },
     },
     {
         id: 'rose-pine',
@@ -226,7 +226,7 @@ export const THEME_PRESETS: { id: string; label: string; seeds: SeedColors }[] =
     {
         id: 'sunset',
         label: '🌅 Sunset',
-        seeds: { background: '#eae2b7', foreground: '#003049', primary: '#f77f00', card: '#dfd8a8', border: '#c8bf90' },
+        seeds: { background: '#1a1025', foreground: '#faf0ff', primary: '#f97316', card: '#2d1b3d', border: '#3d2952' },
     },
     {
         id: 'harvest',
@@ -282,22 +282,24 @@ export function customThemeToFluxTheme(theme: CustomTheme): FluxTheme {
     const isDark = bgL < 52;
 
     const borderAlpha = isDark ? 0.22 : 0.30;
+    const bgAlpha = isDark ? 0.94 : 0.98; // Less transparency for light themes to avoid "washed out" look
 
     return {
         name: theme.name,
         id: theme.id,
-        dot: hslToHex(tokens.background),
-        bg: hslToHex(tokens.background),
-        bgSolid: hslToHex(tokens.background),
-        surface: hslToHex(tokens.card),
+        dot: hslToHex(tokens.primary),
+        bg: hslToRgba(tokens.popover, bgAlpha),
+        bgSolid: hslToHex(tokens.popover),
+        surface: hslToHex(tokens.background),
         surfaceActive: hslToHex(tokens.secondary),
-        text: hslToHex(tokens.foreground),
+        text: hslToHex(tokens['popover-foreground']),
         textSecondary: hslToHex(tokens['muted-foreground']),
-        textDim: hslToRgba(tokens['muted-foreground'], 0.50),
+        textDim: hslToRgba(tokens['popover-foreground'], 0.40),
         accent: hslToHex(tokens.primary),
-        accentGlow: hslToRgba(tokens.primary, 0.20),
+        accentForeground: hslToHex(tokens['primary-foreground']),
+        accentGlow: hslToRgba(tokens.primary, 0.15),
         border: hslToRgba(tokens.border, borderAlpha),
-        borderLight: hslToRgba(tokens.border, borderAlpha * 0.5),
+        borderLight: hslToRgba(tokens.border, borderAlpha * 0.4),
         error: hslToHex(tokens.destructive),
         success: hslToHex(tokens.success ?? (isDark ? '142 65% 52%' : '142 55% 32%')),
         info: hslToHex(tokens.primary),

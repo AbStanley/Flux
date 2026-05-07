@@ -68,7 +68,7 @@ export function FluxControls({
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ background: theme.bgSolid, borderRadius: '7px', padding: '2px', display: 'flex', gap: '2px' }}>
+                <div style={{ background: theme.surface, borderRadius: '7px', padding: '2px', display: 'flex', gap: '2px' }}>
                     <FluxIconButton
                         onClick={() => onModeChange('EXPLAIN')}
                         active={mode === 'EXPLAIN'}
@@ -142,7 +142,7 @@ export function FluxControls({
             </div>
 
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                <div style={{ flex: 1, minWidth: 0, background: theme.bgSolid, borderRadius: '8px', padding: '1px 8px', border: `1px solid ${theme.border}` }}>
+                <div style={{ flex: 1, minWidth: 0, background: theme.surface, borderRadius: '8px', padding: '1px 8px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <FluxSelect
                             value={sourceLang || 'Auto'}

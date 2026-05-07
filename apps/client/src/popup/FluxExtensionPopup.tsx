@@ -143,7 +143,7 @@ export default function FluxExtensionPopup() {
                         onClick={openSidePanel}
                         style={{
                             marginTop: '8px', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: 'white',
+                            gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: theme.accentForeground,
                             borderRadius: '12px', border: 'none', width: '100%', fontWeight: 600,
                             cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
                         }}
