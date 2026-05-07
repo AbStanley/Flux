@@ -66,8 +66,8 @@ function CorrectionChip({ token, targetLanguage, nativeLanguage }: {
         <span ref={ref} className="relative inline-block align-middle">
             <span
                 onClick={() => setShowPopover(!showPopover)}
-                className="inline-flex items-center gap-1 whitespace-nowrap bg-destructive/15 text-destructive
-                    px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer
+                className="inline-flex flex-wrap items-center gap-x-1 whitespace-normal bg-destructive/15 text-destructive
+                    px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer max-w-full
                     hover:bg-destructive/25 transition-colors border border-destructive/20 mx-0.5"
             >
                 <span className="line-through opacity-60">{token.wrong}</span>
@@ -123,9 +123,9 @@ function ConfirmationChip({ token }: { token: ConfirmationToken }) {
         <span ref={ref} className="relative inline-block align-middle">
             <span
                 onClick={() => hasExplanation && setShowPopover(!showPopover)}
-                className={`inline-flex items-center gap-1 whitespace-nowrap bg-success/10
+                className={`inline-flex flex-wrap items-center gap-x-1 whitespace-normal bg-success/10
                     text-success px-2 py-0.5 rounded-md text-xs font-medium
-                    transition-colors border border-success/20 mx-0.5
+                    transition-colors border border-success/20 mx-0.5 max-w-full
                     ${hasExplanation ? 'cursor-pointer hover:bg-success/20' : ''}`}
                 title={hasExplanation ? token.explanation : `"${token.text}" — looks good`}
             >
@@ -159,8 +159,8 @@ function VocabChip({ token, targetLanguage, nativeLanguage }: {
         <span ref={ref} className="relative inline-block align-middle">
             <span
                 onClick={() => setShowPopover(!showPopover)}
-                className="inline-flex items-center gap-1 whitespace-nowrap bg-primary/15 text-primary
-                    px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer
+                className="inline-flex flex-wrap items-center gap-x-1 whitespace-normal bg-primary/15 text-primary
+                    px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer max-w-full
                     hover:bg-primary/25 transition-colors border border-primary/20 mx-0.5"
             >
                 <span className="font-semibold">{token.term}</span>

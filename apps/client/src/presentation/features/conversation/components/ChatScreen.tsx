@@ -19,7 +19,7 @@ function MessageBubble({ message, targetLanguage, nativeLanguage, fontSize }: {
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
             <div
                 style={{ fontSize: `${fontSize}px` }}
-                className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-2.5 leading-relaxed
+                className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-2.5 leading-relaxed break-words
                     ${isUser
                         ? 'bg-primary text-primary-foreground rounded-br-md'
                         : 'bg-muted text-foreground rounded-bl-md'
