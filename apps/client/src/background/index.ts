@@ -46,6 +46,36 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((message: ChromeMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: ChromeResponse) => void) => {
+    // Handle TTS separately — must always respond synchronously
+    if (message.type === 'PLAY_TTS') {
+        const { text, lang } = (message.data || {}) as { text: string; lang: string };
+        console.log(`[Background] PLAY_TTS received: "${text}" [${lang}]`);
+
+        try {
+            if (typeof chrome.tts !== 'undefined') {
+                chrome.tts.stop();
+                chrome.tts.speak(text || '', {
+                    lang: lang || 'en-US',
+                    rate: 0.9,
+                    onEvent: (event) => {
+                        console.log(`[Background] TTS event: ${event.type}`);
+                        if (event.type === 'error') {
+                            console.error('[Background] TTS error:', event.errorMessage);
+                        }
+                    }
+                });
+                console.log('[Background] chrome.tts.speak() called');
+            } else {
+                console.error('[Background] chrome.tts is undefined');
+            }
+        } catch (e) {
+            console.error('[Background] TTS exception:', e);
+        }
+
+        sendResponse({ success: true });
+        return false; // synchronous, port can close
+    }
+
     try {
         if (message.type === 'PROXY_REQUEST') {
             const config = message.data as ProxyConfig;

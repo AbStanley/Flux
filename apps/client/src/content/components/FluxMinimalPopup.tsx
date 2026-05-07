@@ -3,7 +3,7 @@ import { FluxSelect } from './ui/FluxSelect';
 import { FluxIconButton } from './ui/FluxIconButton';
 import { LANGUAGES, type FluxTheme } from '../constants';
 import { ArrowLeftRight, Save, Check, Volume2 } from 'lucide-react';
-import { SPEECH_CODE_MAP } from '../../core/constants/languages';
+import { useFluxAudio } from '../hooks/useFluxAudio';
 
 
 interface FluxMinimalPopupProps {
@@ -53,17 +53,12 @@ export function FluxMinimalPopup({
     const errColor = theme?.error ?? '#ef4444';
     const successColor = theme?.success ?? '#4ade80';
 
+    const { playAudio } = useFluxAudio();
+
     const handlePlayAudio = () => {
         const text = result || textToPlay;
-        if (!text) return;
-
         const langToUse = result ? targetLang : (sourceLang === 'auto' ? 'English' : (sourceLang || 'English'));
-        const speechCode = SPEECH_CODE_MAP[langToUse as keyof typeof SPEECH_CODE_MAP] || 'en-US';
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = speechCode;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
+        playAudio(text || '', langToUse);
     };
 
     return (
@@ -101,20 +96,52 @@ export function FluxMinimalPopup({
                 lineHeight: '1.4',
                 color: text,
                 marginBottom: '4px',
-                minHeight: '24px'
+                minHeight: '24px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: '12px'
             }}>
-                {(loading || isDebouncing) ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.8 }}>
-                        <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: accent }}>
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.2 }} />
-                            <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor" />
-                        </svg>
-                        <span>Translating...</span>
-                    </span>
-                ) : error ? (
-                    <span style={{ color: errColor }}>⚠️ {error}</span>
-                ) : (
-                    result || "No translation found"
+                <div style={{ flex: 1 }}>
+                    {(loading || isDebouncing) ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.8 }}>
+                            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: accent }}>
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.2 }} />
+                                <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor" />
+                            </svg>
+                            <span>Translating...</span>
+                        </span>
+                    ) : error ? (
+                        <span style={{ color: errColor }}>⚠️ {error}</span>
+                    ) : (
+                        result || "No translation found"
+                    )}
+                </div>
+
+                {result && !loading && !isDebouncing && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); handlePlayAudio(); }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: textSec,
+                            padding: '4px',
+                            cursor: 'pointer',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                            flexShrink: 0,
+                            marginTop: '2px'
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = accent)}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = textSec)}
+                        title="Listen"
+                    >
+                        <Volume2 size={16} strokeWidth={2.5} />
+                    </button>
                 )}
             </div>
 
@@ -165,22 +192,6 @@ export function FluxMinimalPopup({
                             maxWidth: '80px'
                         }}
                     />
-                    <FluxIconButton
-                        onClick={handlePlayAudio}
-                        title="Listen"
-                        theme={theme}
-                        style={{
-                            padding: '4px',
-                            color: textSec,
-                            fontSize: '12px',
-                            minWidth: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <Volume2 size={14} strokeWidth={2.5} />
-                    </FluxIconButton>
                 </div>
 
                 {result && !loading && !isDebouncing && (

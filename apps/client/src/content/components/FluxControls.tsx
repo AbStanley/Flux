@@ -6,7 +6,7 @@ import { FluxIconButton } from './ui/FluxIconButton';
 import { FluxSelect } from './ui/FluxSelect';
 import { FluxButton } from './ui/FluxButton';
 import { Copy, BookOpen, Zap, Check, ArrowLeftRight, Volume2 } from 'lucide-react';
-import { SPEECH_CODE_MAP } from '../../core/constants/languages';
+import { useFluxAudio } from '../hooks/useFluxAudio';
 
 interface FluxControlsProps {
     mode: Mode;
@@ -66,20 +66,12 @@ export function FluxControls({
         }
     };
 
+    const { playAudio } = useFluxAudio();
+
     const handlePlayAudio = () => {
         const textToPlay = result || selection.text;
-        if (!textToPlay) return;
-
-        // Use targetLang if we have a result, otherwise try sourceLang
         const langToUse = result ? targetLang : (sourceLang === 'Auto' ? 'English' : (sourceLang || 'English'));
-        const speechCode = SPEECH_CODE_MAP[langToUse as keyof typeof SPEECH_CODE_MAP] || 'en-US';
-
-        const utterance = new SpeechSynthesisUtterance(textToPlay);
-        utterance.lang = speechCode;
-        
-        // Mobile fix: Cancel existing speech before starting new one
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
+        playAudio(textToPlay, langToUse);
     };
 
     return (

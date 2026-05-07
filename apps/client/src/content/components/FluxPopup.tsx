@@ -5,8 +5,9 @@ import { FluxControls } from './FluxControls';
 import { FluxContent } from './FluxContent';
 import { useDraggable } from '../hooks/useDraggable';
 import { UI_CONSTANTS, type FluxTheme } from '../constants';
-import { Check, Maximize2, Save, X } from 'lucide-react';
+import { Check, Maximize2, Save, X, Volume2 } from 'lucide-react';
 import { useFluxMessaging } from '../hooks/useFluxMessaging';
+import { useFluxAudio } from '../hooks/useFluxAudio';
 
 interface FluxPopupProps {
     selection: { text: string; x: number; y: number };
@@ -111,6 +112,14 @@ export function FluxPopup({
         }
     }, [onSave, selection.text, result, selectAndOpen]);
 
+    const { playAudio } = useFluxAudio();
+
+    const handlePlayAudio = useCallback(() => {
+        const textToPlay = result || selection.text;
+        const langToUse = result ? targetLang : (sourceLang === 'Auto' ? 'English' : (sourceLang || 'English'));
+        playAudio(textToPlay, langToUse);
+    }, [result, selection.text, targetLang, sourceLang, playAudio]);
+
     // Keyboard shortcuts: Esc=close, S=save, E=expand/collapse
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -173,18 +182,45 @@ export function FluxPopup({
                     }}
                 >
                     {/* Translation text */}
-                    <div style={{ padding: '10px 14px', maxHeight: '200px', overflowY: 'auto', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {loading && (
-                            <div className="animate-spin" style={{
-                                width: '14px',
-                                height: '14px',
-                                border: `2px solid ${theme.accent}`,
-                                borderTopColor: 'transparent',
-                                borderRadius: '50%',
-                                flexShrink: 0
-                            }}></div>
+                    <div style={{ padding: '10px 14px', maxHeight: '200px', overflowY: 'auto', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {loading && (
+                                <div className="animate-spin" style={{
+                                    width: '14px',
+                                    height: '14px',
+                                    border: `2px solid ${theme.accent}`,
+                                    borderTopColor: 'transparent',
+                                    borderRadius: '50%',
+                                    flexShrink: 0
+                                }}></div>
+                            )}
+                            <span>{error ? 'Error' : (loading ? 'Processing...' : result || '—')}</span>
+                        </div>
+                        
+                        {result && !loading && !error && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handlePlayAudio(); }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: theme.textSecondary,
+                                    padding: '4px',
+                                    cursor: 'pointer',
+                                    borderRadius: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s',
+                                    flexShrink: 0
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
+                                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textSecondary)}
+                                title="Listen"
+                            >
+                                <Volume2 size={14} strokeWidth={2.5} />
+                            </button>
                         )}
-                        <span>{error ? 'Error' : (loading ? 'Processing...' : result || '—')}</span>
                     </div>
 
                     {/* Action bar */}
