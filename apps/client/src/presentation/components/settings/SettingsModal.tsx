@@ -105,20 +105,19 @@ function ThemeSection({
         <div>
             <h3 className="text-xs md:text-sm font-medium mb-1.5 md:mb-3">Theme</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 md:gap-2">
-                {THEMES.map((t) => (
-                    <button
-                        key={t.value}
-                        onClick={() => setTheme(t.value)}
-                        className={`flex flex-col items-center gap-1 md:gap-2 p-2 md:p-3 rounded-lg border-2 transition-all ${theme === t.value
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
-                            }`}
-                    >
-                        <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full ${t.preview} border`} />
-                        <span className="text-[10px] md:text-xs truncate max-w-full">{t.label}</span>
-                    </button>
-                ))}
+                {/* 1. Add New Button */}
+                <button
+                    onClick={onCreate}
+                    className="flex flex-col items-center justify-center gap-1 md:gap-2 p-2 md:p-3 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary"
+                    title="Create custom theme"
+                >
+                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center border border-dashed">
+                        <Plus className="w-4 h-4" />
+                    </div>
+                    <span className="text-[10px] md:text-xs">New</span>
+                </button>
 
+                {/* 2. Custom Themes (User Created) */}
                 {customThemes.map((t) => (
                     <button
                         key={t.id}
@@ -144,17 +143,26 @@ function ThemeSection({
                         </div>
                     </button>
                 ))}
+            </div>
 
-                <button
-                    onClick={onCreate}
-                    className="flex flex-col items-center justify-center gap-1 md:gap-2 p-2 md:p-3 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary"
-                    title="Create custom theme"
-                >
-                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center border border-dashed">
-                        <Plus className="w-4 h-4" />
-                    </div>
-                    <span className="text-[10px] md:text-xs">New</span>
-                </button>
+            {/* Gap and Separator */}
+            <div className="mt-6 mb-4 border-t border-border/50" />
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 md:gap-2 opacity-80">
+                {/* 3. Default Themes */}
+                {THEMES.map((t) => (
+                    <button
+                        key={t.value}
+                        onClick={() => setTheme(t.value)}
+                        className={`flex flex-col items-center gap-1 md:gap-2 p-2 md:p-3 rounded-lg border-2 transition-all ${theme === t.value
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border hover:border-primary/50'
+                            }`}
+                    >
+                        <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full ${t.preview} border`} />
+                        <span className="text-[10px] md:text-xs truncate max-w-full">{t.label}</span>
+                    </button>
+                ))}
             </div>
         </div>
     );
