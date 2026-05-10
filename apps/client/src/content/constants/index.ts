@@ -44,7 +44,7 @@ export const THEMES: Record<string, FluxTheme> = THEME_PRESETS.reduce((acc, pres
     acc[preset.id] = customThemeToFluxTheme({
         id: preset.id,
         name: preset.label,
-        colors: tokens as any
+        colors: tokens
     });
     return acc;
 }, {} as Record<string, FluxTheme>);
