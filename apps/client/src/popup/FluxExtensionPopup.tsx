@@ -95,9 +95,11 @@ export default function FluxExtensionPopup() {
     return (
         <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            minHeight: '450px', padding: '20px', backgroundColor: theme.bgSolid, color: theme.text,
+            minHeight: '450px', padding: '24px', 
+            backgroundColor: theme.bgSolid,
+            color: theme.text,
             textAlign: 'center', position: 'relative', transition: 'background-color 0.3s, color 0.3s',
-            width: '100%', boxSizing: 'border-box'
+            width: '100%', boxSizing: 'border-box',
         }}>
             {!isAuthenticated ? (
                 <PopupLoginView
@@ -143,7 +145,7 @@ export default function FluxExtensionPopup() {
                         onClick={openSidePanel}
                         style={{
                             marginTop: '8px', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: 'white',
+                            gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: theme.accentForeground,
                             borderRadius: '12px', border: 'none', width: '100%', fontWeight: 600,
                             cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
                         }}
@@ -206,13 +208,25 @@ export default function FluxExtensionPopup() {
                                     onClick={() => storage.persistTheme(t.id)}
                                     title={t.name}
                                     style={{
-                                        width: '20px', height: '20px', borderRadius: '50%', background: t.dot,
-                                        border: storage.themeId === t.id ? `2px solid ${theme.accent}` : '2px solid rgba(255, 255, 255, 0.15)',
+                                        position: 'relative', width: '24px', height: '24px', borderRadius: '50%',
+                                        overflow: 'hidden',
+                                        border: storage.themeId === t.id ? `2px solid ${theme.accent}` : `1px solid ${theme.border}`,
                                         cursor: 'pointer', padding: 0, flexShrink: 0,
-                                        boxShadow: storage.themeId === t.id ? `0 0 8px ${theme.accent}` : 'none',
-                                        transition: 'all 0.2s',
+                                        boxShadow: storage.themeId === t.id ? `0 0 10px ${theme.accent}66` : 'none',
+                                        transform: storage.themeId === t.id ? 'scale(1.15)' : 'scale(1)',
+                                        transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                        background: 'none',
                                     }}
-                                />
+                                >
+                                    <div style={{ position: 'absolute', inset: 0, display: 'flex', transform: 'rotate(15deg) scale(1.6)' }}>
+                                        <div style={{ flex: 1, background: t.bgSolid }} />
+                                        <div style={{ flex: 1, background: t.accent }} />
+                                    </div>
+                                    {/* Inner ring for selected state to make it pop */}
+                                    {storage.themeId === t.id && (
+                                        <div style={{ position: 'absolute', inset: '1px', border: '1px solid white', borderRadius: '50%', opacity: 0.5 }} />
+                                    )}
+                                </button>
                             ))}
                         </div>
                     </div>

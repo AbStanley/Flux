@@ -22,6 +22,7 @@ export function LearningModePage() {
                 return <SentenceScrambleGame />;
             case 'story':
                 return <StoryGame />;
+            case 'conjugation':
             case 'cloze':
                 return <ClozeGame />;
             default:

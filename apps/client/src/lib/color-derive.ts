@@ -81,6 +81,11 @@ export interface DerivedTokens {
     'link-color': string;
     'link-foreground': string;
     'selection-foreground': string;
+    'chart-trend': string;
+    'chart-growth': string;
+    'chart-alert': string;
+    'chart-success': string;
+    'chart-muted': string;
 }
 
 /**
@@ -134,6 +139,8 @@ export function deriveTokens(seeds: SeedColors): DerivedTokens {
     const destructive = bl > 60 ? '0 72% 51%' : '0 55% 58%';
     const destructiveFg = '0 0% 98%';
 
+    const success = bl > 60 ? '142 55% 32%' : '142 65% 52%';
+
     return {
         background: bg,
         foreground: fg,
@@ -156,11 +163,16 @@ export function deriveTokens(seeds: SeedColors): DerivedTokens {
         'input-background': inputBg,
         'reader-textarea-bg': readerBg,
         ring,
-        success: bl > 60 ? '142 55% 32%' : '142 65% 52%',
+        success,
         'success-foreground': '0 0% 100%',
         'link-color': bl > 60 ? pr : '142 65% 52%', // Default to primary for light, success/emerald for dark
         'link-foreground': autoFg(bl > 60 ? pr : '142 65% 52%', '0 0% 8%', '0 0% 98%'),
         'selection-foreground': fg,
+        'chart-trend': pr,
+        'chart-growth': accent,
+        'chart-alert': destructive,
+        'chart-success': success,
+        'chart-muted': secondary,
     };
 }
 
@@ -188,7 +200,7 @@ export const THEME_PRESETS: { id: string; label: string; seeds: SeedColors }[] =
     {
         id: 'dark',
         label: '🌙 Dark',
-        seeds: { background: '#171d2e', foreground: '#f5f8ff', primary: '#f5f8ff', card: '#1e2538', border: '#2a3040' },
+        seeds: { background: '#0f172a', foreground: '#f8fafc', primary: '#3b82f6', card: '#1e293b', border: '#334155' },
     },
     {
         id: 'nordic',
@@ -198,7 +210,7 @@ export const THEME_PRESETS: { id: string; label: string; seeds: SeedColors }[] =
     {
         id: 'cream',
         label: '📜 Cream',
-        seeds: { background: '#eae2b7', foreground: '#3a2a18', primary: '#fcbf49', card: '#dfd8b0', border: '#c8bf90' },
+        seeds: { background: '#fdfcf0', foreground: '#433422', primary: '#c09030', card: '#f9f5df', border: '#e6dfbc' },
     },
     {
         id: 'rose-pine',
@@ -211,14 +223,44 @@ export const THEME_PRESETS: { id: string; label: string; seeds: SeedColors }[] =
         seeds: { background: '#f0f5f0', foreground: '#243c30', primary: '#4a9970', card: '#e8f0e8', border: '#c0d4c0' },
     },
     {
-        id: 'moonlight',
-        label: '🔭 Moonlight',
-        seeds: { background: '#161a2e', foreground: '#c8d0e0', primary: '#5ecfdc', card: '#1b2036', border: '#2a3256' },
+        id: 'ember',
+        label: '🔥 Ember',
+        seeds: { background: '#0a1525', foreground: '#e2d8c8', primary: '#F77F00', card: '#122035', border: '#1e3048' },
     },
     {
         id: 'sunset',
         label: '🌅 Sunset',
-        seeds: { background: '#eae2b7', foreground: '#003049', primary: '#f77f00', card: '#dfd8a8', border: '#c8bf90' },
+        seeds: { background: '#fff9f0', foreground: '#5c3a2a', primary: '#f97316', card: '#fdf2e4', border: '#f7e2c8' },
+    },
+    {
+        id: 'harvest',
+        label: '🍂 Harvest',
+        seeds: { background: '#efe2c7', foreground: '#2e3d22', primary: '#EA5252', card: '#e6d8b8', border: '#c8b78e' },
+    },
+    {
+        id: 'ultraviolet',
+        label: '🔮 Ultraviolet',
+        seeds: { background: '#faf8ff', foreground: '#281c52', primary: '#FF653F', card: '#f0ecf8', border: '#ddd8e8' },
+    },
+    {
+        id: 'sandcastle',
+        label: '🏖️ Sandcastle',
+        seeds: { background: '#faf7ef', foreground: '#2d4a5a', primary: '#5a8eb5', card: '#f0ece2', border: '#d8d0c2' },
+    },
+    {
+        id: 'sage',
+        label: '🌿 Sage',
+        seeds: { background: '#f8f5ec', foreground: '#3a4d2e', primary: '#546B41', card: '#ede8dc', border: '#d5cebe' },
+    },
+    {
+        id: 'bauhaus',
+        label: '🎨 Bauhaus',
+        seeds: { background: '#faf6ef', foreground: '#0a3050', primary: '#F77F00', card: '#f0ebe0', border: '#d8d0c2' },
+    },
+    {
+        id: 'espresso',
+        label: '☕ Espresso',
+        seeds: { background: '#fff8f0', foreground: '#4B2E2B', primary: '#8C5A3C', card: '#f0e0d0', border: '#c8b8a8' },
     },
 ];
 
@@ -248,18 +290,21 @@ export function customThemeToFluxTheme(theme: CustomTheme): FluxTheme {
     return {
         name: theme.name,
         id: theme.id,
-        dot: hslToHex(tokens.background),
-        bg: hslToHex(tokens.background),
+        dot: hslToHex(tokens.primary),
+        bg: hslToRgba(tokens.popover, 0.94),
         bgSolid: hslToHex(tokens.background),
         surface: hslToHex(tokens.card),
         surfaceActive: hslToHex(tokens.secondary),
+        muted: hslToHex(tokens.muted),
+        mutedForeground: hslToHex(tokens['muted-foreground']),
         text: hslToHex(tokens.foreground),
         textSecondary: hslToHex(tokens['muted-foreground']),
-        textDim: hslToRgba(tokens['muted-foreground'], 0.50),
+        textDim: hslToRgba(tokens.foreground, 0.40),
         accent: hslToHex(tokens.primary),
-        accentGlow: hslToRgba(tokens.primary, 0.20),
+        accentForeground: hslToHex(tokens['primary-foreground']),
+        accentGlow: hslToRgba(tokens.primary, 0.15),
         border: hslToRgba(tokens.border, borderAlpha),
-        borderLight: hslToRgba(tokens.border, borderAlpha * 0.5),
+        borderLight: hslToRgba(tokens.border, borderAlpha * 0.4),
         error: hslToHex(tokens.destructive),
         success: hslToHex(tokens.success ?? (isDark ? '142 65% 52%' : '142 55% 32%')),
         info: hslToHex(tokens['link-color'] ?? tokens.primary),

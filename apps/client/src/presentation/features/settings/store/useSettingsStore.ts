@@ -20,6 +20,7 @@ export type SrsRevealAudioMode = 'none' | 'source' | 'target' | 'both';
 export interface CustomTheme {
     id: string; // 'custom-<uuid>'
     name: string;
+    emoji?: string;
     colors: {
         background: string;
         foreground: string;
@@ -47,6 +48,11 @@ export interface CustomTheme {
         'link-color': string;
         'link-foreground': string;
         'selection-foreground': string;
+        'chart-trend': string;
+        'chart-growth': string;
+        'chart-alert': string;
+        'chart-success': string;
+        'chart-muted': string;
     };
 }
 
@@ -123,6 +129,8 @@ export const useSettingsStore = create<SettingsState>()(
                 customThemes: state.customThemes.map((t) => (t.id === theme.id ? theme : t)),
             })),
         }),
-        { name: 'flux-reader-settings' }
+        {
+            name: 'flux-reader-settings',
+        }
     )
 );

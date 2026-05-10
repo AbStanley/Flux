@@ -9,11 +9,21 @@ interface SettingsState {
 // Helper to promisify chrome.storage.local.get
 const storageGet = (key: string): Promise<string | null> => {
     return new Promise((resolve) => {
-        if (typeof chrome !== 'undefined' && chrome.storage) {
-            chrome.storage.local.get([key], (result) => {
-                const data = result as Record<string, string>;
-                resolve(data[key] || null);
-            });
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.runtime?.id) {
+            try {
+                chrome.storage.local.get([key], (result) => {
+                    if (chrome.runtime.lastError) {
+                        console.warn('[Flux Settings] Storage get error (likely invalidated context):', chrome.runtime.lastError.message);
+                        resolve(null);
+                        return;
+                    }
+                    const data = result as Record<string, string>;
+                    resolve(data[key] || null);
+                });
+            } catch (e) {
+                console.warn('[Flux Settings] Storage get failed:', e);
+                resolve(null);
+            }
         } else {
             resolve(null);
         }
@@ -23,17 +33,25 @@ const storageGet = (key: string): Promise<string | null> => {
 // Helper to promisify chrome.storage.local.set
 const storageSet = (key: string, value: string): Promise<void> => {
     return new Promise((resolve) => {
-        if (typeof chrome !== 'undefined' && chrome.storage) {
-            chrome.storage.local.set({ [key]: value }, () => {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.runtime?.id) {
+            try {
+                chrome.storage.local.set({ [key]: value }, () => {
+                    if (chrome.runtime.lastError) {
+                        console.warn('[Flux Settings] Storage set error (likely invalidated context):', chrome.runtime.lastError.message);
+                    }
+                    resolve();
+                });
+            } catch (e) {
+                console.warn('[Flux Settings] Storage set failed:', e);
                 resolve();
-            });
+            }
         } else {
             resolve();
         }
     });
 };
 
-const DEFAULT_API_URL = import.meta.env.VITE_EXT_API_URL || 'http://localhost';
+const DEFAULT_API_URL = import.meta.env.VITE_EXT_API_URL || 'http://localhost:3000';
 
 export const useSettingsStore = create<SettingsState>((set) => ({
     apiUrl: DEFAULT_API_URL,

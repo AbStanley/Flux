@@ -4,6 +4,8 @@ import { useTextSelection } from './hooks/useTextSelection';
 import { useYouTubeSubtitles } from './hooks/useYouTubeSubtitles';
 import { FluxPopup } from './components/FluxPopup';
 import { YouTubeSubtitleOverlay } from './components/YouTubeSubtitleOverlay';
+import { YouTubeService } from './services/YouTubeService';
+
 import { UniversalSubtitleOverlay } from './components/universal-subs/UniversalSubtitleOverlay';
 import { VideoPickerOverlay } from './components/universal-subs/VideoPickerOverlay';
 import { wordsApi } from '../infrastructure/api/words';
@@ -24,10 +26,18 @@ export function FluxContentApp() {
     const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
     const [mode, setMode] = useState<Mode>('TRANSLATE');
     const [isOverlayActive, setIsOverlayActive] = useState(false);
+    const [isPinned, setIsPinnedState] = useState(false);
+    const isPinnedRef = useRef(false);
+
+    const setIsPinned = useCallback((pinned: boolean) => {
+        isPinnedRef.current = pinned;
+        setIsPinnedState(pinned);
+    }, []);
 
     const { aiService } = useServices();
     const settings = useChromeSettings(aiService);
     const { notification, isSaving, setIsSaving, showNotification } = useNotification();
+    const { result, loading, error, handleAction, cancel } = useAIHandler({ isGlobal: true });
 
     // Resolve FluxTheme: built-in lookup first, then custom theme bridge, then default
     const theme: FluxTheme = (() => {
@@ -40,18 +50,21 @@ export function FluxContentApp() {
 
     // Sync model to aiService + reader store
     const setAiModel = useSettingsStore((s) => s.setLlmModel);
+    const lastModelRef = useRef<string | null>(null);
     useEffect(() => {
         if (settings.selectedModel) {
+            if (lastModelRef.current !== settings.selectedModel) {
+                cancel();
+                lastModelRef.current = settings.selectedModel;
+            }
             aiService.setModel(settings.selectedModel);
             setAiModel(settings.selectedModel);
         }
-    }, [settings.selectedModel, aiService, setAiModel]);
+    }, [settings.selectedModel, aiService, setAiModel, cancel]);
 
 
     const isHoveringRef = useRef(false);
     const wasPlayingBeforeHover = useRef(false);
-
-    const { result, loading, error, handleAction } = useAIHandler();
 
     const {
         currentCue, isActive: isYouTube,
@@ -103,13 +116,13 @@ export function FluxContentApp() {
             // Notify side panel to refresh word list
             await window.chrome?.runtime?.sendMessage?.({ type: 'WORD_SAVED' });
         } catch (err) {
-            console.error('[Flux] Failed to save word:', err);
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             showNotification(`Save failed: ${errorMessage}`, 'error', 5000);
         } finally {
             setTimeout(() => setIsSaving(false), 1200);
         }
     };
+
 
     // Language/mode handlers that also re-trigger AI when popup is open
     const handleSourceLangChange = (lang: string) => {
@@ -162,14 +175,24 @@ export function FluxContentApp() {
         }
     };
 
-    const onClearSelection = () => {
-        if (!isHoveringRef.current) {
+    const onClearSelection = useCallback(() => {
+        if (!isHoveringRef.current && !isPinnedRef.current) {
             setView('HIDDEN');
             setSelection(null);
         }
-    };
+    }, []);
 
     useTextSelection(isHoveringRef, onSelectionDetected, onClearSelection);
+
+    // Hide/Show native YouTube subtitles based on Flux setting
+    useEffect(() => {
+        if (isYouTube && settings.fluxEnabled) {
+            YouTubeService.hideNativeSubtitles();
+        } else if (isYouTube) {
+            console.log('[Flux] Showing native YouTube subtitles');
+            YouTubeService.showNativeSubtitles();
+        }
+    }, [isYouTube, settings.fluxEnabled]);
 
     useEffect(() => {
         console.log('[Flux] Component Mounted');
@@ -262,6 +285,8 @@ export function FluxContentApp() {
                     onModelChange={settings.persistModel}
                     collapsed={settings.popupCollapsed}
                     onCollapsedChange={settings.persistPopupCollapsed}
+                    isPinned={isPinned}
+                    onPinChange={setIsPinned}
                 />
             )}
 

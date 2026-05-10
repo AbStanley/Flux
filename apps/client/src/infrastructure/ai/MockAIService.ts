@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { IAIService, RichTranslationResult, RichConjugationsResult } from '../../core/interfaces/IAIService';
 import type { PartOfSpeech } from '../../core/types/Linguistics';
 
@@ -27,19 +28,19 @@ export class MockAIService implements IAIService {
         }
     }
 
-    async translateText(text: string, targetLanguage: string = 'en', context?: string, sourceLanguage?: string): Promise<string | { response: string; sourceLanguage?: string }> {
+    async translateText(text: string, targetLanguage: string = 'en', context?: string, sourceLanguage?: string, _signal?: AbortSignal): Promise<string | { response: string; sourceLanguage?: string }> {
         console.log(`[MockAI] Translating "${text}" from ${sourceLanguage || 'Auto'} to ${targetLanguage} (Context: ${context || 'None'})`);
         await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
         return `[Translated to ${targetLanguage}]: ${text}`;
     }
 
-    async explainText(text: string, targetLanguage: string = 'en', context?: string): Promise<string> {
+    async explainText(text: string, targetLanguage: string = 'en', context?: string, _sourceLanguage?: string, _signal?: AbortSignal): Promise<string> {
         console.log(`[MockAI] Explaining "${text}" in ${targetLanguage} (Context: ${context || 'None'})`);
         await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
         return `[Explanation in ${targetLanguage}]: This is a mock explanation for "${text}".`;
     }
 
-    async getRichTranslation(text: string, _targetLanguage?: string, _context?: string): Promise<RichTranslationResult> {
+    async getRichTranslation(text: string, _targetLanguage?: string, _context?: string, _sourceLanguage?: string, _signal?: AbortSignal): Promise<RichTranslationResult> {
         console.log(`[MockAI] Getting rich translation for "${text}" to ${_targetLanguage} (Context: ${_context})`);
         return {
             translation: `[Mock Rich] ${text}`,
@@ -53,7 +54,7 @@ export class MockAIService implements IAIService {
         };
     }
 
-    async getConjugations(): Promise<RichConjugationsResult> {
+    async getConjugations(_infinitive: string, _sourceLanguage: string, _signal?: AbortSignal): Promise<RichConjugationsResult> {
         await new Promise(resolve => setTimeout(resolve, 900));
         return { conjugations: {} };
     }
@@ -105,7 +106,6 @@ export class MockAIService implements IAIService {
         return "mock-model";
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     setModel(_model: string): void {
         // No-op for mock service
     }

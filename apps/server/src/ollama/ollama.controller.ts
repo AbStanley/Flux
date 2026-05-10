@@ -1,5 +1,5 @@
-import { Body, Controller, Post, Get, Delete, Res } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Post, Get, Delete, Res, Req } from '@nestjs/common';
+import type { Response, Request } from 'express';
 import { OllamaService } from './services/ollama.service';
 import { OllamaClientService } from './services/ollama-client.service';
 import {
@@ -91,8 +91,11 @@ export class OllamaController {
       count?: number;
       existingExamples?: string[];
     },
+    @Req() req: Request,
   ) {
-    return await this.ollamaService.generateExamples(body);
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+    return await this.ollamaService.generateExamples({ ...body, signal: controller.signal });
   }
 
   @Post('analyze-grammar')
@@ -104,8 +107,11 @@ export class OllamaController {
       targetLanguage: string;
       model?: string;
     },
+    @Req() req: Request,
   ): Promise<GrammarAnalysisResponse> {
-    return await this.ollamaService.analyzeGrammar(body);
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+    return await this.ollamaService.analyzeGrammar({ ...body, signal: controller.signal });
   }
 
   @Post('translate')
@@ -118,9 +124,12 @@ export class OllamaController {
       sourceLanguage?: string;
       model?: string;
     },
+    @Req() req: Request,
   ) {
     body.text = cleanSelection(body.text);
-    return await this.ollamaService.translateText(body);
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+    return await this.ollamaService.translateText({ ...body, signal: controller.signal });
   }
 
   @Post('explain')
@@ -132,9 +141,12 @@ export class OllamaController {
       context?: string;
       model?: string;
     },
+    @Req() req: Request,
   ) {
     body.text = cleanSelection(body.text);
-    return await this.ollamaService.explainText(body);
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+    return await this.ollamaService.explainText({ ...body, signal: controller.signal });
   }
 
   @Post('rich-translation')
@@ -149,11 +161,15 @@ export class OllamaController {
       stream?: boolean;
     },
     @Res() res: Response,
+    @Req() req: Request,
   ) {
     body.text = cleanSelection(body.text);
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+    
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
-      const stream = await this.ollamaService.getRichTranslationStream(body);
+      const stream = await this.ollamaService.getRichTranslationStream({ ...body, signal: controller.signal });
       for await (const chunk of stream) {
         res.write(JSON.stringify(chunk) + '\n');
       }
@@ -161,7 +177,7 @@ export class OllamaController {
       return;
     }
     const result: RichTranslation =
-      await this.ollamaService.getRichTranslation(body);
+      await this.ollamaService.getRichTranslation({ ...body, signal: controller.signal });
     res.json(result);
   }
 
@@ -175,17 +191,21 @@ export class OllamaController {
       stream?: boolean;
     },
     @Res() res: Response,
+    @Req() req: Request,
   ) {
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
-      for await (const item of this.ollamaService.getConjugationsStream(body)) {
+      for await (const item of this.ollamaService.getConjugationsStream({ ...body, signal: controller.signal })) {
         res.write(JSON.stringify(item) + '\n');
       }
       res.end();
       return;
     }
     const result: RichConjugations =
-      await this.ollamaService.getConjugations(body);
+      await this.ollamaService.getConjugations({ ...body, signal: controller.signal });
     res.json(result);
   }
 
@@ -193,16 +213,20 @@ export class OllamaController {
   async generateContent(
     @Body() body: GenerateContentDto,
     @Res() res: Response,
+    @Req() req: Request,
   ) {
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
-      const stream = await this.ollamaService.generateContentStream(body);
+      const stream = await this.ollamaService.generateContentStream({ ...body, signal: controller.signal });
       for await (const part of stream) {
         res.write(JSON.stringify(part) + '\n');
       }
       res.end();
     } else {
-      const result = await this.ollamaService.generateContent(body);
+      const result = await this.ollamaService.generateContent({ ...body, signal: controller.signal });
       res.json(result);
     }
   }
@@ -221,18 +245,24 @@ export class OllamaController {
       stream?: boolean;
       sourceLangCode?: string;
       targetLangCode?: string;
+      verb?: string;
+      tense?: string;
     },
     @Res() res: Response,
+    @Req() req: Request,
   ) {
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
-      const stream = await this.ollamaService.generateGameContentStream(body);
+      const stream = await this.ollamaService.generateGameContentStream({ ...body, signal: controller.signal });
       for await (const part of stream) {
         res.write(JSON.stringify(part) + '\n');
       }
       res.end();
     } else {
-      const result = await this.ollamaService.generateGameContent(body);
+      const result = await this.ollamaService.generateGameContent({ ...body, signal: controller.signal });
       res.json(result);
     }
   }
@@ -246,8 +276,11 @@ export class OllamaController {
       model?: string;
       mode?: 'minimal' | 'full';
     },
+    @Req() req: Request,
   ): Promise<WritingAnalysisResponse> {
-    return this.ollamaService.analyzeWriting(body);
+    const controller = new AbortController();
+    req.on('close', () => controller.abort());
+    return this.ollamaService.analyzeWriting({ ...body, signal: controller.signal });
   }
 
   @Post('models/pull')

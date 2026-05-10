@@ -85,10 +85,11 @@ html, body, #root {
     --ring: 193 100% 33%;
     --radius: 0.75rem;
 
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 220 70% 50%;
-    --chart-5: 27 87% 67%;
+    --chart-trend: 12 76% 61%;
+    --chart-growth: 173 58% 39%;
+    --chart-alert: 220 70% 50%;
+    --chart-success: 142 60% 36%;
+    --chart-muted: 27 87% 67%;
 
     /* Custom Premium Colors */
     --link-color: 193 100% 33%;
@@ -135,11 +136,11 @@ html, body, #root {
     --input: 215 25% 22%;
     --ring: 224 76% 60%;
 
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-trend: 220 70% 50%;
+    --chart-growth: 160 60% 45%;
+    --chart-alert: 30 80% 55%;
+    --chart-success: 280 65% 60%;
+    --chart-muted: 340 75% 55%;
 
     /* Custom Premium Colors */
     --link-color: 142 70% 50%;
@@ -189,11 +190,11 @@ html, body, #root {
     /* Lighter than card (16%) */
     --ring: 200 80% 65%;
 
-    --chart-1: 200 80% 65%;
-    --chart-2: 180 60% 50%;
-    --chart-3: 160 50% 45%;
-    --chart-4: 280 50% 55%;
-    --chart-5: 320 60% 55%;
+    --chart-trend: 200 80% 65%;
+    --chart-growth: 180 60% 50%;
+    --chart-alert: 160 50% 45%;
+    --chart-success: 280 50% 55%;
+    --chart-muted: 320 60% 55%;
 
     /* Custom Premium Colors */
     --link-color: 200 80% 70%;
@@ -214,10 +215,10 @@ html, body, #root {
     /* Slightly warmer cards */
     --card-foreground: 30 25% 15%;
 
-    --popover: 30 35% 28%;
-    /* Dark warm brown for readable white text */
-    --popover-foreground: 0 0% 98%;
-    /* White text in translation popups */
+    --popover: 40 35% 85%;
+    /* Light warm parchment matching cards */
+    --popover-foreground: 30 25% 18%;
+    /* Dark warm brown text for readability */
 
     --primary: 36 90% 50%;
     /* #fcbf49 - warm gold */
@@ -244,11 +245,11 @@ html, body, #root {
     --input: 42 38% 85%;
     --ring: 36 90% 50%;
 
-    --chart-1: 36 90% 50%;
-    --chart-2: 30 80% 55%;
-    --chart-3: 25 70% 45%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-trend: 36 90% 50%;
+    --chart-growth: 30 80% 55%;
+    --chart-alert: 25 70% 45%;
+    --chart-success: 43 74% 66%;
+    --chart-muted: 27 87% 67%;
 
     /* Custom Premium Colors */
     --link-color: 36 70% 42%;
@@ -303,15 +304,15 @@ html, body, #root {
     /* Match secondary for consistency */
     --ring: 31 100% 48%;
 
-    --chart-1: 31 100% 48%;
+    --chart-trend: 31 100% 48%;
     /* Orange */
-    --chart-2: 355 83% 50%;
+    --chart-growth: 355 83% 50%;
     /* Red */
-    --chart-3: 203 100% 14%;
+    --chart-alert: 203 100% 14%;
     /* Navy */
-    --chart-4: 40 80% 65%;
+    --chart-success: 40 80% 65%;
     /* Gold */
-    --chart-5: 43 47% 90%;
+    --chart-muted: 43 47% 90%;
     /* Cream */
 
     /* Custom Premium Colors */
@@ -364,11 +365,11 @@ html, body, #root {
     --input-background: 249 15% 20%;
     --ring: 2 55% 70%;
 
-    --chart-1: 2 55% 70%;
-    --chart-2: 35 88% 72%;
-    --chart-3: 189 43% 73%;
-    --chart-4: 267 57% 78%;
-    --chart-5: 343 76% 68%;
+    --chart-trend: 2 55% 70%;
+    --chart-growth: 35 88% 72%;
+    --chart-alert: 189 43% 73%;
+    --chart-success: 267 57% 78%;
+    --chart-muted: 343 76% 68%;
 
     --link-color: 189 43% 73%;
     /* foam */
@@ -415,11 +416,11 @@ html, body, #root {
     --input-background: 150 15% 96%;
     --ring: 158 40% 42%;
 
-    --chart-1: 158 40% 42%;
-    --chart-2: 120 30% 50%;
-    --chart-3: 180 35% 45%;
-    --chart-4: 90 40% 55%;
-    --chart-5: 40 60% 55%;
+    --chart-trend: 158 40% 42%;
+    --chart-growth: 120 30% 50%;
+    --chart-alert: 180 35% 45%;
+    --chart-success: 90 40% 55%;
+    --chart-muted: 40 60% 55%;
 
     --link-color: 158 50% 35%;
     --link-foreground: 0 0% 100%;
@@ -429,56 +430,339 @@ html, body, #root {
     --success-foreground: 0 0% 100%;
   }
 
-  .moonlight {
-    /* Moonlight — rich indigo dark theme with cyan and peach accents */
-    --background: 232 30% 10%;
-    /* #161a2e — deep indigo night */
-    --foreground: 225 15% 85%;
-    /* #c8d0e0 — soft silver */
+  .ember {
+    /* Ember — warm dark navy with vivid orange and gold accents */
+    --background: 210 55% 8%;
+    /* Deep rich navy */
+    --foreground: 35 12% 90%;
+    /* Clean warm white */
 
-    --card: 232 28% 13%;
-    /* #1b2036 */
-    --card-foreground: 225 15% 85%;
+    --card: 210 45% 11%;
+    /* Elevated navy */
+    --card-foreground: 35 12% 92%;
 
-    --popover: 232 25% 16%;
-    /* #222845 */
-    --popover-foreground: 225 15% 85%;
+    --popover: 210 40% 13%;
+    /* Layered surface */
+    --popover-foreground: 35 12% 92%;
 
-    --primary: 185 70% 60%;
-    /* Cyan glow */
-    --primary-foreground: 232 30% 10%;
+    --primary: 31 100% 48%;
+    /* Vivid orange */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 232 22% 18%;
-    /* #262d4a */
-    --secondary-foreground: 225 15% 85%;
+    --secondary: 210 30% 15%;
+    --secondary-foreground: 35 10% 85%;
 
-    --muted: 232 20% 20%;
-    --muted-foreground: 228 15% 55%;
+    --muted: 210 25% 16%;
+    --muted-foreground: 30 12% 55%;
 
-    --accent: 25 80% 68%;
-    /* Warm peach */
-    --accent-foreground: 232 30% 10%;
+    --accent: 40 92% 62%;
+    /* Warm gold */
+    --accent-foreground: 0 0% 6%;
 
-    --destructive: 0 45% 58%;
-    --destructive-foreground: 225 15% 90%;
+    --destructive: 0 69% 50%;
+    /* Bold red */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 232 20% 22%;
-    --input: 232 22% 18%;
-    --input-background: 232 22% 18%;
-    --ring: 185 70% 60%;
+    --border: 210 22% 18%;
+    --input: 210 28% 15%;
+    --input-background: 210 28% 15%;
+    --ring: 31 100% 48%;
 
-    --chart-1: 185 70% 60%;
-    --chart-2: 25 80% 68%;
-    --chart-3: 265 60% 68%;
-    --chart-4: 145 50% 55%;
-    --chart-5: 340 55% 65%;
+    --chart-trend: 31 100% 48%;
+    --chart-growth: 40 92% 62%;
+    --chart-alert: 0 69% 50%;
+    --chart-success: 152 40% 48%;
+    --chart-muted: 210 40% 45%;
 
-    --link-color: 185 70% 65%;
-    --link-foreground: 232 30% 10%;
+    --link-color: 31 100% 52%;
+    --link-foreground: 0 0% 98%;
     --selection-foreground: var(--foreground);
-    --reader-textarea-bg: hsl(var(--secondary) / 0.3);
-    --success: 142 60% 55%;
-    --success-foreground: 232 30% 10%;
+    --reader-textarea-bg: hsl(210 50% 9%);
+    --success: 152 45% 48%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  .harvest {
+    /* Harvest — warm autumn palette with reds, oranges, and olive green */
+    --background: 40 35% 94%;
+    --foreground: 92 20% 18%;
+
+    --card: 42 38% 90%;
+    --card-foreground: 92 20% 16%;
+
+    --popover: 44 40% 92%;
+    --popover-foreground: 92 20% 16%;
+
+    --primary: 0 78% 62%;
+    /* Warm red */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 45 50% 85%;
+    --secondary-foreground: 92 20% 20%;
+
+    --muted: 42 30% 88%;
+    --muted-foreground: 35 18% 45%;
+
+    --accent: 33 80% 60%;
+    /* Golden orange */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 78% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 25% 78%;
+    --input: 40 30% 85%;
+    --input-background: 40 35% 94%;
+    --ring: 0 78% 62%;
+
+    --chart-trend: 0 78% 62%;
+    --chart-growth: 33 100% 57%;
+    --chart-alert: 45 100% 68%;
+    --chart-success: 92 35% 36%;
+    --chart-muted: 20 60% 50%;
+
+    --link-color: 33 100% 50%;
+    --link-foreground: 0 0% 98%;
+    --selection-foreground: var(--foreground);
+    --reader-textarea-bg: hsl(42 40% 92%);
+    --success: 92 35% 36%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  .ultraviolet {
+    /* Ultraviolet — near-white with a whisper of lavender, coral and gold accents */
+    --background: 270 30% 99%;
+    --foreground: 254 50% 20%;
+
+    --card: 264 25% 96%;
+    --card-foreground: 254 50% 18%;
+
+    --popover: 262 22% 97%;
+    --popover-foreground: 254 50% 18%;
+
+    --primary: 12 100% 62%;
+    /* Vibrant coral */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 264 20% 94%;
+    --secondary-foreground: 254 45% 22%;
+
+    --muted: 262 16% 95%;
+    --muted-foreground: 265 18% 48%;
+
+    --accent: 40 100% 68%;
+    /* Warm gold */
+    --accent-foreground: 254 50% 14%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 264 15% 90%;
+    --input: 262 18% 92%;
+    --input-background: 270 25% 99%;
+    --ring: 12 100% 62%;
+
+    --chart-trend: 12 100% 62%;
+    --chart-growth: 40 100% 68%;
+    --chart-alert: 271 40% 52%;
+    --chart-success: 254 40% 50%;
+    --chart-muted: 340 55% 58%;
+
+    --link-color: 271 40% 40%;
+    --link-foreground: 0 0% 98%;
+    --selection-foreground: var(--foreground);
+    --reader-textarea-bg: hsl(264 22% 97%);
+    --success: 142 55% 35%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  .sandcastle {
+    /* Sandcastle — warm cream-white with sky blue and soft orange harmony */
+    --background: 45 50% 97%;
+    --foreground: 206 40% 22%;
+
+    --card: 42 35% 94%;
+    --card-foreground: 206 40% 20%;
+
+    --popover: 40 30% 95%;
+    --popover-foreground: 206 40% 20%;
+
+    --primary: 206 45% 55%;
+    /* Calming sky blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 42 28% 92%;
+    --secondary-foreground: 206 35% 24%;
+
+    --muted: 40 22% 93%;
+    --muted-foreground: 206 20% 48%;
+
+    --accent: 28 75% 55%;
+    /* Warm sunset orange */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 22% 86%;
+    --input: 42 25% 90%;
+    --input-background: 45 40% 97%;
+    --ring: 206 45% 55%;
+
+    --chart-trend: 206 45% 55%;
+    --chart-growth: 28 75% 55%;
+    --chart-alert: 45 80% 52%;
+    --chart-success: 180 35% 50%;
+    --chart-muted: 15 60% 55%;
+
+    --link-color: 206 50% 45%;
+    --link-foreground: 0 0% 98%;
+    --selection-foreground: var(--foreground);
+    --reader-textarea-bg: hsl(42 30% 95%);
+    --success: 142 50% 35%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  .sage {
+    /* Sage — serene ivory with olive and sage green accents */
+    --background: 40 45% 97%;
+    --foreground: 93 22% 22%;
+
+    --card: 42 30% 94%;
+    --card-foreground: 93 22% 20%;
+
+    --popover: 40 28% 95%;
+    --popover-foreground: 93 22% 20%;
+
+    --primary: 93 28% 38%;
+    /* Rich olive */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 42 22% 92%;
+    --secondary-foreground: 93 22% 24%;
+
+    --muted: 40 18% 93%;
+    --muted-foreground: 84 14% 46%;
+
+    --accent: 84 24% 62%;
+    /* Soft sage */
+    --accent-foreground: 93 30% 16%;
+
+    --destructive: 0 60% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 20% 86%;
+    --input: 42 22% 90%;
+    --input-background: 40 35% 97%;
+    --ring: 93 28% 38%;
+
+    --chart-trend: 93 28% 38%;
+    --chart-growth: 84 24% 62%;
+    --chart-alert: 40 35% 55%;
+    --chart-success: 120 28% 48%;
+    --chart-muted: 60 35% 50%;
+
+    --link-color: 93 32% 32%;
+    --link-foreground: 0 0% 98%;
+    --selection-foreground: var(--foreground);
+    --reader-textarea-bg: hsl(42 28% 95%);
+    --success: 84 30% 40%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  .bauhaus {
+    /* Bauhaus — clean warm white with bold navy text, vivid orange and gold accents */
+    --background: 36 55% 97%;
+    --foreground: 201 80% 16%;
+
+    --card: 35 35% 94%;
+    --card-foreground: 201 80% 14%;
+
+    --popover: 34 30% 95%;
+    --popover-foreground: 201 80% 14%;
+
+    --primary: 31 100% 48%;
+    /* Vivid orange */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 35 25% 92%;
+    --secondary-foreground: 201 70% 18%;
+
+    --muted: 34 20% 93%;
+    --muted-foreground: 201 30% 45%;
+
+    --accent: 40 92% 62%;
+    /* Bright gold */
+    --accent-foreground: 201 80% 12%;
+
+    --destructive: 0 69% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 35 18% 86%;
+    --input: 34 22% 90%;
+    --input-background: 36 45% 97%;
+    --ring: 31 100% 48%;
+
+    --chart-trend: 31 100% 48%;
+    --chart-growth: 0 69% 50%;
+    --chart-alert: 40 92% 62%;
+    --chart-success: 201 55% 45%;
+    --chart-muted: 15 75% 55%;
+
+    --link-color: 201 80% 30%;
+    --link-foreground: 0 0% 98%;
+    --selection-foreground: var(--foreground);
+    --reader-textarea-bg: hsl(35 30% 95%);
+    --success: 142 55% 35%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  .espresso {
+    /* Espresso — warm coffee tones on creamy white, cozy and refined */
+    --background: 32 100% 97%;
+    --foreground: 6 27% 20%;
+
+    --card: 30 50% 93%;
+    --card-foreground: 6 27% 18%;
+
+    --popover: 28 40% 94%;
+    --popover-foreground: 6 27% 18%;
+
+    --primary: 23 40% 39%;
+    /* Rich brown */
+    --primary-foreground: 32 100% 97%;
+
+    --secondary: 30 35% 88%;
+    --secondary-foreground: 6 27% 22%;
+
+    --muted: 28 25% 90%;
+    --muted-foreground: 20 18% 48%;
+
+    --accent: 28 47% 54%;
+    /* Warm caramel */
+    --accent-foreground: 32 100% 97%;
+
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 28 25% 80%;
+    --input: 28 28% 85%;
+    --input-background: 32 80% 96%;
+    --ring: 23 40% 39%;
+
+    --chart-trend: 23 40% 39%;
+    --chart-growth: 28 47% 54%;
+    --chart-alert: 6 27% 35%;
+    --chart-success: 32 60% 60%;
+    --chart-muted: 15 45% 45%;
+
+    --link-color: 23 50% 35%;
+    --link-foreground: 0 0% 98%;
+    --selection-foreground: var(--foreground);
+    --reader-textarea-bg: hsl(30 45% 94%);
+    --success: 142 45% 35%;
+    --success-foreground: 0 0% 100%;
+
   }
 }
 

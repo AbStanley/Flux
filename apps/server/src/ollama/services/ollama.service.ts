@@ -46,6 +46,7 @@ export class OllamaService {
     model?: string;
     count?: number;
     existingExamples?: string[];
+    signal?: AbortSignal;
   }) {
     return this.generation.generateExamples(params);
   }
@@ -56,6 +57,7 @@ export class OllamaService {
     context?: string;
     sourceLanguage?: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<{ response: string; sourceLanguage?: string }> {
     return this.translation.translateText(params);
   }
@@ -65,6 +67,7 @@ export class OllamaService {
     targetLanguage: string;
     context?: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<string> {
     return this.translation.explainText(params);
   }
@@ -75,6 +78,7 @@ export class OllamaService {
     context?: string;
     sourceLanguage?: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<RichTranslation> {
     return this.translation.getRichTranslation(params);
   }
@@ -85,6 +89,7 @@ export class OllamaService {
     context?: string;
     sourceLanguage?: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<AsyncIterable<GenerateResponse>> {
     return this.translation.getRichTranslationStream(params);
   }
@@ -93,6 +98,7 @@ export class OllamaService {
     infinitive: string;
     sourceLanguage: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<RichConjugations> {
     return this.translation.getConjugations(params);
   }
@@ -101,6 +107,7 @@ export class OllamaService {
     infinitive: string;
     sourceLanguage: string;
     model?: string;
+    signal?: AbortSignal;
   }): AsyncGenerator<{
     tense: string;
     rows: Array<{ pronoun: string; conjugation: string }>;
@@ -115,6 +122,7 @@ export class OllamaService {
     proficiencyLevel: string;
     contentType: ContentType;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<string> {
     return this.generation.generateContent(params);
   }
@@ -126,6 +134,7 @@ export class OllamaService {
     proficiencyLevel: string;
     contentType: ContentType;
     model?: string;
+    signal?: AbortSignal;
   }) {
     return this.generation.generateContentStream(params);
   }
@@ -140,6 +149,9 @@ export class OllamaService {
     model?: string;
     sourceLangCode?: string;
     targetLangCode?: string;
+    verb?: string;
+    tense?: string;
+    signal?: AbortSignal;
   }): Promise<string> {
     return this.generation.generateGameContent(params);
   }
@@ -154,6 +166,9 @@ export class OllamaService {
     model?: string;
     sourceLangCode?: string;
     targetLangCode?: string;
+    verb?: string;
+    tense?: string;
+    signal?: AbortSignal;
   }) {
     return this.generation.generateGameContentStream(params);
   }
@@ -163,6 +178,7 @@ export class OllamaService {
     sourceLanguage: string;
     targetLanguage: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<GrammarAnalysisResponse> {
     return this.grammar.analyzeGrammar(params);
   }
@@ -171,6 +187,7 @@ export class OllamaService {
     text: string;
     sourceLanguage: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<WritingAnalysisResponse> {
     return this.writing.analyzeWriting(params);
   }

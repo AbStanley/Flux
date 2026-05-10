@@ -130,6 +130,7 @@ export const YouTubeSubtitleOverlay = ({
             >
                 {hasPrev && <SubtitleNavigationButton direction="prev" onClick={onPrev} theme={theme} />}
 
+
                 {/* Subtitle Tokens — vertically centered in upper area */}
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                     <div
@@ -232,6 +233,7 @@ export const YouTubeSubtitleOverlay = ({
                         onSwapLanguages={handleSwapLanguages}
                         onSave={() => { if (hover.hoveredWord) handleSaveWord(hover.hoveredWord.text, result || undefined); }}
                         isSaved={isSaved} saveError={saveError} theme={theme}
+                        textToPlay={hover.hoveredWord?.text}
                         onMouseEnter={() => { hover.setIsPopupHovered(true); if (hover.timerRef.current) clearTimeout(hover.timerRef.current); }}
                         onMouseLeave={() => { hover.setIsPopupHovered(false); hover.onWordLeave(); }}
                     />

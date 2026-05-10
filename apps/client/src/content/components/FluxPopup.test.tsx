@@ -29,6 +29,7 @@ describe('FluxPopup', () => {
         onModelChange: vi.fn(),
         collapsed: false,
         onCollapsedChange: vi.fn(),
+        isPinned: false,
     };
 
     it('renders at correct position', () => {
@@ -36,7 +37,7 @@ describe('FluxPopup', () => {
         // The outer div has the absolute positioning
         const outerDiv = container.firstChild as HTMLElement;
         expect(outerDiv).toHaveStyle({
-            position: 'fixed',
+            position: 'absolute',
             left: '100px',
             top: '100px',
         });

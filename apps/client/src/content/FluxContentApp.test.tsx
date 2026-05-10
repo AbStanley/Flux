@@ -31,6 +31,8 @@ describe('FluxContentApp', () => {
         handleAction: handleActionMock,
         setResult: vi.fn(),
         setError: vi.fn(),
+        cancel: vi.fn(),
+        reset: vi.fn(),
     };
 
     // We need to capture the callbacks passed to useTextSelection

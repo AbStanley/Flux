@@ -25,7 +25,10 @@ interface ProxyConfig {
     method?: string;
     headers?: Record<string, string>;
     body?: unknown;
+    requestId?: string;
 }
+
+const activeRequests = new Map<string, AbortController>();
 
 chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
@@ -43,19 +46,82 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((message: ChromeMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: ChromeResponse) => void) => {
-    if (message.type === 'PROXY_REQUEST') {
-        console.log('[Background] Received PROXY_REQUEST:', message.data);
-        handleProxyRequest(message.data as ProxyConfig)
-            .then(data => {
-                console.log('[Background] Proxy success:', data);
-                sendResponse({ success: true, data });
-            })
-            .catch((error: unknown) => {
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                console.error('[Background] Proxy error:', errorMessage);
-                sendResponse({ success: false, error: errorMessage });
-            });
-        return true; // Will respond asynchronously
+    // Handle TTS separately — must always respond synchronously
+    if (message.type === 'PLAY_TTS') {
+        const { text, lang } = (message.data || {}) as { text: string; lang: string };
+        console.log(`[Background] PLAY_TTS received: "${text}" [${lang}]`);
+
+        try {
+            if (typeof chrome.tts !== 'undefined') {
+                chrome.tts.stop();
+                chrome.tts.speak(text || '', {
+                    lang: lang || 'en-US',
+                    rate: 0.9,
+                    onEvent: (event) => {
+                        console.log(`[Background] TTS event: ${event.type}`);
+                        if (event.type === 'error') {
+                            console.error('[Background] TTS error:', event.errorMessage);
+                        }
+                    }
+                });
+                console.log('[Background] chrome.tts.speak() called');
+            } else {
+                console.error('[Background] chrome.tts is undefined');
+            }
+        } catch (e) {
+            console.error('[Background] TTS exception:', e);
+        }
+
+        sendResponse({ success: true });
+        return false; // synchronous, port can close
+    }
+
+    try {
+        if (message.type === 'PROXY_REQUEST') {
+            const config = message.data as ProxyConfig;
+            const requestId = config.requestId;
+            
+            let controller: AbortController | undefined;
+            if (requestId) {
+                controller = new AbortController();
+                activeRequests.set(requestId, controller);
+            }
+
+            handleProxyRequest(config, controller?.signal)
+                .then(data => {
+                    console.log(`[Background] Proxy SUCCESS for ${config.url}`);
+                    sendResponse({ success: true, data });
+                })
+                .catch((error: unknown) => {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    console.error(`[Background] Proxy FAILURE for ${config.url}:`, errorMessage);
+                    sendResponse({ success: false, error: errorMessage });
+                })
+                .finally(() => {
+                    if (requestId) activeRequests.delete(requestId);
+                });
+
+            return true; // Will respond asynchronously
+        }
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('[Background] Message listener CRASH:', msg);
+        sendResponse({ success: false, error: `Background crash: ${msg}` });
+        return false;
+    }
+
+    if (message.type === 'CANCEL_REQUEST') {
+        const { requestId } = message.data as { requestId: string };
+        const controller = activeRequests.get(requestId);
+        if (controller) {
+            console.log(`[Background] Cancelling request: ${requestId}`);
+            controller.abort();
+            activeRequests.delete(requestId);
+            sendResponse({ success: true });
+        } else {
+            sendResponse({ success: false, error: 'Request not found' });
+        }
+        return true;
     }
 
     if (message.type === 'OPEN_SIDE_PANEL') {
@@ -81,33 +147,50 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
     }
 });
 
-async function handleProxyRequest(config: ProxyConfig): Promise<unknown> {
+async function handleProxyRequest(config: ProxyConfig, signal?: AbortSignal): Promise<unknown> {
     const { url, method = 'GET', headers = {}, body } = config;
 
     console.log('[Background] Fetching:', url);
 
     try {
+        const timeoutController = new AbortController();
+        const timeoutId = setTimeout(() => timeoutController.abort(), 60000);
+        
+        if (signal) {
+            signal.addEventListener('abort', () => timeoutController.abort());
+        }
+
+        const bodyStr = body ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined;
+        console.log(`[Background] Prepared fetch to ${url} with body length: ${bodyStr?.length || 0}`);
+
         const fetchOptions: RequestInit = {
             method,
             headers,
-            body: body ? JSON.stringify(body) : undefined,
-            credentials: 'include'
+            body: bodyStr,
+            credentials: 'include',
+            signal: timeoutController.signal
         };
 
+        console.log(`[Background] Fetching ${url}...`);
+        const startTime = Date.now();
         const response = await fetch(url, fetchOptions);
-        console.log('[Background] Response status:', response.status);
-        console.log('[Background] Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
+        const duration = Date.now() - startTime;
+        clearTimeout(timeoutId);
+        
+        console.log(`[Background] Response received in ${duration}ms:`, response.status, response.statusText);
+        
+        const text = await response.text();
+        console.log(`[Background] Body received (${text.length} chars)`);
 
         if (!response.ok) {
+            console.error(`[Background] Response error body: ${text}`);
             if (response.status === 401) {
                 throw new Error('Login required. Please sign in via the extension popup.');
             }
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} - ${text || response.statusText}`);
         }
 
-        const text = await response.text();
-        console.log('[Background] Response text length:', text.length);
-
+        // text was already awaited above at line 156
         try {
             return JSON.parse(text);
         } catch {

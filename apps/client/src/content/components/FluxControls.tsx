@@ -5,7 +5,8 @@ import { useFluxMessaging } from '../hooks/useFluxMessaging';
 import { FluxIconButton } from './ui/FluxIconButton';
 import { FluxSelect } from './ui/FluxSelect';
 import { FluxButton } from './ui/FluxButton';
-import { Copy, BookOpen, Zap, Check } from 'lucide-react';
+import { Copy, BookOpen, Zap, Check, ArrowLeftRight, Volume2 } from 'lucide-react';
+import { useFluxAudio } from '../hooks/useFluxAudio';
 
 interface FluxControlsProps {
     mode: Mode;
@@ -65,6 +66,14 @@ export function FluxControls({
         }
     };
 
+    const { playAudio } = useFluxAudio();
+
+    const handlePlayAudio = () => {
+        const textToPlay = result || selection.text;
+        const langToUse = result ? targetLang : (sourceLang === 'Auto' ? 'English' : (sourceLang || 'English'));
+        playAudio(textToPlay, langToUse);
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -86,9 +95,9 @@ export function FluxControls({
                 </div>
 
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <button 
-                        onClick={handleCopy} 
-                        style={{ 
+                    <button
+                        onClick={handleCopy}
+                        style={{
                             background: 'transparent', border: 'none', color: copied ? theme.success : theme.textSecondary,
                             padding: '6px', cursor: 'pointer', transition: 'all 0.2s', borderRadius: '6px',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -100,9 +109,9 @@ export function FluxControls({
                         {copied ? <Check size={14} strokeWidth={3} /> : <Copy size={14} strokeWidth={2.5} />}
                     </button>
 
-                    <button 
+                    <button
                         onClick={handleSave}
-                        style={{ 
+                        style={{
                             background: 'transparent', border: 'none', color: theme.textSecondary,
                             padding: '6px', cursor: 'pointer', transition: 'all 0.2s', borderRadius: '6px',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -112,6 +121,20 @@ export function FluxControls({
                         title="Read in Flux"
                     >
                         <BookOpen size={14} strokeWidth={2.5} />
+                    </button>
+
+                    <button
+                        onClick={handlePlayAudio}
+                        style={{
+                            background: 'transparent', border: 'none', color: theme.textSecondary,
+                            padding: '6px', cursor: 'pointer', transition: 'all 0.2s', borderRadius: '6px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = theme.borderLight}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        title="Listen"
+                    >
+                        <Volume2 size={14} strokeWidth={2.5} />
                     </button>
 
                     <button
@@ -151,17 +174,17 @@ export function FluxControls({
                             theme={theme}
                             style={{ background: 'transparent', border: 'none', padding: '4px 0', fontSize: '11px', flex: 1 }}
                         />
-                        <button 
+                        <button
                             onClick={() => onSwapLanguages?.()}
                             title="Swap Languages"
-                            style={{ 
-                                background: 'transparent', border: 'none', color: theme.textDim, fontSize: '12px', 
-                                padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center' 
+                            style={{
+                                background: 'transparent', border: 'none', color: theme.textDim, fontSize: '12px',
+                                padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center'
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.color = theme.accent}
                             onMouseLeave={(e) => e.currentTarget.style.color = theme.textDim}
                         >
-                            →
+                            <ArrowLeftRight size={14} strokeWidth={2.5} />
                         </button>
                         <FluxSelect
                             value={targetLang}
@@ -178,7 +201,8 @@ export function FluxControls({
                     theme={theme}
                     style={{
                         padding: '6px 14px',
-                        borderRadius: '8px'
+                        borderRadius: '8px',
+                        color: theme.accentForeground
                     }}
                 >
                     Go

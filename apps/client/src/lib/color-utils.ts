@@ -4,6 +4,7 @@
  * Example: "#0081a7" -> "193 100% 33%"
  */
 export function hexToHsl(hex: string): string {
+    if (!hex || typeof hex !== 'string') return "0 0% 0%";
     let r = 0, g = 0, b = 0;
     if (hex.length === 4) {
         r = parseInt("0x" + hex[1] + hex[1]);
@@ -47,9 +48,11 @@ export function hexToHsl(hex: string): string {
  * Example: "193 100% 33%" -> "#0081a7"
  */
 export function hslToHex(hslString: string): string {
-    if (!hslString) return '#000000';
+    if (!hslString || typeof hslString !== 'string') return "#000000";
     // Remove % and split
-    const [hStr, sStr, lStr] = hslString.replace(/%/g, '').split(' ');
+    const parts = hslString.replace(/%/g, '').trim().split(/\s+/);
+    if (parts.length < 3) return "#000000";
+    const [hStr, sStr, lStr] = parts;
     const h = parseFloat(hStr);
     const s = parseFloat(sStr) / 100;
     const l = parseFloat(lStr) / 100;

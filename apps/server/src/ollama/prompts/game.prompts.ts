@@ -7,7 +7,9 @@ export const getGameContentPrompt = (
   limit: number = 10,
   _isStreaming: boolean = false,
   sourceLangCode: string = 'en-US',
-  targetLangCode: string = 'es-ES'
+  targetLangCode: string = 'es-ES',
+  verb?: string,
+  tense?: string
 ): string => {
   const isStoryMode = mode === 'story';
   const contextInstruction =
@@ -47,7 +49,7 @@ export const getGameContentPrompt = (
       - "question": The full sentence in ${sourceLang} (for reference/hint).
       - "answer": The full sentence in ${targetLang} (this will be scrambled).
       - "target_lang_code": ALWAYS "${targetLangCode}"
-      - "source_lang_code": ALWAYS "${sourceLangCode}"
+      - "source_lang_code": "${sourceLangCode}"
       - "context": A brief explanation of grammar or context if needed.
       - "type": "phrase"
 
@@ -56,10 +58,32 @@ export const getGameContentPrompt = (
          { "question": "The cat sleeps on the sofa.", "answer": "El gato duerme en el sofá.", "target_lang_code": "${targetLangCode}", "source_lang_code": "${sourceLangCode}", "context": "Simple present.", "type": "phrase" }
      ]
       `;
+  } else if (mode === 'conjugation') {
+    const verbInstruction = verb ? `Verb: "${verb}"` : `Use 5 DIFFERENT common verbs (no repeats).`;
+    const tenseInstruction = tense ? `Tense: "${tense}"` : `Mix Tenses: "Present Simple", "Past Simple", "Future".`;
+
+    return `
+      Generate 5 verb exercises for ${targetLang}.
+      ${verbInstruction}
+      ${tenseInstruction}
+      
+      CRITICAL: Use specific tense names in source_translation. DO NOT just say "Past" if you mean "Preterite" or "Imperfect"
+      
+      Fields:
+      - "target_text": conjugated verb in ${targetLang}
+      - "source_translation": "to [infinitive] ([Specific Tense]) - [Pronoun]" in ${sourceLang}
+      - "context": "Sentence in ${targetLang} with [verb] in brackets"
+      - "target_lang_code": "${targetLangCode}"
+      - "source_lang_code": "${sourceLangCode}"
+      - "type": "word"
+
+      Example:
+      { "target_text": "ran", "source_translation": "to run (Past Simple) - I", "context": "Yesterday, I [ran] to the park." }
+      `;
   } else {
     // Default / Multiple Choice
     return `
-      TRANSLATION DIRECTION: Translate from ${targetLang} to ${sourceLang}.
+      TRANSLATION DIRECTION: Translate from ${sourceLang} to ${targetLang}.
       
       Generate ${limit} items for a language learning game.
       Topic: "${topic}"
@@ -68,18 +92,18 @@ export const getGameContentPrompt = (
 
       ${baseInstruction}
       Each object must have:
-      - "target_text": The word or phrase in ${targetLang}.
-      - "target_lang_code": ALWAYS "${targetLangCode}"
-      - "source_translation": The exact translation in ${sourceLang}.
+      - "source_translation": The exact phrase or word in ${sourceLang}.
       - "source_lang_code": ALWAYS "${sourceLangCode}"
+      - "target_text": The translation in ${targetLang}.
+      - "target_lang_code": ALWAYS "${targetLangCode}"
       - "context": A short example sentence using the word in ${targetLang}.
       - "type": "word" or "phrase".
 
       CRITICAL CONSTRAINTS:
       1. FIELD NAMES: You MUST use "target_text" and "source_translation". DO NOT use "question" or "answer".
       2. LANGUAGES: 
-         - "target_text" MUST be in ${targetLang}.
-         - "source_translation" MUST be in ${sourceLang} (Translation).
+         - "source_translation" MUST be in ${sourceLang} (Original).
+         - "target_text" MUST be in ${targetLang} (Translation).
       3. LANGUAGE CODES: 
          - Set "target_lang_code" to "${targetLangCode}".
          - Set "source_lang_code" to "${sourceLangCode}".

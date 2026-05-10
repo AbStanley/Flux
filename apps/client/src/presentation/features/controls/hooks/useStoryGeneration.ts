@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import type { IAIService } from '../../../../core/interfaces/IAIService';
 import type { ContentType, ProficiencyLevel } from '../../../../core/types/AIConfig';
-import { defaultClient } from '../../../../infrastructure/api/api-client';
+import { defaultClient, getAuthToken } from '../../../../infrastructure/api/api-client';
 
 interface UseStoryGenerationProps {
     aiService: IAIService;
@@ -33,10 +33,15 @@ export const useStoryGeneration = ({
         abortControllerRef.current = new AbortController();
 
         try {
-            const baseUrl = defaultClient.getBaseUrl();
+            const baseUrl = await defaultClient.getActiveBaseUrl();
+            const token = await getAuthToken();
+            
             const response = await fetch(`${baseUrl}/api/generate-content`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                     topic,
                     sourceLanguage: sourceLang,

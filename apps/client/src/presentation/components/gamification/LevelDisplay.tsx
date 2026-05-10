@@ -9,7 +9,7 @@ export const LevelDisplay = () => {
     const progress = Math.min(100, Math.max(0, (currentXp / nextLevelXp) * 100));
 
     return (
-        <div className="flex items-center gap-3 p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="flex items-center gap-3 p-2 bg-muted rounded-lg border border-border shadow-sm">
             <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-yellow-400 text-yellow-900 font-bold shadow-sm">
                 <span className="text-xs">{level}</span>
                 <div className="absolute -bottom-1 -right-1">
@@ -18,7 +18,7 @@ export const LevelDisplay = () => {
             </div>
 
             <div className="flex flex-col w-24">
-                <div className="flex justify-between text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-0.5">
+                <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
                     <span>Lvl {level}</span>
                     <span>{Math.floor(currentXp)} / {nextLevelXp}</span>
                 </div>

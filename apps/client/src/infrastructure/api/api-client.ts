@@ -4,16 +4,26 @@ import { getStoredApiUrl } from "../settings/settings.store";
 export async function getAuthToken(): Promise<string | null> {
   // Use extension storage if we are in an extension context (popup OR content script)
   const isExtensionContext = typeof chrome !== "undefined" && !!chrome.runtime?.id;
-  
+
   if (isExtensionContext && chrome?.storage?.local) {
     return new Promise((resolve) => {
-      chrome.storage.local.get(["flux_auth_token"], (result) => {
-        const data = result as { flux_auth_token?: string };
-        resolve(data.flux_auth_token || null);
-      });
+      try {
+        chrome.storage.local.get(["flux_auth_token"], (result) => {
+          if (chrome.runtime.lastError) {
+            console.warn("[Flux Debug] getAuthToken: storage error:", chrome.runtime.lastError.message);
+            resolve(null);
+            return;
+          }
+          const data = result as { flux_auth_token?: string };
+          resolve(data.flux_auth_token || null);
+        });
+      } catch (e) {
+        console.warn("[Flux Debug] getAuthToken: failed to access storage:", e);
+        resolve(null);
+      }
     });
   }
-  
+
   // Web app fallback: read from localStorage
   return localStorage.getItem("flux_auth_token");
 }
@@ -67,10 +77,14 @@ export class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    // Use extension proxy if we are in an extension context (popup OR content script)
-    // This allows content scripts on HTTPS pages to reach HTTP localhost via background script
-    const isExtensionContext = typeof chrome !== "undefined" && !!chrome.runtime?.id;
-    if (isExtensionContext) {
+    // Use extension proxy ONLY if we are in a content script
+    // Popup and SidePanel are already in extension context and can fetch directly
+    const isContentScript = typeof chrome !== "undefined" &&
+      !!chrome.runtime?.id &&
+      typeof window !== "undefined" &&
+      window.location.protocol !== "chrome-extension:";
+
+    if (isContentScript) {
       console.log(`[Flux Debug] ApiClient: Proxying ${method} ${url}`);
       return new Promise<T>((resolve, reject) => {
         let parsedBody: unknown = undefined;
@@ -86,43 +100,74 @@ export class ApiClient {
           }
         }
 
-        chrome.runtime.sendMessage(
-          {
-            type: "PROXY_REQUEST",
-            data: {
-              url,
-              method,
-              headers,
-              body: parsedBody,
+        const requestId = Math.random().toString(36).substring(7);
+
+        const abortListener = () => {
+          chrome.runtime.sendMessage({ type: "CANCEL_REQUEST", data: { requestId } });
+        };
+
+        if (signal) {
+          if (signal.aborted) {
+            reject(new DOMException("Aborted", "AbortError"));
+            return;
+          }
+          signal.addEventListener("abort", abortListener);
+        }
+
+        const timeoutId = setTimeout(() => {
+          if (signal) signal.removeEventListener("abort", abortListener);
+          reject(new Error("Request timed out (background proxy)"));
+        }, 30000); // 30s timeout for safety
+        if (signal?.aborted) {
+          reject(new DOMException("Aborted", "AbortError"));
+          return;
+        }
+
+        try {
+          chrome.runtime.sendMessage(
+            {
+              type: "PROXY_REQUEST",
+              data: {
+                url,
+                method,
+                headers,
+                body: parsedBody,
+                requestId,
+              },
             },
-          },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              console.error(
-                "[Flux Debug] ApiClient: Extension error:",
-                chrome.runtime.lastError.message,
-              );
-              reject(new Error(chrome.runtime.lastError.message));
-            } else if (!response) {
-              console.error(
-                "[Flux Debug] ApiClient: No response from background script",
-              );
-              reject(new Error("No response from background script"));
-            } else if (!response.success) {
-              console.error(
-                "[Flux Debug] ApiClient: Proxy failure:",
-                response.error,
-              );
-              reject(new Error(response.error || "Proxy request failed"));
-            } else {
-              console.log(
-                "[Flux Debug] ApiClient: Proxy success",
-                response.data,
-              );
-              resolve(response.data as T);
-            }
-          },
-        );
+            (response) => {
+              clearTimeout(timeoutId);
+              if (signal) signal.removeEventListener("abort", abortListener);
+              if (signal?.aborted) {
+                reject(new DOMException("Aborted", "AbortError"));
+                return;
+              }
+
+              if (chrome.runtime.lastError) {
+                const msg = chrome.runtime.lastError.message || "";
+                
+                if (msg.includes("context invalidated")) {
+                  reject(new Error("Extension updated. Please refresh the page to continue."));
+                } else {
+                  reject(new Error(msg));
+                }
+              } else if (!response) {
+                reject(new Error("No response from background script"));
+              } else if (!response.success) {
+                reject(new Error(response.error || "Proxy request failed"));
+              } else {
+                resolve(response.data as T);
+              }
+            },
+          );
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (msg.includes("context invalidated")) {
+            reject(new Error("Extension updated. Please refresh the page to continue."));
+          } else {
+            reject(new Error(msg));
+          }
+        }
       });
     }
 
@@ -137,7 +182,7 @@ export class ApiClient {
     if (!response.ok) {
       if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/register')) {
         const tokenAtError = await getAuthToken();
-        
+
         if (tokenAtError) {
           // Only clear and logout if we actually thought we had a valid session
           localStorage.removeItem("flux_auth_token");
@@ -152,12 +197,12 @@ export class ApiClient {
       }
       const text = await response.text();
       let errorMessage = text || response.statusText;
-      
+
       try {
         const parsed = JSON.parse(text);
         if (parsed.message) {
-          errorMessage = Array.isArray(parsed.message) 
-            ? parsed.message[0] 
+          errorMessage = Array.isArray(parsed.message)
+            ? parsed.message[0]
             : parsed.message;
         }
       } catch {

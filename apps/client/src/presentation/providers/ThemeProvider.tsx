@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { ThemeProviderContext } from "./ThemeProviderContext"
 import { useSettingsStore, type CustomTheme } from "../features/settings/store/useSettingsStore"
 
-export type Theme = "dark" | "nordic" | "light" | "cream" | "sunset" | "rose-pine" | "evergreen" | "moonlight" | "system" | string
+export type Theme = "dark" | "nordic" | "light" | "cream" | "sunset" | "rose-pine" | "evergreen" | "ember" | "system" | string
 
 type ThemeProviderProps = {
     children: React.ReactNode
@@ -15,18 +15,7 @@ export type ThemeProviderState = {
     setTheme: (theme: Theme) => void
 }
 
-/** Map extension theme IDs to web app theme names */
-const EXTENSION_TO_WEBAPP_THEME: Record<string, Theme> = {
-    dark: "dark",
-    ivory: "cream",
-    nordic: "nordic",
-    sunset: "sunset",
-    light: "light",
-    cream: "cream",
-    'rose-pine': "rose-pine",
-    evergreen: "evergreen",
-    moonlight: "moonlight",
-}
+
 
 export function ThemeProvider({
     children,
@@ -50,9 +39,8 @@ export function ThemeProvider({
         window.chrome.storage.local.get(['fluxTheme', 'fluxCustomThemes'], (result: Record<string, unknown>) => {
             const extTheme = result.fluxTheme as string | undefined;
             if (extTheme) {
-                const mapped = extTheme.startsWith('custom-') ? extTheme : (EXTENSION_TO_WEBAPP_THEME[extTheme] || extTheme);
-                localStorage.setItem(storageKey, mapped);
-                setThemeState(mapped);
+                localStorage.setItem(storageKey, extTheme);
+                setThemeState(extTheme);
             }
 
             const storedCustom = result.fluxCustomThemes as CustomTheme[] | undefined;
@@ -65,9 +53,8 @@ export function ThemeProvider({
         const handleChange = (changes: Record<string, chrome.storage.StorageChange>) => {
             if (changes.fluxTheme?.newValue) {
                 const extTheme = changes.fluxTheme.newValue as string;
-                const mapped = extTheme.startsWith('custom-') ? extTheme : (EXTENSION_TO_WEBAPP_THEME[extTheme] || extTheme);
-                localStorage.setItem(storageKey, mapped);
-                setThemeState(mapped);
+                localStorage.setItem(storageKey, extTheme);
+                setThemeState(extTheme);
             }
             if (changes.fluxCustomThemes?.newValue) {
                 setExtCustomThemes(changes.fluxCustomThemes.newValue as CustomTheme[]);
@@ -95,7 +82,7 @@ export function ThemeProvider({
             document.head.appendChild(styleTag)
         }
 
-        root.classList.remove("light", "dark", "nordic", "cream", "sunset", "rose-pine", "evergreen", "moonlight")
+        root.classList.remove("light", "dark", "nordic", "cream", "sunset", "rose-pine", "evergreen", "ember", "harvest", "ultraviolet", "sandcastle", "sage", "bauhaus", "espresso")
         // Clear custom styles
         styleTag.textContent = "";
 

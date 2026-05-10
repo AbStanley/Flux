@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BookmarkPlus, Check, Loader2, CheckCircle2 } from 'lucide-react';
 import { parseContent, type CorrectionToken, type VocabToken, type ConfirmationToken } from '../utils/contentParser';
+import { computeDiff } from '../utils/diffUtils';
 import { useSaveVocabulary } from '../hooks/useSaveVocabulary';
 import { useCloseOnOutsideClick } from '../hooks/useCloseOnOutsideClick';
 
@@ -61,18 +62,31 @@ function CorrectionChip({ token, targetLanguage, nativeLanguage }: {
     const { saved, saving, handleSave } = useSaveVocabulary();
 
     useCloseOnOutsideClick(ref, () => setShowPopover(false));
+    const diff = computeDiff(token.wrong, token.correct);
 
     return (
         <span ref={ref} className="relative inline-block align-middle">
             <span
                 onClick={() => setShowPopover(!showPopover)}
-                className="inline-flex items-center gap-1 whitespace-nowrap bg-destructive/15 text-destructive
-                    px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer
+                className="inline-flex flex-wrap items-center gap-x-1 whitespace-normal bg-destructive/15 text-destructive
+                    px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer max-w-full
                     hover:bg-destructive/25 transition-colors border border-destructive/20 mx-0.5"
             >
-                <span className="line-through opacity-60">{token.wrong}</span>
-                <span className="mx-0.5">→</span>
-                <span className="font-semibold">{token.correct}</span>
+                <span className="line-through opacity-80">
+                    {diff.map((part, i) => !part.added && (
+                        <span key={i} className={part.removed ? "bg-destructive/45 px-0.5 rounded-sm" : ""}>
+                            {part.value}
+                        </span>
+                    ))}
+                </span>
+                <span className="mx-0.5 opacity-40">→</span>
+                <span className="font-semibold">
+                    {diff.map((part, i) => !part.removed && (
+                        <span key={i} className={part.added ? "bg-destructive/30 px-0.5 rounded-sm" : ""}>
+                            {part.value}
+                        </span>
+                    ))}
+                </span>
             </span>
 
             {showPopover && (
@@ -82,9 +96,21 @@ function CorrectionChip({ token, targetLanguage, nativeLanguage }: {
                             <div>
                                 <p className="text-xs text-muted-foreground">Correction</p>
                                 <p className="text-sm">
-                                    <span className="line-through text-destructive">{token.wrong}</span>
-                                    {' → '}
-                                    <span className="font-semibold text-success">{token.correct}</span>
+                                    <span className="line-through text-destructive opacity-80">
+                                        {diff.map((part, i) => !part.added && (
+                                            <span key={i} className={part.removed ? "bg-destructive/35 px-0.5 rounded-sm" : ""}>
+                                                {part.value}
+                                            </span>
+                                        ))}
+                                    </span>
+                                    <span className="mx-1 opacity-40">→</span>
+                                    <span className="font-semibold">
+                                        {diff.map((part, i) => !part.removed && (
+                                            <span key={i} className={part.added ? "bg-destructive/25 px-0.5 rounded-sm" : ""}>
+                                                {part.value}
+                                            </span>
+                                        ))}
+                                    </span>
                                 </p>
                             </div>
                         </div>
@@ -123,9 +149,9 @@ function ConfirmationChip({ token }: { token: ConfirmationToken }) {
         <span ref={ref} className="relative inline-block align-middle">
             <span
                 onClick={() => hasExplanation && setShowPopover(!showPopover)}
-                className={`inline-flex items-center gap-1 whitespace-nowrap bg-success/10
+                className={`inline-flex flex-wrap items-center gap-x-1 whitespace-normal bg-success/10
                     text-success px-2 py-0.5 rounded-md text-xs font-medium
-                    transition-colors border border-success/20 mx-0.5
+                    transition-colors border border-success/20 mx-0.5 max-w-full
                     ${hasExplanation ? 'cursor-pointer hover:bg-success/20' : ''}`}
                 title={hasExplanation ? token.explanation : `"${token.text}" — looks good`}
             >
@@ -159,8 +185,8 @@ function VocabChip({ token, targetLanguage, nativeLanguage }: {
         <span ref={ref} className="relative inline-block align-middle">
             <span
                 onClick={() => setShowPopover(!showPopover)}
-                className="inline-flex items-center gap-1 whitespace-nowrap bg-primary/15 text-primary
-                    px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer
+                className="inline-flex flex-wrap items-center gap-x-1 whitespace-normal bg-primary/15 text-primary
+                    px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer max-w-full
                     hover:bg-primary/25 transition-colors border border-primary/20 mx-0.5"
             >
                 <span className="font-semibold">{token.term}</span>

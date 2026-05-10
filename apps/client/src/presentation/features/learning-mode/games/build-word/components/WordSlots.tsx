@@ -44,10 +44,8 @@ export const WordSlots: React.FC<WordSlotsProps> = ({
                                     slot.isFilled && !slot.isStatic && slot.status === 'none' && "bg-secondary border-secondary-foreground/20",
 
                                     // Success
-                                    (slot.status === 'correct' || isComplete) && "bg-green-500 border-green-700 text-white",
-
-                                    // Error
-                                    slot.status === 'wrong' && "bg-red-500 border-red-700 text-white animate-shake",
+                                    (slot.status === 'correct' || isComplete) && "bg-chart-success border-chart-success/50 text-white",
+                                    slot.status === 'wrong' && "bg-chart-alert border-chart-alert/50 text-white animate-shake",
 
                                     // Revealed (Answer shown)
                                     slot.status === 'revealed' && "bg-blue-500 border-blue-700 text-white",

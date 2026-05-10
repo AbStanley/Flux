@@ -24,7 +24,7 @@ export function FluxButton({
             case 'primary':
                 return {
                     background: theme.accent,
-                    color: theme.bgSolid,
+                    color: theme.accentForeground,
                     boxShadow: `0 4px 12px ${theme.accentGlow}`,
                 };
             case 'secondary':

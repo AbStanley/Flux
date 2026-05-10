@@ -40,6 +40,17 @@ function buildClozeData(item: { question: string; answer: string; context?: stri
     const qRegex = new RegExp(`\\b${escapeRegex(item.question)}\\b`, 'i');
     const aRegex = new RegExp(`\\b${escapeRegex(item.answer)}\\b`, 'i');
 
+    const bracketMatch = ctx.match(/\[(.*?)\]/);
+    if (bracketMatch) {
+        return {
+            sentence: ctx.replace(/\[.*?\]/, '_____'),
+            wordToGuess: bracketMatch[1],
+            hint: item.question,
+            hintLang: item.lang?.source ?? '',
+            sentenceLang: item.lang?.target ?? '',
+        };
+    }
+
     const questionInContext = qRegex.test(ctx);
     const answerInContext = aRegex.test(ctx);
 
@@ -188,15 +199,36 @@ export function ClozeGame() {
                         <p className="text-xs uppercase tracking-wider text-muted-foreground">
                             {cloze.hintLang && `${cloze.hintLang} · `}Translation
                         </p>
-                        <h2 className="text-3xl md:text-4xl font-black text-primary">
-                            {cloze.hint}
-                        </h2>
+                        <div className="flex flex-col items-center">
+                            {cloze.hint.includes('(') && cloze.hint.includes(')') ? (
+                                <>
+                                    <h2 className="text-3xl md:text-4xl font-black text-primary">
+                                        {cloze.hint.split('(')[0].trim()}
+                                    </h2>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-sm font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary/70 border border-primary/20">
+                                            {cloze.hint.match(/\((.*?)\)/)?.[1]}
+                                        </span>
+                                        {cloze.hint.includes('-') && (
+                                            <span className="text-sm font-medium text-muted-foreground/80 italic">
+                                                — {cloze.hint.split('-')[1].trim()}
+                                            </span>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <h2 className="text-3xl md:text-4xl font-black text-primary">
+                                    {cloze.hint}
+                                </h2>
+                            )}
+                        </div>
                     </div>
 
                     {/* Context sentence with blank */}
                     <div className="border-t pt-4 w-full text-center">
                         <p className="text-sm uppercase tracking-wider text-muted-foreground mb-3">
-                            {cloze.sentenceLang && `${cloze.sentenceLang} · `}Fill in the missing word
+                            {cloze.sentenceLang && `${cloze.sentenceLang} · `}
+                            {config.mode === 'conjugation' ? 'Conjugate the verb' : 'Fill in the missing word'}
                         </p>
                         <p className="text-xl md:text-2xl font-semibold leading-relaxed">
                             {cloze.sentence.split('_____').map((part, i, arr) => (
@@ -207,8 +239,8 @@ export function ClozeGame() {
                                             "inline-block min-w-[80px] border-b-4 mx-1 px-2 pb-1 font-black",
                                             showAnswer
                                                 ? isCorrect
-                                                    ? "border-green-500 text-green-500"
-                                                    : "border-red-500 text-red-500"
+                                                    ? "border-chart-success text-chart-success"
+                                                    : "border-chart-alert text-chart-alert"
                                                 : "border-primary/40 text-primary/70"
                                         )}>
                                             {showAnswer ? cloze.wordToGuess : (input || answerHint || '\u00A0')}
@@ -248,8 +280,8 @@ export function ClozeGame() {
                         "w-full text-center text-2xl font-bold py-4 px-6 rounded-xl border-2 bg-background outline-none transition-all",
                         isProcessing
                             ? isCorrect
-                                ? "border-green-500 bg-green-500/10"
-                                : "border-red-500 bg-red-500/10"
+                                ? "border-chart-success bg-chart-success/10"
+                                : "border-chart-alert bg-chart-alert/10"
                             : "border-border focus:border-primary"
                     )}
                 />
@@ -286,7 +318,7 @@ export function ClozeGame() {
 
                 {showAnswer && !isCorrect && (
                     <p className="text-center text-lg animate-in fade-in slide-in-from-bottom-2">
-                        Correct: <span className="font-bold text-green-500">{cloze.wordToGuess}</span>
+                        Correct: <span className="font-bold text-chart-success">{cloze.wordToGuess}</span>
                     </p>
                 )}
             </div>

@@ -15,7 +15,9 @@
         "sidePanel",
         "declarativeNetRequest",
         "contextMenus",
-        "storage"
+        "storage",
+        "tts",
+        "offscreen"
     ],
     "declarative_net_request": {
         "rule_resources": [

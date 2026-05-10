@@ -1,5 +1,5 @@
 import type { FluxTheme } from '../constants';
-import { Save } from 'lucide-react';
+import { Check, Save, Pin, Minimize2, X } from 'lucide-react';
 
 interface FluxHeaderProps {
     onClose: () => void;
@@ -8,6 +8,9 @@ interface FluxHeaderProps {
     isPinned: boolean;
     isCollapsed: boolean;
     onCollapseToggle: () => void;
+    isSaving?: boolean;
+    result?: string;
+    loading?: boolean;
     theme: FluxTheme;
 }
 
@@ -18,6 +21,9 @@ export function FluxHeader({
     isPinned,
     isCollapsed,
     onCollapseToggle,
+    isSaving,
+    result,
+    loading,
     theme,
 }: FluxHeaderProps) {
     return (
@@ -35,116 +41,134 @@ export function FluxHeader({
         >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{
-                    width: '8px',
-                    height: '8px',
+                    width: '18px',
+                    height: '18px',
                     borderRadius: '50%',
-                    backgroundColor: isPinned ? theme.accent : theme.border,
-                    boxShadow: isPinned ? `0 0 10px ${theme.accent}` : 'none',
-                    transition: 'all 0.3s ease'
-                }} />
+                    backgroundColor: theme.accent,
+                    color: theme.bgSolid,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: '800',
+                    boxShadow: isPinned ? `0 0 12px ${theme.accent}66` : 'none',
+                    transition: 'all 0.3s ease',
+                    flexShrink: 0,
+                    userSelect: 'none'
+                }}>
+                    F
+                </div>
                 <span style={{
-                    fontSize: '10px',
+                    fontSize: '11px',
                     fontWeight: '700',
                     textTransform: 'uppercase',
-                    letterSpacing: '1px',
-                    color: theme.textSecondary
+                    letterSpacing: '0.5px',
+                    color: theme.text
                 }}>
                     Flux
                 </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {/* Save to Deck Icon - Using requested Lucide version */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {/* Save to Deck Icon */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onSave(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    disabled={!result || loading || isSaving}
                     title="Add to Deck"
                     style={{
-                        background: 'none',
-                        border: 'none',
-                        color: theme.accent,
-                        cursor: 'pointer',
+                        background: isSaving ? theme.success : theme.borderLight,
+                        border: `1px solid ${theme.borderLight}`,
+                        color: isSaving ? theme.bgSolid : theme.text,
+                        cursor: (!result || loading || isSaving) ? 'not-allowed' : 'pointer',
+                        opacity: (!result || loading || isSaving) ? 0.4 : 1,
                         padding: '4px',
-                        borderRadius: '6px',
+                        borderRadius: '50%',
+                        width: '26px',
+                        height: '26px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = theme.accentGlow}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                    onMouseEnter={(e) => { if (!isSaving && result && !loading) { e.currentTarget.style.background = theme.accentGlow; e.currentTarget.style.borderColor = theme.accent; } }}
+                    onMouseLeave={(e) => { if (!isSaving) { e.currentTarget.style.background = theme.borderLight; e.currentTarget.style.borderColor = theme.borderLight; } }}
                 >
-                    <Save size={14} strokeWidth={2.5} />
+                    {isSaving ? <Check size={13} strokeWidth={3} /> : <Save size={13} strokeWidth={2.5} />}
                 </button>
 
-                {/* Collapse Toggle - Reverted to original SVG */}
+                {/* Collapse Toggle */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onCollapseToggle(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
                     title={isCollapsed ? "Expand" : "Collapse"}
                     style={{
-                        background: isCollapsed ? theme.accentGlow : 'none',
-                        border: 'none',
+                        background: isCollapsed ? theme.accentGlow : theme.borderLight,
+                        border: `1px solid ${isCollapsed ? theme.accent : theme.borderLight}`,
                         color: theme.text,
                         cursor: 'pointer',
                         padding: '4px',
-                        borderRadius: '6px',
+                        borderRadius: '50%',
+                        width: '26px',
+                        height: '26px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         transition: 'all 0.2s'
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = theme.surface; e.currentTarget.style.borderColor = theme.border; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = isCollapsed ? theme.accentGlow : theme.borderLight; e.currentTarget.style.borderColor = isCollapsed ? theme.accent : theme.borderLight; }}
                 >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        {isCollapsed ? (
-                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                        ) : (
-                            <path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7" />
-                        )}
-                    </svg>
+                    <Minimize2 size={13} strokeWidth={2.5} />
                 </button>
 
-                {/* Pin Toggle - Reverted to original SVG */}
+                {/* Pin Toggle */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onPinToggle(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
                     style={{
-                        background: isPinned ? theme.accentGlow : 'none',
-                        border: 'none',
-                        color: isPinned ? theme.accent : theme.text,
+                        background: isPinned ? theme.accentGlow : theme.borderLight,
+                        border: `1px solid ${isPinned ? theme.accent : theme.borderLight}`,
+                        color: theme.text,
                         cursor: 'pointer',
                         padding: '4px',
-                        borderRadius: '6px',
+                        borderRadius: '50%',
+                        width: '26px',
+                        height: '26px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         transition: 'all 0.2s'
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = theme.surface; e.currentTarget.style.borderColor = theme.border; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = isPinned ? theme.accentGlow : theme.borderLight; e.currentTarget.style.borderColor = isPinned ? theme.accent : theme.borderLight; }}
                 >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
+                    <Pin size={13} strokeWidth={2.5} />
                 </button>
 
-                {/* Close Button - Reverted to original ✕ */}
+                {/* Close Button */}
                 <button
                     onClick={(e) => { e.stopPropagation(); onClose(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
                     style={{
-                        background: 'none',
-                        border: 'none',
+                        background: theme.borderLight,
+                        border: `1px solid ${theme.borderLight}`,
                         color: theme.text,
                         cursor: 'pointer',
                         padding: '4px',
-                        borderRadius: '6px',
-                        fontSize: '14px',
+                        borderRadius: '50%',
+                        width: '26px',
+                        height: '26px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         opacity: 0.6,
-                        transition: 'opacity 0.2s'
+                        transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                    onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = theme.error; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = theme.error; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.background = theme.borderLight; e.currentTarget.style.color = theme.text; e.currentTarget.style.borderColor = theme.borderLight; }}
                 >
-                    ✕
+                    <X size={13} strokeWidth={2.5} />
                 </button>
             </div>
         </div>

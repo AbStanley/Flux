@@ -93,6 +93,7 @@ export class OllamaWritingService {
     text: string;
     sourceLanguage: string;
     model?: string;
+    signal?: AbortSignal;
   }): Promise<WritingAnalysisResponse> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = WRITING_ANALYSIS_PROMPT(params.text, params.sourceLanguage);
@@ -110,6 +111,7 @@ export class OllamaWritingService {
           num_ctx: 8192,
           num_predict: 4096,
         },
+        params.signal,
       );
 
       const rawText = response.response.trim();

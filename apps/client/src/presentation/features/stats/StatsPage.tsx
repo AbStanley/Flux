@@ -76,27 +76,27 @@ export function StatsPage() {
                             <p className="text-xs text-muted-foreground">Total</p>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-orange-500">{overview.srs.due}</p>
+                            <p className="text-2xl font-bold text-chart-growth">{overview.srs.due}</p>
                             <p className="text-xs text-muted-foreground">Due</p>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-green-500">{overview.srs.learned}</p>
+                            <p className="text-2xl font-bold text-chart-success">{overview.srs.learned}</p>
                             <p className="text-xs text-muted-foreground">Learned</p>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-blue-500">{overview.srs.reviewedToday}</p>
+                            <p className="text-2xl font-bold text-chart-trend">{overview.srs.reviewedToday}</p>
                             <p className="text-xs text-muted-foreground">Today</p>
                         </div>
                     </div>
                     {overview.srs.total > 0 && (
                         <div className="mt-4 h-3 bg-muted rounded-full overflow-hidden flex">
                             <div
-                                className="bg-green-500 transition-all"
+                                className="bg-chart-success transition-all"
                                 style={{ width: `${(overview.srs.learned / overview.srs.total) * 100}%` }}
                                 title={`${overview.srs.learned} learned`}
                             />
                             <div
-                                className="bg-orange-500 transition-all"
+                                className="bg-chart-growth transition-all"
                                 style={{ width: `${(overview.srs.due / overview.srs.total) * 100}%` }}
                                 title={`${overview.srs.due} due`}
                             />
@@ -260,10 +260,10 @@ function ActivityChart({ data }: { data: DailyActivity[] }) {
     const getIntensityClass = (total: number) => {
         if (total === 0) return 'bg-muted/30';
         const ratio = total / maxVal;
-        if (ratio < 0.25) return 'bg-primary/30';
-        if (ratio < 0.5) return 'bg-primary/50';
-        if (ratio < 0.75) return 'bg-primary/75';
-        return 'bg-primary';
+        if (ratio < 0.25) return 'bg-chart-trend/30';
+        if (ratio < 0.5) return 'bg-chart-trend/50';
+        if (ratio < 0.75) return 'bg-chart-trend/75';
+        return 'bg-chart-trend';
     };
 
     return (
@@ -273,10 +273,10 @@ function ActivityChart({ data }: { data: DailyActivity[] }) {
                 <span>Less</span>
                 <div className="flex gap-1">
                     <div className="w-3 h-3 rounded-sm bg-muted/30" />
-                    <div className="w-3 h-3 rounded-sm bg-primary/30" />
-                    <div className="w-3 h-3 rounded-sm bg-primary/50" />
-                    <div className="w-3 h-3 rounded-sm bg-primary/75" />
-                    <div className="w-3 h-3 rounded-sm bg-primary" />
+                    <div className="w-3 h-3 rounded-sm bg-chart-trend/30" />
+                    <div className="w-3 h-3 rounded-sm bg-chart-trend/50" />
+                    <div className="w-3 h-3 rounded-sm bg-chart-trend/75" />
+                    <div className="w-3 h-3 rounded-sm bg-chart-trend" />
                 </div>
                 <span>More</span>
             </div>
@@ -294,7 +294,7 @@ function ActivityChart({ data }: { data: DailyActivity[] }) {
                             className={cn(
                                 "aspect-square rounded-sm transition-all hover:scale-110 cursor-pointer",
                                 getIntensityClass(total),
-                                isToday && "ring-2 ring-primary ring-offset-1 ring-offset-background"
+                                isToday && "ring-2 ring-chart-trend ring-offset-1 ring-offset-background"
                             )}
                             title={`${dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${total} total activity (${day.wordsAdded} added, ${day.wordsReviewed} reviewed)`}
                         />

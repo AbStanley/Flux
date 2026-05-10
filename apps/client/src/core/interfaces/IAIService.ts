@@ -53,12 +53,12 @@ export interface IAIService {
      * @param targetLanguage The language code (e.g., 'en', 'es', 'fr'). Defaults to user preference or 'en'.
      * @returns The translated text.
      */
-    translateText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string): Promise<string | { response: string; sourceLanguage?: string }>;
+    translateText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal): Promise<string | { response: string; sourceLanguage?: string }>;
 
     /**
      * Helper to get rich translation info with grammar and examples
      */
-    getRichTranslation(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string): Promise<RichTranslationResult>;
+    getRichTranslation(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal): Promise<RichTranslationResult>;
 
     /**
      * Streaming variant of getRichTranslation. Calls `onPartial` with a
@@ -121,7 +121,7 @@ export interface IAIService {
     /**
      * Explains text in a target language.
      */
-    explainText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string): Promise<string>;
+    explainText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal): Promise<string>;
 
     /**
      * Generates content with strict parameters.

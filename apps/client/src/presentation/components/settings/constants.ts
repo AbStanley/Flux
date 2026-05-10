@@ -1,15 +1,21 @@
 import type { Theme } from '@/presentation/providers/ThemeProvider';
 import type { ReaderFont, FontSize } from '@/presentation/features/settings/store/useSettingsStore';
 
-export const THEMES: { value: Theme; label: string; preview: string }[] = [
-    { value: 'light', label: 'Light', preview: 'bg-blue-50 text-slate-700' },
-    { value: 'dark', label: 'Dark', preview: 'bg-slate-800 text-white' },
-    { value: 'nordic', label: 'Nordic', preview: 'bg-slate-900 text-sky-400' },
-    { value: 'cream', label: 'Cream', preview: 'bg-amber-100 text-amber-900' },
-    { value: 'sunset', label: 'Sunset', preview: 'bg-orange-200 text-orange-950' },
-    { value: 'rose-pine', label: 'Rosé Pine', preview: 'bg-[#191724] text-[#ebbcba]' },
-    { value: 'evergreen', label: 'Evergreen', preview: 'bg-[#f0f5f0] text-[#2d4a3e]' },
-    { value: 'moonlight', label: 'Moonlight', preview: 'bg-[#161a2e] text-[#65d9ef]' },
+export const THEMES: { value: Theme; label: string; emoji: string; primary: string; preview: string }[] = [
+    { value: 'light', label: 'Light', emoji: '☀️', primary: '#0081a7', preview: 'bg-[#f0f8ff] text-[#0081a7]' },
+    { value: 'dark', label: 'Dark', emoji: '🌙', primary: '#3b82f6', preview: 'bg-[#1d2840] text-[#c8d4e8]' },
+    { value: 'nordic', label: 'Nordic', emoji: '❄️', primary: '#62c4e0', preview: 'bg-[#1c2232] text-[#62c4e0]' },
+    { value: 'cream', label: 'Cream', emoji: '📜', primary: '#c09030', preview: 'bg-[#fdfcf0] text-[#c09030]' },
+    { value: 'sunset', label: 'Sunset', emoji: '🌅', primary: '#f97316', preview: 'bg-[#fff9f0] text-[#f97316]' },
+    { value: 'rose-pine', label: 'Rosé Pine', emoji: '🌹', primary: '#ebbcba', preview: 'bg-[#1f1b30] text-[#ebbcba]' },
+    { value: 'evergreen', label: 'Evergreen', emoji: '🌲', primary: '#4a9970', preview: 'bg-[#d8ead8] text-[#4a9970]' },
+    { value: 'ember', label: 'Ember', emoji: '🔥', primary: '#f77f00', preview: 'bg-[#0c1828] text-[#f77f00]' },
+    { value: 'harvest', label: 'Harvest', emoji: '🌾', primary: '#EA5252', preview: 'bg-[#e5d0a8] text-[#EA5252]' },
+    { value: 'ultraviolet', label: 'Ultraviolet', emoji: '🔮', primary: '#FF653F', preview: 'bg-[#ece5f5] text-[#FF653F]' },
+    { value: 'sandcastle', label: 'Sandcastle', emoji: '🏰', primary: '#5a8eb5', preview: 'bg-[#ede5d0] text-[#5a8eb5]' },
+    { value: 'sage', label: 'Sage', emoji: '🌿', primary: '#546B41', preview: 'bg-[#dde5cc] text-[#546B41]' },
+    { value: 'bauhaus', label: 'Bauhaus', emoji: '📐', primary: '#003049', preview: 'bg-[#f2e8d5] text-[#003049]' },
+    { value: 'espresso', label: 'Espresso', emoji: '☕', primary: '#4B2E2B', preview: 'bg-[#e5d0bb] text-[#4B2E2B]' },
 ];
 
 export const FONTS: { value: ReaderFont; label: string }[] = [
