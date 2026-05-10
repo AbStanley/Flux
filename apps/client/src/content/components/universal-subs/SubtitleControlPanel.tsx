@@ -90,7 +90,7 @@ export function SubtitleControlPanel({
                         <button onClick={onToggleManualPlay} style={{
                             ...transportBtn(theme, false), width: '36px', height: '36px', fontSize: '16px',
                             backgroundColor: manualPlaying ? theme.accent : theme.surfaceActive,
-                            color: manualPlaying ? 'white' : theme.text,
+                            color: manualPlaying ? theme.bg : theme.text,
                         }} title={manualPlaying ? 'Pause' : 'Play'}>{manualPlaying ? '⏸' : '▶'}</button>
                     )}
                     <button onClick={() => jumpTargets.next !== null && onSeek(jumpTargets.next)}
@@ -292,7 +292,7 @@ function CueLine({ cue, offsetMs, color, dim, active, onSeek, theme }: {
 function transportBtn(theme: FluxTheme, disabled: boolean): React.CSSProperties {
     return {
         width: '30px', height: '30px', borderRadius: '50%', border: 'none',
-        backgroundColor: theme.surfaceActive,
+        backgroundColor: theme.borderLight,
         color: disabled ? theme.textDim : theme.text,
         cursor: disabled ? 'not-allowed' : 'pointer',
         fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -302,7 +302,7 @@ function transportBtn(theme: FluxTheme, disabled: boolean): React.CSSProperties 
 
 function stepBtn(theme: FluxTheme): React.CSSProperties {
     return {
-        background: theme.surfaceActive, border: 'none', color: theme.text,
+        background: theme.borderLight, border: 'none', color: theme.text,
         cursor: 'pointer', padding: '3px 6px', borderRadius: '4px',
         fontSize: '10px', fontWeight: 700, lineHeight: 1, whiteSpace: 'nowrap',
     };

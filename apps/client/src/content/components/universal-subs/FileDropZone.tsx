@@ -147,7 +147,7 @@ export function FileDropZone({ onFiles, onUrl, theme, compact }: Props) {
                             borderRadius: '8px',
                             border: 'none',
                             backgroundColor: theme.accent,
-                            color: 'white',
+                            color: theme.bg,
                             fontSize: '12px',
                             fontWeight: 600,
                             cursor: urlInput.trim() ? 'pointer' : 'not-allowed',

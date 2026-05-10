@@ -25,10 +25,10 @@ export function FluxContent({ loading, error, result, theme }: FluxContentProps)
                         <div style={{
                             marginTop: '8px',
                             padding: '8px 12px',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            backgroundColor: `${theme.info}1a`,
+                            border: `1px solid ${theme.info}4d`,
                             borderRadius: '8px',
-                            color: '#93c5fd',
+                            color: theme.info,
                             fontSize: '12px'
                         }}>
                             Make sure your server is running and check the extension popup to configure the connection.

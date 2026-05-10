@@ -45,13 +45,13 @@ export function FluxMinimalPopup({
 }: FluxMinimalPopupProps) {
     const popupRef = useRef<HTMLDivElement>(null);
 
-    const bg = theme?.bgSolid ?? '#0f172a';
-    const text = theme?.text ?? '#f8fafc';
-    const textSec = theme?.textSecondary ?? '#cbd5e1';
-    const accent = theme?.accent ?? '#3b82f6';
-    const border = theme?.border ?? 'rgba(255, 255, 255, 0.1)';
-    const errColor = theme?.error ?? '#ef4444';
-    const successColor = theme?.success ?? '#4ade80';
+    const bg = theme.bgSolid;
+    const text = theme.text;
+    const textSec = theme.textSecondary;
+    const accent = theme.accent;
+    const border = theme.border;
+    const errColor = theme.error;
+    const successColor = theme.success;
 
     const { playAudio } = useFluxAudio();
 

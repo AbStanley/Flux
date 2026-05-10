@@ -27,9 +27,9 @@ export function FluxSelect({
             onMouseUp={(e) => e.stopPropagation()}
             title={title}
             style={{
-                background: theme ? `${theme.surface}80` : 'rgba(51, 65, 85, 0.5)',
-                color: theme?.text ?? 'white',
-                border: `1px solid ${theme?.border ?? 'rgba(255, 255, 255, 0.1)'}`,
+                background: `${theme?.surface}80`,
+                color: theme?.text,
+                border: `1px solid ${theme?.border}`,
                 borderRadius: '10px',
                 padding: '8px 12px',
                 fontSize: '0.9em',
@@ -42,7 +42,7 @@ export function FluxSelect({
                 const label = typeof opt === 'string' ? opt : opt.label;
                 const val = typeof opt === 'string' ? opt : opt.value;
                 return (
-                    <option key={val} value={val} style={{ backgroundColor: theme?.bgSolid ?? '#0f172a', color: theme?.text ?? '#f8fafc' }}>
+                    <option key={val} value={val} style={{ backgroundColor: theme?.bgSolid, color: theme?.text }}>
                         {label}
                     </option>
                 );

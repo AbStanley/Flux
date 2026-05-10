@@ -294,7 +294,7 @@ export function FluxContentApp() {
                 <div style={{
                     position: 'fixed', bottom: '24px', right: '24px',
                     backgroundColor: notification.type === 'success' ? theme.success : theme.error,
-                    color: 'white', padding: '12px 20px', borderRadius: '12px',
+                    color: notification.type === 'success' ? theme.successForeground : theme.errorForeground, padding: '12px 20px', borderRadius: '12px',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
                     zIndex: 2147483647, fontSize: '14px', fontWeight: 500,
                     animation: 'flux-fade-in 0.3s ease-out',

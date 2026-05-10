@@ -143,6 +143,9 @@ export const YouTubeSubtitleOverlay = ({
                     >
                         {tokens.map((token, i) => {
                             const clean = token.trim().replace(/[.,!?;:]/g, '');
+                            const isHovered = !isSentenceMode && hover.hoveredWord?.text === clean;
+                            const shouldHighlight = (isSentenceMode && hover.hoveredWord) || isHovered;
+                            
                             return (
                                 <span
                                     key={`token-${i}`}
@@ -150,9 +153,15 @@ export const YouTubeSubtitleOverlay = ({
                                     onClick={(e) => e.stopPropagation()}
                                     style={{
                                         cursor: clean ? 'pointer' : 'default',
-                                        display: 'inline-block', transition: 'all 0.2s ease', margin: '0 4px',
-                                        color: (isSentenceMode && hover.hoveredWord) ? theme.accent : undefined,
-                                        transform: (isSentenceMode && hover.hoveredWord) ? 'scale(1.05)' : undefined,
+                                        display: 'inline-block', 
+                                        transition: 'all 0.2s ease', 
+                                        margin: '0 4px',
+                                        padding: '1px 4px',
+                                        borderRadius: '6px',
+                                        color: shouldHighlight ? theme.accent : theme.textSecondary,
+                                        backgroundColor: isHovered ? theme.accentGlow : 'transparent',
+                                        transform: shouldHighlight ? 'scale(1.05)' : 'scale(1)',
+                                        fontWeight: shouldHighlight ? 700 : 600,
                                     }}
                                 >
                                     {token}

@@ -141,8 +141,8 @@ export function FluxControls({
                         onClick={() => onAutoSaveChange(!autoSave)}
                         title={autoSave ? "Auto-Save On" : "Auto-Save Off"}
                         style={{
-                            background: isSaving ? theme.success : (autoSave ? theme.accentGlow : 'transparent'),
-                            color: isSaving ? theme.bgSolid : (autoSave ? theme.accent : theme.textSecondary),
+                            background: isSaving ? theme.success : (autoSave ? theme.accent : 'transparent'),
+                            color: isSaving ? theme.successForeground : (autoSave ? theme.bg : theme.textSecondary),
                             border: 'none',
                             padding: '6px',
                             borderRadius: '6px',
@@ -202,7 +202,7 @@ export function FluxControls({
                     style={{
                         padding: '6px 14px',
                         borderRadius: '8px',
-                        color: theme.accentForeground
+                        color: theme.bg
                     }}
                 >
                     Go

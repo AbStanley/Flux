@@ -29,7 +29,9 @@ export interface FluxTheme {
     border: string;
     borderLight: string;
     error: string;
+    errorForeground: string;
     success: string;
+    successForeground: string;
     info: string;
     dot: string;
     link: string;
