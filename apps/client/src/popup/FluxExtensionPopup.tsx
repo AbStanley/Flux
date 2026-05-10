@@ -94,8 +94,8 @@ export default function FluxExtensionPopup() {
 
     return (
         <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            minHeight: '450px', padding: '24px', 
+            display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start',
+            minHeight: '100%', padding: '16px 20px', 
             backgroundColor: theme.bgSolid,
             color: theme.text,
             textAlign: 'center', position: 'relative', transition: 'background-color 0.3s, color 0.3s',
@@ -132,12 +132,12 @@ export default function FluxExtensionPopup() {
                         </svg>
                     </button>
 
-                    <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '100%', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <img src="/flux-logo.png" alt="Flux Logo" style={{ width: '40px', height: '40px' }} />
                         <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Flux Reader</h2>
                     </div>
 
-                    <p style={{ margin: '0 0 20px', fontSize: '0.9rem', color: theme.textSecondary }}>
+                    <p style={{ width: '100%', margin: '0 0 20px', fontSize: '0.9rem', color: theme.textSecondary }}>
                         Welcome, {user?.email}
                     </p>
 
@@ -194,14 +194,19 @@ export default function FluxExtensionPopup() {
                         transition: 'background-color 0.3s', width: '100%', boxSizing: 'border-box',
                     }}>
                         <span style={{ flex: 1, textAlign: 'left', fontWeight: 500, fontSize: '0.9rem' }}>Theme</span>
-                        <div style={{ 
-                            display: 'flex', 
-                            gap: '8px', 
-                            overflowX: 'auto', 
-                            padding: '4px 2px',
-                            maxWidth: '180px',
-                            scrollbarWidth: 'none',
-                        }}>
+                        <div 
+                            onWheel={(e) => {
+                                e.currentTarget.scrollLeft += e.deltaY;
+                            }}
+                            style={{ 
+                                display: 'flex', 
+                                gap: '8px', 
+                                overflowX: 'auto', 
+                                padding: '4px 2px',
+                                maxWidth: '180px',
+                                scrollbarWidth: 'none',
+                            }}
+                        >
                             {Object.values(availableThemes).map(t => (
                                 <button
                                     key={t.id}

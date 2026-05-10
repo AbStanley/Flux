@@ -76,8 +76,8 @@ export function PopupSettingsView({
                     onClick={onTestConnection}
                     disabled={testStatus === 'testing'}
                     style={{
-                        flex: 1, padding: '10px', backgroundColor: theme.textSecondary, color: 'white',
-                        borderRadius: '8px', border: 'none', fontWeight: 600,
+                        flex: 1, padding: '10px', backgroundColor: theme.surfaceActive, color: theme.text,
+                        borderRadius: '8px', border: `1px solid ${theme.border}`, fontWeight: 600,
                         cursor: testStatus === 'testing' ? 'not-allowed' : 'pointer',
                     }}
                 >
@@ -86,7 +86,7 @@ export function PopupSettingsView({
                 <button
                     onClick={onSave}
                     style={{
-                        flex: 2, padding: '10px', backgroundColor: theme.accent, color: 'white',
+                        flex: 2, padding: '10px', backgroundColor: theme.accent, color: theme.accentForeground,
                         borderRadius: '8px', border: 'none', fontWeight: 600, cursor: 'pointer',
                     }}
                 >

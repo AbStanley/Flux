@@ -100,7 +100,7 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
             } else {
                 // DOM sync mode (fallback)
                 const domCue = YouTubeService.getSubtitleFromDom();
-                if (domCue && domCue.text !== currentCue?.text) {
+                if (domCue?.text !== currentCue?.text) {
                     setCurrentCue(domCue);
                 }
             }

@@ -178,7 +178,7 @@ function App() {
           "flex flex-col transition-none max-w-full",
           visualReadingMode 
             ? "h-[100dvh] overflow-hidden w-full max-w-none" 
-            : "container mx-auto min-h-[100dvh] max-w-4xl py-4"
+            : cn("min-h-[100dvh] py-4", isExtension ? "w-full" : "container mx-auto max-w-4xl")
         )}
       >
         <AppContent />

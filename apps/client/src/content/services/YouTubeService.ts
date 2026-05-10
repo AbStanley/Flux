@@ -78,4 +78,9 @@ export class YouTubeService {
             style.remove();
         }
     }
+
+    static isNativeSubtitlesActive(): boolean {
+        const subButton = document.querySelector('.ytp-subtitles-button');
+        return subButton?.getAttribute('aria-pressed') === 'true';
+    }
 }
