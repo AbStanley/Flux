@@ -40,9 +40,10 @@ export interface FluxTheme {
 }
 
 import { THEME_PRESETS, deriveTokens, customThemeToFluxTheme } from '@/lib/color-derive';
+import { BUILT_IN_THEME_TOKENS } from '@/lib/theme-presets';
 
 export const THEMES: Record<string, FluxTheme> = THEME_PRESETS.reduce((acc, preset) => {
-    const tokens = deriveTokens(preset.seeds);
+    const tokens = BUILT_IN_THEME_TOKENS[preset.id] || deriveTokens(preset.seeds);
     acc[preset.id] = customThemeToFluxTheme({
         id: preset.id,
         name: preset.label,
