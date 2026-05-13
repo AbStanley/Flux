@@ -56,7 +56,7 @@ export interface CustomTheme {
     };
 }
 
-interface SettingsState {
+export interface SettingsState {
     font: ReaderFont;
     fontSize: FontSize;
     customThemes: CustomTheme[];

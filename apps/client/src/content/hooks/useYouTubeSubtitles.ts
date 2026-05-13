@@ -41,6 +41,7 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
             setIsActive(false);
             setCurrentCue(null);
             setAllCues([]);
+            setHistory([]);
             lastVideoId.current = null;
         };
 
@@ -62,6 +63,9 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
             YouTubeService.showNativeSubtitles();
         };
     }, [allCues.length, fluxEnabled]);
+
+    const [history, setHistory] = useState<string[]>([]);
+    const lastCapturedText = useRef<string>('');
 
     // Sync currentCue with video time
     useEffect(() => {
@@ -95,13 +99,46 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
                 const newIndex = allCues.findIndex(c => time >= c.start && time <= (c.start + c.duration));
                 if (newIndex !== currentIndex) {
                     setCurrentIndex(newIndex);
-                    setCurrentCue(newIndex >= 0 ? allCues[newIndex] : null);
+                    const cue = newIndex >= 0 ? allCues[newIndex] : null;
+                    setCurrentCue(cue);
+                    
+                    // Accumulate to history if not already there
+                    if (cue && !history.includes(cue.text)) {
+                        setHistory(prev => [...prev, cue.text]);
+                    }
                 }
             } else {
                 // DOM sync mode (fallback)
                 const domCue = YouTubeService.getSubtitleFromDom();
-                if (domCue?.text !== currentCue?.text) {
-                    setCurrentCue(domCue);
+                if (domCue && domCue.text !== lastCapturedText.current) {
+                    const newText = domCue.text;
+                    const oldText = lastCapturedText.current;
+
+                    // Improved stitching: only add if it's truly new or significantly different
+                    let textToAdd = '';
+                    if (!oldText || !newText.includes(oldText)) {
+                        // If it's totally different or doesn't contain the old part, take it all
+                        textToAdd = newText;
+                    } else if (newText.length > oldText.length) {
+                        // If it's an extension, take the new part
+                        textToAdd = newText.slice(oldText.length).trim();
+                    }
+
+                    if (textToAdd) {
+                        setHistory(prev => {
+                            if (prev[prev.length - 1] === textToAdd) return prev;
+                            const newHistory = [...prev, textToAdd];
+                            
+                            // Immediately update the UI cue with a smaller window (last 2 segments)
+                            const windowSize = 2;
+                            const windowText = newHistory.slice(-windowSize).join(' ');
+                            setCurrentCue({ ...domCue, text: windowText });
+                            
+                            return newHistory;
+                        });
+                    }
+                    
+                    lastCapturedText.current = newText;
                 }
             }
         };
@@ -113,7 +150,7 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
             clearInterval(vInterval);
             clearInterval(sInterval);
         };
-    }, [isActive, allCues, currentIndex, currentCue?.text]);
+    }, [isActive, allCues, currentIndex, history]);
 
     const seekPrev = useCallback(() => {
         if (allCues.length === 0) {
@@ -192,6 +229,8 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
 
     return {
         currentCue,
+        history,
+        clearHistory: () => setHistory([]),
         isActive,
         pauseVideo,
         playVideo,
