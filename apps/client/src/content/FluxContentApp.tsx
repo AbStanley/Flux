@@ -36,7 +36,7 @@ export function FluxContentApp() {
     useFluxModelSync(settings.selectedModel, aiService, cancel);
 
     const {
-        currentCue, history, isActive: isYouTube,
+        currentCue, history, clearHistory, isActive: isYouTube,
         pauseVideo, playVideo, getIsPlaying,
         seekPrev, seekNext, hasPrev, hasNext,
     } = useYouTubeSubtitles(settings.fluxEnabled);
@@ -130,6 +130,7 @@ export function FluxContentApp() {
                             const cleanText = history.map(t => t.trim()).filter(Boolean).join('\n');
                             useReaderStore.getState().loadText(cleanText);
                             showNotification('Subtitles exported to Reader!', 'success', 3000);
+                            clearHistory();
                             window.chrome?.runtime?.sendMessage?.({ type: 'OPEN_SIDE_PANEL' });
                         }
                     }}
@@ -140,7 +141,6 @@ export function FluxContentApp() {
                     fluxEnabled={settings.fluxEnabled} theme={theme}
                 />
             )}
-
             {showUniversalSubs && (
                 <UniversalSubtitleOverlay
                     video={uni.videoDetector.selectedVideo!} activeCues={uni.activeCues}

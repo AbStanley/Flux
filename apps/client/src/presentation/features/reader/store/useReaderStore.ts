@@ -42,6 +42,7 @@ interface ReaderState {
     clearSelection: () => void;
     setSession: (id: string | null, title: string | null) => void;
     loadText: (text: string) => void;
+    appendText: (text: string) => void;
 }
 
 export const useReaderStore = create<ReaderState>()(
@@ -182,6 +183,11 @@ export const useReaderStore = create<ReaderState>()(
                 const tokens = text.split(/(\s+)/);
                 set({ text, tokens, currentPage: 1, selectedIndices: new Set() });
             },
+            appendText: (newText) => {
+                const currentText = get().text;
+                const combined = currentText ? `${currentText}\n\n${newText}` : newText;
+                get().loadText(combined);
+            },
         }),
         {
             name: 'reader-storage',
@@ -198,3 +204,12 @@ export const useReaderStore = create<ReaderState>()(
         }
     )
 );
+
+// Listen for storage changes from other contexts (like content scripts) to keep the store in sync
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'local' && changes['reader-storage']) {
+            useReaderStore.persist.rehydrate();
+        }
+    });
+}
