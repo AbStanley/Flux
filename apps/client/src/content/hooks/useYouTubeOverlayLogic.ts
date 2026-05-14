@@ -29,7 +29,7 @@ export function useYouTubeOverlayLogic({ cue, targetLang, sourceLang, onHover, o
 
     const { selectionMode } = useReaderStore();
     const draggable = useDraggable({ initialPos: { x: window.innerWidth / 2, y: window.innerHeight * 0.85 } });
-    const resizable = useResizable({ initialSize: { width: 600, height: 200 } });
+    const resizable = useResizable({ initialSize: { width: 850, height: 260 } });
 
     const isSentenceMode = selectionMode === SelectionMode.Sentence;
     const hover = useSubtitleHover({ isSentenceMode, cue, mode, targetLang, sourceLang, handleAction, setResult });

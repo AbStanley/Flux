@@ -24,10 +24,18 @@ export class YouTubeService {
             const segments = document.querySelectorAll('.ytp-caption-segment');
             if (segments.length === 0) return null;
 
-            const text = Array.from(segments)
+            let text = Array.from(segments)
                 .map(s => s.textContent || '')
                 .join(' ')
                 .trim();
+
+            // Clean up YouTube auto-generated garbage text
+            text = text.replace(/([a-zA-Z-áéíóúÁÉÍÓÚñÑ]+\s*)?\((auto-generated|generado automáticamente)\)/gi, '')
+                       .replace(/click[\s\S]*?for[\s\S]*?settings/gi, '')
+                       .replace(/haz\s*clic\s*para\s*ver\s*las\s*opciones/gi, '')
+                       .replace(/\[.*?\]/g, '') // Strip [Music], [Applause], etc.
+                       .replace(/\(.*?\)/g, '') // Strip (laughter), etc.
+                       .trim();
 
             if (!text) return null;
 

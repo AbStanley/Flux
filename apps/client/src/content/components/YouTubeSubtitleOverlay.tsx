@@ -32,9 +32,12 @@ export const YouTubeSubtitleOverlay = ({
     const logic = useYouTubeOverlayLogic({ cue, targetLang, sourceLang, onHover, onPopupStateChange });
     const { hover, draggable, resizable } = logic;
 
-    const visibleTokens = useMemo(() => {
-        const t = cue?.text.split(/(\s+)/) || [];
-        return t.length > 60 ? t.slice(-60) : t;
+    const visibleLines = useMemo(() => {
+        const lines = cue?.text.split('\n') || [];
+        return lines.map((line) => {
+            const tokens = line.split(/(\s+)/);
+            return { tokens, text: line };
+        });
     }, [cue]);
 
     const handleSwapLanguages = () => {
@@ -50,39 +53,81 @@ export const YouTubeSubtitleOverlay = ({
         <>
             <div
                 className="flux-youtube-overlay flux-selectable"
-                onMouseEnter={() => { logic.setIsOverlayHovered(true); onHover(true); }}
+                onMouseEnter={(e) => { 
+                    const isOverBtn = (e.target as HTMLElement).closest('.flux-nav-btn');
+                    if (!isOverBtn) {
+                        logic.setIsOverlayHovered(true); 
+                        onHover(true); 
+                    }
+                }}
+                onMouseMove={(e) => {
+                    const isOverBtn = (e.target as HTMLElement).closest('.flux-nav-btn');
+                    if (isOverBtn && logic.isOverlayHovered) {
+                        logic.setIsOverlayHovered(false);
+                    } else if (!isOverBtn && !logic.isOverlayHovered) {
+                        logic.setIsOverlayHovered(true);
+                    }
+                }}
                 onMouseLeave={() => { logic.setIsOverlayHovered(false); logic.clearLastTranslatedText(); }}
                 onMouseDown={draggable.handleMouseDown}
                 onClick={(e) => (e.target as HTMLElement).classList.contains('flux-youtube-overlay') && hover.clearHover()}
                 style={getOverlayStyles(draggable.pos, resizable.size, draggable.isDragging, resizable.isResizing, theme)}
             >
-                {hasPrev && <SubtitleNavigationButton direction="prev" onClick={onPrev} theme={theme} />}
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '8px 0' }}>
-                    <div
-                        style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', width: 'max-content', maxWidth: '100%' }}
-                        onMouseOver={(e) => {
-                            const el = (e.target as HTMLElement).closest('[data-flux-token]') as HTMLElement | null;
-                            if (el?.dataset.fluxToken) hover.onWordHover(e as unknown as React.MouseEvent, el.dataset.fluxToken);
-                        }}
-                        onMouseLeave={hover.onWordLeave}
-                    >
-                        {visibleTokens.map((token, i) => {
-                            const clean = token.trim().replace(/[.,!?;:]/g, '');
-                            const isHov = !logic.isSentenceMode && hover.hoveredWord?.text === clean;
-                            const highlight = (logic.isSentenceMode && hover.hoveredWord) || isHov;
-                            return (
-                                <span key={`t-${i}`} data-flux-token={clean || undefined} onClick={(e) => e.stopPropagation()}
-                                    style={{
-                                        cursor: clean ? 'pointer' : 'default', display: 'inline-block', transition: 'all 0.2s ease', margin: '0 2px', padding: '1px 4px', borderRadius: '6px',
-                                        color: highlight ? theme.accent : theme.textSecondary, backgroundColor: isHov ? theme.accentGlow : 'transparent',
-                                        transform: highlight ? 'scale(1.05)' : 'scale(1)', fontWeight: highlight ? 700 : 600,
-                                    }}>
-                                    {token}
-                                </span>
-                            );
-                        })}
+                {hasPrev && (
+                    <div className="flux-nav-btn">
+                        <SubtitleNavigationButton direction="prev" onClick={onPrev} theme={theme} />
                     </div>
+                )}
+
+                <div style={{ 
+                    display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', 
+                    width: '100%', padding: '12px 24px', minHeight: '120px', 
+                    margin: '0 auto', maxWidth: '95%'
+                }}>
+                    {visibleLines.length === 1 && (
+                        <div style={{ opacity: 0, height: '1.2em', marginBottom: '12px', fontSize: '28px' }}>&nbsp;</div>
+                    )}
+                    {visibleLines.map((line, lineIdx) => {
+                        const isPrevLine = lineIdx < visibleLines.length - 1;
+                        return (
+                            <div
+                                key={`line-${lineIdx}`}
+                                style={{ 
+                                    display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', width: '100%',
+                                    opacity: isPrevLine ? 0.4 : 1,
+                                    marginBottom: isPrevLine ? '12px' : '0',
+                                    transition: 'opacity 0.3s ease',
+                                    fontSize: isPrevLine ? '24px' : '28px',
+                                    lineHeight: 1.4,
+                                    whiteSpace: 'normal',
+                                    overflow: 'visible',
+                                    textOverflow: 'clip'
+                                }}
+                                onMouseOver={(e) => {
+                                    const el = (e.target as HTMLElement).closest('[data-flux-token]') as HTMLElement | null;
+                                    if (el?.dataset.fluxToken) hover.onWordHover(e as unknown as React.MouseEvent, el.dataset.fluxToken);
+                                }}
+                                onMouseLeave={hover.onWordLeave}
+                            >
+                                {line.tokens.map((token: string, i) => {
+                                    const clean = token.trim().replace(/[.,!?;:]/g, '');
+                                    const isHov = !logic.isSentenceMode && hover.hoveredWord?.text === clean;
+                                    const highlight = (logic.isSentenceMode && hover.hoveredWord) || isHov;
+                                    return (
+                                        <span key={`t-${lineIdx}-${i}`} data-flux-token={clean || undefined} onClick={(e) => e.stopPropagation()}
+                                            style={{
+                                                cursor: clean ? 'pointer' : 'default', display: 'inline-block', transition: 'all 0.2s ease', margin: '0 1px', padding: '1px 3px', borderRadius: '6px',
+                                                color: highlight ? theme.accent : (isPrevLine ? theme.textDim : theme.textSecondary), 
+                                                backgroundColor: isHov ? theme.accentGlow : 'transparent',
+                                                transform: highlight ? 'scale(1.05)' : 'scale(1)', fontWeight: highlight ? 700 : 600,
+                                            }}>
+                                            {token}
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })}
                 </div>
 
                 <div className="flux-youtube-translation-area" style={getActionAreaStyles(logic.fullError, theme, !!(logic.fullResult || logic.fullLoading || logic.fullError))}>
