@@ -10,14 +10,16 @@ interface UseSubtitleHoverParams {
     sourceLang: string;
     handleAction: (text: string, mode: Mode, targetLang: string, sourceLang: string, context?: string) => void;
     setResult: (v: string) => void;
+    overlayPos?: { x: number; y: number };
 }
 
 export function useSubtitleHover({
-    isSentenceMode, cue, mode, targetLang, sourceLang, handleAction, setResult,
+    isSentenceMode, cue, mode, targetLang, sourceLang, handleAction, setResult, overlayPos,
 }: UseSubtitleHoverParams) {
     const [hoveredWord, setHoveredWord] = useState<{ text: string; x: number; y: number } | null>(null);
     const [isPopupHovered, setIsPopupHovered] = useState(false);
     const [isDebouncing, setIsDebouncing] = useState(false);
+    const [initialOverlayPos, setInitialOverlayPos] = useState<{ x: number; y: number } | null>(null);
     
     // Use ref to track isPopupHovered for the setTimeout closure
     const isPopupHoveredRef = useRef(false);
@@ -38,6 +40,7 @@ export function useSubtitleHover({
         setIsDebouncing(false);
         lastHoveredWord.current = '';
         updatePopupHover(false);
+        setInitialOverlayPos(null);
     }, [setResult]);
 
     const onWordHover = useCallback((event: React.MouseEvent, word: string) => {
@@ -53,6 +56,13 @@ export function useSubtitleHover({
         if (hoverDebounceRef.current) clearTimeout(hoverDebounceRef.current);
 
         const rect = (event.target as HTMLElement).getBoundingClientRect();
+        
+        if (overlayPos) {
+            setInitialOverlayPos({ x: overlayPos.x, y: overlayPos.y });
+        } else {
+            setInitialOverlayPos(null);
+        }
+
         setHoveredWord({ text: textToProcess, x: rect.left + rect.width / 2, y: rect.top });
         setIsDebouncing(true);
 
@@ -60,7 +70,7 @@ export function useSubtitleHover({
             setIsDebouncing(false);
             handleAction(textToProcess, mode, targetLang, sourceLang, cue?.text);
         }, 350);
-    }, [isSentenceMode, cue, mode, targetLang, sourceLang, handleAction, hoveredWord]);
+    }, [isSentenceMode, cue, mode, targetLang, sourceLang, handleAction, hoveredWord, overlayPos]);
 
     const onWordLeave = useCallback(() => {
         if (hoverDebounceRef.current) {
@@ -85,5 +95,6 @@ export function useSubtitleHover({
         isDebouncing,
         timerRef,
         onWordHover, onWordLeave, clearHover,
+        initialOverlayPos,
     };
 }

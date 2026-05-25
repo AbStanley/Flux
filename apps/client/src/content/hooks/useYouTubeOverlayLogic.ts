@@ -32,7 +32,10 @@ export function useYouTubeOverlayLogic({ cue, targetLang, sourceLang, onHover, o
     const resizable = useResizable({ initialSize: { width: 850, height: 260 } });
 
     const isSentenceMode = selectionMode === SelectionMode.Sentence;
-    const hover = useSubtitleHover({ isSentenceMode, cue, mode, targetLang, sourceLang, handleAction, setResult });
+    const hover = useSubtitleHover({
+        isSentenceMode, cue, mode, targetLang, sourceLang, handleAction, setResult,
+        overlayPos: draggable.pos
+    });
     const { isSaved, saveError, handleSaveWord } = useSaveWord({ sourceLang, targetLang, context: cue?.text });
 
     const { clearLastTranslatedText } = useLanguageSync({
