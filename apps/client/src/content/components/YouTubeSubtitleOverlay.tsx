@@ -7,7 +7,8 @@ import { getOverlayStyles, getActionAreaStyles } from './YouTubeSubtitleOverlay.
 import type { FluxTheme } from '../constants';
 
 interface Props {
-    cue: SubtitleCue | null;
+    activeCue: SubtitleCue | null;
+    prevCue: SubtitleCue | null;
     historyCount?: number;
     onExport?: () => void;
     onHover: (hovering: boolean) => void;
@@ -25,20 +26,28 @@ interface Props {
 }
 
 export const YouTubeSubtitleOverlay = ({
-    cue, historyCount = 0, onExport, onHover, onPopupStateChange,
+    activeCue, prevCue, historyCount = 0, onExport, onHover, onPopupStateChange,
     targetLang, onTargetLangChange, sourceLang, onSourceLangChange,
     onPrev, onNext, hasPrev, hasNext, fluxEnabled, theme,
 }: Props) => {
-    const logic = useYouTubeOverlayLogic({ cue, targetLang, sourceLang, onHover, onPopupStateChange });
+    const logic = useYouTubeOverlayLogic({ cue: activeCue, targetLang, sourceLang, onHover, onPopupStateChange });
     const { hover, draggable, resizable } = logic;
 
-    const visibleLines = useMemo(() => {
-        const lines = cue?.text.split('\n') || [];
+    const activeLines = useMemo(() => {
+        const lines = activeCue?.text.split('\n').filter(Boolean) || [];
         return lines.map((line) => {
             const tokens = line.split(/(\s+)/);
             return { tokens, text: line };
         });
-    }, [cue]);
+    }, [activeCue]);
+
+    const prevLines = useMemo(() => {
+        const lines = prevCue?.text.split('\n').filter(Boolean) || [];
+        return lines.map((line) => {
+            const tokens = line.split(/(\s+)/);
+            return { tokens, text: line };
+        });
+    }, [prevCue]);
 
     const handleSwapLanguages = () => {
         const newSource = targetLang;
@@ -47,7 +56,7 @@ export const YouTubeSubtitleOverlay = ({
         onSourceLangChange(newSource);
     };
 
-    if (!fluxEnabled || !cue) return null;
+    if (!fluxEnabled) return null;
 
     return (
         <>
@@ -84,50 +93,69 @@ export const YouTubeSubtitleOverlay = ({
                     width: '100%', padding: '12px 24px', minHeight: '120px', 
                     margin: '0 auto', maxWidth: '95%'
                 }}>
-                    {visibleLines.length === 1 && (
+                    {prevLines.length === 0 && activeLines.length === 0 && (
                         <div style={{ opacity: 0, height: '1.2em', marginBottom: '12px', fontSize: '28px' }}>&nbsp;</div>
                     )}
-                    {visibleLines.map((line, lineIdx) => {
-                        const isPrevLine = lineIdx < visibleLines.length - 1;
-                        return (
-                            <div
-                                key={`line-${lineIdx}`}
-                                style={{ 
-                                    display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', width: '100%',
-                                    opacity: isPrevLine ? 0.4 : 1,
-                                    marginBottom: isPrevLine ? '12px' : '0',
-                                    transition: 'opacity 0.3s ease',
-                                    fontSize: isPrevLine ? '24px' : '28px',
-                                    lineHeight: 1.4,
-                                    whiteSpace: 'normal',
-                                    overflow: 'visible',
-                                    textOverflow: 'clip'
-                                }}
-                                onMouseOver={(e) => {
-                                    const el = (e.target as HTMLElement).closest('[data-flux-token]') as HTMLElement | null;
-                                    if (el?.dataset.fluxToken) hover.onWordHover(e as unknown as React.MouseEvent, el.dataset.fluxToken);
-                                }}
-                                onMouseLeave={hover.onWordLeave}
-                            >
-                                {line.tokens.map((token: string, i) => {
-                                    const clean = token.trim().replace(/[.,!?;:]/g, '');
-                                    const isHov = !logic.isSentenceMode && hover.hoveredWord?.text === clean;
-                                    const highlight = (logic.isSentenceMode && hover.hoveredWord) || isHov;
-                                    return (
-                                        <span key={`t-${lineIdx}-${i}`} data-flux-token={clean || undefined} onClick={(e) => e.stopPropagation()}
-                                            style={{
-                                                cursor: clean ? 'pointer' : 'default', display: 'inline-block', transition: 'all 0.2s ease', margin: '0 1px', padding: '1px 3px', borderRadius: '6px',
-                                                color: highlight ? theme.accent : (isPrevLine ? theme.textDim : theme.textSecondary), 
-                                                backgroundColor: isHov ? theme.accentGlow : 'transparent',
-                                                transform: highlight ? 'scale(1.05)' : 'scale(1)', fontWeight: highlight ? 700 : 600,
-                                            }}>
-                                            {token}
-                                        </span>
-                                    );
-                                })}
-                            </div>
-                        );
-                    })}
+                    {prevLines.map((line, lineIdx) => (
+                        <div
+                            key={`prev-line-${lineIdx}`}
+                            style={{ 
+                                display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', width: '100%',
+                                opacity: 0.4,
+                                marginBottom: '12px',
+                                transition: 'opacity 0.3s ease',
+                                fontSize: '24px',
+                                lineHeight: 1.4,
+                                whiteSpace: 'normal',
+                                overflow: 'visible',
+                                textOverflow: 'clip'
+                            }}
+                        >
+                            {line.tokens.map((token: string, i) => (
+                                <span key={`p-t-${lineIdx}-${i}`} style={{ display: 'inline-block', margin: '0 1px', padding: '1px 3px', color: theme.textDim, fontWeight: 600 }}>
+                                    {token}
+                                </span>
+                            ))}
+                        </div>
+                    ))}
+                    {activeLines.map((line, lineIdx) => (
+                        <div
+                            key={`active-line-${lineIdx}`}
+                            style={{ 
+                                display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', width: '100%',
+                                opacity: 1,
+                                marginBottom: lineIdx < activeLines.length - 1 ? '12px' : '0',
+                                transition: 'opacity 0.3s ease',
+                                fontSize: '28px',
+                                lineHeight: 1.4,
+                                whiteSpace: 'normal',
+                                overflow: 'visible',
+                                textOverflow: 'clip'
+                            }}
+                            onMouseOver={(e) => {
+                                const el = (e.target as HTMLElement).closest('[data-flux-token]') as HTMLElement | null;
+                                if (el?.dataset.fluxToken) hover.onWordHover(e as unknown as React.MouseEvent, el.dataset.fluxToken);
+                            }}
+                            onMouseLeave={hover.onWordLeave}
+                        >
+                            {line.tokens.map((token: string, i) => {
+                                const clean = token.trim().replace(/[.,!?;:]/g, '');
+                                const isHov = !logic.isSentenceMode && hover.hoveredWord?.text === clean;
+                                const highlight = (logic.isSentenceMode && hover.hoveredWord) || isHov;
+                                return (
+                                    <span key={`a-t-${lineIdx}-${i}`} data-flux-token={clean || undefined} onClick={(e) => e.stopPropagation()}
+                                        style={{
+                                            cursor: clean ? 'pointer' : 'default', display: 'inline-block', transition: 'all 0.2s ease', margin: '0 1px', padding: '1px 3px', borderRadius: '6px',
+                                            color: highlight ? theme.accent : theme.textSecondary, 
+                                            backgroundColor: isHov ? theme.accentGlow : 'transparent',
+                                            transform: highlight ? 'scale(1.05)' : 'scale(1)', fontWeight: highlight ? 700 : 600,
+                                        }}>
+                                        {token}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    ))}
                 </div>
 
                 <div className="flux-youtube-translation-area" style={getActionAreaStyles(logic.fullError, theme, !!(logic.fullResult || logic.fullLoading || logic.fullError))}>

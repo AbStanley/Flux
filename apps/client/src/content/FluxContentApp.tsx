@@ -4,7 +4,6 @@ import { useTextSelection } from './hooks/useTextSelection';
 import { useYouTubeSubtitles } from './hooks/useYouTubeSubtitles';
 import { FluxPopup } from './components/FluxPopup';
 import { YouTubeSubtitleOverlay } from './components/YouTubeSubtitleOverlay';
-import { YouTubeService } from './services/YouTubeService';
 import { UniversalSubtitleOverlay } from './components/universal-subs/UniversalSubtitleOverlay';
 import { VideoPickerOverlay } from './components/universal-subs/VideoPickerOverlay';
 import { wordsApi } from '../infrastructure/api/words';
@@ -36,7 +35,7 @@ export function FluxContentApp() {
     useFluxModelSync(settings.selectedModel, aiService, cancel);
 
     const {
-        currentCue, history, clearHistory, isActive: isYouTube,
+        currentCue: activeCue, prevCue, history, clearHistory, isActive: isYouTube,
         pauseVideo, playVideo, getIsPlaying,
         seekPrev, seekNext, hasPrev, hasNext,
     } = useYouTubeSubtitles(settings.fluxEnabled);
@@ -101,16 +100,6 @@ export function FluxContentApp() {
     }, []));
 
     useEffect(() => {
-        if (isYouTube) {
-            if (settings.fluxEnabled) {
-                YouTubeService.hideNativeSubtitles();
-            } else {
-                YouTubeService.showNativeSubtitles();
-            }
-        }
-    }, [isYouTube, settings.fluxEnabled]);
-
-    useEffect(() => {
         const onMsg = (m: { type: string }) => {
             if (m.type === 'SCAN_SUBTITLES') {
                 uni.videoDetector.startPicking();
@@ -122,9 +111,9 @@ export function FluxContentApp() {
 
     return (
         <>
-            {isYouTube && currentCue && settings.fluxEnabled && (
+            {isYouTube && settings.fluxEnabled && (
                 <YouTubeSubtitleOverlay
-                    cue={currentCue} historyCount={history.length}
+                    activeCue={activeCue} prevCue={prevCue} historyCount={history.length}
                     onExport={() => {
                         if (history.length > 0) {
                             const cleanText = history.map(t => t.trim()).filter(Boolean).join('\n');

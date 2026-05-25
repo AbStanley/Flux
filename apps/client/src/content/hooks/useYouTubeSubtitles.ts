@@ -1,409 +1,189 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { YouTubeService, type SubtitleCue } from '../services/YouTubeService';
-
-interface HistoryItem {
-    text: string;
-    time: number;
-}
+import {
+    pauseViaPlayer, playViaPlayer,
+    isPlaying as checkIsPlaying, getCurrentTime,
+} from '../services/YouTubePlayerAPI';
+import { useYouTubeCCState } from './useYouTubeCCState';
+import { useYouTubeNavigation } from './useYouTubeNavigation';
+import {
+    isTextRedundant,
+    findDisplayFromHistory, getDomSubtitle,
+} from './useYouTubeSubtitleHelpers';
+import { useYouTubeHistory } from './useYouTubeHistory';
 
 export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
     const [allCues, setAllCues] = useState<SubtitleCue[]>([]);
     const [currentCue, setCurrentCue] = useState<SubtitleCue | null>(null);
-    const [isActive, setIsActive] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(-1);
-    const [currentHistoryIdx, setCurrentHistoryIdx] = useState(-1);
-    const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [prevCue, setPrevCue] = useState<SubtitleCue | null>(null);
+    const [isWatchPage, setIsWatchPage] = useState(false);
 
-    const videoRef = useRef<HTMLVideoElement | null>(null);
     const lastVideoId = useRef<string | null>(null);
-    const lastSeekTime = useRef<number>(0);
-    const targetSeekTime = useRef<number | null>(null);
-    const lastCapturedText = useRef<string>('');
-    const lastHistoryText = useRef<string>('');
-    const lastVideoTime = useRef<number>(0);
-    const wasSeek = useRef<boolean>(false);
-    const CAPTURE_OFFSET = 1.3; // Offset to account for YouTube DOM rendering lag
+    const lastVideoTime = useRef(0);
+    const lastSeekTime = useRef(0);
 
-    // Detect YouTube page and fetch global cues
+    const ccEnabled = useYouTubeCCState(isWatchPage);
+    const isActive = isWatchPage && fluxEnabled && ccEnabled;
+    
+    const { history, clearHistory, addToHistory, updateHistoryFromDom } = useYouTubeHistory();
+    const nav = useYouTubeNavigation(allCues, history);
+
+    // Page detection + transcript fetch
     useEffect(() => {
         const checkPage = async () => {
-            const isWatchPage = YouTubeService.isYouTubeWatchPage();
-            setIsActive(isWatchPage);
+            const onWatch = YouTubeService.isYouTubeWatchPage();
+            setIsWatchPage(onWatch);
 
-            if (isWatchPage) {
-                const videoId = YouTubeService.getVideoId();
-                if (videoId && videoId !== lastVideoId.current) {
-                    lastVideoId.current = videoId;
-                    setAllCues([]); 
-                    setHistory([]);
-                    lastCapturedText.current = '';
-                    lastHistoryText.current = '';
-                }
-                if (fluxEnabled) {
-                    YouTubeService.hideNativeSubtitles();
-                } else {
-                    YouTubeService.showNativeSubtitles();
-                }
-            } else {
-                setIsActive(false);
-                setCurrentCue(null);
+            if (!onWatch) {
                 setAllCues([]);
+                clearHistory();
                 lastVideoId.current = null;
-                YouTubeService.showNativeSubtitles();
+                return;
+            }
+
+            const videoId = YouTubeService.getVideoId();
+            if (videoId && videoId !== lastVideoId.current) {
+                lastVideoId.current = videoId;
+                setAllCues([]);
+                clearHistory();
+                const cues = await YouTubeService.fetchTranscript(videoId);
+                if (cues.length > 0) setAllCues(cues);
             }
         };
 
         checkPage();
 
-        const handleNavigateStart = () => {
-            setIsActive(false);
-            setCurrentCue(null);
+        const onNavStart = () => {
+            setIsWatchPage(false);
             setAllCues([]);
-            setHistory([]);
+            clearHistory();
             lastVideoId.current = null;
         };
 
         window.addEventListener('popstate', checkPage);
         window.addEventListener('yt-navigate-finish', checkPage as EventListener);
-        window.addEventListener('yt-navigate-start', handleNavigateStart as EventListener);
-
-        const originalPushState = window.history.pushState;
+        window.addEventListener('yt-navigate-start', onNavStart as EventListener);
+        const interval = setInterval(checkPage, 2000);
+        const origPush = window.history.pushState;
         window.history.pushState = function (...args) {
-            originalPushState.apply(this, args);
+            origPush.apply(this, args);
             checkPage();
         };
 
         return () => {
             window.removeEventListener('popstate', checkPage);
             window.removeEventListener('yt-navigate-finish', checkPage as EventListener);
-            window.removeEventListener('yt-navigate-start', handleNavigateStart as EventListener);
-            window.history.pushState = originalPushState;
-            YouTubeService.showNativeSubtitles();
+            window.removeEventListener('yt-navigate-start', onNavStart as EventListener);
+            clearInterval(interval);
+            window.history.pushState = origPush;
         };
-    }, [fluxEnabled]);
+    }, [clearHistory]);
 
-    // Sync currentCue with video time
+    // Manage native subtitle visibility
     useEffect(() => {
-        if (!isActive) return;
+        if (isActive) {
+            YouTubeService.hideNativeSubtitles();
+        } else {
+            YouTubeService.showNativeSubtitles();
+        }
+    }, [isActive]);
 
-        const syncWithTime = () => {
-            const video = videoRef.current || YouTubeService.getVideoElement();
-            if (video) videoRef.current = video;
-            if (!video) return;
+    // Time sync loop
+    useEffect(() => {
+        if (!isActive) {
+            setCurrentCue(null);
+            setPrevCue(null);
+            return;
+        }
 
-            const time = video.currentTime;
+        const sync = () => {
+            const time = getCurrentTime();
+            const video = YouTubeService.getVideoElement();
+            const isPlaying = video ? !video.paused : false;
 
-            // 1. Transcript sync mode (Pre-defined cues)
+            if (video) {
+                const ct = video.currentTime;
+                const jumped = Math.abs(ct - (lastVideoTime.current || ct)) > 1.5;
+                lastVideoTime.current = ct;
+
+                if (jumped) {
+                    lastSeekTime.current = Date.now();
+                }
+            }
+
+            const isJustSeeked = Date.now() - lastSeekTime.current < 1000;
+            const shouldUpdate = isPlaying || isJustSeeked;
+
             if (allCues.length > 0) {
-                if (Date.now() - lastSeekTime.current < 500) return;
-
-                setCurrentIndex(prevIdx => {
-                    if (prevIdx >= 0 && prevIdx < allCues.length) {
-                        const cue = allCues[prevIdx];
-                        if (time >= cue.start && time <= (cue.start + cue.duration)) return prevIdx;
-                    }
-
-                    const newIdx = allCues.findIndex(c => time >= c.start && time <= (c.start + c.duration));
-                    if (newIdx !== prevIdx) {
-                        if (newIdx >= 0) {
-                            const cue = allCues[newIdx];
-                            // For transcript mode, we can show context from previous cues
-                            const prevCue = newIdx > 0 ? allCues[newIdx - 1] : null;
-                            const textLines = [cue.text];
-                            if (prevCue) {
-                                const normPrev = prevCue.text.replace(/[.,!?¿¡\n]/g, '').toLowerCase().trim();
-                                const normCurr = cue.text.replace(/[.,!?¿¡\n]/g, '').toLowerCase().trim();
-                                const isRedundant = normCurr.includes(normPrev) || normPrev.includes(normCurr);
-                                if (!isRedundant) {
-                                    textLines.unshift(prevCue.text);
-                                }
-                            }
-                            const text = textLines.join('\n');
-                            setCurrentCue({ ...cue, text });
-                            
-                            if (lastHistoryText.current !== cue.text) {
-                                setHistory(h => [...h, { text: cue.text, time: cue.start }]);
-                                lastHistoryText.current = cue.text;
-                            }
-                        } else {
-                            setCurrentCue(null);
-                        }
-                        return newIdx;
-                    }
-                    return prevIdx;
-                });
-            } else {
-                // 2. DOM sync mode (Fallback / Autogenerated)
-                const domCue = YouTubeService.getSubtitleFromDom();
-                
-                const currentTime = video.currentTime;
-                const isSeek = Math.abs(currentTime - (lastVideoTime.current || currentTime)) > 1.5;
-                lastVideoTime.current = currentTime;
-
-                if (isSeek) {
-                    wasSeek.current = true;
-                    if (domCue) {
-                        lastCapturedText.current = domCue.text;
-                    }
-                }
-
-                if (domCue && domCue.text !== lastCapturedText.current) {
-                    const newText = domCue.text;
-                    const oldText = lastCapturedText.current;
-
-                    let textToAdd = '';
-                    let isExtension = false;
-
-                    if (wasSeek.current) {
-                        textToAdd = newText;
-                        isExtension = false;
-                        wasSeek.current = false;
-                    } else if (oldText && newText.startsWith(oldText)) {
-                        textToAdd = newText.slice(oldText.length).trim();
-                        isExtension = true;
-                    } else if (oldText && oldText.includes(newText)) {
-                        isExtension = true;
-                        textToAdd = '';
-                    } else if (oldText) {
-                        const wordsOld = oldText.split(/\s+/);
-                        const wordsNew = newText.split(/\s+/);
-                        let overlapWords = 0;
-                        for (let n = Math.min(wordsOld.length, wordsNew.length); n > 0; n--) {
-                            if (wordsOld.slice(-n).join(' ') === wordsNew.slice(0, n).join(' ')) {
-                                overlapWords = n;
-                                break;
-                            }
-                        }
-                        if (overlapWords > 0) {
-                            textToAdd = wordsNew.slice(overlapWords).join(' ').trim();
-                            isExtension = true;
-                        } else {
-                            textToAdd = newText;
-                            isExtension = false;
-                        }
-                    } else {
-                        textToAdd = newText;
-                        isExtension = false;
-                    }
-
-                    if (textToAdd || (isExtension && !textToAdd)) {
-                        setHistory(prev => {
-                            let newHistory = [...prev];
-                            
-                            const latestRecordedTime = newHistory.length > 0 ? newHistory[newHistory.length - 1].time + CAPTURE_OFFSET : 0;
-                            if (newHistory.length > 0 && currentTime < latestRecordedTime - 1.5) {
-                                return newHistory; // User requested to ONLY build history at the frontier.
-                            }
-                            
-                            let activeIdx = -1;
-                            for (let i = newHistory.length - 1; i >= 0; i--) {
-                                if (newHistory[i].time <= currentTime + 1.0) {
-                                    activeIdx = i;
-                                    break;
-                                }
-                            }
-
-                            if (isExtension && activeIdx >= 0) {
-                                const activeEntry = newHistory[activeIdx];
-                                const isClosed = /[.!?]$/.test(activeEntry.text.trim()) || activeEntry.text.length > 75;
-                                if (!isClosed) {
-                                    if (textToAdd && !activeEntry.text.includes(textToAdd)) {
-                                        newHistory[activeIdx] = { ...activeEntry, text: (activeEntry.text + ' ' + textToAdd).trim() };
-                                    }
-                                } else if (textToAdd && !activeEntry.text.includes(textToAdd)) {
-                                    newHistory.push({ text: textToAdd, time: currentTime - CAPTURE_OFFSET });
-                                }
-                            } else if (textToAdd) {
-                                const duplicateIdx = newHistory.findIndex(h => {
-                                    if (Math.abs(h.time - currentTime) >= 5.0) return false;
-                                    const normH = h.text.replace(/[.,!?¿¡]/g, '').toLowerCase().trim();
-                                    const normT = textToAdd.replace(/[.,!?¿¡]/g, '').toLowerCase().trim();
-                                    return normH === normT || (normH.length > 10 && normH.includes(normT)) || (normT.length > 10 && normT.includes(normH));
-                                });
-                                if (duplicateIdx !== -1) {
-                                    if (textToAdd.length > newHistory[duplicateIdx].text.length) {
-                                        newHistory[duplicateIdx] = { ...newHistory[duplicateIdx], text: textToAdd };
-                                    }
-                                } else {
-                                    if (activeIdx >= 0) {
-                                        const activeEntry = newHistory[activeIdx];
-                                        const isClosed = /[.!?]$/.test(activeEntry.text.trim()) || activeEntry.text.length > 75;
-                                        if (!isClosed && Math.abs(currentTime - activeEntry.time) < 10.0) {
-                                            if (!activeEntry.text.includes(textToAdd)) {
-                                                newHistory[activeIdx] = { ...activeEntry, text: (activeEntry.text + ' ' + textToAdd).trim() };
-                                            }
-                                        } else {
-                                            newHistory.push({ text: textToAdd, time: currentTime - CAPTURE_OFFSET });
-                                        }
-                                    } else {
-                                        newHistory.push({ text: textToAdd, time: currentTime - CAPTURE_OFFSET });
-                                    }
-                                }
-                            }
-                            
-                            newHistory.sort((a, b) => a.time - b.time);
-                            if (newHistory.length > 1000) newHistory = newHistory.slice(-1000);
-                            return newHistory;
-                        });
-                    }
-                    lastCapturedText.current = newText;
-                }
-
-                // Update Display based on current time (Sync with History)
-                setHistory(currentHistory => {
-                    if (currentHistory.length === 0) return currentHistory;
-
-                    let bestIdx = -1;
-                    for (let i = currentHistory.length - 1; i >= 0; i--) {
-                        if (currentHistory[i].time <= time + 0.2) {
-                            bestIdx = i;
-                            break;
-                        }
-                    }
-
-                    if (bestIdx !== -1) {
-                        const item = currentHistory[bestIdx];
-                        const prevItem = bestIdx > 0 ? currentHistory[bestIdx - 1] : null;
-                        
-                        const textLines = [item.text];
-                        if (prevItem && (item.time - prevItem.time < 30)) {
-                            const normPrev = prevItem.text.replace(/[.,!?¿¡\n]/g, '').toLowerCase().trim();
-                            const normCurr = item.text.replace(/[.,!?¿¡\n]/g, '').toLowerCase().trim();
-                            const isRedundant = normCurr.includes(normPrev) || normPrev.includes(normCurr);
-                            if (!isRedundant) {
-                                textLines.unshift(prevItem.text);
-                            }
-                        }
-                        const text = textLines.join('\n');
-                        
-                        setCurrentCue(prev => {
-                            if (prev?.text === text) return prev;
-                            return { start: item.time, duration: 0, text };
-                        });
-                        setCurrentHistoryIdx(prev => prev !== bestIdx ? bestIdx : prev);
-                    } else {
-                        setCurrentCue(null);
-                        setCurrentHistoryIdx(prev => prev !== -1 ? -1 : prev);
-                    }
-                    return currentHistory;
-                });
+                syncTranscript(time, shouldUpdate);
+            } else if (video) {
+                syncDom(video, time, shouldUpdate);
             }
         };
 
-        const sInterval = setInterval(syncWithTime, 200);
-        return () => clearInterval(sInterval);
+        const interval = setInterval(sync, 250);
+        return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isActive, allCues]);
 
-    const seekPrev = useCallback(() => {
-        const video = videoRef.current || YouTubeService.getVideoElement();
-        if (!video) return;
-        
-        // Prevent getting stuck if video is paused or buffering
-        const isFastClick = Date.now() - lastSeekTime.current < 800;
-        const time = (targetSeekTime.current !== null && (isFastClick || Math.abs(video.currentTime - targetSeekTime.current) < 0.5)) 
-            ? targetSeekTime.current 
-            : video.currentTime;
+    const syncTranscript = (time: number, shouldUpdateHistory: boolean) => {
+        const idx = allCues.findIndex(
+            c => time >= c.start && time <= c.start + c.duration + 0.5
+        );
 
-        if (allCues.length === 0) {
-            if (history.length === 0) return;
-            let currentIdx = -1;
-            for (let i = history.length - 1; i >= 0; i--) {
-                if (history[i].time <= time + 0.1) {
-                    currentIdx = i;
-                    break;
-                }
-            }
+        if (idx >= 0) {
+            const cue = allCues[idx];
+            const pc = idx > 0 ? allCues[idx - 1] : null;
+            const showPrev = pc && !isTextRedundant(pc.text, cue.text) && (cue.start - pc.start) < 10;
             
-            let targetTime = 0;
-            if (currentIdx >= 0 && (time - history[currentIdx].time) > 1.5) {
-                targetTime = history[currentIdx].time;
-            } else {
-                const targetIdx = (currentIdx <= 0) ? 0 : currentIdx - 1;
-                targetTime = history[targetIdx].time;
-            }
+            setPrevCue(showPrev && pc ? pc : null);
+            setCurrentCue(cue);
             
-            lastSeekTime.current = Date.now();
-            targetSeekTime.current = targetTime;
-            lastVideoTime.current = targetTime;
-            YouTubeService.seekTo(targetTime);
-            video.pause();
-            return;
-        }
-
-        const currentCue = currentIndex >= 0 ? allCues[currentIndex] : null;
-        let targetIndex: number;
-        if (currentCue && (time - currentCue.start) > 1.0) {
-            targetIndex = currentIndex;
-        } else if (currentIndex > 0) {
-            targetIndex = currentIndex - 1;
-        } else {
-            return;
-        }
-        lastSeekTime.current = Date.now();
-        targetSeekTime.current = allCues[targetIndex].start;
-        YouTubeService.seekTo(allCues[targetIndex].start);
-        video.pause();
-    }, [currentIndex, allCues, history]);
-
-    const seekNext = useCallback(() => {
-        const video = videoRef.current || YouTubeService.getVideoElement();
-        if (!video) return;
-        
-        const isFastClick = Date.now() - lastSeekTime.current < 800;
-        const time = (targetSeekTime.current !== null && (isFastClick || Math.abs(video.currentTime - targetSeekTime.current) < 0.5)) 
-            ? targetSeekTime.current 
-            : video.currentTime;
-
-        if (allCues.length === 0) {
-            if (history.length === 0) return;
-            let currentIdx = -1;
-            for (let i = history.length - 1; i >= 0; i--) {
-                if (history[i].time <= time + 0.1) {
-                    currentIdx = i;
-                    break;
-                }
-            }
-            const targetIdx = currentIdx + 1;
-            if (targetIdx < history.length) {
-                const targetTime = history[targetIdx].time;
-                lastSeekTime.current = Date.now();
-                targetSeekTime.current = targetTime;
-                lastVideoTime.current = targetTime;
-                YouTubeService.seekTo(targetTime);
-                video.pause();
+            if (shouldUpdateHistory) {
+                addToHistory(cue.text, cue.start);
             }
             return;
         }
 
-        if (currentIndex >= 0 && currentIndex < allCues.length - 1) {
-            const cue = allCues[currentIndex + 1];
-            lastSeekTime.current = Date.now();
-            targetSeekTime.current = cue.start;
-            YouTubeService.seekTo(cue.start);
-            video.pause();
+        // Keep closest past cue visible if gap is small
+        for (let i = allCues.length - 1; i >= 0; i--) {
+            if (allCues[i].start <= time && time - (allCues[i].start + allCues[i].duration) < 5.0) {
+                setCurrentCue(allCues[i]);
+                return;
+            }
         }
-    }, [currentIndex, allCues, history]);
+        setCurrentCue(null);
+        setPrevCue(null);
+    };
 
-    const pauseVideo = useCallback(() => videoRef.current?.pause(), []);
-    const playVideo = useCallback(() => videoRef.current?.play(), []);
-    const getIsPlaying = useCallback(() => {
-        const video = videoRef.current || YouTubeService.getVideoElement();
-        return video ? !video.paused : false;
-    }, []);
+    const syncDom = (video: HTMLVideoElement, time: number, shouldUpdateHistory: boolean) => {
+        const domCue = getDomSubtitle();
+        const ct = video.currentTime;
 
-    const isFallbackMode = allCues.length === 0 && isActive;
+        if (shouldUpdateHistory && domCue && domCue.text.trim()) {
+            updateHistoryFromDom(domCue.text.trim(), ct);
+        }
+
+        const display = findDisplayFromHistory(history, time, domCue, ct);
+        setCurrentCue(p => p?.text === display.current?.text ? p : display.current);
+        setPrevCue(display.prev);
+    };
+
+    const pauseVideo = useCallback(() => pauseViaPlayer(), []);
+    const playVideo = useCallback(() => playViaPlayer(), []);
+    const getIsPlaying = useCallback(() => checkIsPlaying(), []);
+
+    const isFallback = allCues.length === 0 && isActive;
 
     return {
-        currentCue,
+        currentCue, prevCue,
         history: history.map(h => h.text),
-        clearHistory: () => { setHistory([]); lastHistoryText.current = ''; },
+        clearHistory,
         isActive,
-        pauseVideo,
-        playVideo,
-        getIsPlaying,
-        seekPrev,
-        seekNext,
-        hasPrev: (currentIndex > 0) || (isFallbackMode && currentHistoryIdx > 0),
-        hasNext: (currentIndex < allCues.length - 1 && allCues.length > 0) || (isFallbackMode && currentHistoryIdx >= 0 && currentHistoryIdx < history.length - 1)
+        pauseVideo, playVideo, getIsPlaying,
+        seekPrev: nav.seekPrev,
+        seekNext: nav.seekNext,
+        hasPrev: isFallback || allCues.length > 0,
+        hasNext: isFallback || allCues.length > 0,
     };
 };

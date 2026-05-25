@@ -39,7 +39,8 @@ export function useLanguageSync({
     useEffect(() => {
         if (isOverlayHovered && cue?.text && (cue.text !== lastTranslatedText.current && !fullResult)) {
             lastTranslatedText.current = cue.text;
-            handleFullAction(cue.text, 'TRANSLATE', targetLang, sourceLang, 'YouTube Subtitle');
+            const textToTranslate = cue.text.split('\n').pop()?.trim() || '';
+            handleFullAction(textToTranslate, 'TRANSLATE', targetLang, sourceLang, 'YouTube Subtitle');
         }
     }, [cue?.text, isOverlayHovered, handleFullAction, targetLang, sourceLang, fullResult]);
 
@@ -51,7 +52,8 @@ export function useLanguageSync({
 
         if (langChanged && cue?.text) {
             lastTranslatedText.current = cue.text;
-            handleFullAction(cue.text, 'TRANSLATE', targetLang, sourceLang, 'YouTube Subtitle');
+            const textToTranslate = cue.text.split('\n').pop()?.trim() || '';
+            handleFullAction(textToTranslate, 'TRANSLATE', targetLang, sourceLang, 'YouTube Subtitle');
         }
     }, [targetLang, sourceLang, cue?.text, handleFullAction]);
 

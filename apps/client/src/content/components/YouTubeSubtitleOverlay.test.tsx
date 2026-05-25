@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { YouTubeSubtitleOverlay } from './YouTubeSubtitleOverlay';
 import * as UseAIHandler from '../hooks/useAIHandler';
 import { wordsApi } from '../../infrastructure/api/words';
@@ -20,8 +20,18 @@ vi.mock('@/lib/chrome-storage', () => ({
     }
 }));
 
+
+
 vi.mock('./FluxMinimalPopup', () => ({
-    FluxMinimalPopup: ({ isSaved }: any) => <div data-testid="flux-popup-minimal" data-is-saved={isSaved}>Popup</div>
+    FluxMinimalPopup: ({ isSaved, onSave }: any) => (
+        <div 
+            data-testid="flux-popup-minimal" 
+            data-is-saved={isSaved}
+            onClick={onSave}
+        >
+            Popup
+        </div>
+    )
 }));
 
 vi.mock('./SubtitleToken', () => ({
@@ -66,6 +76,7 @@ describe('YouTubeSubtitleOverlay', () => {
     beforeEach(() => {
         vi.resetAllMocks();
         vi.useRealTimers();
+        localStorage.setItem('flux_auth_token', 'fake-token');
 
         // Use persistent mock return value to handle multiple renders
         vi.spyOn(UseAIHandler, 'useAIHandler').mockReturnValue(defaultAIHandlerMock as any);
@@ -76,7 +87,8 @@ describe('YouTubeSubtitleOverlay', () => {
     });
 
     const defaultProps = {
-        cue: { text: "Hello world", start: 0, duration: 1 },
+        activeCue: { text: "Hello world", start: 0, duration: 1 },
+        prevCue: null,
         onHover: vi.fn(),
         targetLang: "Spanish",
         onTargetLangChange: vi.fn(),
@@ -94,8 +106,9 @@ describe('YouTubeSubtitleOverlay', () => {
     };
 
     it('renders tokens', () => {
-        render(<YouTubeSubtitleOverlay {...defaultProps} />);
-        expect(screen.getAllByTestId('token')).toHaveLength(3); // "Hello", " ", "world"
+        const { container } = render(<YouTubeSubtitleOverlay {...defaultProps} />);
+        const tokens = container.querySelectorAll('span[data-flux-token]');
+        expect(tokens).toHaveLength(2); // "Hello", "world" (ignoring spaces)
     });
 
     it('does NOT trigger translation on mount (requires hover)', () => {
@@ -150,8 +163,8 @@ describe('YouTubeSubtitleOverlay', () => {
         fireEvent.mouseEnter(overlay!);
 
         // Hover a word
-        const token = screen.getAllByTestId('token')[0];
-        fireEvent.mouseEnter(token);
+        const token = container.querySelectorAll('span[data-flux-token]')[0];
+        fireEvent.mouseOver(token);
 
         // Leave overlay
         fireEvent.mouseLeave(overlay!);
@@ -202,28 +215,34 @@ describe('YouTubeSubtitleOverlay', () => {
         // Hover to show tokens
         fireEvent.mouseEnter(overlay!);
 
-        const token = screen.getAllByTestId('token')[0]; // "Hello"
+        const token = container.querySelectorAll('span[data-flux-token]')[0]; // "Hello"
 
         // Must hover word first to show popup AND set hoveredWord state
-        fireEvent.mouseEnter(token);
+        fireEvent.mouseOver(token);
 
         // Fast forward debounced AI call (100ms)
         act(() => {
             vi.advanceTimersByTime(100);
         });
 
-        // Click token
+        // Restore real timers so waitFor doesn't stall on fake timers
+        vi.useRealTimers();
+
+        // Click popup to trigger save
         await act(async () => {
-            fireEvent.click(token);
+            const popup = screen.getByTestId('flux-popup-minimal');
+            fireEvent.click(popup);
         });
 
         // Verify API call includes definition
-        expect(wordsApi.create).toHaveBeenCalledWith(expect.objectContaining({
-            text: "Hello",
-            sourceLanguage: "English",
-            targetLanguage: "Spanish",
-            definition: "Hola" // Verified!
-        }));
+        await waitFor(() => {
+            expect(wordsApi.create).toHaveBeenCalledWith(expect.objectContaining({
+                text: "Hello",
+                sourceLanguage: "English",
+                targetLanguage: "Spanish",
+                definition: "Hola" // Verified!
+            }));
+        });
 
         // Verify popup shows saved state
         const popup = screen.getByTestId('flux-popup-minimal');
@@ -240,7 +259,7 @@ describe('YouTubeSubtitleOverlay', () => {
 
         // Change cue
         const newCue = { text: "Goodbye world", start: 5, duration: 1 };
-        rerender(<YouTubeSubtitleOverlay {...defaultProps} cue={newCue} />);
+        rerender(<YouTubeSubtitleOverlay {...defaultProps} activeCue={newCue} />);
 
         // Should be called again with new text
         expect(handleFullActionMock).toHaveBeenCalledWith("Goodbye world", 'TRANSLATE', "Spanish", "English", 'YouTube Subtitle');

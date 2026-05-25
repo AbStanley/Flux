@@ -21,7 +21,7 @@ interface FluxMinimalPopupProps {
     saveError?: string | null;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
-    theme?: FluxTheme;
+    theme: FluxTheme;
     textToPlay?: string;
 }
 
