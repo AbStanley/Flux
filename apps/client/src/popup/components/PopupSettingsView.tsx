@@ -75,19 +75,22 @@ export function PopupSettingsView({
                 <button
                     onClick={onTestConnection}
                     disabled={testStatus === 'testing'}
+                    className="flex-1 p-2.5 rounded-lg font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
                     style={{
-                        flex: 1, padding: '10px', backgroundColor: theme.surfaceActive, color: theme.text,
-                        borderRadius: '8px', border: `1px solid ${theme.border}`, fontWeight: 600,
-                        cursor: testStatus === 'testing' ? 'not-allowed' : 'pointer',
+                        backgroundColor: theme.surfaceActive,
+                        color: theme.text,
+                        border: `1px solid ${theme.border}`,
                     }}
                 >
                     {testStatus === 'testing' ? 'Testing...' : 'Test'}
                 </button>
                 <button
                     onClick={onSave}
+                    className="flex-[2] p-2.5 rounded-lg font-semibold border-none cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0 active:scale-[0.98]"
                     style={{
-                        flex: 2, padding: '10px', backgroundColor: theme.accent, color: theme.accentForeground,
-                        borderRadius: '8px', border: 'none', fontWeight: 600, cursor: 'pointer',
+                        backgroundColor: theme.accent,
+                        color: theme.accentForeground,
+                        boxShadow: `0 4px 12px ${theme.accentGlow}`,
                     }}
                 >
                     Save

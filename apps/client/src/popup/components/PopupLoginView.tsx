@@ -207,10 +207,12 @@ export function PopupLoginView({
                         <button
                             type="submit"
                             disabled={authLoading}
+                            className="w-full py-2.5 rounded-lg font-semibold border-none cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
                             style={{
-                                padding: '10px', backgroundColor: theme.accent, color: 'white', borderRadius: '8px',
-                                border: 'none', fontWeight: 600, cursor: authLoading ? 'not-allowed' : 'pointer',
-                                opacity: authLoading ? 0.6 : 1, fontSize: '0.9rem',
+                                backgroundColor: theme.accent,
+                                color: theme.accentForeground,
+                                fontSize: '0.9rem',
+                                boxShadow: `0 4px 12px ${theme.accentGlow}`,
                             }}
                         >
                             {authLoading ? 'Signing in...' : 'Sign In'}

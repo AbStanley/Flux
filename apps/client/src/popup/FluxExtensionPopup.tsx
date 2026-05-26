@@ -143,14 +143,12 @@ export default function FluxExtensionPopup() {
 
                     <button
                         onClick={openSidePanel}
+                        className="w-full flex items-center justify-center gap-2.5 py-3 px-5 rounded-xl font-semibold border-none cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
                         style={{
-                            marginTop: '8px', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            gap: '10px', padding: '12px 20px', backgroundColor: theme.accent, color: theme.accentForeground,
-                            borderRadius: '12px', border: 'none', width: '100%', fontWeight: 600,
-                            cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
+                            marginTop: '8px', marginBottom: '8px',
+                            backgroundColor: theme.accent, color: theme.accentForeground,
+                            boxShadow: `0 4px 12px ${theme.accentGlow}`,
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                        onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -173,14 +171,19 @@ export default function FluxExtensionPopup() {
                     onClick={storage.toggleEnabled}
                     style={{
                         position: 'relative', width: '44px', height: '24px', borderRadius: '999px',
-                        backgroundColor: storage.enabled ? theme.accent : '#cbd5e1',
-                        border: 'none', cursor: 'pointer', transition: 'background-color 0.2s',
+                        backgroundColor: storage.enabled ? theme.accent : theme.muted,
+                        border: `1px solid ${storage.enabled ? theme.accent : theme.border}`,
+                        cursor: 'pointer', transition: 'background-color 0.2s, border-color 0.2s',
+                        outline: 'none',
+                        boxSizing: 'border-box',
                     }}
                 >
                     <span style={{
-                        position: 'absolute', top: '2px', left: storage.enabled ? '22px' : '2px',
-                        width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'white',
-                        transition: 'left 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        position: 'absolute', top: '1px', left: storage.enabled ? '21px' : '1px',
+                        width: '20px', height: '20px', borderRadius: '50%',
+                        backgroundColor: storage.enabled ? theme.accentForeground : theme.textSecondary,
+                        transition: 'left 0.2s, background-color 0.2s',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
                     }} />
                 </button>
             </div>
@@ -262,14 +265,13 @@ export default function FluxExtensionPopup() {
 
                     <button
                         onClick={scanSubtitles}
+                        className="w-full flex items-center justify-center gap-2.5 py-3 px-5 rounded-xl font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98]"
                         style={{
-                            marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            gap: '10px', padding: '12px 20px', backgroundColor: theme.surface, color: theme.text,
-                            borderRadius: '12px', border: `1px solid ${theme.border}`, width: '100%', fontWeight: 600,
-                            cursor: 'pointer', transition: 'opacity 0.2s, background-color 0.3s',
+                            marginTop: '12px',
+                            backgroundColor: theme.surface,
+                            color: theme.text,
+                            border: `1px solid ${theme.border}`,
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-                        onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="2" y="6" width="20" height="12" rx="2" />
