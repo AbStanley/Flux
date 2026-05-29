@@ -38,7 +38,6 @@ export function EditWordDialog({
         isLoading,
         isGenerating,
         isValid,
-        showLimitWarning,
         handleChange,
         handleAddExample,
         handleExampleChange,
@@ -177,7 +176,6 @@ export function EditWordDialog({
                             onGenerate={handleGenerateExamples}
                             isGenerating={isGenerating}
                             canGenerate={!!(formData.text && formData.sourceLanguage && formData.targetLanguage)}
-                            showLimitWarning={showLimitWarning}
                         />
                     </form>
                 </div >

@@ -66,10 +66,6 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
     };
 
     const handleAddExample = () => {
-        if ((formData.examples?.length || 0) >= 3) {
-            setShowLimitWarning(true);
-            return;
-        }
         setFormData(prev => ({
             ...prev,
             examples: [...(prev.examples || []), { sentence: '', translation: '' }]
@@ -101,12 +97,6 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
         }
 
         const currentExamples = formData.examples || [];
-        const filledExamplesCount = currentExamples.filter(ex => ex.sentence.trim()).length;
-
-        if (filledExamplesCount >= 3) {
-            setShowLimitWarning(true);
-            return;
-        }
 
         setIsGenerating(true);
         try {
@@ -115,7 +105,6 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
                 .map(ex => ex.sentence.trim())
                 .filter(Boolean);
 
-            // Always request 3 examples to ensure we have enough to fill all slots
             const generated = await ollamaApi.generateExamples({
                 word: formData.text,
                 definition: formData.definition,
@@ -140,22 +129,10 @@ export const useWordForm = ({ initialData, defaultValues, onSubmit, onClose, isO
                 ex => !existingSentencesSet.has(ex.sentence.toLowerCase().trim())
             );
 
-            const newExamplesList = [...currentExamples];
-            let genIdx = 0;
+            // Filter out empty existing examples first, then append unique newly generated ones
+            const cleanedCurrent = currentExamples.filter(ex => ex.sentence.trim());
+            const finalExamples = [...cleanedCurrent, ...uniqueGenerated];
 
-            // Pass 1: Fill empty slots
-            for (let i = 0; i < newExamplesList.length && genIdx < uniqueGenerated.length; i++) {
-                if (!newExamplesList[i].sentence.trim()) {
-                    newExamplesList[i] = uniqueGenerated[genIdx++];
-                }
-            }
-
-            // Pass 2: Append remaining if still below 3
-            while (newExamplesList.length < 3 && genIdx < uniqueGenerated.length) {
-                newExamplesList.push(uniqueGenerated[genIdx++]);
-            }
-
-            const finalExamples = newExamplesList.slice(0, 3);
             console.log('Final merged examples:', finalExamples);
 
             setFormData(prev => ({

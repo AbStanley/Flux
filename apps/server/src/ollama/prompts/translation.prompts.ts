@@ -64,19 +64,20 @@ export const getRichTranslationPrompt = (
 
   return `You are a ${srcLang}→${targetLanguage} bilingual dictionary.
 
+CRITICAL ROLE & RULES:
+1. Ensure absolute parts-of-speech and category consistency. Never translate a verb form as a pronoun. If the input tapped word is a verb, the "translation" field MUST be a verb or verb form in the target language.
+2. Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural source words into singular target forms, preventing pronoun mix-ups.
+
 A learner is reading this ${srcLang} sentence:
 "${context || 'none'}"
 
 Within that sentence they tapped: "${text}"
 
-CRITICAL: "${text}" is a ${srcLang} word (or phrase) as used in the ${srcLang} sentence above. Do NOT interpret it as a word from English or any other language, even if it looks identical to one. Cross-language homograph trap — watch for it:
-- German "war" → past tense of "sein" (to be), NOT the English noun "war"
-- German "also" → "therefore", NOT the English "also"
-- Spanish "once" → the number 11, NOT the English "once"
+CRITICAL: "${text}" is a ${srcLang} word (or phrase) as used in the ${srcLang} sentence above. Do NOT interpret it as a word from any other language, even if it looks identical to one. Pay close attention to cross-language homographs.
 
 BEFORE writing JSON, decide:
 1. In THIS ${srcLang} sentence, is "${text}" a verb form? (infinitive, conjugated, participle, gerund, zu-infinitive all count)
-2. If yes, what is the ${srcLang} infinitive? (e.g. "ging" → "gehen", "war" → "sein", "подошла" → "подойти", "come" → "comer")
+2. If yes, what is the ${srcLang} infinitive?
 
 Reply with ONE JSON object in this exact shape:
 
@@ -103,13 +104,14 @@ Reply with ONE JSON object in this exact shape:
 
 Rules:
 - Use the ${srcLang} sentence above to pick the correct sense. The translation must match how the word is actually used there.
+- Grammatical Agreement: Maintain strict grammatical agreement (number, person, gender, tense) between the source word and the translation. Do NOT translate plural pronouns or plural verb forms as singular, avoiding singular pronoun mix-ups.
+- Parts-of-Speech Matching: Ensure absolute semantic and parts-of-speech consistency between the source word and its translation. Never translate a verb form as a pronoun.
 - When isVerb=true, "infinitive" MUST be the ${srcLang} dictionary form — NEVER copy the segment verbatim when the segment is a conjugated form.
 - Every string value MUST be in the language its slot assigns. Omit optional keys whose condition is false — never write "n/a", "none", or empty strings.
 - "examples": each "sentence" entirely in ${srcLang}, each "translation" entirely in ${targetLanguage}. Never swap. If scripts differ, the two fields MUST use different scripts.
 - Examples should show "${text}" used in natural, varied ${srcLang} contexts — not all the same sense.
 ${isSentence ? `- Multi-word input: type="sentence", isVerb=false.` : ''}
 - Translate ONLY the specific segment "${text}". DO NOT include translations of surrounding words from the context sentence in the "translation" field. 
-  Example: Context: "Das ist etwas Besonderes" | Segment: "Besonderes" | Result: "especial" (NOT "algo especial").
 
 Output JSON only. No markdown, no preamble. Do NOT include a "conjugations" field — conjugation tables are fetched separately when the user requests them.`;
 };
@@ -142,20 +144,21 @@ export const getExplainPrompt = (
   targetLanguage: string = 'en',
   context?: string,
 ): string => {
-  return `Role: Educational Encyclopedia and Teacher.
-Task: Explain the following text clearly and concisely IN ${targetLanguage}.
+  return `Role: High-quality General Monolingual Dictionary.
+Task: Provide a clean, direct, monolingual dictionary-style definition of "${text}" in ${targetLanguage}.
 
 Input Text: "${text}"
-${context ? `Context: "${context}"` : ''}
+${context ? `Reading context of occurrence: "${context}"` : ''}
 
 Instructions:
-1. Provide a clear definition or explanation of the concept/phrase.
-2. If it's a difficult word, provide a simple synonym.
-3. If it's a cultural reference, explain the background briefly.
-4. CRITICAL: The explanation MUST be written in ${targetLanguage}.
-5. CRITICAL: Do NOT start with "Sure", "Here is", or "In this context". Just give the explanation.
-6. Keep it under 3 sentences unless complex.
+1. Output format: Start with the input word in bold on the first line, followed by its general, standard definition on the next line.
+2. General-First Rule: Provide the general, standard dictionary definition of "${text}". Do NOT narrow the definition entirely to the provided reading context sentence if the word has a more common general meaning.
+3. CRITICAL: The explanation must be completely written in ${targetLanguage}.
+4. CRITICAL: Output ONLY the word and its definition. Do NOT write "Here is the definition", "Definition:", "Sure!", or any other conversational intro.
+5. Keep it under 2 sentences. Be clear, precise, and educational.
 
-Output:
-(The explanation text only)`;
+Output:`;
 };
+
+
+

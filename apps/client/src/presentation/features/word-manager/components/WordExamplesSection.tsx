@@ -12,7 +12,6 @@ interface WordExamplesSectionProps {
     onGenerate: () => void;
     isGenerating: boolean;
     canGenerate: boolean;
-    showLimitWarning: boolean;
 }
 
 export function WordExamplesSection({
@@ -22,8 +21,7 @@ export function WordExamplesSection({
     onRemove,
     onGenerate,
     isGenerating,
-    canGenerate,
-    showLimitWarning
+    canGenerate
 }: WordExamplesSectionProps) {
     return (
         <div className="space-y-2">
@@ -51,11 +49,7 @@ export function WordExamplesSection({
                     </Button>
                 </div>
             </div>
-            {showLimitWarning && (
-                <span className="text-xs text-destructive">
-                    Maximum 3 examples allowed
-                </span>
-            )}
+
             <div className="space-y-3">
                 {examples?.map((ex, idx) => (
                     <div key={idx} className="flex gap-2 items-start border p-2 rounded-md bg-muted/20 relative">
