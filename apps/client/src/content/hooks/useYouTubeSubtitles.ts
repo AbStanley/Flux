@@ -12,7 +12,7 @@ import {
 } from './useYouTubeSubtitleHelpers';
 import { useYouTubeHistory } from './useYouTubeHistory';
 
-export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
+export const useYouTubeSubtitles = (fluxEnabled: boolean = true, sourceLang: string = 'Auto') => {
     const [allCues, setAllCues] = useState<SubtitleCue[]>([]);
     const [currentCue, setCurrentCue] = useState<SubtitleCue | null>(null);
     const [prevCue, setPrevCue] = useState<SubtitleCue | null>(null);
@@ -21,6 +21,7 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
     const lastVideoId = useRef<string | null>(null);
     const lastVideoTime = useRef(0);
     const lastSeekTime = useRef(0);
+    const lastSourceLang = useRef<string>(sourceLang);
 
     const ccEnabled = useYouTubeCCState(isWatchPage);
     const isActive = isWatchPage && fluxEnabled && ccEnabled;
@@ -42,11 +43,12 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
             }
 
             const videoId = YouTubeService.getVideoId();
-            if (videoId && videoId !== lastVideoId.current) {
+            if (videoId && (videoId !== lastVideoId.current || sourceLang !== lastSourceLang.current)) {
                 lastVideoId.current = videoId;
+                lastSourceLang.current = sourceLang;
                 setAllCues([]);
                 clearHistory();
-                const cues = await YouTubeService.fetchTranscript(videoId);
+                const cues = await YouTubeService.fetchTranscript(videoId, sourceLang);
                 if (cues.length > 0) setAllCues(cues);
             }
         };
@@ -128,7 +130,7 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
 
     const syncTranscript = (time: number, shouldUpdateHistory: boolean) => {
         const activeCues = allCues.filter(
-            c => time >= c.start && time <= c.start + c.duration + 0.5
+            c => time >= c.start && time < c.start + c.duration
         );
 
         if (activeCues.length > 0) {
