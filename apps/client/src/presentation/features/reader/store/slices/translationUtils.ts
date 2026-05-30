@@ -19,7 +19,7 @@ export const getContextForIndex = (tokens: string[], index: number): string => {
     const end = Math.min(tokens.length - 1, index + WINDOW_SIZE);
 
     let refinedStart = start;
-    for (let i = index; i >= start; i--) {
+    for (let i = index - 1; i >= start; i--) {
         if (/[.!?\n]/.test(tokens[i])) {
             refinedStart = i + 1;
             break;
@@ -98,7 +98,11 @@ export const fetchTranslationHelper = async (
                 setTimeout(() => reject(new Error("Timeout")), timeoutMs)
             );
 
-            return await Promise.race([fetchPromise, timeoutPromise]) as string;
+            const result = await Promise.race([fetchPromise, timeoutPromise]);
+            if (typeof result === 'object' && result !== null && 'response' in result) {
+                return (result as { response: string }).response;
+            }
+            return result as string;
         } catch (error: unknown) {
             attempt++;
             const errorMsg = error instanceof Error ? error.message : String(error);

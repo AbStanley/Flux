@@ -5,7 +5,6 @@ import type {
 } from "../../../../../core/interfaces/IAIService";
 import { ollamaApi } from "../../../../../infrastructure/api/ollama";
 import {
-  isSingleToken,
   coreLooksLikeVerb,
   shouldFetchConjugations,
   sanitizeConjugations,
@@ -155,7 +154,12 @@ async function runRichLoad(
       // Clear the loading spinner as soon as we have SOME useful
       // content to render — the remaining fields fade in as they
       // arrive. Until then, keep showing the spinner.
-      const becomeLoaded = !!next.translation || !!next.grammar;
+      // If it's a verb, we wait for the conjugated translation to arrive
+      // so it doesn't flash the infinitive alone.
+      const becomeLoaded = next.isVerb 
+        ? !!next.translationConjugated 
+        : (!!next.translation || !!next.grammar);
+        
       return {
         ...tab,
         data: next,
@@ -391,13 +395,14 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
     };
 
     const modelInfinitive = tab.data.grammar?.infinitive?.trim();
-    const infinitive =
-      modelInfinitive || (isSingleToken(tab.text) ? tab.text.trim() : "");
+    // Never fall back to tab.text: it may be a conjugated form (e.g. "macht"),
+    // which would confuse the conjugation model into guessing a different verb.
+    const infinitive = modelInfinitive ?? "";
     if (!infinitive) {
       updateTab((t) => ({
         ...t,
         conjugationsError:
-          "No infinitive available — can't fetch conjugations.",
+          "No infinitive available — the model did not identify one for this word.",
         conjugationsLoading: false,
       }));
       return;

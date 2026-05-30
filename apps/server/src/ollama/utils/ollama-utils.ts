@@ -36,7 +36,8 @@ export function cleanResponse(
     }
   }
 
-  if (options?.multiline === false) {
+  const multiline = options?.multiline ?? false;
+  if (!multiline) {
     cleaned = cleaned.split('\n')[0].trim();
   }
 

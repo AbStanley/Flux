@@ -74,7 +74,12 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
     if (!isOpen) return null;
 
     const activeTab = tabs.find(t => t.id === activeTabId);
-    const existingWord = activeTab ? [...wordsState.items, ...phrasesState.items].find(w => w.text.toLowerCase() === activeTab.text.toLowerCase()) : undefined;
+    const activeTabText = activeTab?.text.toLowerCase();
+    const activeTabInfinitive = activeTab?.data?.grammar?.infinitive?.toLowerCase();
+    const existingWord = activeTab ? [...wordsState.items, ...phrasesState.items].find(w => {
+        const text = w.text.toLowerCase();
+        return text === activeTabText || (activeTabInfinitive && text === activeTabInfinitive);
+    }) : undefined;
     const peekTranslation = activeTab?.data?.translation?.trim() || (activeTab?.isLoading ? 'Loading…' : '');
 
     const cardHeightCss = dragHeight !== null
@@ -145,8 +150,10 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
     const getDefaultValues = (): Partial<CreateWordRequest> | undefined => {
         if (!activeTab?.data) return undefined;
         const { data } = activeTab;
+        // `translation` is always the infinitive/citation form (e.g. "mirar", "see"),
+        // which is what we want to save as the dictionary definition.
         return {
-            text: activeTab.text,
+            text: data.grammar?.infinitive || activeTab.text,
             definition: data.translation,
             explanation: data.grammar?.explanation || activeTab.aiExplanation,
             context: activeTab.context,
@@ -158,6 +165,8 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
             })) || []
         };
     };
+
+
 
     const desktopOverrides = forceOverlay
         ? ''

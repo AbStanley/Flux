@@ -88,8 +88,17 @@ export function RichDetailsContent({
             {/* Main Translation */}
             <motion.div variants={itemVariants}>
                 <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="text-lg font-semibold text-primary prose dark:prose-invert prose-p:my-0 prose-p:text-current prose-headings:my-0 prose-headings:text-lg prose-headings:font-semibold prose-headings:text-current max-w-none">
-                        <ReactMarkdown>{data.segment}</ReactMarkdown>
+                    <div className="text-lg font-semibold text-primary max-w-none">
+                        {data.grammar?.infinitive && data.grammar.infinitive !== data.segment ? (
+                            <>
+                                <span>{data.segment}</span>
+                                <span className="text-sm font-normal text-primary/70 ml-1">
+                                    {' — '}<span className="italic">{data.grammar.infinitive}</span>
+                                </span>
+                            </>
+                        ) : (
+                            <span>{data.segment}</span>
+                        )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                         <Button
@@ -115,8 +124,18 @@ export function RichDetailsContent({
                         )}
                     </div>
                 </div>
-                <div className="text-2xl font-bold text-foreground prose dark:prose-invert prose-p:my-0 prose-p:text-current prose-headings:my-1 prose-headings:text-current max-w-none">
-                    <ReactMarkdown>{data.translation}</ReactMarkdown>
+                <div className="text-2xl font-bold text-foreground max-w-none">
+                    {data.translationConjugated && data.translationConjugated !== data.translation
+                        ? (
+                            <>
+                                <span>{data.translationConjugated}</span>
+                                <span className="text-base font-normal text-muted-foreground ml-1">
+                                    {' — '}<span className="italic">{data.translation}</span>
+                                </span>
+                            </>
+                        )
+                        : <span>{data.translation}</span>
+                    }
                 </div>
 
                 {/* Direct Pill Lookups Dictionaries Card */}

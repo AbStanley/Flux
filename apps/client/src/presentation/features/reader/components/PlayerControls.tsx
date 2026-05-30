@@ -38,7 +38,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
     } = useAudioStore();
 
     // Reader Store Actions
-    const { text, tokens: readerTokens, clearSelection, toggleZenMode } = useReaderStore();
+    const { text, tokens: readerTokens, targetLang, clearSelection, toggleZenMode } = useReaderStore();
     const selectionMode = useReaderStore(state => state.selectionMode);
     const setSelectionMode = useReaderStore(state => state.setSelectionMode);
     const readingMode = useReaderStore(state => state.readingMode);
@@ -140,7 +140,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                             showTranslations={showTranslations}
                             onToggleTranslations={toggleShowTranslations}
                             onClearTranslations={() => {
-                                clearSelectionTranslations();
+                                clearSelectionTranslations(readerTokens, targetLang);
                                 clearSelection();
                             }}
                         />
@@ -226,7 +226,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                     showTranslations={showTranslations}
                     onToggleTranslations={toggleShowTranslations}
                     onClearTranslations={() => {
-                        clearSelectionTranslations();
+                        clearSelectionTranslations(readerTokens, targetLang);
                         clearSelection();
                     }}
                 />

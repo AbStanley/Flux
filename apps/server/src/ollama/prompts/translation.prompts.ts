@@ -15,8 +15,9 @@ export const getTranslatePrompt = (
 [TARGET_LANGUAGE] ${targetLanguage}
 [TASK] Translate ONLY "${text}" and detect source language.
 [RULES]
-1. No extra words from context.
-2. Return JSON ONLY.
+1. No extra words from context. DO NOT complete the sentence.
+2. Translate strictly ONLY the text in [TO_TRANSLATE]. Keep it incomplete if it is a phrase.
+3. Return JSON ONLY.
 [JSON_FORMAT]
 {
   "detectedLanguage": "string",
@@ -42,13 +43,16 @@ Text to Translate:
 [TO_TRANSLATE] ${text}
 [TARGET_LANGUAGE] ${targetLanguage}
 [RULES]
-1. Translate ONLY "${text}".
-2. DO NOT include translations of surrounding words from the context.
-3. DO NOT add words like "Algo", "Something", or "The" if not in the original text.
+1. Translate strictly ONLY the text: "${text}".
+2. DO NOT complete the sentence. You must translate ONLY the exact words provided in [TO_TRANSLATE].
+3. DO NOT include translations of surrounding words from the context.
+4. Keep it as an incomplete phrase if the source text is incomplete.
 [RESULT]`;
 
   return prompt;
 };
+
+
 
 export const getRichTranslationPrompt = (
   text: string,
@@ -65,19 +69,19 @@ export const getRichTranslationPrompt = (
   return `You are a ${srcLang}→${targetLanguage} bilingual dictionary.
 
 CRITICAL ROLE & RULES:
-1. Ensure absolute parts-of-speech and category consistency. Never translate a verb form as a pronoun. If the input tapped word is a verb, the "translation" field MUST be a verb or verb form in the target language.
-2. Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural source words into singular target forms, preventing pronoun mix-ups.
+1. Ensure absolute parts-of-speech and category consistency. Never translate a verb form as a pronoun. If the input is a verb, the "translation" and "translationConjugated" fields MUST be verbs in the target language.
+2. Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural source words into singular target forms.
 
 A learner is reading this ${srcLang} sentence:
 "${context || 'none'}"
 
 Within that sentence they tapped: "${text}"
 
-CRITICAL: "${text}" is a ${srcLang} word (or phrase) as used in the ${srcLang} sentence above. Do NOT interpret it as a word from any other language, even if it looks identical to one. Pay close attention to cross-language homographs.
+CRITICAL: "${text}" is a ${srcLang} word as used in the ${srcLang} sentence above. Do NOT interpret it as a word from any other language.
 
 BEFORE writing JSON, decide:
-1. In THIS ${srcLang} sentence, is "${text}" a verb form? (infinitive, conjugated, participle, gerund, zu-infinitive all count)
-2. If yes, what is the ${srcLang} infinitive?
+1. In THIS ${srcLang} sentence, is "${text}" a verb form? (infinitive, conjugated, participle, gerund all count)
+2. If yes, what is the ${srcLang} infinitive, and what is the conjugated ${targetLanguage} equivalent?
 
 Reply with ONE JSON object in this exact shape:
 
@@ -85,9 +89,11 @@ Reply with ONE JSON object in this exact shape:
   "type": "word" | "sentence",
   "isVerb": true | false,
   "segment": "${text}",
-  "translation": "<${targetLanguage}: dictionary headword(s) for the ${srcLang} word in this context; ≤3 words for single-word input>",
+  "_analysis": "<Analyze '${text}' in isolation: is it a main verb or just an auxiliary/helping verb? State its literal base meaning before translating.>",
+  "translationConjugated": "<${targetLanguage}: ONLY when isVerb=true — exact morphological equivalent of ONLY the word '${text}'. If '${text}' is just an auxiliary verb within a larger sentence, conjugate ONLY the auxiliary. Do NOT translate the full compound verb. Omit entirely when isVerb=false>",
+  "translation": "<${targetLanguage}: INFINITIVE / base citation form of the translation; ≤3 words>",
   "grammar": {
-    "infinitive":   "<${srcLang} dictionary form; REQUIRED and MUST be filled when isVerb=true>",
+    "sourceInfinitive": "<${srcLang} INFINITIVE / dictionary citation form. MUST BE IN ${srcLang}, NOT ${targetLanguage}. NEVER copy the segment if conjugated>",
     "partOfSpeech": "<${targetLanguage}>",
     "tense":        "<${targetLanguage}; REQUIRED when isVerb=true>",
     "gender":       "<${targetLanguage}; ONLY when grammatically gendered>",
@@ -103,40 +109,51 @@ Reply with ONE JSON object in this exact shape:
 }
 
 Rules:
-- Use the ${srcLang} sentence above to pick the correct sense. The translation must match how the word is actually used there.
-- Grammatical Agreement: Maintain strict grammatical agreement (number, person, gender, tense) between the source word and the translation. Do NOT translate plural pronouns or plural verb forms as singular, avoiding singular pronoun mix-ups.
-- Parts-of-Speech Matching: Ensure absolute semantic and parts-of-speech consistency between the source word and its translation. Never translate a verb form as a pronoun.
-- When isVerb=true, "infinitive" MUST be the ${srcLang} dictionary form — NEVER copy the segment verbatim when the segment is a conjugated form.
+- Use the ${srcLang} sentence above to pick the correct sense.
+- "translation" is ALWAYS the infinitive/citation form: never conjugated, never progressive, never include reflexive pronouns unless mandatory.
+- "translationConjugated" (isVerb=true only): conjugated to match "${text}" person/tense/number exactly. If the source is simple present, the target MUST be simple present.
+- Grammatical Agreement: Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural forms as singular.
+- Parts-of-Speech Matching: Never translate a verb form as a pronoun.
+- When isVerb=true, "sourceInfinitive" MUST be the ${srcLang} INFINITIVE. NEVER copy the conjugated segment.
 - Every string value MUST be in the language its slot assigns. Omit optional keys whose condition is false — never write "n/a", "none", or empty strings.
-- "examples": each "sentence" entirely in ${srcLang}, each "translation" entirely in ${targetLanguage}. Never swap. If scripts differ, the two fields MUST use different scripts.
-- Examples should show "${text}" used in natural, varied ${srcLang} contexts — not all the same sense.
-${isSentence ? `- Multi-word input: type="sentence", isVerb=false.` : ''}
-- Translate ONLY the specific segment "${text}". DO NOT include translations of surrounding words from the context sentence in the "translation" field. 
+- "examples": each "sentence" entirely in ${srcLang}, each "translation" entirely in ${targetLanguage}. Never swap.
+- Translate ONLY the specific segment "${text}". DO NOT translate the entire sentence. 
+- If "${text}" is a single word, the translation MUST be a single word (or minimal equivalent). DO NOT translate the full compound verb if only the auxiliary verb was tapped.
+${isSentence ? '- Multi-word input: type="sentence", isVerb=false.' : ''}
 
-Output JSON only. No markdown, no preamble. Do NOT include a "conjugations" field — conjugation tables are fetched separately when the user requests them.`;
+Output JSON only. No markdown, no preamble. Do NOT include a "conjugations" field.`;
 };
 
-/**
- * Focused fallback that asks for a SINGLE tense at a time. Wrapping the
- * rows in an object plays nicer with Ollama's JSON mode (which prefers
- * top-level objects) than a bare array.
- */
 export const getSingleTensePrompt = (
   infinitive: string,
   sourceLanguage: string,
   tense: string,
 ): string => {
-  return `Give the ${tense} tense conjugation of the ${sourceLanguage} verb "${infinitive}".
+  return `You are a ${sourceLanguage} grammar expert.
+Task: Conjugate ONLY the ${sourceLanguage} verb "${infinitive}" in the ${tense} tense.
 
-Reply with this exact JSON shape — no commentary, no markdown:
+CRITICAL RULES:
+1. Conjugate ONLY "${infinitive}". Do NOT conjugate any other verb, even if you believe a synonym is more common in this tense.
+2. "pronoun" = the standalone subject pronoun(s) ONLY — never include a verb word here.
+3. "conjugation" = the COMPLETE verb form for that person — all auxiliary + main verb words, NO pronoun.
+   - Compound/periphrastic tenses (Perfekt, Futur, Passé composé, etc.):
+       pronoun: "ich"  →  conjugation: "habe geschaut"   (NOT "ich habe geschaut")
+       pronoun: "ich"  →  conjugation: "werde schauen"   (NOT "ich werde schauen")
+   - Simple tenses: just the single conjugated word, e.g. "schaue", "schaust", "schaut".
+
+Return exactly this 6-row JSON (replace placeholder text with real ${sourceLanguage} for "${infinitive}" ${tense}):
 {
   "rows": [
-    {"pronoun": "<${sourceLanguage} pronoun>", "conjugation": "<inflected form of '${infinitive}'>"},
-    …
+    {"pronoun": "1st sg pronoun",  "conjugation": "<1st sg form of ${infinitive}>"},
+    {"pronoun": "2nd sg pronoun",  "conjugation": "<2nd sg form of ${infinitive}>"},
+    {"pronoun": "3rd sg pronoun",  "conjugation": "<3rd sg form of ${infinitive}>"},
+    {"pronoun": "1st pl pronoun",  "conjugation": "<1st pl form of ${infinitive}>"},
+    {"pronoun": "2nd pl pronoun",  "conjugation": "<2nd pl form of ${infinitive}>"},
+    {"pronoun": "3rd pl pronoun",  "conjugation": "<3rd pl form of ${infinitive}>"}
   ]
 }
 
-Use one row per person/gender/number the paradigm has — typically 6 rows by person; Russian past is 4 rows with pronouns "он", "она", "оно", "они". Every row is filled with a real ${sourceLanguage} form.`;
+Output JSON only. No markdown. No preamble.`;
 };
 
 export const getExplainPrompt = (
@@ -159,6 +176,3 @@ Instructions:
 
 Output:`;
 };
-
-
-

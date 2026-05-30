@@ -95,7 +95,10 @@ export class OllamaController {
   ) {
     const controller = new AbortController();
     req.on('close', () => controller.abort());
-    return await this.ollamaService.generateExamples({ ...body, signal: controller.signal });
+    return await this.ollamaService.generateExamples({
+      ...body,
+      signal: controller.signal,
+    });
   }
 
   @Post('analyze-grammar')
@@ -111,7 +114,10 @@ export class OllamaController {
   ): Promise<GrammarAnalysisResponse> {
     const controller = new AbortController();
     req.on('close', () => controller.abort());
-    return await this.ollamaService.analyzeGrammar({ ...body, signal: controller.signal });
+    return await this.ollamaService.analyzeGrammar({
+      ...body,
+      signal: controller.signal,
+    });
   }
 
   @Post('translate')
@@ -129,7 +135,10 @@ export class OllamaController {
     body.text = cleanSelection(body.text);
     const controller = new AbortController();
     req.on('close', () => controller.abort());
-    return await this.ollamaService.translateText({ ...body, signal: controller.signal });
+    return await this.ollamaService.translateText({
+      ...body,
+      signal: controller.signal,
+    });
   }
 
   @Post('explain')
@@ -146,7 +155,10 @@ export class OllamaController {
     body.text = cleanSelection(body.text);
     const controller = new AbortController();
     req.on('close', () => controller.abort());
-    return await this.ollamaService.explainText({ ...body, signal: controller.signal });
+    return await this.ollamaService.explainText({
+      ...body,
+      signal: controller.signal,
+    });
   }
 
   @Post('rich-translation')
@@ -166,18 +178,22 @@ export class OllamaController {
     body.text = cleanSelection(body.text);
     const controller = new AbortController();
     req.on('close', () => controller.abort());
-    
+
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
-      const stream = await this.ollamaService.getRichTranslationStream({ ...body, signal: controller.signal });
+      const stream = await this.ollamaService.getRichTranslationStream({
+        ...body,
+        signal: controller.signal,
+      });
       for await (const chunk of stream) {
         res.write(JSON.stringify(chunk) + '\n');
       }
       res.end();
       return;
     }
-    const result: RichTranslation =
-      await this.ollamaService.getRichTranslation({ ...body, signal: controller.signal });
+    const result: RichTranslation = await this.ollamaService.getRichTranslation(
+      { ...body, signal: controller.signal },
+    );
     res.json(result);
   }
 
@@ -198,14 +214,19 @@ export class OllamaController {
 
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
-      for await (const item of this.ollamaService.getConjugationsStream({ ...body, signal: controller.signal })) {
+      for await (const item of this.ollamaService.getConjugationsStream({
+        ...body,
+        signal: controller.signal,
+      })) {
         res.write(JSON.stringify(item) + '\n');
       }
       res.end();
       return;
     }
-    const result: RichConjugations =
-      await this.ollamaService.getConjugations({ ...body, signal: controller.signal });
+    const result: RichConjugations = await this.ollamaService.getConjugations({
+      ...body,
+      signal: controller.signal,
+    });
     res.json(result);
   }
 
@@ -220,13 +241,19 @@ export class OllamaController {
 
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
-      const stream = await this.ollamaService.generateContentStream({ ...body, signal: controller.signal });
+      const stream = await this.ollamaService.generateContentStream({
+        ...body,
+        signal: controller.signal,
+      });
       for await (const part of stream) {
         res.write(JSON.stringify(part) + '\n');
       }
       res.end();
     } else {
-      const result = await this.ollamaService.generateContent({ ...body, signal: controller.signal });
+      const result = await this.ollamaService.generateContent({
+        ...body,
+        signal: controller.signal,
+      });
       res.json(result);
     }
   }
@@ -256,13 +283,19 @@ export class OllamaController {
 
     if (body.stream) {
       res.setHeader('Content-Type', 'application/x-ndjson');
-      const stream = await this.ollamaService.generateGameContentStream({ ...body, signal: controller.signal });
+      const stream = await this.ollamaService.generateGameContentStream({
+        ...body,
+        signal: controller.signal,
+      });
       for await (const part of stream) {
         res.write(JSON.stringify(part) + '\n');
       }
       res.end();
     } else {
-      const result = await this.ollamaService.generateGameContent({ ...body, signal: controller.signal });
+      const result = await this.ollamaService.generateGameContent({
+        ...body,
+        signal: controller.signal,
+      });
       res.json(result);
     }
   }
@@ -280,7 +313,10 @@ export class OllamaController {
   ): Promise<WritingAnalysisResponse> {
     const controller = new AbortController();
     req.on('close', () => controller.abort());
-    return this.ollamaService.analyzeWriting({ ...body, signal: controller.signal });
+    return this.ollamaService.analyzeWriting({
+      ...body,
+      signal: controller.signal,
+    });
   }
 
   @Post('models/pull')

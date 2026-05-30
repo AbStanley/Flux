@@ -91,14 +91,14 @@ export class OllamaClientService {
   ): Promise<T> {
     try {
       this.logger.log(`Ollama request: ${action}`);
-      const client = signal 
-        ? new Ollama({ 
-            host: this.ollamaHost, 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            fetch: (url: any, init: any) => fetch(url, { ...init, signal }) 
-          }) 
+      const client = signal
+        ? new Ollama({
+            host: this.ollamaHost,
+
+            fetch: (url: any, init: any) => fetch(url, { ...init, signal }),
+          })
         : this.ollama;
-        
+
       return await fn(client);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);

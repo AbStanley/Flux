@@ -9,7 +9,7 @@ export const getGameContentPrompt = (
   sourceLangCode: string = 'en-US',
   targetLangCode: string = 'es-ES',
   verb?: string,
-  tense?: string
+  tense?: string,
 ): string => {
   const isStoryMode = mode === 'story';
   const contextInstruction =
@@ -59,8 +59,12 @@ export const getGameContentPrompt = (
      ]
       `;
   } else if (mode === 'conjugation') {
-    const verbInstruction = verb ? `Verb: "${verb}"` : `Use 5 DIFFERENT common verbs (no repeats).`;
-    const tenseInstruction = tense ? `Tense: "${tense}"` : `Mix Tenses: "Present Simple", "Past Simple", "Future".`;
+    const verbInstruction = verb
+      ? `Verb: "${verb}"`
+      : `Use 5 DIFFERENT common verbs (no repeats).`;
+    const tenseInstruction = tense
+      ? `Tense: "${tense}"`
+      : `Mix Tenses: "Present Simple", "Past Simple", "Future".`;
 
     return `
       Generate 5 verb exercises for ${targetLang}.

@@ -17,7 +17,9 @@ export class WordsService {
       .replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, '');
   }
 
-  private buildSearchFilter(search?: string): Prisma.WordWhereInput | undefined {
+  private buildSearchFilter(
+    search?: string,
+  ): Prisma.WordWhereInput | undefined {
     if (!search?.trim()) return undefined;
 
     const normalized = search.trim().replace(/\s+/g, ' ');
@@ -68,7 +70,8 @@ export class WordsService {
   async create(createWordDto: CreateWordDto, userId?: string) {
     const resolvedUserId = await this.resolveUserId(userId);
 
-    const sanitizedText = this.sanitizeVocabularyField(createWordDto.text) ?? '';
+    const sanitizedText =
+      this.sanitizeVocabularyField(createWordDto.text) ?? '';
     const sanitizedDefinition = this.sanitizeVocabularyField(
       createWordDto.definition,
     );
@@ -184,7 +187,7 @@ export class WordsService {
                     ? { definition: 'asc' }
                     : sort === 'definition_desc'
                       ? { definition: 'desc' }
-                : { createdAt: 'desc' },
+                      : { createdAt: 'desc' },
           include: {
             examples: true,
           },

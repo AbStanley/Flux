@@ -66,6 +66,22 @@ const ReaderTokenComponent = ({
     groupEndId,
     groupText,
 }: ReaderTokenProps) => {
+    // Sanitize translations to string to handle legacy bad cache entries safely
+    const cleanTranslationObj = (val: unknown): string | undefined => {
+        if (!val) return undefined;
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') {
+            const obj = val as Record<string, unknown>;
+            if (obj && 'response' in obj) {
+                return String(obj.response);
+            }
+        }
+        return String(val);
+    };
+
+    const sanitizedGroupTranslation = cleanTranslationObj(groupTranslation);
+    const sanitizedHoverTranslation = cleanTranslationObj(hoverTranslation);
+
     // 1. Calculate derived state (synchronous)
     const isHeaderMarker = /^#+$/.test(token.trim());
     const isWhitespace = !token.trim();
@@ -88,8 +104,8 @@ const ReaderTokenComponent = ({
         tokenRef,
         containerRef,
         popupContainerRef,
-        groupTranslation,
-        hoverTranslation,
+        groupTranslation: sanitizedGroupTranslation,
+        hoverTranslation: sanitizedHoverTranslation,
         isHovered,
         isSelected,
         groupEndId
@@ -103,8 +119,7 @@ const ReaderTokenComponent = ({
     const targetLang = useReaderStore(state => state.targetLang);
 
     const handleSave = (translationText: string) => {
-
-        const textToSave = (groupText && translationText === groupTranslation)
+        const textToSave = (groupText && translationText === sanitizedGroupTranslation)
             ? groupText
             : token;
 
@@ -112,7 +127,7 @@ const ReaderTokenComponent = ({
 
         // Determine type: explicitly 'phrase' if it was a group translation, 
         // OR fallback heuristics (spaces) if generic.
-        const type = (groupText && translationText === groupTranslation)
+        const type = (groupText && translationText === sanitizedGroupTranslation)
             ? 'phrase'
             : (textToSave.includes(' ') && textToSave.length > 20 ? 'phrase' : 'word');
 
@@ -147,7 +162,6 @@ const ReaderTokenComponent = ({
         return undefined;
     };
 
-
     // 3. Conditional Returns (After hooks)
     if (isHeaderMarker) return null;
     if (hasNewline) return <br />;
@@ -161,7 +175,7 @@ const ReaderTokenComponent = ({
                 ${isSelected ? tokenStyles.selected : ''} 
                 ${!isWhitespace ? tokenStyles.interactive : ''}
                 ${position ? tokenStyles[position] : ''} 
-                ${groupTranslation ? tokenStyles.visualStart : ''}
+                ${sanitizedGroupTranslation ? tokenStyles.visualStart : ''}
                 ${isAudioHighlighted ? tokenStyles.audioHighlight : ''}
                 ${isHovered ? cn(
                 tokenStyles.hoveredSentence,
@@ -199,7 +213,7 @@ const ReaderTokenComponent = ({
             }}
             tabIndex={0} // Allow focus to bring to front via CSS :focus-within
         >
-            {groupTranslation && (
+            {sanitizedGroupTranslation && (
                 <span
                     ref={popupContainerRef}
                     className={cn(popupStyles.selectionPopupValid, isRightAligned && popupStyles.popupRight)}
@@ -215,13 +229,13 @@ const ReaderTokenComponent = ({
                 >
                     {/* DEBUG RENDER */}
                     <ReaderTokenPopup
-                        translation={groupTranslation}
+                        translation={sanitizedGroupTranslation}
                         onPlay={() => onPlay(index, false)}
                         onMoreInfo={() => onMoreInfo(index, false)}
                         onRegenerate={() => onRegenerate(index, false)}
-                        onSave={() => handleSave(groupTranslation)}
+                        onSave={() => handleSave(sanitizedGroupTranslation)}
                         isSaved={isSaved}
-                        collapsedText={getCollapsedText(groupText || token, groupTranslation, isPopupHovered)}
+                        collapsedText={getCollapsedText(groupText || token, sanitizedGroupTranslation, isPopupHovered)}
                     />
                 </span>
             )}
@@ -234,7 +248,7 @@ const ReaderTokenComponent = ({
                 - If SELECTED: Show below to avoid clash with group translation + user request.
                 - EXCEPTION: If selected is SINGLE word, disable below popup (green popup handles it).
              */}
-            {(isHoveredWord) && hoverTranslation && !(isSelected && position === 'single') && (
+            {(isHoveredWord) && sanitizedHoverTranslation && !(isSelected && position === 'single') && (
                 <span
                     className={cn(isSelected ? popupStyles.hoverPopupBelow : popupStyles.hoverPopup, isRightAligned && popupStyles.popupRight)}
                     style={{ maxWidth: dynamicMaxWidth ? `${dynamicMaxWidth}px` : undefined }}
@@ -246,13 +260,13 @@ const ReaderTokenComponent = ({
                     onMouseLeave={() => setIsPopupHovered(false)}
                 >
                     <ReaderTokenPopup
-                        translation={hoverTranslation}
+                        translation={sanitizedHoverTranslation}
                         onPlay={() => onPlay(index, true)}
                         onMoreInfo={() => onMoreInfo(index, true)}
                         onRegenerate={() => onRegenerate(index, true)}
-                        onSave={() => handleSave(hoverTranslation)}
+                        onSave={() => handleSave(sanitizedHoverTranslation)}
                         isSaved={isSaved}
-                        collapsedText={getCollapsedText(token, hoverTranslation, isPopupHovered)}
+                        collapsedText={getCollapsedText(token, sanitizedHoverTranslation, isPopupHovered)}
                     />
                 </span>
             )}

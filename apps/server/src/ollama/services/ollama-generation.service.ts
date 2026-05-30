@@ -111,11 +111,18 @@ export class OllamaGenerationService {
       contentType: params.contentType,
     });
 
-    return this.ollamaClient.generate(model, prompt, true, undefined, {
-      temperature: 0.8,
-      top_p: 0.9,
-      top_k: 40,
-    }, params.signal) as unknown as AsyncIterable<{ response: string; done: boolean }>;
+    return this.ollamaClient.generate(
+      model,
+      prompt,
+      true,
+      undefined,
+      {
+        temperature: 0.8,
+        top_p: 0.9,
+        top_k: 40,
+      },
+      params.signal,
+    ) as unknown as AsyncIterable<{ response: string; done: boolean }>;
   }
 
   async generateGameContent(params: {
@@ -144,7 +151,7 @@ export class OllamaGenerationService {
       params.sourceLangCode || 'en-US',
       params.targetLangCode || 'es-ES',
       params.verb,
-      params.tense
+      params.tense,
     );
 
     const response = await this.ollamaClient.generate(
@@ -188,7 +195,7 @@ export class OllamaGenerationService {
       params.sourceLangCode || 'en-US',
       params.targetLangCode || 'es-ES',
       params.verb,
-      params.tense
+      params.tense,
     );
 
     const stream = await this.ollamaClient.generate(

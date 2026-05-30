@@ -6,6 +6,7 @@ import { OllamaClientService } from './ollama-client.service';
 import { OllamaTranslationService } from './ollama-translation.service';
 import { OllamaGrammarService } from './ollama-grammar.service';
 import { OllamaGenerationService } from './ollama-generation.service';
+import { OllamaWritingService } from './ollama-writing.service';
 
 describe('OllamaService', () => {
   let service: OllamaService;
@@ -46,6 +47,12 @@ describe('OllamaService', () => {
             generateGameContent: jest.fn(),
           },
         },
+        {
+          provide: OllamaWritingService,
+          useValue: {
+            analyzeWriting: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -60,6 +67,7 @@ describe('OllamaService', () => {
       translation: OllamaTranslationService;
       grammar: OllamaGrammarService;
       generation: OllamaGenerationService;
+      writing: OllamaWritingService;
     };
     serviceInternal.client =
       module.get<OllamaClientService>(OllamaClientService);
@@ -69,6 +77,8 @@ describe('OllamaService', () => {
     serviceInternal.grammar =
       module.get<OllamaGrammarService>(OllamaGrammarService);
     serviceInternal.generation = generationService;
+    serviceInternal.writing =
+      module.get<OllamaWritingService>(OllamaWritingService);
   });
 
   it('should be defined', () => {

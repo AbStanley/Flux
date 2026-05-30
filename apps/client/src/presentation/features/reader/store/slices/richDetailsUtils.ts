@@ -98,7 +98,7 @@ export const sanitizeGrammar = (
     partOfSpeech: asString(g.partOfSpeech) ?? "",
     tense: dropVerbFields ? undefined : asString(g.tense),
     gender: asString(g.gender),
-    infinitive: dropVerbFields ? undefined : asString(g.infinitive),
+    infinitive: dropVerbFields ? undefined : (asString(g.sourceInfinitive) ?? asString(g.infinitive)),
     explanation: asString(g.explanation) ?? "",
   } as RichTranslationResult["grammar"];
 };
@@ -133,12 +133,24 @@ export const sanitizeRichResult = (
 ): RichTranslationResult => {
   const rawObj = raw as unknown as Record<string, unknown>;
   const isVerb = typeof raw.isVerb === "boolean" ? raw.isVerb : undefined;
+  const translationConjugated = isVerb ? asString(rawObj.translationConjugated) : undefined;
+  
+  const grammar = sanitizeGrammar(rawObj.grammar, isVerb);
+  const translationStr = asString(raw.translation) ?? "";
+  
+  // Anti-hallucination: If the model placed the target language translation 
+  // into the source infinitive slot, discard it.
+  if (grammar?.infinitive && translationStr && grammar.infinitive.toLowerCase() === translationStr.toLowerCase()) {
+    grammar.infinitive = undefined;
+  }
+
   return {
     type: raw.type,
     isVerb,
     segment: asString(raw.segment) ?? fallbackSegment,
-    translation: asString(raw.translation) ?? "",
-    grammar: sanitizeGrammar(rawObj.grammar, isVerb),
+    translation: translationStr,
+    translationConjugated,
+    grammar,
     examples: asExampleArray(rawObj.examples) ?? [],
     alternatives: asStringArray(rawObj.alternatives) ?? [],
     syntaxAnalysis: asString(rawObj.syntaxAnalysis),
@@ -157,10 +169,19 @@ export const sanitizePartialRich = (
   if (typeof isVerb === "boolean") out.isVerb = isVerb;
   const segment = asString(r.segment);
   if (segment) out.segment = segment;
-  const translation = asString(r.translation);
-  if (translation) out.translation = translation;
+  const translationStr = asString(r.translation);
+  if (translationStr) out.translation = translationStr;
+  const translationConjugated = asString(r.translationConjugated);
+  if (translationConjugated && isVerb) out.translationConjugated = translationConjugated;
+  
   const grammar = sanitizeGrammar(r.grammar, isVerb);
-  if (grammar) out.grammar = grammar;
+  if (grammar) {
+    if (grammar.infinitive && translationStr && grammar.infinitive.toLowerCase() === translationStr.toLowerCase()) {
+      grammar.infinitive = undefined;
+    }
+    out.grammar = grammar;
+  }
+  
   const examples = asExampleArray(r.examples);
   if (examples) out.examples = examples;
   const alternatives = asStringArray(r.alternatives);

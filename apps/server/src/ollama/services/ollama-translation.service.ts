@@ -63,7 +63,7 @@ const CORE_TENSES: Readonly<Record<string, readonly string[]>> = {
 export class OllamaTranslationService {
   private readonly logger = new Logger(OllamaTranslationService.name);
 
-  constructor(private readonly ollamaClient: OllamaClientService) {}
+  constructor(private readonly ollamaClient: OllamaClientService) { }
 
   async translateText(params: {
     text: string;
@@ -81,37 +81,46 @@ export class OllamaTranslationService {
       params.context,
       params.sourceLanguage,
     );
-    const isAuto = !params.sourceLanguage || params.sourceLanguage === 'Auto';
-    const { response } = await this.ollamaClient.generate(
+    this.logger.debug(`[TRANSLATE PROMPT]\n${prompt}`);
+    const generateResult = await this.ollamaClient.generate(
       model,
       prompt,
       false,
-      isAuto ? 'json' : undefined,
+      isBlock ? undefined : {
+        type: 'object',
+        properties: {
+          detectedLanguage: { type: 'string' },
+          translation: { type: 'string' },
+        },
+        required: ['detectedLanguage', 'translation'],
+      },
       {
         num_predict: isBlock ? 512 : 64,
         temperature: 0,
-        stop: isBlock ? undefined : ['\n'],
+        stop: isBlock ? ['\n'] : undefined,
       },
       params.signal,
     );
+    const response = (generateResult as any).response;
+    this.logger.debug(`[TRANSLATE RESPONSE]\n${response}`);
 
-    if (!isAuto) {
-      const cleaned = cleanResponse(response, { multiline: isBlock });
+    if (isBlock) {
+      const cleaned = cleanResponse(response, { multiline: true });
       return { response: this.trimContextBleed(cleaned, params.text) };
     }
 
     try {
       const parsed = cleanAndParseJson<{
-        detectedLanguage: string;
         translation: string;
+        detectedLanguage?: string;
       }>(response);
       return {
         response: this.trimContextBleed(parsed.translation, params.text),
         sourceLanguage: parsed.detectedLanguage,
       };
     } catch (e) {
-      this.logger.error('Failed to parse auto-translation JSON:', e);
-      const cleaned = cleanResponse(response, { multiline: isBlock });
+      this.logger.error('Failed to parse single-word translation JSON:', e);
+      const cleaned = cleanResponse(response, { multiline: false });
       return { response: this.trimContextBleed(cleaned, params.text) };
     }
   }
@@ -125,44 +134,27 @@ export class OllamaTranslationService {
     if (!isSingleWord || !translation) return translation;
 
     const lowerOriginal = original.toLowerCase();
-    const prefixes = [
-      'algo ',
-      'un ',
-      'una ',
-      'el ',
-      'la ',
-      'lo ',
-      'muy ',
-      'something ',
-      'a ',
-      'the ',
-      'very ',
-      'it is ',
-      'es ',
-      'c\'est ',
-      'sehr ',
-      'un peu ',
-      'a bit ',
-    ];
 
     let cleaned = translation;
-    let foundPrefix = true;
 
-    while (foundPrefix) {
-      foundPrefix = false;
-      const lowerCleaned = cleaned.toLowerCase();
-      for (const prefix of prefixes) {
-        // If the translation starts with the prefix but the original didn't
-        if (
-          lowerCleaned.startsWith(prefix) &&
-          !lowerOriginal.startsWith(prefix.trim())
-        ) {
-          cleaned = cleaned.slice(prefix.length).trim();
-          foundPrefix = true;
-          break;
-        }
-      }
+    // Strip leading inverted punctuation (¿, ¡) if the original didn't have it
+    if (
+      (cleaned.startsWith('¿') || cleaned.startsWith('¡')) &&
+      !(original.startsWith('¿') || original.startsWith('¡'))
+    ) {
+      cleaned = cleaned.slice(1).trim();
     }
+
+    // Strip trailing punctuation if the original didn't have it
+    const lastCleanedChar = cleaned.slice(-1);
+    const lastOriginalChar = original.trim().slice(-1);
+    if (
+      ['.', ',', '?', '!', ';', ':'].includes(lastCleanedChar) &&
+      lastOriginalChar !== lastCleanedChar
+    ) {
+      cleaned = cleaned.slice(0, -1).trim();
+    }
+
 
     // Restore capitalized first letter if original was capitalized
     if (original[0] === original[0].toUpperCase() && cleaned[0]) {
@@ -185,7 +177,14 @@ export class OllamaTranslationService {
       params.targetLanguage,
       params.context,
     );
-    const { response } = await this.ollamaClient.generate(model, prompt, false, undefined, undefined, params.signal);
+    const { response } = await this.ollamaClient.generate(
+      model,
+      prompt,
+      false,
+      undefined,
+      undefined,
+      params.signal,
+    );
     return cleanResponse(response);
   }
 
@@ -229,11 +228,69 @@ export class OllamaTranslationService {
       params.context,
       params.sourceLanguage,
     );
-    return this.ollamaClient.generate(model, prompt, true, 'json', {
-      num_ctx: 2048,
-      num_predict: 768,
-      temperature: 0,
-    }, params.signal);
+    this.logger.debug(`[RICH TRANSLATION PROMPT]\n${prompt}`);
+
+    const stream = await this.ollamaClient.generate(
+      model,
+      prompt,
+      true,
+      {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['word', 'sentence'] },
+          isVerb: { type: 'boolean' },
+          segment: { type: 'string' },
+          translation: { type: 'string' },
+          translationConjugated: { type: 'string' },
+          grammar: {
+            type: 'object',
+            properties: {
+              sourceInfinitive: { type: 'string' },
+              partOfSpeech: { type: 'string' },
+              tense: { type: 'string' },
+              gender: { type: 'string' },
+              explanation: { type: 'string' }
+            }
+          },
+          examples: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                sentence: { type: 'string' },
+                translation: { type: 'string' }
+              }
+            }
+          },
+          alternatives: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          syntaxAnalysis: { type: 'string' },
+          grammarRules: {
+            type: 'array',
+            items: { type: 'string' }
+          }
+        },
+        required: ['type', 'isVerb', 'segment', 'translation']
+      },
+      {
+        num_ctx: 2048,
+        num_predict: 768,
+        temperature: 0,
+      },
+      params.signal,
+    ) as AsyncIterable<GenerateResponse>;
+
+    const logger = this.logger;
+    return (async function* () {
+      let fullResponse = '';
+      for await (const chunk of stream) {
+        fullResponse += chunk.response;
+        yield chunk;
+      }
+      logger.debug(`[RICH TRANSLATION RESPONSE]\n${fullResponse}`);
+    })();
   }
 
   /**
@@ -254,7 +311,13 @@ export class OllamaTranslationService {
 
     const results = await Promise.all(
       tenses.map((tense) =>
-        this.fetchTenseRows(verb, params.sourceLanguage, tense, model, params.signal),
+        this.fetchTenseRows(
+          verb,
+          params.sourceLanguage,
+          tense,
+          model,
+          params.signal,
+        ),
       ),
     );
 
@@ -300,7 +363,13 @@ export class OllamaTranslationService {
 
     for (const tense of tenses) {
       if (params.signal?.aborted) break;
-      this.fetchTenseRows(verb, params.sourceLanguage, tense, model, params.signal)
+      this.fetchTenseRows(
+        verb,
+        params.sourceLanguage,
+        tense,
+        model,
+        params.signal,
+      )
         .then((rows) => {
           queue.push({ tense, rows });
         })
@@ -424,6 +493,7 @@ export class OllamaTranslationService {
   private enforceVerbShape(rich: RichObj): void {
     if (rich.isVerb === true) return;
     delete rich.conjugations;
+    delete (rich as Record<string, unknown>).translationConjugated;
     if (rich.grammar) {
       delete rich.grammar.infinitive;
       delete rich.grammar.tense;
@@ -466,8 +536,7 @@ export class OllamaTranslationService {
       const rows = parsed?.rows;
       if (!Array.isArray(rows) || rows.length === 0) {
         this.logger.warn(
-          `[Conjugations] verb="${verb}" tense="${tense}" produced ${
-            Array.isArray(rows) ? 'empty rows array' : `rows=${typeof rows}`
+          `[Conjugations] verb="${verb}" tense="${tense}" produced ${Array.isArray(rows) ? 'empty rows array' : `rows=${typeof rows}`
           }`,
         );
         return null;

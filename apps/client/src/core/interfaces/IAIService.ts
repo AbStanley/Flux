@@ -4,7 +4,8 @@ import type { GrammaticalGender, GrammaticalTense, PartOfSpeech, TranslationType
 export interface RichTranslationResult {
     type?: TranslationType; // Discriminator
     isVerb?: boolean;
-    translation: string;
+    translation: string;         // Infinitive/citation form: "mirar", "see", "ver"
+    translationConjugated?: string; // Context-matched conjugated form: "miro", "vio", "saw" — only when isVerb=true
     segment: string;
     // Word-specific
     grammar?: {

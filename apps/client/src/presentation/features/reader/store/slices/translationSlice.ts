@@ -52,7 +52,7 @@ export interface TranslationSlice {
 
     clearHover: () => void;
     toggleShowTranslations: () => void;
-    clearSelectionTranslations: () => void;
+    clearSelectionTranslations: (tokens?: string[], targetLang?: string) => void;
     removeTranslation: (key: string, text?: string, targetLang?: string) => void;
 }
 
@@ -357,5 +357,23 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
 
     clearHover: () => set({ hoveredIndex: null, hoverTranslation: null, hoverSource: null }),
     toggleShowTranslations: () => set(state => ({ showTranslations: !state.showTranslations })),
-    clearSelectionTranslations: () => set({ selectionTranslations: new Map() }), // Optional: Clear cache here too if desired, but User wants session persistence.
+    clearSelectionTranslations: (tokens?: string[], targetLang?: string) => set(state => {
+        if (!tokens || !targetLang) {
+            return { selectionTranslations: new Map() };
+        }
+        
+        const nextCache = new Map(state.translationCache);
+        for (const key of state.selectionTranslations.keys()) {
+            const [start, end] = key.split('-').map(Number);
+            const textToTranslate = tokens.slice(start, end + 1).join('');
+            const cacheKey = `${textToTranslate}_${targetLang}`;
+            nextCache.delete(cacheKey);
+        }
+
+        return {
+            selectionTranslations: new Map(),
+            translationCache: nextCache
+        };
+    }),
 });
+

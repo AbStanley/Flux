@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { SelectionMode } from '../../../../core/types';
+import { getContextForIndex } from '../store/slices/translationUtils';
 
 interface UseReaderInteractionsProps {
     currentPage: number;
@@ -217,15 +218,7 @@ export const useReaderInteractions = ({
         const { text: textToTranslate } = resolveTarget(globalIndex, groups, tokens, forceSingle);
 
         if (textToTranslate) {
-            let startIndex = globalIndex;
-            while (startIndex > 0 && !tokens[startIndex - 1].includes('\n') && !/[.!?]['"”’)]*$/.test(tokens[startIndex - 1])) {
-                startIndex--;
-            }
-            let endIndex = globalIndex;
-            while (endIndex < tokens.length - 1 && !tokens[endIndex + 1].includes('\n') && !/[.!?]['"”’)]*$/.test(tokens[endIndex])) {
-                endIndex++;
-            }
-            const context = tokens.slice(startIndex, endIndex + 1).join('');
+            const context = getContextForIndex(tokens, globalIndex);
             fetchRichTranslation(textToTranslate, context);
         }
     }, [currentPage, PAGE_SIZE, groups, tokens, fetchRichTranslation]);

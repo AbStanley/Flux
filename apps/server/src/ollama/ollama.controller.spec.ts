@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 // Removed vitest import
 import { OllamaController } from './ollama.controller';
 import { OllamaService } from './services/ollama.service';
+import { OllamaClientService } from './services/ollama-client.service';
 
 describe('OllamaController', () => {
   let controller: OllamaController;
@@ -12,6 +13,10 @@ describe('OllamaController', () => {
       providers: [
         {
           provide: OllamaService,
+          useValue: {},
+        },
+        {
+          provide: OllamaClientService,
           useValue: {},
         },
       ],

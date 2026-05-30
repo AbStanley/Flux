@@ -79,10 +79,23 @@ export const useTranslation = (enableAutoFetch = false) => {
             clearHoverTimeoutRef.current = null;
         }
 
-        // 2. Prevent redundant triggers if we are hovering over the same effective "item"
-        // Note: checking source is tricky here if we switch source on same index. 
-        // We allow re-trigger if source effectively changes how we handle it? 
-        // For simplicity, we just pass through.
+        // 2. Skip re-dispatch if the same page-local index is already the active hover.
+        // Prevents hover→click from firing two concurrent fetches for the same word.
+        const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
+        if (lastHoveredIndexRef.current === index) {
+            // Still update the store's hoveredIndex without re-fetching
+            // by cancelling any pending fetch timer — state is already correct.
+            if (hoverTimeoutRef.current) {
+                clearTimeout(hoverTimeoutRef.current);
+                hoverTimeoutRef.current = null;
+            }
+            // Re-sync the store's hovered index in case it was cleared by a race
+            const { hoveredIndex } = useTranslationStore.getState();
+            if (hoveredIndex !== globalIndex) {
+                handleHoverAction(index, source, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService);
+            }
+            return;
+        }
 
         lastHoveredIndexRef.current = index;
 
@@ -97,7 +110,6 @@ export const useTranslation = (enableAutoFetch = false) => {
 
             // Auto-pronounce on hover if enabled
             if (source === 'token' && useSettingsStore.getState().speakOnHover) {
-                const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
                 const word = tokens[globalIndex]?.trim();
                 if (word) useAudioStore.getState().playSingle(word);
             }
