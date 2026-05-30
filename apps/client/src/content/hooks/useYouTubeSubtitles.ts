@@ -127,20 +127,27 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true) => {
     }, [isActive, allCues]);
 
     const syncTranscript = (time: number, shouldUpdateHistory: boolean) => {
-        const idx = allCues.findIndex(
+        const activeCues = allCues.filter(
             c => time >= c.start && time <= c.start + c.duration + 0.5
         );
 
-        if (idx >= 0) {
-            const cue = allCues[idx];
-            const pc = idx > 0 ? allCues[idx - 1] : null;
-            const showPrev = pc && !isTextRedundant(pc.text, cue.text) && (cue.start - pc.start) < 10;
+        if (activeCues.length > 0) {
+            const combinedText = activeCues.map(c => c.text).join('\n');
+            const mergedCue: SubtitleCue = {
+                start: activeCues[0].start,
+                duration: Math.max(...activeCues.map(c => c.start + c.duration)) - activeCues[0].start,
+                text: combinedText
+            };
+
+            const firstIdx = allCues.indexOf(activeCues[0]);
+            const pc = firstIdx > 0 ? allCues[firstIdx - 1] : null;
+            const showPrev = pc && !isTextRedundant(pc.text, mergedCue.text) && (mergedCue.start - pc.start) < 10;
             
             setPrevCue(showPrev && pc ? pc : null);
-            setCurrentCue(cue);
+            setCurrentCue(mergedCue);
             
             if (shouldUpdateHistory) {
-                addToHistory(cue.text, cue.start);
+                addToHistory(mergedCue.text, mergedCue.start);
             }
             return;
         }

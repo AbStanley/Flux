@@ -138,7 +138,7 @@ export class YouTubeService {
                         const gap = startAttr - (lastCue.start + lastCue.duration);
                         const isPunctuation = /[.!?]$/.test(lastCue.text.trim());
                         const isDuplicate = Math.abs(lastCue.start - startAttr) < 0.1;
-                        const shouldMerge = (gap < 1.0 && !isPunctuation && lastCue.text.length < 100) || gap < 0;
+                        const shouldMerge = (gap >= 0 && gap < 1.0 && !isPunctuation && lastCue.text.length < 100);
                         const normLast = lastCue.text.replace(/[.,!?¿¡\n]/g, '').toLowerCase().trim();
                         const normClean = cleanText.replace(/[.,!?¿¡\n]/g, '').toLowerCase().trim();
                         
@@ -147,7 +147,14 @@ export class YouTubeService {
                             lastCue.duration = Math.max(lastCue.duration, (startAttr + durAttr) - lastCue.start);
                             continue;
                         }
-                        if (isDuplicate || shouldMerge) {
+                        if (isDuplicate) {
+                            if (!lastCue.text.toLowerCase().includes(cleanText.toLowerCase())) {
+                                lastCue.text += (cleanText.startsWith('\n') ? '' : '\n') + cleanText;
+                            }
+                            lastCue.duration = Math.max(lastCue.duration, (startAttr + durAttr) - lastCue.start);
+                            continue;
+                        }
+                        if (shouldMerge) {
                             const lastWord = lastCue.text.split(' ').pop() || '';
                             const firstWord = cleanText.split(' ')[0] || '';
                             if (lastWord.toLowerCase() === firstWord.toLowerCase()) {
