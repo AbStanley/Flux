@@ -144,6 +144,7 @@ async function runRichLoad(
         isVerb: patch.isVerb ?? prev?.isVerb,
         segment: patch.segment ?? prev?.segment ?? text,
         translation: patch.translation ?? prev?.translation ?? "",
+        translationConjugated: patch.translationConjugated ?? prev?.translationConjugated,
         grammar: patch.grammar ?? prev?.grammar,
         examples: patch.examples ?? prev?.examples ?? [],
         alternatives: patch.alternatives ?? prev?.alternatives ?? [],

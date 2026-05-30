@@ -240,46 +240,7 @@ export class OllamaTranslationService {
       model,
       prompt,
       true,
-      {
-        type: 'object',
-        properties: {
-          type: { type: 'string', enum: ['word', 'sentence'] },
-          isVerb: { type: 'boolean' },
-          segment: { type: 'string' },
-          translation: { type: 'string' },
-          translationConjugated: { type: 'string' },
-          grammar: {
-            type: 'object',
-            properties: {
-              sourceInfinitive: { type: 'string' },
-              partOfSpeech: { type: 'string' },
-              tense: { type: 'string' },
-              gender: { type: 'string' },
-              explanation: { type: 'string' }
-            }
-          },
-          examples: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                sentence: { type: 'string' },
-                translation: { type: 'string' }
-              }
-            }
-          },
-          alternatives: {
-            type: 'array',
-            items: { type: 'string' }
-          },
-          syntaxAnalysis: { type: 'string' },
-          grammarRules: {
-            type: 'array',
-            items: { type: 'string' }
-          }
-        },
-        required: ['type', 'isVerb', 'segment', 'translation']
-      },
+      'json',
       {
         num_ctx: 2048,
         num_predict: 768,

@@ -173,8 +173,8 @@ export const sanitizePartialRich = (
   if (translationStr) out.translation = translationStr;
   const translationConjugated = asString(r.translationConjugated);
   if (translationConjugated && isVerb) out.translationConjugated = translationConjugated;
-  
   const grammar = sanitizeGrammar(r.grammar, isVerb);
+  
   if (grammar) {
     if (grammar.infinitive && translationStr && grammar.infinitive.toLowerCase() === translationStr.toLowerCase()) {
       grammar.infinitive = undefined;
