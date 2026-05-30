@@ -24,8 +24,8 @@ const premiumEase = [0.22, 1, 0.36, 1] as const;
 
 const panelVariants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { 
-        opacity: 1, 
+    visible: {
+        opacity: 1,
         y: 0,
         transition: {
             staggerChildren: 0.1,
@@ -36,21 +36,21 @@ const panelVariants = {
 
 const itemVariants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { 
-        opacity: 1, 
+    visible: {
+        opacity: 1,
         y: 0,
         transition: { duration: 0.4, ease: premiumEase }
     }
 } as const;
 
 const collapseVariants = {
-    expanded: { 
-        height: 'auto', 
+    expanded: {
+        height: 'auto',
         opacity: 1,
         transition: { height: { duration: 0.5, ease: premiumEase }, opacity: { duration: 0.3 } }
     },
-    collapsed: { 
-        height: 0, 
+    collapsed: {
+        height: 0,
         opacity: 0,
         transition: { height: { duration: 0.5, ease: premiumEase }, opacity: { duration: 0.2 } }
     }
@@ -110,18 +110,18 @@ export function ControlPanel() {
     return (
         <Card className={cn("w-full mt-5 mb-2 glass text-card-foreground overflow-hidden")}>
             <CardHeader className={cn("p-4", isGenerating && "p-0")}>
-                <motion.div 
+                <motion.div
                     variants={collapseVariants}
                     animate={isGenerating ? "collapsed" : "expanded"}
                     className="overflow-hidden"
                 >
-                    <motion.div 
+                    <motion.div
                         variants={panelVariants}
                         initial="hidden"
                         animate="visible"
                         className="space-y-2"
                     >
-                        <motion.div 
+                        <motion.div
                             variants={itemVariants}
                             className={cn("flex flex-col sm:flex-row gap-2 pb-2 border-b border-border/40 items-center sm:items-end justify-center")}
                         >
@@ -157,7 +157,7 @@ export function ControlPanel() {
                             />
                         </motion.div>
 
-                        <motion.div 
+                        <motion.div
                             variants={itemVariants}
                             className={cn(isGenerating ? 'opacity-50 pointer-events-none' : '')}
                         >
@@ -187,7 +187,7 @@ export function ControlPanel() {
             </CardHeader>
 
             <CardContent className={cn("space-y-2 p-4 pt-0", isGenerating && "space-y-0")}>
-                <motion.div 
+                <motion.div
                     variants={collapseVariants}
                     animate={isGenerating ? "collapsed" : "expanded"}
                     className="overflow-hidden"
@@ -195,7 +195,7 @@ export function ControlPanel() {
                     <SessionLibrary />
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                     layout
                     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     className={cn(isGenerating ? "mt-0" : "")}
@@ -208,7 +208,7 @@ export function ControlPanel() {
                     />
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                     layout
                     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     className={cn("flex gap-4 flex-wrap", isGenerating ? "justify-center mt-4" : "mt-4")}
@@ -243,25 +243,11 @@ export function ControlPanel() {
                             <MotionButton
                                 onClick={handleStartReading}
                                 disabled={!text.trim() || isGenerating}
-                                whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(34, 197, 94, 0.4)" }}
-                                whileTap={{ scale: 0.95 }}
-                                initial={{ boxShadow: "0 0 0px rgba(34, 197, 94, 0)" }}
-                                animate={{ 
-                                    boxShadow: [
-                                        "0 0 0px rgba(34, 197, 94, 0)",
-                                        "0 0 15px rgba(34, 197, 94, 0.5)",
-                                        "0 0 0px rgba(34, 197, 94, 0)"
-                                    ]
-                                }}
-                                transition={{ 
-                                    boxShadow: {
-                                        repeat: Infinity,
-                                        duration: 2,
-                                        ease: "easeInOut"
-                                    }
-                                }}
+                                whileHover={{ scale: 1.02, boxShadow: "0 0 15px hsl(var(--primary) / 0.25)" }}
+                                whileTap={{ scale: 0.98 }}
+
                                 className={cn(
-                                    "w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-lg transition-all",
+                                    "w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all",
                                     "font-bold px-8"
                                 )}
                             >

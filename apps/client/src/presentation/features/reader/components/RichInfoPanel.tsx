@@ -12,7 +12,6 @@ import { type CreateWordRequest } from '../../../../infrastructure/api/words';
 import { useTranslationStore } from '../store/useTranslationStore';
 import type { RichSnapState } from '../store/slices/richDetailsSlice';
 import { useReaderStore } from '../store/useReaderStore';
-import { useServices } from '../../../contexts/ServiceContext';
 
 interface RichInfoPanelProps {
     isOpen: boolean;
@@ -50,8 +49,7 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
     const { wordsState, phrasesState, addWord, updateWord } = useWordsStore();
     const snapState = useTranslationStore(s => s.snapState);
     const setSnapState = useTranslationStore(s => s.setSnapState);
-    const { aiService } = useServices();
-    const explainWordForTab = useTranslationStore(s => s.explainWordForTab);
+
     const generateMoreExamplesForTab = useTranslationStore(s => s.generateMoreExamplesForTab);
 
     const cardRef = useRef<HTMLDivElement>(null);
@@ -155,7 +153,7 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
         return {
             text: data.grammar?.infinitive || activeTab.text,
             definition: data.translation,
-            explanation: data.grammar?.explanation || activeTab.aiExplanation,
+            explanation: data.grammar?.explanation,
             context: activeTab.context,
             sourceLanguage: activeTab.sourceLang,
             targetLanguage: activeTab.targetLang,
@@ -320,7 +318,6 @@ export function RichInfoPanel({ isOpen, tabs, activeTabId, onClose, onTabChange,
                                     onRegenerate={() => onRegenerate(tab.id)}
                                     onFetchConjugations={() => onFetchConjugations(tab.id)}
                                     onCancel={() => onCancel(tab.id)}
-                                    onExplainWord={() => explainWordForTab(tab.id, aiService)}
                                     onGenerateMoreExamples={() => generateMoreExamplesForTab(tab.id)}
                                 />
                             </div>

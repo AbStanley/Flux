@@ -47,7 +47,9 @@ export const useTranslationStore = create<TranslationState>()(
             partialize: (state) => ({
                 selectionTranslations: state.selectionTranslations,
                 translationCache: state.translationCache,
-                showTranslations: state.showTranslations
+                showTranslations: state.showTranslations,
+                savedTranslationsByText: state.savedTranslationsByText,
+                currentTextHash: state.currentTextHash
             } as Partial<TranslationState>),
         }
     )

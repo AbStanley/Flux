@@ -18,7 +18,7 @@ export function ReaderInput({
     onClear
 }: ReaderInputProps) {
     return (
-        <div className={cn("relative")}>
+        <div className={cn("relative", isGenerating && "mt-10 transition-all duration-500")}>
             <Textarea
                 placeholder="Paste text here, or generate..."
                 className={cn("min-h-[80px] h-[80px] overflow-y-auto font-mono text-base shadow-sm resize-y focus-visible:ring-primary bg-[var(--reader-textarea-bg)] border-border/50 transition-[border-color,box-shadow,background-color] duration-300",

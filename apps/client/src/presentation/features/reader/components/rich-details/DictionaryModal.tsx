@@ -1,11 +1,8 @@
-import ReactMarkdown from 'react-markdown';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../../components/ui/dialog";
 import { NativeDictionaryView } from './NativeDictionaryView';
-import { Button } from "../../../../components/ui/button";
-import { Loader2, BookA, Sparkles, BookOpen, Globe, Search } from "lucide-react";
-import { Skeleton } from "../../../../components/ui/skeleton";
+import { BookA, BookOpen, Globe, Search } from "lucide-react";
 
-export type TabType = 'oxford' | 'wiktionary' | 'freedict' | 'ai';
+export type TabType = 'oxford' | 'wiktionary' | 'freedict';
 
 interface DictionaryModalProps {
     isOpen: boolean;
@@ -14,10 +11,6 @@ interface DictionaryModalProps {
     langCode: string;
     activeTab: TabType;
     onTabChange: (tab: TabType) => void;
-    aiExplanation?: string;
-    aiExplanationLoading?: boolean;
-    aiExplanationError?: string | null;
-    onExplainWord: () => void;
 }
 
 export function DictionaryModal({
@@ -26,11 +19,7 @@ export function DictionaryModal({
     word,
     langCode,
     activeTab,
-    onTabChange,
-    aiExplanation,
-    aiExplanationLoading,
-    aiExplanationError,
-    onExplainWord
+    onTabChange
 }: DictionaryModalProps) {
     const cleanWord = word.trim();
     const encodedWord = encodeURIComponent(cleanWord);
@@ -80,18 +69,8 @@ export function DictionaryModal({
                             <Search className="h-3.5 w-3.5" />
                             Free Dictionary
                         </button>
-                        <button
-                            onClick={() => onTabChange('ai')}
-                            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all ${
-                                activeTab === 'ai'
-                                    ? 'bg-primary text-primary-foreground shadow-md'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                        >
-                            <Sparkles className="h-3.5 w-3.5" />
-                            AI Explanation
-                        </button>
                     </div>
+
                 </DialogHeader>
 
                 {/* Content Container */}
@@ -127,58 +106,6 @@ export function DictionaryModal({
                         </div>
                     )}
 
-                    {/* Tab 4: AI Explanation */}
-                    {activeTab === 'ai' && (
-                        <div className="flex-1 overflow-y-auto pr-2 space-y-4 max-h-[70vh] p-2 select-text">
-                            <div className="border border-primary/20 bg-primary/5 p-5 rounded-xl space-y-4">
-                                <div className="flex items-center justify-between gap-2 border-b border-primary/10 pb-2">
-                                    <h4 className="text-md font-bold flex items-center gap-2 text-primary">
-                                        <Sparkles className="h-5 w-5" /> AI Monolingual Dictionary Explanation
-                                    </h4>
-                                    {!aiExplanation && (
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={onExplainWord}
-                                            disabled={aiExplanationLoading}
-                                            className="font-semibold"
-                                        >
-                                            {aiExplanationLoading ? (
-                                                <>
-                                                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                                                    Explaining…
-                                                </>
-                                            ) : aiExplanationError ? 'Retry' : 'Explain Word'}
-                                        </Button>
-                                    )}
-                                </div>
-
-                                {aiExplanationError && (
-                                    <p className="text-sm text-destructive font-medium">{aiExplanationError}</p>
-                                )}
-
-                                {aiExplanationLoading && (
-                                    <div className="space-y-3">
-                                        <Skeleton className="h-4 w-full" />
-                                        <Skeleton className="h-4 w-5/6" />
-                                        <Skeleton className="h-4 w-4/5" />
-                                    </div>
-                                )}
-
-                                {aiExplanation && (
-                                    <div className="text-sm text-foreground leading-relaxed prose dark:prose-invert prose-sm max-w-none prose-p:my-2 prose-headings:text-primary">
-                                        <ReactMarkdown>{aiExplanation}</ReactMarkdown>
-                                    </div>
-                                )}
-
-                                {!aiExplanation && !aiExplanationLoading && !aiExplanationError && (
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                        Generates a detailed, non-translated explanation of the word's meaning, etymology, and context, written fully in the foreign study language to promote monolingual thinking.
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    )}
                 </div>
             </DialogContent>
         </Dialog>

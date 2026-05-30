@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from "../../../../components/ui/button";
-import { Loader2, Volume2, BookA, Square, AudioLines, Sparkles, RotateCw } from "lucide-react";
+import { Loader2, Volume2, BookA, Square, AudioLines, RotateCw } from "lucide-react";
 import { useAudioStore } from '../../store/useAudioStore';
 import { ConjugationsDisplay } from '../ConjugationsDisplay';
 import { AnalysisSection } from './AnalysisSection';
@@ -18,7 +18,6 @@ interface RichDetailsContentProps {
     onRegenerate: () => void;
     onFetchConjugations: () => void;
     onCancel: () => void;
-    onExplainWord: () => void;
     onGenerateMoreExamples: () => void;
 }
 
@@ -37,11 +36,10 @@ export function RichDetailsContent({
     onRegenerate,
     onFetchConjugations,
     onCancel,
-    onExplainWord,
     onGenerateMoreExamples
 }: RichDetailsContentProps) {
     const activeSingleText = useAudioStore(state => state.activeSingleText);
-    const { data, isLoading, isStreaming, error, sourceLang, conjugationsLoading, conjugationsError, aiExplanation, aiExplanationLoading, aiExplanationError } = tab;
+    const { data, isLoading, isStreaming, error, sourceLang, conjugationsLoading, conjugationsError } = tab;
     const [isDictOpen, setIsDictOpen] = useState(false);
     const [dictTab, setDictTab] = useState<TabType>('oxford');
 
@@ -147,12 +145,14 @@ export function RichDetailsContent({
                         <p className="text-xs text-muted-foreground/80 leading-normal">Select an option to look up the word in-app:</p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                        <Button
-                            variant="outline" size="sm" onClick={() => openDictionary('oxford')}
-                            className="text-xs font-semibold border-border/80 hover:bg-muted bg-card text-foreground/80 hover:text-foreground rounded-full h-8 px-3.5 transition-all"
-                        >
-                            Google Define 🔍
-                        </Button>
+                        {langCode === 'en' && (
+                            <Button
+                                variant="outline" size="sm" onClick={() => openDictionary('oxford')}
+                                className="text-xs font-semibold border-border/80 hover:bg-muted bg-card text-foreground/80 hover:text-foreground rounded-full h-8 px-3.5 transition-all"
+                            >
+                                Google Define 🔍
+                            </Button>
+                        )}
                         <Button
                             variant="outline" size="sm" onClick={() => openDictionary('wiktionary')}
                             className="text-xs font-semibold border-border/80 hover:bg-muted bg-card text-foreground/80 hover:text-foreground rounded-full h-8 px-3.5 transition-all"
@@ -172,8 +172,6 @@ export function RichDetailsContent({
                 <DictionaryModal
                     isOpen={isDictOpen} onOpenChange={setIsDictOpen} word={data.segment}
                     langCode={langCode} activeTab={dictTab} onTabChange={setDictTab}
-                    aiExplanation={aiExplanation} aiExplanationLoading={aiExplanationLoading}
-                    aiExplanationError={aiExplanationError} onExplainWord={onExplainWord}
                 />
             </motion.div>
 
@@ -206,27 +204,7 @@ export function RichDetailsContent({
                 })()}
             </motion.div>
 
-            {/* AI Explanation — manually triggered in side-panel too */}
-            <motion.div variants={itemVariants} className="border rounded-lg p-3 space-y-2 bg-primary/5 border-primary/20">
-                <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-semibold flex items-center gap-2 text-primary"><Sparkles className="h-4 w-4" /> AI Dictionary Explanation</h4>
-                    {!aiExplanation && (
-                        <Button variant="secondary" size="sm" onClick={onExplainWord} disabled={aiExplanationLoading}>
-                            {aiExplanationLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />Explaining…</> : aiExplanationError ? 'Retry' : 'Explain Word'}
-                        </Button>
-                    )}
-                </div>
-                {aiExplanationError && <p className="text-xs text-destructive">{aiExplanationError}</p>}
-                {aiExplanationLoading && <div className="space-y-2 mt-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" /></div>}
-                {aiExplanation && (
-                    <div className="text-xs text-foreground mt-2 leading-relaxed prose dark:prose-invert prose-sm max-w-none prose-p:my-1">
-                        <ReactMarkdown>{aiExplanation}</ReactMarkdown>
-                    </div>
-                )}
-                {!aiExplanation && !aiExplanationLoading && !aiExplanationError && (
-                    <p className="text-xs text-muted-foreground">Get a detailed, non-translated explanation of the word's meaning.</p>
-                )}
-            </motion.div>
+
 
             {/* Explanation from grammar */}
             {data.grammar?.explanation && (

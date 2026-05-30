@@ -71,9 +71,9 @@ export const useReaderStore = create<ReaderState>()(
 
                 const tokens = text.split(/(\s+)/);
 
-                const { closeRichInfo, clearSelectionTranslations } = useTranslationStore.getState();
+                const { closeRichInfo, switchText } = useTranslationStore.getState();
                 closeRichInfo();
-                clearSelectionTranslations();
+                switchText(text);
 
                 set({
                     text,
@@ -86,9 +86,9 @@ export const useReaderStore = create<ReaderState>()(
             },
 
             setText: (text) => {
-                const { closeRichInfo, clearSelectionTranslations } = useTranslationStore.getState();
+                const { closeRichInfo, switchText } = useTranslationStore.getState();
                 closeRichInfo();
-                clearSelectionTranslations();
+                switchText(text);
 
                 const tokens = text.split(/(\s+)/);
                 set({
@@ -177,9 +177,9 @@ export const useReaderStore = create<ReaderState>()(
             clearSelection: () => set({ selectedIndices: new Set() }),
             setSession: (sessionId, sessionTitle) => set({ sessionId, sessionTitle }),
             loadText: (text) => {
-                const { closeRichInfo, clearSelectionTranslations } = useTranslationStore.getState();
+                const { closeRichInfo, switchText } = useTranslationStore.getState();
                 closeRichInfo();
-                clearSelectionTranslations();
+                switchText(text);
                 const tokens = text.split(/(\s+)/);
                 set({ text, tokens, currentPage: 1, selectedIndices: new Set() });
             },

@@ -54,11 +54,16 @@ export interface TranslationSlice {
     toggleShowTranslations: () => void;
     clearSelectionTranslations: (tokens?: string[], targetLang?: string) => void;
     removeTranslation: (key: string, text?: string, targetLang?: string) => void;
+    savedTranslationsByText: Record<string, [string, string][]>;
+    currentTextHash: string | null;
+    switchText: (text: string) => void;
 }
 
 export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get) => ({
     translationCache: new Map(), // <"text_targetLang", translation>
     selectionTranslations: new Map(),
+    savedTranslationsByText: {},
+    currentTextHash: null,
     hoveredIndex: null,
     hoverTranslation: null,
     hoverSource: null,
@@ -373,6 +378,29 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         return {
             selectionTranslations: new Map(),
             translationCache: nextCache
+        };
+    }),
+    switchText: (text: string) => set(state => {
+        let hash = 0;
+        for (let i = 0; i < text.length; i++) {
+            hash = (hash << 5) - hash + text.charCodeAt(i);
+            hash |= 0;
+        }
+        const newHash = hash.toString(36);
+
+        if (state.currentTextHash === newHash) return state;
+
+        const nextSaved = { ...state.savedTranslationsByText };
+        if (state.currentTextHash) {
+            nextSaved[state.currentTextHash] = Array.from(state.selectionTranslations.entries());
+        }
+
+        const newTranslations = new Map(nextSaved[newHash] || []);
+        
+        return {
+            savedTranslationsByText: nextSaved,
+            currentTextHash: newHash,
+            selectionTranslations: newTranslations,
         };
     }),
 });

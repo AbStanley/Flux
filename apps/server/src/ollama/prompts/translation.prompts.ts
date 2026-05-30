@@ -119,7 +119,7 @@ Reply with ONE JSON object in this exact shape:
     "gender":       "<${targetLanguage}; ONLY when grammatically gendered>",
     "explanation":  "<${targetLanguage}, one full sentence about how the word functions in THIS sentence>"
   },
-  "examples":     [ {"sentence":"<${srcLang} ONLY>","translation":"<${targetLanguage} ONLY>"}, 2-3 entries — REQUIRED ],
+  "examples":     [ {"sentence":"<${srcLang} ONLY>","translation":"<${targetLanguage} ONLY>"}, 3 entries — REQUIRED ],
   "alternatives": [ "<${targetLanguage}>", 1-2 entries — REQUIRED ]${isSentence
       ? `,
   "syntaxAnalysis": "<${targetLanguage}, 1-2 sentences describing structure>",

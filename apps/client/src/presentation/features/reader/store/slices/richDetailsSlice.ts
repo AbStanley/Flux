@@ -41,10 +41,6 @@ export interface RichDetailsTab {
   conjugationsLoading?: boolean;
   conjugationsError?: string | null;
 
-  // AI dictionary explanation fields
-  aiExplanation?: string;
-  aiExplanationLoading?: boolean;
-  aiExplanationError?: string | null;
 }
 
 /**
@@ -106,11 +102,6 @@ export interface RichDetailsSlice {
    * data already rendered stays. No-op if nothing is in flight.
    */
   cancelRichLoad: (id: string) => void;
-
-  /**
-   * Manually trigger a non-translating AI explanation of the word.
-   */
-  explainWordForTab: (id: string, aiService: IAIService) => Promise<void>;
 
   /**
    * On-demand generation of 3 additional unique examples appended to the side panel.
@@ -471,47 +462,6 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
   toggleRichInfo: () =>
     set((state) => ({ isRichInfoOpen: !state.isRichInfoOpen })),
   setSnapState: (snapState) => set({ snapState }),
-
-  explainWordForTab: async (id, aiService) => {
-    const tab = get().richDetailsTabs.find((t) => t.id === id);
-    if (!tab) return;
-
-    const updateTab = (updater: (t: RichDetailsTab) => RichDetailsTab) => {
-      set((state) => ({
-        richDetailsTabs: state.richDetailsTabs.map((t) =>
-          t.id === id ? updater(t) : t,
-        ),
-      }));
-    };
-
-    updateTab((t) => ({
-      ...t,
-      aiExplanationLoading: true,
-      aiExplanationError: null,
-    }));
-
-    try {
-      const result = await aiService.explainText(
-        tab.text,
-        tab.sourceLang, // Request explanation in the foreign source language
-        tab.context,
-        tab.sourceLang,
-      );
-      updateTab((t) => ({
-        ...t,
-        aiExplanation: result,
-        aiExplanationLoading: false,
-      }));
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to explain word";
-      updateTab((t) => ({
-        ...t,
-        aiExplanationLoading: false,
-        aiExplanationError: message,
-      }));
-    }
-  },
 
   generateMoreExamplesForTab: async (id) => {
     const tab = get().richDetailsTabs.find((t) => t.id === id);
