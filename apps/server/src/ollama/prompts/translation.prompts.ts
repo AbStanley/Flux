@@ -9,24 +9,24 @@ export const getTranslatePrompt = (
 
   const isBlock = text.length > 100 || text.includes('\n');
 
-  if (isAuto) {
-    return `[CONTEXT] ${context || 'None'}
+  if (!isBlock) {
+    const isSingleWord = !text.trim().includes(' ');
+    const shouldIncludeContext = context && isSingleWord;
+
+    return `[CONTEXT] ${shouldIncludeContext ? context : 'None'}
 [TO_TRANSLATE] ${text}
 [TARGET_LANGUAGE] ${targetLanguage}
-[TASK] Translate ONLY "${text}" and detect source language.
 [RULES]
-1. No extra words from context. DO NOT complete the sentence.
-2. Translate strictly ONLY the text in [TO_TRANSLATE]. Keep it incomplete if it is a phrase.
-3. Return JSON ONLY.
+1. Translate strictly ONLY the text: "${text}" into ${targetLanguage}.
+2. Return JSON ONLY.
 [JSON_FORMAT]
 {
-  "detectedLanguage": "string",
+  "detectedLanguage": "${isAuto ? 'string' : sourceLanguage}",
   "translation": "string"
 }`;
   }
 
-  if (isBlock) {
-    return `Role: Professional Translator.
+  return `Role: Professional Translator.
 Task: Translate the following text ${fromLang} into ${targetLanguage}.
 
 Instructions:
@@ -37,19 +37,6 @@ Instructions:
 
 Text to Translate:
 "${text}"`;
-  }
-
-  const prompt = `[CONTEXT] ${context || 'None'}
-[TO_TRANSLATE] ${text}
-[TARGET_LANGUAGE] ${targetLanguage}
-[RULES]
-1. Translate strictly ONLY the text: "${text}".
-2. DO NOT complete the sentence. You must translate ONLY the exact words provided in [TO_TRANSLATE].
-3. DO NOT include translations of surrounding words from the context.
-4. Keep it as an incomplete phrase if the source text is incomplete.
-[RESULT]`;
-
-  return prompt;
 };
 
 

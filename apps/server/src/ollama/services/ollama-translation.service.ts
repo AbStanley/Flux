@@ -45,6 +45,15 @@ function detectScript(text: string): string {
 }
 
 /**
+ * Removes all punctuation and markdown from context strings, leaving only letters, numbers, and spaces.
+ * This prevents markdown tokens (like **Name:**) from confusing the LLM's language detection.
+ */
+function cleanContext(text?: string): string | undefined {
+  if (!text) return undefined;
+  return text.replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim();
+}
+
+/**
  * Tense names to request per source language for the on-demand conjugations
  * fetch. Keys are lowercase language names (matched case-insensitively).
  */
@@ -73,12 +82,13 @@ export class OllamaTranslationService {
     model?: string;
     signal?: AbortSignal;
   }): Promise<{ response: string; sourceLanguage?: string }> {
+    this.logger.debug(`[INCOMING PAYLOAD]\n${JSON.stringify({ ...params, signal: undefined }, null, 2)}`);
     const isBlock = params.text.length > 100 || params.text.includes('\n');
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getTranslatePrompt(
       params.text,
       params.targetLanguage,
-      params.context,
+      cleanContext(params.context),
       params.sourceLanguage,
     );
     this.logger.debug(`[TRANSLATE PROMPT]\n${prompt}`);
@@ -175,7 +185,7 @@ export class OllamaTranslationService {
     const prompt = getExplainPrompt(
       params.text,
       params.targetLanguage,
-      params.context,
+      cleanContext(params.context),
     );
     const { response } = await this.ollamaClient.generate(
       model,
@@ -197,7 +207,10 @@ export class OllamaTranslationService {
     signal?: AbortSignal;
   }): Promise<RichTranslation> {
     const model = await this.ollamaClient.ensureModel(params.model);
-    const rich = await this.fetchRichTranslation(params, model);
+    const rich = await this.fetchRichTranslation({
+      ...params,
+      context: cleanContext(params.context)
+    }, model);
 
     this.trimRunawayTranslation(rich, params.text);
     this.enforceVerbShape(rich);
@@ -225,7 +238,7 @@ export class OllamaTranslationService {
     const prompt = getRichTranslationPrompt(
       params.text,
       params.targetLanguage,
-      params.context,
+      cleanContext(params.context),
       params.sourceLanguage,
     );
     this.logger.debug(`[RICH TRANSLATION PROMPT]\n${prompt}`);

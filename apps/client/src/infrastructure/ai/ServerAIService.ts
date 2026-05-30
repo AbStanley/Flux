@@ -32,6 +32,8 @@ export class ServerAIService implements IAIService {
     return text.trim().replace(/^[^\p{L}\p{N}\s]+|[^\p{L}\p{N}\s]+$/gu, "");
   }
 
+
+
   async generateText(
     prompt: string,
 
@@ -56,7 +58,7 @@ export class ServerAIService implements IAIService {
     const data = await defaultClient.post<string | { response: string; sourceLanguage?: string }>('/api/translate', {
       text: cleanedText,
       targetLanguage,
-      context,
+      context: context, // Do not clean context, punctuation is critical for the LLM
       sourceLanguage,
       model: this.model,
     }, signal);
@@ -76,10 +78,10 @@ export class ServerAIService implements IAIService {
     signal?: AbortSignal,
   ): Promise<string> {
     const cleanedText = this.cleanSelection(text);
-    const data = await defaultClient.post<string | { response: string }>('/api/explain', {
+    const data = await defaultClient.post<{ response: string }>('/api/explain', {
       text: cleanedText,
       targetLanguage,
-      context,
+      context: context,
       sourceLanguage,
       model: this.model,
     }, signal);
@@ -98,7 +100,7 @@ export class ServerAIService implements IAIService {
     return defaultClient.post<RichTranslationResult>('/api/rich-translation', {
       text: cleanedText,
       targetLanguage,
-      context,
+      context: context,
       sourceLanguage,
       model: this.model,
     }, signal);
