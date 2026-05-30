@@ -9,11 +9,22 @@ export const getTranslatePrompt = (
 
   const isBlock = text.length > 100 || text.includes('\n');
 
+  let formattedContext = context || 'None';
   if (!isBlock) {
     const isSingleWord = !text.trim().includes(' ');
     const shouldIncludeContext = context && isSingleWord;
 
-    return `[CONTEXT] ${shouldIncludeContext ? context : 'None'}
+    if (shouldIncludeContext && text.trim().length <= 2) {
+      try {
+        const escapedText = text.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(?<=^|[^\\p{L}\\p{N}_])${escapedText}(?=[^\\p{L}\\p{N}_]|$)`, 'u');
+        formattedContext = context.replace(regex, `'${text.trim()}'`);
+      } catch (e) {
+        // Fallback to raw context if regex fails
+      }
+    }
+
+    return `[CONTEXT] ${shouldIncludeContext ? formattedContext : 'None'}
 [TO_TRANSLATE] ${text}
 [TARGET_LANGUAGE] ${targetLanguage}
 [RULES]

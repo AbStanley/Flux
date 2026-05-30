@@ -44,14 +44,7 @@ function detectScript(text: string): string {
   return 'unknown';
 }
 
-/**
- * Removes all punctuation and markdown from context strings, leaving only letters, numbers, and spaces.
- * This prevents markdown tokens (like **Name:**) from confusing the LLM's language detection.
- */
-function cleanContext(text?: string): string | undefined {
-  if (!text) return undefined;
-  return text.replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim();
-}
+
 
 /**
  * Tense names to request per source language for the on-demand conjugations
@@ -88,7 +81,7 @@ export class OllamaTranslationService {
     const prompt = getTranslatePrompt(
       params.text,
       params.targetLanguage,
-      cleanContext(params.context),
+      params.context, // Pass context exactly as it is, punctuation is critical for the LLM
       params.sourceLanguage,
     );
     this.logger.debug(`[TRANSLATE PROMPT]\n${prompt}`);
@@ -185,7 +178,7 @@ export class OllamaTranslationService {
     const prompt = getExplainPrompt(
       params.text,
       params.targetLanguage,
-      cleanContext(params.context),
+      params.context,
     );
     const { response } = await this.ollamaClient.generate(
       model,
@@ -209,7 +202,7 @@ export class OllamaTranslationService {
     const model = await this.ollamaClient.ensureModel(params.model);
     const rich = await this.fetchRichTranslation({
       ...params,
-      context: cleanContext(params.context)
+      context: params.context
     }, model);
 
     this.trimRunawayTranslation(rich, params.text);
@@ -238,7 +231,7 @@ export class OllamaTranslationService {
     const prompt = getRichTranslationPrompt(
       params.text,
       params.targetLanguage,
-      cleanContext(params.context),
+      params.context,
       params.sourceLanguage,
     );
     this.logger.debug(`[RICH TRANSLATION PROMPT]\n${prompt}`);
