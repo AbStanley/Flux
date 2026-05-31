@@ -79,7 +79,7 @@ export const useYouTubeSubtitles = (fluxEnabled: boolean = true, sourceLang: str
             clearInterval(interval);
             window.history.pushState = origPush;
         };
-    }, [clearHistory]);
+    }, [clearHistory, sourceLang]);
 
     // Manage native subtitle visibility
     useEffect(() => {

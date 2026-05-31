@@ -17,7 +17,10 @@ export const getTranslatePrompt = (
     if (shouldIncludeContext && text.trim().length <= 2) {
       try {
         const escapedText = text.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(?<=^|[^\\p{L}\\p{N}_])${escapedText}(?=[^\\p{L}\\p{N}_]|$)`, 'u');
+        const regex = new RegExp(
+          `(?<=^|[^\\p{L}\\p{N}_])${escapedText}(?=[^\\p{L}\\p{N}_]|$)`,
+          'u',
+        );
         formattedContext = context.replace(regex, `'${text.trim()}'`);
       } catch (e) {
         // Fallback to raw context if regex fails
@@ -50,8 +53,6 @@ Text to Translate:
 "${text}"`;
 };
 
-
-
 export const getRichTranslationPrompt = (
   text: string,
   targetLanguage: string = 'en',
@@ -70,7 +71,10 @@ export const getRichTranslationPrompt = (
     if (text.trim().length <= 2) {
       try {
         const escapedText = text.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(?<=^|[^\\p{L}\\p{N}_])${escapedText}(?=[^\\p{L}\\p{N}_]|$)`, 'u');
+        const regex = new RegExp(
+          `(?<=^|[^\\p{L}\\p{N}_])${escapedText}(?=[^\\p{L}\\p{N}_]|$)`,
+          'u',
+        );
         const newContext = context.replace(regex, `'${text.trim()}'`);
         if (newContext !== context) {
           formattedContext = newContext;
@@ -120,12 +124,13 @@ Reply with ONE JSON object in this exact shape:
     "explanation":  "<${targetLanguage}, one full sentence about how the word functions in THIS sentence>"
   },
   "examples":     [ {"sentence":"<${srcLang} ONLY>","translation":"<${targetLanguage} ONLY>"}, 3 entries — REQUIRED ],
-  "alternatives": [ "<${targetLanguage}>", 1-2 entries — REQUIRED ]${isSentence
+  "alternatives": [ "<${targetLanguage}>", 1-2 entries — REQUIRED ]${
+    isSentence
       ? `,
   "syntaxAnalysis": "<${targetLanguage}, 1-2 sentences describing structure>",
   "grammarRules":   [ "<${targetLanguage}, one grammar point>", 2-4 entries ]`
       : ''
-    }
+  }
 }
 
 Rules:

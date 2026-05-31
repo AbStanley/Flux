@@ -24,7 +24,9 @@ describe('LLM Translation E2E (Ollama)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    service = moduleFixture.get<OllamaTranslationService>(OllamaTranslationService);
+    service = moduleFixture.get<OllamaTranslationService>(
+      OllamaTranslationService,
+    );
   });
 
   afterAll(async () => {
@@ -56,8 +58,11 @@ describe('LLM Translation E2E (Ollama)', () => {
   describe('German → Spanish verbs', () => {
     it('"hat" → tener / tiene / haben', async () => {
       const r = await stream({
-        text: 'hat', context: 'Er hat ein Buch.',
-        sourceLanguage: 'German', targetLanguage: 'Spanish', model: 'translategemma:4b',
+        text: 'hat',
+        context: 'Er hat ein Buch.',
+        sourceLanguage: 'German',
+        targetLanguage: 'Spanish',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(r.translation?.toLowerCase()).toBe('tener');
@@ -67,8 +72,11 @@ describe('LLM Translation E2E (Ollama)', () => {
 
     it('"sieht" → ver / ve / sehen', async () => {
       const r = await stream({
-        text: 'sieht', context: 'Er sieht das Haus.',
-        sourceLanguage: 'German', targetLanguage: 'Spanish', model: 'translategemma:4b',
+        text: 'sieht',
+        context: 'Er sieht das Haus.',
+        sourceLanguage: 'German',
+        targetLanguage: 'Spanish',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(r.translation?.toLowerCase()).toBe('ver');
@@ -78,8 +86,11 @@ describe('LLM Translation E2E (Ollama)', () => {
 
     it('"klingt" → sonar / suena / klingen', async () => {
       const r = await stream({
-        text: 'klingt', context: '**Max:** Wow, das klingt ja wirklich speziell.',
-        sourceLanguage: 'German', targetLanguage: 'Spanish', model: 'translategemma:4b',
+        text: 'klingt',
+        context: '**Max:** Wow, das klingt ja wirklich speziell.',
+        sourceLanguage: 'German',
+        targetLanguage: 'Spanish',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(oneOf(r.translation, ['sonar', 'klingen'])).toBe(true);
@@ -89,8 +100,11 @@ describe('LLM Translation E2E (Ollama)', () => {
 
     it('"Hast" → tener|haber / tienes|has / haben', async () => {
       const r = await stream({
-        text: 'Hast', context: 'Hast du schon mal über ungewöhnliche Hobbys nachgedacht?',
-        sourceLanguage: 'German', targetLanguage: 'Spanish', model: 'translategemma:4b',
+        text: 'Hast',
+        context: 'Hast du schon mal über ungewöhnliche Hobbys nachgedacht?',
+        sourceLanguage: 'German',
+        targetLanguage: 'Spanish',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(oneOf(r.translation, ['tener', 'haber'])).toBe(true);
@@ -105,8 +119,11 @@ describe('LLM Translation E2E (Ollama)', () => {
   describe('French → Spanish verbs', () => {
     it('"a" → isVerb, conjugated form populated, not the source word', async () => {
       const r = await stream({
-        text: 'a', context: "Il a toujours un air innocent.",
-        sourceLanguage: 'French', targetLanguage: 'Spanish', model: 'translategemma:4b',
+        text: 'a',
+        context: 'Il a toujours un air innocent.',
+        sourceLanguage: 'French',
+        targetLanguage: 'Spanish',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(r.translationConjugated).toBeTruthy();
@@ -115,8 +132,11 @@ describe('LLM Translation E2E (Ollama)', () => {
 
     it('"suis" → ser|estar / soy|estoy / être', async () => {
       const r = await stream({
-        text: 'suis', context: "Je suis très fatigué aujourd'hui.",
-        sourceLanguage: 'French', targetLanguage: 'Spanish', model: 'translategemma:4b',
+        text: 'suis',
+        context: "Je suis très fatigué aujourd'hui.",
+        sourceLanguage: 'French',
+        targetLanguage: 'Spanish',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(oneOf(r.translation, ['ser', 'estar'])).toBe(true);
@@ -131,23 +151,33 @@ describe('LLM Translation E2E (Ollama)', () => {
   describe('Russian → English verbs', () => {
     it('"читал" → isVerb, conjugated populated, source inf читать', async () => {
       const r = await stream({
-        text: 'читал', context: 'Он читал книгу.',
-        sourceLanguage: 'Russian', targetLanguage: 'English', model: 'translategemma:4b',
+        text: 'читал',
+        context: 'Он читал книгу.',
+        sourceLanguage: 'Russian',
+        targetLanguage: 'English',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(r.translationConjugated).toBeTruthy();
-      const srcInf = (r._verbAnalysis?.sourceInfinitive ?? r.grammar?.sourceInfinitive)?.toLowerCase();
+      const srcInf = (
+        r._verbAnalysis?.sourceInfinitive ?? r.grammar?.sourceInfinitive
+      )?.toLowerCase();
       expect(srcInf).toBe('читать');
     });
 
     it('"знаю" → know family / знать', async () => {
       const r = await stream({
-        text: 'знаю', context: 'Я не знаю, почему он это сделал.',
-        sourceLanguage: 'Russian', targetLanguage: 'English', model: 'translategemma:4b',
+        text: 'знаю',
+        context: 'Я не знаю, почему он это сделал.',
+        sourceLanguage: 'Russian',
+        targetLanguage: 'English',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(oneOf(r.translationConjugated, ['know', 'i know'])).toBe(true);
-      const srcInf = (r._verbAnalysis?.sourceInfinitive ?? r.grammar?.sourceInfinitive)?.toLowerCase();
+      const srcInf = (
+        r._verbAnalysis?.sourceInfinitive ?? r.grammar?.sourceInfinitive
+      )?.toLowerCase();
       expect(srcInf).toBe('знать');
     });
   });
@@ -158,8 +188,11 @@ describe('LLM Translation E2E (Ollama)', () => {
   describe('Spanish → English verbs', () => {
     it('"tiene" → have family / has', async () => {
       const r = await stream({
-        text: 'tiene', context: 'Ella tiene un perro.',
-        sourceLanguage: 'Spanish', targetLanguage: 'English', model: 'translategemma:4b',
+        text: 'tiene',
+        context: 'Ella tiene un perro.',
+        sourceLanguage: 'Spanish',
+        targetLanguage: 'English',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(oneOf(r.translationConjugated, ['has', 'have'])).toBe(true);
@@ -168,13 +201,18 @@ describe('LLM Translation E2E (Ollama)', () => {
 
     it('"voy" → go / go / ir', async () => {
       const r = await stream({
-        text: 'voy', context: 'Yo siempre voy al parque los domingos.',
-        sourceLanguage: 'Spanish', targetLanguage: 'English', model: 'translategemma:4b',
+        text: 'voy',
+        context: 'Yo siempre voy al parque los domingos.',
+        sourceLanguage: 'Spanish',
+        targetLanguage: 'English',
+        model: 'translategemma:4b',
       });
       expect(r.isVerb).toBe(true);
       expect(oneOf(r.translation, ['to go', 'go'])).toBe(true);
       expect(oneOf(r.translationConjugated, ['go', 'i go'])).toBe(true);
-      const srcInf = (r._verbAnalysis?.sourceInfinitive ?? r.grammar?.sourceInfinitive)?.toLowerCase();
+      const srcInf = (
+        r._verbAnalysis?.sourceInfinitive ?? r.grammar?.sourceInfinitive
+      )?.toLowerCase();
       expect(srcInf).toBe('ir');
     });
   });

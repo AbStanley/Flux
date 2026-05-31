@@ -44,8 +44,6 @@ function detectScript(text: string): string {
   return 'unknown';
 }
 
-
-
 /**
  * Tense names to request per source language for the on-demand conjugations
  * fetch. Keys are lowercase language names (matched case-insensitively).
@@ -65,7 +63,7 @@ const CORE_TENSES: Readonly<Record<string, readonly string[]>> = {
 export class OllamaTranslationService {
   private readonly logger = new Logger(OllamaTranslationService.name);
 
-  constructor(private readonly ollamaClient: OllamaClientService) { }
+  constructor(private readonly ollamaClient: OllamaClientService) {}
 
   async translateText(params: {
     text: string;
@@ -75,7 +73,9 @@ export class OllamaTranslationService {
     model?: string;
     signal?: AbortSignal;
   }): Promise<{ response: string; sourceLanguage?: string }> {
-    this.logger.debug(`[INCOMING PAYLOAD]\n${JSON.stringify({ ...params, signal: undefined }, null, 2)}`);
+    this.logger.debug(
+      `[INCOMING PAYLOAD]\n${JSON.stringify({ ...params, signal: undefined }, null, 2)}`,
+    );
     const isBlock = params.text.length > 100 || params.text.includes('\n');
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getTranslatePrompt(
@@ -89,14 +89,16 @@ export class OllamaTranslationService {
       model,
       prompt,
       false,
-      isBlock ? undefined : {
-        type: 'object',
-        properties: {
-          detectedLanguage: { type: 'string' },
-          translation: { type: 'string' },
-        },
-        required: ['detectedLanguage', 'translation'],
-      },
+      isBlock
+        ? undefined
+        : {
+            type: 'object',
+            properties: {
+              detectedLanguage: { type: 'string' },
+              translation: { type: 'string' },
+            },
+            required: ['detectedLanguage', 'translation'],
+          },
       {
         num_predict: isBlock ? 512 : 64,
         temperature: 0,
@@ -158,7 +160,6 @@ export class OllamaTranslationService {
       cleaned = cleaned.slice(0, -1).trim();
     }
 
-
     // Restore capitalized first letter if original was capitalized
     if (original[0] === original[0].toUpperCase() && cleaned[0]) {
       cleaned = cleaned[0].toUpperCase() + cleaned.slice(1);
@@ -200,10 +201,13 @@ export class OllamaTranslationService {
     signal?: AbortSignal;
   }): Promise<RichTranslation> {
     const model = await this.ollamaClient.ensureModel(params.model);
-    const rich = await this.fetchRichTranslation({
-      ...params,
-      context: params.context
-    }, model);
+    const rich = await this.fetchRichTranslation(
+      {
+        ...params,
+        context: params.context,
+      },
+      model,
+    );
 
     this.trimRunawayTranslation(rich, params.text);
     this.enforceVerbShape(rich);
@@ -247,7 +251,7 @@ export class OllamaTranslationService {
         temperature: 0,
       },
       params.signal,
-    ) as AsyncIterable<GenerateResponse>;
+    );
 
     const logger = this.logger;
     return (async function* () {
@@ -503,7 +507,8 @@ export class OllamaTranslationService {
       const rows = parsed?.rows;
       if (!Array.isArray(rows) || rows.length === 0) {
         this.logger.warn(
-          `[Conjugations] verb="${verb}" tense="${tense}" produced ${Array.isArray(rows) ? 'empty rows array' : `rows=${typeof rows}`
+          `[Conjugations] verb="${verb}" tense="${tense}" produced ${
+            Array.isArray(rows) ? 'empty rows array' : `rows=${typeof rows}`
           }`,
         );
         return null;

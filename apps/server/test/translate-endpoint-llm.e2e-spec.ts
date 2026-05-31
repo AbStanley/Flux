@@ -24,7 +24,9 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    service = moduleFixture.get<OllamaTranslationService>(OllamaTranslationService);
+    service = moduleFixture.get<OllamaTranslationService>(
+      OllamaTranslationService,
+    );
   });
 
   afterAll(async () => {
@@ -66,7 +68,7 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
           'me parece',
           'yo lo encuentro',
           'yo pienso eso',
-        ])
+        ]),
       ).toBe(true);
     });
 
@@ -80,7 +82,13 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
       });
       // Accept 'también', 'igualmente', 'además', etc. Note character decoding issues in old script.
       expect(
-        oneOf(res.response, ['también', 'tambien', 'igualmente', 'además', 'ademas'])
+        oneOf(res.response, [
+          'también',
+          'tambien',
+          'igualmente',
+          'además',
+          'ademas',
+        ]),
       ).toBe(true);
     });
 
@@ -93,7 +101,14 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
         model: 'translategemma:4b',
       });
       expect(
-        oneOf(res.response, ['también bien', 'tambien bien', 'igualmente bien', 'muy bien también', 'muy bien', 'bien también'])
+        oneOf(res.response, [
+          'también bien',
+          'tambien bien',
+          'igualmente bien',
+          'muy bien también',
+          'muy bien',
+          'bien también',
+        ]),
       ).toBe(true);
     });
 
@@ -110,7 +125,7 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
           'acabo de leer algo interesante',
           'he leído algo interesante',
           'he leido algo interesante',
-        ])
+        ]),
       ).toBe(true);
     });
   });
@@ -136,7 +151,9 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
         sourceLanguage: 'Russian',
         model: 'translategemma:4b',
       });
-      expect(oneOf(res.response, ['no sé', 'no se', 'no lo sé', 'no lo se'])).toBe(true);
+      expect(
+        oneOf(res.response, ['no sé', 'no se', 'no lo sé', 'no lo se']),
+      ).toBe(true);
     });
 
     it('Spanish single word "siempre" → English', async () => {
