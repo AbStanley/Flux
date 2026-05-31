@@ -15,20 +15,49 @@ export class YouTubeService {
 
     static getSubtitleFromDom(): SubtitleCue | null {
         try {
-            let segments = document.querySelectorAll('.ytp-caption-segment');
+            const player = document.getElementById('movie_player');
+            let segments: Element[] = [];
+
+            const isElementVisible = (el: Element): boolean => {
+                let current: Node | null = el;
+                while (current && current !== player && current !== document.body) {
+                    if (current instanceof HTMLElement) {
+                        if (current.style && current.style.display === 'none') {
+                            return false;
+                        }
+                    }
+                    current = current.parentNode instanceof ShadowRoot 
+                        ? current.parentNode.host 
+                        : current.parentNode;
+                }
+                return true;
+            };
+
+            if (player) {
+                let found = player.querySelectorAll('.ytp-caption-segment');
+                if (found.length === 0 && player.shadowRoot) {
+                    found = player.shadowRoot.querySelectorAll('.ytp-caption-segment');
+                }
+                segments = Array.from(found).filter(isElementVisible);
+            }
+
             if (segments.length === 0) {
-                const player = document.getElementById('movie_player');
-                if (player?.shadowRoot) {
-                    segments = player.shadowRoot.querySelectorAll('.ytp-caption-segment');
+                const container = document.querySelector('#movie_player .ytp-caption-window-container')
+                    || document.querySelector('.ytp-caption-window-container');
+                if (container) {
+                    const found = container.querySelectorAll('.ytp-caption-segment');
+                    segments = Array.from(found).filter(isElementVisible);
                 }
             }
+
             if (segments.length === 0) {
-                const container = document.querySelector('.ytp-caption-window-container');
-                if (container) segments = container.querySelectorAll('.ytp-caption-segment');
+                const found = document.querySelectorAll('.ytp-caption-segment');
+                segments = Array.from(found).filter(isElementVisible);
             }
+
             if (segments.length === 0) return null;
 
-            let text = Array.from(segments).map(s => s.textContent || '').join(' ').trim();
+            let text = segments.map(s => s.textContent || '').join(' ').trim();
             text = this.cleanSubtitleText(text);
             return text ? { start: 0, duration: 0, text } : null;
         } catch {
