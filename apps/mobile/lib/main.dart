@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/theme.dart';
@@ -10,7 +11,16 @@ import 'presentation/settings/settings_provider.dart';
 import 'presentation/word_manager/words_provider.dart';
 import 'presentation/writing/writing_provider.dart';
 
+class DevHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
+}
+
 void main() {
+  HttpOverrides.global = DevHttpOverrides();
   runApp(
     MultiProvider(
       providers: [

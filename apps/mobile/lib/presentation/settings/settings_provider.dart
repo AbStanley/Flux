@@ -114,4 +114,15 @@ class SettingsProvider extends ChangeNotifier {
       // Offline/server down, default models list unchanged
     }
   }
+
+  Future<bool> testConnection() async {
+    try {
+      final data = await apiClient
+          .get<Map<String, dynamic>>('/api/tags')
+          .timeout(const Duration(seconds: 5));
+      return data.containsKey('models');
+    } catch (_) {
+      return false;
+    }
+  }
 }

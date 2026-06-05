@@ -44,6 +44,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             onChanged: (val) => settings.updateApiUrl(val.trim()),
           ),
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.network_check),
+            label: const Text('Test Connection'),
+            onPressed: () async {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(child: CircularProgressIndicator()),
+              );
+
+              final ok = await settings.testConnection();
+
+              if (context.mounted) {
+                Navigator.pop(context); // Close loading indicator
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(ok
+                        ? 'Connection Successful! Models loaded.'
+                        : 'Connection Failed. Check host IP and network.'),
+                    backgroundColor: ok ? Colors.green : Colors.redAccent,
+                  ),
+                );
+              }
+            },
+          ),
           const SizedBox(height: 16),
           _buildSectionHeader('Appearance & Theme'),
           DropdownButtonFormField<AppThemeMode>(
