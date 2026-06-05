@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../settings/settings_provider.dart';
 import 'reader_provider.dart';
 
 class ReaderTextView extends StatelessWidget {
@@ -8,6 +9,7 @@ class ReaderTextView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reader = Provider.of<ReaderProvider>(context);
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
     final pageTokens = reader.currentPageTokens;
     final startIndex = (reader.currentPage - 1) * reader.pageSize;
 
@@ -43,14 +45,14 @@ class ReaderTextView extends StatelessWidget {
           TextDecoration decoration = TextDecoration.none;
 
           if (isPlaying) {
-            bgColor = Theme.of(context).primaryColor.withOpacity(0.35);
+            bgColor = Theme.of(context).primaryColor.withValues(alpha: 0.35);
           } else if (isSelected) {
-            bgColor = Theme.of(context).colorScheme.primary.withOpacity(0.15);
+            bgColor = Theme.of(context).colorScheme.primary.withValues(alpha: 0.15);
             decoration = TextDecoration.underline;
           }
 
           return GestureDetector(
-            onTap: () => reader.handleSelection(index),
+            onTap: () => reader.handleSelection(index, settings.selectedModel),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 1),
               decoration: BoxDecoration(

@@ -1,48 +1,54 @@
 import 'package:flutter/material.dart';
 import '../../core/text_utils.dart';
 import '../../domain/models.dart';
-import '../../infrastructure/api_client.dart';
-import '../../infrastructure/tts_service.dart';
+import 'reader_ai_controller.dart';
+import 'reader_tts_controller.dart';
 
 enum SelectionMode { word, sentence, paragraph }
 
 class ReaderProvider extends ChangeNotifier {
   String _text = '';
   List<String> _tokens = [];
-  List<int> _tokenOffsets = [];
+  final List<int> _tokenOffsets = [];
   final Set<int> _selectedIndices = {};
   int _currentPage = 1;
-  int _pageSize = 300; // Mobile-friendly page size
+  final int _pageSize = 300; // Mobile-friendly page size
 
   SelectionMode _selectionMode = SelectionMode.word;
   String _readingMode = 'STANDARD'; // 'STANDARD' or 'GRAMMAR'
   bool _isZenMode = false;
+  DateTime _lastNotifyTime = DateTime.fromMillisecondsSinceEpoch(0);
 
-  // Audio State
-  bool _isPlayingAudio = false;
-  int? _currentAudioTokenIndex;
-  double _playbackRate = 1.0;
+  late final ReaderTtsController tts;
+  late final ReaderAiController ai;
 
-  // Translation State
-  RichTranslation? _activeTranslation;
-  bool _isLoadingTranslation = false;
-  String? _translationError;
+  ReaderProvider() {
+    tts = ReaderTtsController(this);
+    ai = ReaderAiController(this);
+  }
 
   // Getters
   String get text => _text;
   List<String> get tokens => _tokens;
+  List<int> get tokenOffsets => _tokenOffsets;
   Set<int> get selectedIndices => _selectedIndices;
   int get currentPage => _currentPage;
   int get pageSize => _pageSize;
   SelectionMode get selectionMode => _selectionMode;
   String get readingMode => _readingMode;
   bool get isZenMode => _isZenMode;
-  bool get isPlayingAudio => _isPlayingAudio;
-  int? get currentAudioTokenIndex => _currentAudioTokenIndex;
-  double get playbackRate => _playbackRate;
-  RichTranslation? get activeTranslation => _activeTranslation;
-  bool get isLoadingTranslation => _isLoadingTranslation;
-  String? get translationError => _translationError;
+
+  // Delegated AI/Translation Getters
+  bool get isGenerating => ai.isGenerating;
+  String? get generationError => ai.generationError;
+  RichTranslation? get activeTranslation => ai.activeTranslation;
+  bool get isLoadingTranslation => ai.isLoadingTranslation;
+  String? get translationError => ai.translationError;
+
+  // Delegated TTS Getters
+  bool get isPlayingAudio => tts.isPlaying;
+  int? get currentAudioTokenIndex => tts.currentAudioTokenIndex;
+  double get playbackRate => tts.playbackRate;
 
   int get totalPages => (_tokens.length / _pageSize).ceil();
 
@@ -53,13 +59,14 @@ class ReaderProvider extends ChangeNotifier {
     return _tokens.sublist(start, end);
   }
 
+  void notify() => notifyListeners();
+
   void loadText(String text) {
     _text = text;
     _tokens = text.split(RegExp(r'(\s+)'));
     _currentPage = 1;
     _selectedIndices.clear();
 
-    // Precalculate offsets for TTS boundary sync
     _tokenOffsets.clear();
     int currentLen = 0;
     for (final token in _tokens) {
@@ -67,9 +74,34 @@ class ReaderProvider extends ChangeNotifier {
       currentLen += token.length;
     }
 
-    stopAudio();
-    _activeTranslation = null;
+    tts.stop();
+    ai.clearTranslation();
     notifyListeners();
+  }
+
+  void clearText() {
+    _text = '';
+    _tokens.clear();
+    _tokenOffsets.clear();
+    _selectedIndices.clear();
+    _currentPage = 1;
+  }
+
+  void updateGeneratedText(String text, {bool force = false}) {
+    _text = text;
+    _tokens = text.split(RegExp(r'(\s+)'));
+    _tokenOffsets.clear();
+    int currentLen = 0;
+    for (final token in _tokens) {
+      _tokenOffsets.add(currentLen);
+      currentLen += token.length;
+    }
+    
+    final now = DateTime.now();
+    if (force || now.difference(_lastNotifyTime).inMilliseconds > 150) {
+      _lastNotifyTime = now;
+      notifyListeners();
+    }
   }
 
   void setCurrentPage(int page) {
@@ -95,7 +127,7 @@ class ReaderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void handleSelection(int pageIndex) {
+  void handleSelection(int pageIndex, String model) {
     final globalIndex = (_currentPage - 1) * _pageSize + pageIndex;
     if (globalIndex < 0 || globalIndex >= _tokens.length) return;
 
@@ -115,16 +147,15 @@ class ReaderProvider extends ChangeNotifier {
     notifyListeners();
 
     if (_selectedIndices.isNotEmpty) {
-      fetchTranslationForSelection();
+      ai.fetchTranslationForSelection(selectedText, model);
     } else {
-      _activeTranslation = null;
-      notifyListeners();
+      ai.clearTranslation();
     }
   }
 
   void clearSelection() {
     _selectedIndices.clear();
-    _activeTranslation = null;
+    ai.clearTranslation();
     notifyListeners();
   }
 
@@ -134,86 +165,25 @@ class ReaderProvider extends ChangeNotifier {
     return sorted.map((idx) => _tokens[idx]).join('');
   }
 
-  Future<void> fetchTranslationForSelection() async {
-    final query = selectedText.trim();
-    if (query.isEmpty) return;
-
-    _isLoadingTranslation = true;
-    _translationError = null;
-    _activeTranslation = null;
-    notifyListeners();
-
-    try {
-      final data = await apiClient.post<Map<String, dynamic>>('/api/rich-translation', {
-        'text': query,
-        'targetLanguage': 'en',
-        'context': _text,
-      });
-      _activeTranslation = RichTranslation.fromJson(data);
-    } catch (e) {
-      _translationError = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _isLoadingTranslation = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> setPlaybackRate(double rate) async {
-    _playbackRate = rate;
-    await ttsService.setSpeechRate(rate);
-    notifyListeners();
-  }
-
-  Future<void> playAudio() async {
-    if (_tokens.isEmpty) return;
-    int startTokenIndex = (_currentPage - 1) * _pageSize;
-
-    // Check if we already have a progress, play from there
-    if (_currentAudioTokenIndex != null &&
-        _currentAudioTokenIndex! >= startTokenIndex &&
-        _currentAudioTokenIndex! < startTokenIndex + _pageSize) {
-      startTokenIndex = _currentAudioTokenIndex!;
-    }
-
-    final String textToPlay = _tokens.sublist(startTokenIndex).join('');
-    final int baseOffset = _tokenOffsets[startTokenIndex];
-
-    _isPlayingAudio = true;
-    notifyListeners();
-
-    await ttsService.speak(
-      textToPlay,
-      onProgress: (startChar, endChar) {
-        final absoluteChar = baseOffset + startChar;
-        // Map back to token
-        int foundTokenIdx = startTokenIndex;
-        for (int i = _tokenOffsets.length - 1; i >= startTokenIndex; i--) {
-          if (_tokenOffsets[i] <= absoluteChar) {
-            foundTokenIdx = i;
-            break;
-          }
-        }
-        _currentAudioTokenIndex = foundTokenIdx;
-        notifyListeners();
-      },
-      onComplete: () {
-        _isPlayingAudio = false;
-        _currentAudioTokenIndex = null;
-        notifyListeners();
-      },
+  Future<void> generateStory({
+    required String topic,
+    required String level,
+    required String sourceLang,
+    required String contentType,
+    required String model,
+  }) async {
+    await ai.generateStory(
+      topic: topic,
+      level: level,
+      sourceLang: sourceLang,
+      contentType: contentType,
+      model: model,
     );
   }
 
-  Future<void> pauseAudio() async {
-    await ttsService.pause();
-    _isPlayingAudio = false;
-    notifyListeners();
-  }
-
-  Future<void> stopAudio() async {
-    await ttsService.stop();
-    _isPlayingAudio = false;
-    _currentAudioTokenIndex = null;
-    notifyListeners();
-  }
+  // Delegated TTS calls
+  Future<void> setPlaybackRate(double rate) => tts.setPlaybackRate(rate);
+  Future<void> playAudio() => tts.play();
+  Future<void> pauseAudio() => tts.pause();
+  Future<void> stopAudio() => tts.stop();
 }

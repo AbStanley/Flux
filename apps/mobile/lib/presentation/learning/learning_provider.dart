@@ -107,6 +107,27 @@ class LearningProvider extends ChangeNotifier {
       if (_questions.isEmpty) {
         throw Exception('The AI failed to generate game questions. Please try again.');
       }
+
+      // Populate choices from the batch of questions to create realistic multiple choice options
+      for (final q in _questions) {
+        // Collect other unique answers in the batch as distractors
+        final distractors = _questions
+            .map((item) => item.answer)
+            .where((ans) => ans.trim().toLowerCase() != q.answer.trim().toLowerCase())
+            .toSet()
+            .toList();
+        distractors.shuffle();
+        final pickedDistractors = distractors.take(3).toList();
+        
+        // Fill up to 3 distractors if we have fewer questions in the batch
+        while (pickedDistractors.length < 3) {
+          pickedDistractors.add('${q.answer}_alt${pickedDistractors.length + 1}');
+        }
+        
+        final allChoices = [q.answer, ...pickedDistractors]..shuffle();
+        q.choices.clear();
+        q.choices.addAll(allChoices);
+      }
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
       _activeGame = null;

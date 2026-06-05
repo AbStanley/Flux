@@ -19,10 +19,12 @@ class WordsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final params = {
-        if (type != null) 'type': type,
+      final Map<String, String> params = {
         'limit': '100', // Load a healthy chunk for mobile scrolling
       };
+      if (type != null) {
+        params['type'] = type;
+      }
       final data = await apiClient.get<Map<String, dynamic>>('/api/words', query: params);
       final List itemsList = data['items'] ?? [];
       _words = itemsList.map((x) => WordItem.fromJson(x)).toList();

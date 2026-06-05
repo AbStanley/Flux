@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'reader_import_prompt.dart';
 import 'reader_provider.dart';
 import 'reader_text_view.dart';
 import 'translation_bottom_sheet.dart';
@@ -14,13 +15,15 @@ class ReaderScreen extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
+          if (reader.isGenerating)
+            const LinearProgressIndicator(),
           _buildControlHeader(context, reader),
           Expanded(
-            child: reader.text.isEmpty
-                ? _buildImportPrompt(context, reader)
+            child: (reader.text.isEmpty && !reader.isGenerating)
+                ? const ReaderImportPrompt()
                 : const ReaderTextView(),
           ),
-          if (reader.text.isNotEmpty) _buildFooterControls(context, reader),
+          if (reader.text.isNotEmpty || reader.isGenerating) _buildFooterControls(context, reader),
         ],
       ),
     );
@@ -72,41 +75,7 @@ class ReaderScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImportPrompt(BuildContext context, ReaderProvider reader) {
-    final textController = TextEditingController();
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.menu_book, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text(
-            'Ready to read? Paste some text below:',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: textController,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              hintText: 'Paste target language content here...',
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.input),
-            label: const Text('Start Reading'),
-            onPressed: () {
-              if (textController.text.trim().isNotEmpty) {
-                reader.loadText(textController.text.trim());
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  // Import prompt is now handled by ReaderImportPrompt in reader_import_prompt.dart
 
   Widget _buildFooterControls(BuildContext context, ReaderProvider reader) {
     return Container(

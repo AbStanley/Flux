@@ -135,7 +135,7 @@ class TranslationBottomSheet extends StatelessWidget {
                     icon: const Icon(Icons.volume_up),
                     onPressed: () => ttsService.speak(
                       ex.sentence,
-                      onProgress: (_, __) {},
+                      onProgress: (start, end) {},
                       onComplete: () {},
                     ),
                   ),
