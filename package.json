@@ -11,6 +11,8 @@
     "server:dev": "npm run start:dev --workspace=@flux/server",
     "prisma-prepare": "npx prisma generate --workspace=@flux/server",
     "prisma-studio": "npx prisma studio --schema=apps/server/prisma/schema.prisma",
+    "mobile:run": "cd apps/mobile && flutter run",
+    "mobile:build": "cd apps/mobile && flutter build apk",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
     "prepare": "husky",
