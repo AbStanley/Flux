@@ -1,5 +1,6 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { Ollama, Message, ChatResponse, GenerateResponse } from 'ollama';
+import { DebugTraceService } from './debug-trace.service';
 
 @Injectable()
 export class OllamaClientService {
@@ -9,7 +10,7 @@ export class OllamaClientService {
   private verifiedModels = new Set<string>();
   private verifiedAt = 0;
 
-  constructor() {
+  constructor(private readonly debugTraceService: DebugTraceService) {
     this.ollamaHost = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
     this.logger.log(`Initializing Ollama Client with Host: ${this.ollamaHost}`);
     this.ollama = new Ollama({ host: this.ollamaHost });
@@ -20,8 +21,19 @@ export class OllamaClientService {
     messages: Message[],
     stream?: S,
     signal?: AbortSignal,
+    traceId?: string,
   ): Promise<S extends true ? AsyncIterable<ChatResponse> : ChatResponse> {
     const action = `chat with model ${model}`;
+    if (traceId) {
+      const promptText = messages
+        .map((m) => `[${m.role}]: ${m.content}`)
+        .join('\n');
+      this.debugTraceService.recordTrace(traceId, {
+        model,
+        prompt: promptText,
+      });
+    }
+
     if (stream) {
       return this.execute(
         (client) => client.chat({ model, messages, stream: true }),
@@ -31,11 +43,17 @@ export class OllamaClientService {
         S extends true ? AsyncIterable<ChatResponse> : ChatResponse
       >;
     }
-    return this.execute(
+    const response = await this.execute(
       (client) => client.chat({ model, messages, stream: false }),
       action,
       signal,
-    ) as unknown as Promise<
+    );
+    if (traceId) {
+      this.debugTraceService.recordTrace(traceId, {
+        rawResponse: response.message?.content || JSON.stringify(response),
+      });
+    }
+    return response as unknown as Promise<
       S extends true ? AsyncIterable<ChatResponse> : ChatResponse
     >;
   }
@@ -54,10 +72,17 @@ export class OllamaClientService {
       stop?: string[];
     },
     signal?: AbortSignal,
+    traceId?: string,
   ): Promise<
     S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
   > {
     const action = `generate with model ${model}`;
+    if (traceId) {
+      this.debugTraceService.recordTrace(traceId, {
+        model,
+        prompt,
+      });
+    }
 
     const baseRequest = {
       model,
@@ -75,11 +100,17 @@ export class OllamaClientService {
         S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
       >;
     }
-    return this.execute(
+    const response = await this.execute(
       (client) => client.generate({ ...baseRequest, stream: false }),
       action,
       signal,
-    ) as unknown as Promise<
+    );
+    if (traceId) {
+      this.debugTraceService.recordTrace(traceId, {
+        rawResponse: response.response || JSON.stringify(response),
+      });
+    }
+    return response as unknown as Promise<
       S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
     >;
   }

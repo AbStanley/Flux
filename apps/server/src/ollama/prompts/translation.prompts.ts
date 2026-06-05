@@ -141,7 +141,7 @@ Rules:
 - Parts-of-Speech Matching: Never translate a verb form as a pronoun.
 - When isVerb=true, "sourceInfinitive" MUST be the pure ${srcLang} INFINITIVE. NEVER copy the conjugated segment.
 - Every string value MUST be in the language its slot assigns. Omit optional keys whose condition is false — never write "n/a", "none", or empty strings.
-- "examples": each "sentence" entirely in ${srcLang}, each "translation" entirely in ${targetLanguage}. Never swap.
+- "examples": exactly 3 natural, diverse, and contextual example sentences. Each "sentence" must be entirely in ${srcLang} and MUST explicitly contain "${text}" (or its conjugation/variation). Each "translation" must be entirely in ${targetLanguage}. Never swap the languages or leave them empty.
 - Translate ONLY the specific segment "${text}". DO NOT translate the entire sentence. 
 - If "${text}" is a single word, the translation MUST be a single word (or minimal equivalent). DO NOT translate the full compound verb if only the auxiliary verb was tapped.
 ${isSentence ? '- Multi-word input: type="sentence", isVerb=false.' : ''}

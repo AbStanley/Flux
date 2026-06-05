@@ -242,7 +242,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                 {/* Settings Button */}
                 <SettingsModal />
 
-                <div className="h-6 w-px bg-border/50 mx-1" />
+
 
                 {/* Sidebar Toggle Button */}
                 <Button
@@ -274,6 +274,7 @@ export function PlayerControls({ vertical = false }: PlayerControlsProps) {
                     <Maximize2 className="h-4 w-4" />
                 </Button>
             </div>
+
         </div >
     );
 };

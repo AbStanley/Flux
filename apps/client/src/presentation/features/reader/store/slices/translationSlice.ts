@@ -198,8 +198,9 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             if (pendingRequests.has(cacheKey)) {
                 result = await pendingRequests.get(cacheKey)!;
             } else {
+                const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
                 const context = getContextForIndex(tokens, start);
-                const promise = fetchTranslationHelper(textToTranslate, context, sourceLang, targetLang, aiService);
+                const promise = fetchTranslationHelper(textToTranslate, context, sourceLang, targetLang, aiService, 3, 60000, traceId);
                 pendingRequests.set(cacheKey, promise);
                 try {
                     result = await promise;
@@ -281,8 +282,9 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         if (pendingRequests.has(cacheKey)) {
             result = await pendingRequests.get(cacheKey)!;
         } else {
+            const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
             const context = getContextForIndex(tokens, globalIndex);
-            const promise = fetchTranslationHelper(token, context, sourceLang, targetLang, aiService);
+            const promise = fetchTranslationHelper(token, context, sourceLang, targetLang, aiService, 3, 60000, traceId);
             pendingRequests.set(cacheKey, promise);
             try {
                 result = await promise;
@@ -311,9 +313,10 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
 
         const context = getContextForIndex(tokens, globalIndex);
         const cacheKey = `${token}_${targetLang}`;
+        const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
         // Force Fetch (bypass cache check initially)
-        const result = await fetchTranslationHelper(token, context, sourceLang, targetLang, aiService);
+        const result = await fetchTranslationHelper(token, context, sourceLang, targetLang, aiService, 3, 60000, traceId);
 
         if (result) {
             // Update Cache AND Current Hover if still matching

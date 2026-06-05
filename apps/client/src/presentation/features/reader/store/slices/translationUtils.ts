@@ -86,14 +86,15 @@ export const fetchTranslationHelper = async (
     targetLang: string,
     aiService: IAIService,
     retries = 3,
-    timeoutMs = 60000
+    timeoutMs = 60000,
+    traceId?: string,
 ): Promise<string | null> => {
     if (!text.trim()) return null;
 
     let attempt = 0;
     while (attempt < retries) {
         try {
-            const fetchPromise = aiService.translateText(text.trim(), targetLang, context, sourceLang);
+            const fetchPromise = aiService.translateText(text.trim(), targetLang, context, sourceLang, undefined, traceId);
             const timeoutPromise = new Promise<null>((_, reject) =>
                 setTimeout(() => reject(new Error("Timeout")), timeoutMs)
             );

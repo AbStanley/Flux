@@ -96,7 +96,8 @@ export const useAIHandler = (options: { isGlobal?: boolean } = {}) => {
             if (mode === 'EXPLAIN') {
                 response = await aiService.explainText(text, targetLang, context, sourceLang, controller.signal);
             } else {
-                const translateResult = await aiService.translateText(text, targetLang, context, sourceLang, controller.signal);
+                const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+                const translateResult = await aiService.translateText(text, targetLang, context, sourceLang, controller.signal, traceId);
                 if (typeof translateResult === 'object' && translateResult !== null) {
                     response = translateResult.response;
                     detectedLang = translateResult.sourceLanguage;

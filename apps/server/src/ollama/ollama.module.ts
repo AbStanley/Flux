@@ -8,6 +8,7 @@ import { OllamaGenerationService } from './services/ollama-generation.service';
 import { OllamaWritingService } from './services/ollama-writing.service';
 import { OllamaGateway } from './ollama.gateway';
 import { AuthModule } from '../auth/auth.module';
+import { DebugTraceService } from './services/debug-trace.service';
 
 @Module({
   imports: [AuthModule],
@@ -20,7 +21,8 @@ import { AuthModule } from '../auth/auth.module';
     OllamaGenerationService,
     OllamaWritingService,
     OllamaGateway,
+    DebugTraceService,
   ],
-  exports: [OllamaService],
+  exports: [OllamaService, DebugTraceService],
 })
 export class OllamaModule {}

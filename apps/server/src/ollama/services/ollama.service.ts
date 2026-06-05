@@ -47,6 +47,7 @@ export class OllamaService {
     count?: number;
     existingExamples?: string[];
     signal?: AbortSignal;
+    traceId?: string;
   }) {
     return this.generation.generateExamples(params);
   }
@@ -58,6 +59,7 @@ export class OllamaService {
     sourceLanguage?: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<{ response: string; sourceLanguage?: string }> {
     return this.translation.translateText(params);
   }
@@ -79,6 +81,7 @@ export class OllamaService {
     sourceLanguage?: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<RichTranslation> {
     return this.translation.getRichTranslation(params);
   }
@@ -90,6 +93,7 @@ export class OllamaService {
     sourceLanguage?: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<AsyncIterable<GenerateResponse>> {
     return this.translation.getRichTranslationStream(params);
   }
@@ -99,6 +103,7 @@ export class OllamaService {
     sourceLanguage: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<RichConjugations> {
     return this.translation.getConjugations(params);
   }
@@ -108,6 +113,7 @@ export class OllamaService {
     sourceLanguage: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): AsyncGenerator<{
     tense: string;
     rows: Array<{ pronoun: string; conjugation: string }>;

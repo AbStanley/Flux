@@ -59,15 +59,19 @@ export const getExamplesPrompt = (params: {
       ? `\nDo NOT regenerate these existing examples:\n- ${existingExamples.join('\n- ')}\n`
       : '';
 
-  return `Generate exactly ${count} NEW natural example sentences for "${word}"${definition ? ` (meaning: ${definition})` : ''}.${excludePart}
-- Sentence Language: ${sourceLanguage}
-- Translation Language: ${targetLanguage}
+  return `You are a professional linguist. Generate exactly ${count} NEW, natural, and diverse example sentences in ${sourceLanguage} for the target word/phrase: "${word}"${definition ? ` (meaning: ${definition})` : ''}.${excludePart}
 
-Return a JSON array of ${count} objects. No extra text.
-Format:
+CRITICAL RULES:
+1. Each example sentence MUST be written entirely in ${sourceLanguage} and use the word "${word}" (or a natural variation/conjugation of it) in context.
+2. The translation of each sentence MUST be written entirely in ${targetLanguage} and accurately translate the sentence.
+3. NEVER swap the languages: "sentence" is ${sourceLanguage} ONLY, and "translation" is ${targetLanguage} ONLY.
+4. Return ONLY a valid JSON array of ${count} objects matching the structure below. Do not wrap the JSON in markdown code blocks (like \`\`\`json), and do not include any intro, outro, or explanation.
+
+JSON Schema:
 [
-  {"sentence": "Example 1 in ${sourceLanguage}", "translation": "Translation 1 in ${targetLanguage}"},
-  {"sentence": "Example 2 in ${sourceLanguage}", "translation": "Translation 2 in ${targetLanguage}"},
-  {"sentence": "Example 3 in ${sourceLanguage}", "translation": "Translation 3 in ${targetLanguage}"}
+  {
+    "sentence": "Example sentence in ${sourceLanguage} containing '${word}'",
+    "translation": "Accurate translation in ${targetLanguage}"
+  }
 ]`;
 };

@@ -72,6 +72,7 @@ export class OllamaTranslationService {
     sourceLanguage?: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<{ response: string; sourceLanguage?: string }> {
     this.logger.debug(
       `[INCOMING PAYLOAD]\n${JSON.stringify({ ...params, signal: undefined }, null, 2)}`,
@@ -105,6 +106,7 @@ export class OllamaTranslationService {
         stop: isBlock ? ['\n'] : undefined,
       },
       params.signal,
+      params.traceId,
     );
     const response = (generateResult as any).response;
     this.logger.debug(`[TRANSLATE RESPONSE]\n${response}`);
@@ -199,6 +201,7 @@ export class OllamaTranslationService {
     sourceLanguage?: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<RichTranslation> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const rich = await this.fetchRichTranslation(
@@ -207,6 +210,7 @@ export class OllamaTranslationService {
         context: params.context,
       },
       model,
+      params.traceId,
     );
 
     this.trimRunawayTranslation(rich, params.text);
@@ -230,6 +234,7 @@ export class OllamaTranslationService {
     sourceLanguage?: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<AsyncIterable<GenerateResponse>> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getRichTranslationPrompt(
@@ -251,6 +256,7 @@ export class OllamaTranslationService {
         temperature: 0,
       },
       params.signal,
+      params.traceId,
     );
 
     const logger = this.logger;
@@ -274,6 +280,7 @@ export class OllamaTranslationService {
     sourceLanguage: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<RichConjugations> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const verb = params.infinitive.trim();
@@ -288,6 +295,7 @@ export class OllamaTranslationService {
           tense,
           model,
           params.signal,
+          params.traceId,
         ),
       ),
     );
@@ -316,6 +324,7 @@ export class OllamaTranslationService {
     sourceLanguage: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): AsyncGenerator<{
     tense: string;
     rows: Array<{ pronoun: string; conjugation: string }>;
@@ -340,6 +349,7 @@ export class OllamaTranslationService {
         tense,
         model,
         params.signal,
+        params.traceId,
       )
         .then((rows) => {
           queue.push({ tense, rows });
@@ -415,6 +425,7 @@ export class OllamaTranslationService {
       signal?: AbortSignal;
     },
     model: string,
+    traceId?: string,
   ): Promise<RichObj> {
     const prompt = getRichTranslationPrompt(
       params.text,
@@ -429,6 +440,7 @@ export class OllamaTranslationService {
       'json',
       { num_ctx: 2048, num_predict: 768, temperature: 0 },
       params.signal,
+      traceId,
     );
     try {
       return cleanAndParseJson<RichObj>(response);
@@ -478,6 +490,7 @@ export class OllamaTranslationService {
     tense: string,
     model: string,
     signal?: AbortSignal,
+    traceId?: string,
   ): Promise<unknown[] | null> {
     try {
       const { response } = await this.ollamaClient.generate(
@@ -487,6 +500,7 @@ export class OllamaTranslationService {
         'json',
         { num_predict: 256, temperature: 0 },
         signal,
+        traceId,
       );
       const preview =
         typeof response === 'string'

@@ -8,6 +8,7 @@ export interface GenerateExamplesRequest {
     model?: string;
     count?: number;
     existingExamples?: string[];
+    traceId?: string;
 }
 
 export interface GeneratedExample {

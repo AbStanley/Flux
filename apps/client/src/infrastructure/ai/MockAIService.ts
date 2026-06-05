@@ -28,7 +28,7 @@ export class MockAIService implements IAIService {
         }
     }
 
-    async translateText(text: string, targetLanguage: string = 'en', context?: string, sourceLanguage?: string, _signal?: AbortSignal): Promise<string | { response: string; sourceLanguage?: string }> {
+    async translateText(text: string, targetLanguage: string = 'en', context?: string, sourceLanguage?: string, _signal?: AbortSignal, _traceId?: string): Promise<string | { response: string; sourceLanguage?: string }> {
         console.log(`[MockAI] Translating "${text}" from ${sourceLanguage || 'Auto'} to ${targetLanguage} (Context: ${context || 'None'})`);
         await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
         return `[Translated to ${targetLanguage}]: ${text}`;
@@ -40,7 +40,7 @@ export class MockAIService implements IAIService {
         return `[Explanation in ${targetLanguage}]: This is a mock explanation for "${text}".`;
     }
 
-    async getRichTranslation(text: string, _targetLanguage?: string, _context?: string, _sourceLanguage?: string, _signal?: AbortSignal): Promise<RichTranslationResult> {
+    async getRichTranslation(text: string, _targetLanguage?: string, _context?: string, _sourceLanguage?: string, _signal?: AbortSignal, _traceId?: string): Promise<RichTranslationResult> {
         console.log(`[MockAI] Getting rich translation for "${text}" to ${_targetLanguage} (Context: ${_context})`);
         return {
             translation: `[Mock Rich] ${text}`,
@@ -54,7 +54,7 @@ export class MockAIService implements IAIService {
         };
     }
 
-    async getConjugations(_infinitive: string, _sourceLanguage: string, _signal?: AbortSignal): Promise<RichConjugationsResult> {
+    async getConjugations(_infinitive: string, _sourceLanguage: string, _signal?: AbortSignal, _traceId?: string): Promise<RichConjugationsResult> {
         await new Promise(resolve => setTimeout(resolve, 900));
         return { conjugations: {} };
     }
@@ -65,6 +65,7 @@ export class MockAIService implements IAIService {
         opts: {
             signal?: AbortSignal;
             onTense: (tense: string, rows: Array<{ pronoun: string; conjugation: string }>) => void;
+            traceId?: string;
         },
     ): Promise<RichConjugationsResult> {
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -83,6 +84,7 @@ export class MockAIService implements IAIService {
             sourceLanguage?: string;
             signal?: AbortSignal;
             onPartial: (partial: Partial<RichTranslationResult>) => void;
+            traceId?: string;
         },
     ): Promise<RichTranslationResult> {
         const final = await this.getRichTranslation(text, opts.targetLanguage, opts.context);

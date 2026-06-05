@@ -28,6 +28,7 @@ export class OllamaGenerationService {
     count?: number;
     existingExamples?: string[];
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<{ sentence: string; translation: string }[]> {
     const { count = 3 } = params;
     const model = await this.ollamaClient.ensureModel(params.model);
@@ -46,6 +47,7 @@ export class OllamaGenerationService {
       [{ role: 'user', content: prompt }],
       false,
       params.signal,
+      params.traceId,
     );
 
     const parsed = cleanAndParseJson<ExampleRecord[]>(response.message.content);

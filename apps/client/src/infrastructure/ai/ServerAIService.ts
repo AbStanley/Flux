@@ -53,6 +53,7 @@ export class ServerAIService implements IAIService {
     context?: string,
     sourceLanguage?: string,
     signal?: AbortSignal,
+    traceId?: string,
   ): Promise<string | { response: string; sourceLanguage?: string }> {
     const cleanedText = this.cleanSelection(text);
     const data = await defaultClient.post<string | { response: string; sourceLanguage?: string }>('/api/translate', {
@@ -61,6 +62,7 @@ export class ServerAIService implements IAIService {
       context: context, // Do not clean context, punctuation is critical for the LLM
       sourceLanguage,
       model: this.model,
+      traceId,
     }, signal);
 
     if (typeof data === 'object' && data !== null && 'sourceLanguage' in data) {
@@ -95,6 +97,7 @@ export class ServerAIService implements IAIService {
     context?: string,
     sourceLanguage?: string,
     signal?: AbortSignal,
+    traceId?: string,
   ): Promise<RichTranslationResult> {
     const cleanedText = this.cleanSelection(text);
     return defaultClient.post<RichTranslationResult>('/api/rich-translation', {
@@ -103,6 +106,7 @@ export class ServerAIService implements IAIService {
       context: context,
       sourceLanguage,
       model: this.model,
+      traceId,
     }, signal);
   }
 
@@ -110,11 +114,13 @@ export class ServerAIService implements IAIService {
     infinitive: string,
     sourceLanguage: string,
     signal?: AbortSignal,
+    traceId?: string,
   ): Promise<RichConjugationsResult> {
     return defaultClient.post<RichConjugationsResult>('/api/rich-translation/conjugations', {
       infinitive,
       sourceLanguage,
       model: this.model,
+      traceId,
     }, signal);
   }
 
@@ -129,6 +135,7 @@ export class ServerAIService implements IAIService {
     opts: {
       signal?: AbortSignal;
       onTense: (tense: string, rows: Array<{ pronoun: string; conjugation: string }>) => void;
+      traceId?: string;
     },
   ): Promise<RichConjugationsResult> {
     const body = JSON.stringify({
@@ -136,6 +143,7 @@ export class ServerAIService implements IAIService {
       sourceLanguage,
       model: this.model,
       stream: true,
+      traceId: opts.traceId,
     });
 
     try {
@@ -191,7 +199,7 @@ export class ServerAIService implements IAIService {
       return { conjugations };
     } catch (err) {
       console.warn("[ServerAIService] conjugations stream failed, falling back:", err);
-      const result = await this.getConjugations(infinitive, sourceLanguage);
+      const result = await this.getConjugations(infinitive, sourceLanguage, opts.signal, opts.traceId);
       for (const [tense, rows] of Object.entries(result.conjugations)) {
         opts.onTense(tense, rows);
       }
@@ -218,6 +226,7 @@ export class ServerAIService implements IAIService {
       sourceLanguage?: string;
       signal?: AbortSignal;
       onPartial: (partial: Partial<RichTranslationResult>) => void;
+      traceId?: string;
     },
   ): Promise<RichTranslationResult> {
     const targetLanguage = opts.targetLanguage ?? "en";
@@ -229,6 +238,7 @@ export class ServerAIService implements IAIService {
       sourceLanguage: opts.sourceLanguage,
       model: this.model,
       stream: true,
+      traceId: opts.traceId,
     });
 
     try {
@@ -309,6 +319,8 @@ export class ServerAIService implements IAIService {
         targetLanguage,
         opts.context,
         opts.sourceLanguage,
+        opts.signal,
+        opts.traceId,
       );
       opts.onPartial(fallback);
       return fallback;

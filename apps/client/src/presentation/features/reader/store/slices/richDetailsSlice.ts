@@ -40,7 +40,11 @@ export interface RichDetailsTab {
   /** Per-tab state for the on-demand conjugations fetch. */
   conjugationsLoading?: boolean;
   conjugationsError?: string | null;
-
+  traces?: {
+    richTranslation?: string;
+    conjugations?: string;
+    moreExamples?: string;
+  };
 }
 
 /**
@@ -118,6 +122,7 @@ async function runRichLoad(
   updateTab: (updater: (tab: RichDetailsTab) => RichDetailsTab) => void,
   syncHoverCache: (translation: string) => void,
   signal: AbortSignal,
+  traceId?: string,
 ): Promise<void> {
   let lastSyncedTranslation: string | null = null;
 
@@ -172,6 +177,7 @@ async function runRichLoad(
     sourceLanguage: sourceLang,
     signal,
     onPartial,
+    traceId,
   });
 
   // Final write: run the full sanitize so missing fields get their
@@ -224,6 +230,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
       return;
     }
 
+    const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     const newTab: RichDetailsTab = {
       id: text,
       text,
@@ -234,6 +241,9 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
       context,
       sourceLang,
       targetLang,
+      traces: {
+        richTranslation: traceId,
+      },
     };
 
     set({
@@ -263,6 +273,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
         (translation) =>
           syncRichIntoHoverCache(set, text, targetLang, translation),
         controller.signal,
+        traceId,
       );
     } catch (error: unknown) {
       // User-triggered abort is a clean stop, not an error banner.
@@ -336,12 +347,17 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
       }));
     };
 
+    const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     updateTab((t) => ({
       ...t,
       data: null,
       isLoading: true,
       isStreaming: true,
       error: null,
+      traces: {
+        ...t.traces,
+        richTranslation: traceId,
+      },
     }));
 
     const controller = new AbortController();
@@ -358,6 +374,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
         (translation) =>
           syncRichIntoHoverCache(set, tab.text, tab.targetLang, translation),
         controller.signal,
+        traceId,
       );
     } catch (error: unknown) {
       if (controller.signal.aborted) {
@@ -400,10 +417,15 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
       return;
     }
 
+    const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     updateTab((t) => ({
       ...t,
       conjugationsLoading: true,
       conjugationsError: null,
+      traces: {
+        ...t.traces,
+        conjugations: traceId,
+      },
     }));
 
     try {
@@ -475,9 +497,14 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
       }));
     };
 
+    const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     updateTab((t) => ({
       ...t,
       isStreaming: true,
+      traces: {
+        ...t.traces,
+        moreExamples: traceId,
+      },
     }));
 
     try {
@@ -494,6 +521,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
         count: 3,
         existingExamples: existingSentencesList,
         model: model || undefined,
+        traceId,
       });
 
       if (response && response.length > 0) {

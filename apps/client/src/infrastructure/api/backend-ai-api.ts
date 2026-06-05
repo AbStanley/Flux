@@ -24,6 +24,12 @@ export const backendAiApi = {
       signal,
     ),
 
+  getTrace: (id: string) =>
+    defaultClient.get<unknown>(`/api/debug/traces/${id}`),
+
+  getTraces: () =>
+    defaultClient.get<unknown[]>('/api/debug/traces'),
+
   generateTextStream: async (
     params: {
       prompt: string;

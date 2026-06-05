@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { BarChart3, BookOpen, Brain, Dices, Library, LogOut, MessageCircle, Sparkles, Settings } from 'lucide-react';
+import { BarChart3, BookOpen, Brain, Dices, Library, LogOut, MessageCircle, Sparkles, Settings, Bug } from 'lucide-react';
 import { useViewStore } from '../../features/navigation/store/useViewStore';
 import { AppView } from '../../features/navigation/types';
 import { Button } from '../ui/button';
 import { SettingsModal } from '../settings/SettingsModal';
+import { GlobalDebugConsoleModal } from '../../features/reader/components/rich-details/GlobalDebugConsoleModal';
 import { useAuthStore } from '../../features/auth/store/useAuthStore';
 import { type SrsStats, wordsApi } from '../../../infrastructure/api/words';
 
@@ -94,6 +95,7 @@ function UserMenu({ user, onLogout, setView }: {
 }) {
     const [open, setOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [isGlobalDebugOpen, setIsGlobalDebugOpen] = useState(false);
     const [stats, setStats] = useState<SrsStats | null>(null);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -183,6 +185,11 @@ function UserMenu({ user, onLogout, setView }: {
                     {/* Logout */}
                     <div className="border-t py-1">
                         <MenuButton
+                            icon={<Bug className="w-4 h-4" />}
+                            label="Diagnostics Console"
+                            onClick={() => { setIsGlobalDebugOpen(true); setOpen(false); }}
+                        />
+                        <MenuButton
                             icon={<LogOut className="w-4 h-4" />}
                             label="Logout"
                             danger
@@ -194,6 +201,9 @@ function UserMenu({ user, onLogout, setView }: {
 
             {/* Controlled settings modal */}
             <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} hideTrigger />
+            
+            {/* Global Diagnostics Modal */}
+            <GlobalDebugConsoleModal isOpen={isGlobalDebugOpen} onOpenChange={setIsGlobalDebugOpen} />
         </div>
     );
 }

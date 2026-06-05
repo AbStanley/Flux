@@ -54,12 +54,12 @@ export interface IAIService {
      * @param targetLanguage The language code (e.g., 'en', 'es', 'fr'). Defaults to user preference or 'en'.
      * @returns The translated text.
      */
-    translateText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal): Promise<string | { response: string; sourceLanguage?: string }>;
+    translateText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal, traceId?: string): Promise<string | { response: string; sourceLanguage?: string }>;
 
     /**
      * Helper to get rich translation info with grammar and examples
      */
-    getRichTranslation(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal): Promise<RichTranslationResult>;
+    getRichTranslation(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal, traceId?: string): Promise<RichTranslationResult>;
 
     /**
      * Streaming variant of getRichTranslation. Calls `onPartial` with a
@@ -75,6 +75,7 @@ export interface IAIService {
             sourceLanguage?: string;
             signal?: AbortSignal;
             onPartial: (partial: Partial<RichTranslationResult>) => void;
+            traceId?: string;
         },
     ): Promise<RichTranslationResult>;
 
@@ -82,7 +83,7 @@ export interface IAIService {
      * On-demand conjugation tables. Called when the user clicks "Show
      * conjugations" in the rich details panel.
      */
-    getConjugations(infinitive: string, sourceLanguage: string): Promise<RichConjugationsResult>;
+    getConjugations(infinitive: string, sourceLanguage: string, signal?: AbortSignal, traceId?: string): Promise<RichConjugationsResult>;
 
     /**
      * Streaming variant — fires `onTense` as each tense's rows land so
@@ -96,6 +97,7 @@ export interface IAIService {
         opts: {
             signal?: AbortSignal;
             onTense: (tense: string, rows: Array<{ pronoun: string; conjugation: string }>) => void;
+            traceId?: string;
         },
     ): Promise<RichConjugationsResult>;
 

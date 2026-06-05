@@ -115,6 +115,7 @@ export function RichDetailsContent({
                         >
                             <RotateCw className="h-3.5 w-3.5" />
                         </Button>
+
                         {isStreaming && (
                             <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-destructive hover:text-destructive" onClick={onCancel} title="Stop generating">
                                 <Square className="h-3.5 w-3.5 fill-current" />
@@ -223,6 +224,8 @@ export function RichDetailsContent({
                     onGenerateMoreExamples={onGenerateMoreExamples} isStreaming={!!isStreaming}
                 />
             </motion.div>
+
+
         </motion.div>
     );
 }
