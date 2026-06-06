@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../settings/settings_screen.dart';
 import 'auth_provider.dart';
+import 'login_form_card.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,112 +26,101 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              cs.surface,
+              cs.primary.withValues(alpha: 0.08),
+              cs.surface,
+            ],
           ),
-        ],
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        ),
+        child: SafeArea(
+          child: Stack(
             children: [
-              const Icon(Icons.flash_on, size: 80, color: Colors.blueAccent),
-              const SizedBox(height: 16),
-              const Text(
-                'FLUX',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 2),
-              ),
-              const Text(
-                'Privacy-First Intelligent Learning',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.grey),
-              ),
-              const SizedBox(height: 32),
-              if (auth.error != null)
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  color: Colors.redAccent.withOpacity(0.2),
-                  child: Text(
-                    auth.error!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
+              Positioned(
+                top: 4,
+                right: 4,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.settings_rounded,
+                    color: cs.onSurface.withValues(alpha: 0.6),
                   ),
-                ),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email Address',
-                  prefixIcon: Icon(Icons.email),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock),
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: auth.isLoading
-                    ? null
-                    : () {
-                        final email = _emailController.text.trim();
-                        final pw = _passwordController.text;
-                        if (email.isNotEmpty && pw.isNotEmpty) {
-                          if (_isRegistering) {
-                            auth.register(email, pw);
-                          } else {
-                            auth.login(email, pw);
-                          }
-                        }
-                      },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    auth.isLoading
-                        ? 'Connecting...'
-                        : (_isRegistering ? 'Create Account' : 'Log In'),
-                    style: const TextStyle(fontSize: 16),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  auth.clearError();
-                  setState(() {
-                    _isRegistering = !_isRegistering;
-                  });
-                },
-                child: Text(_isRegistering
-                    ? 'Already have an account? Sign In'
-                    : 'Need an account? Sign Up'),
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 24),
+                      _buildBrandHeader(cs, tt),
+                      const SizedBox(height: 36),
+                      LoginFormCard(
+                        auth: auth,
+                        emailController: _emailController,
+                        passwordController: _passwordController,
+                        isRegistering: _isRegistering,
+                        onToggle: () {
+                          auth.clearError();
+                          setState(
+                            () => _isRegistering = !_isRegistering,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBrandHeader(ColorScheme cs, TextTheme tt) {
+    return Column(
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [cs.primary, cs.primary.withValues(alpha: 0.6)],
+            ),
+          ),
+          child: Icon(Icons.bolt_rounded, size: 44, color: cs.onPrimary),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'FLUX',
+          style: tt.headlineLarge?.copyWith(letterSpacing: 4),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Privacy-First Intelligent Learning',
+          style: tt.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+        ),
+      ],
     );
   }
 }

@@ -70,4 +70,12 @@ class ReaderTtsController {
     _currentAudioTokenIndex = null;
     _provider.notify();
   }
+
+  Future<void> speakWord(String word) async {
+    await ttsService.speak(
+      word,
+      onProgress: (start, end) {},
+      onComplete: () {},
+    );
+  }
 }

@@ -4,6 +4,7 @@ import '../../domain/writing_model.dart';
 import '../settings/settings_provider.dart';
 import 'writing_provider.dart';
 
+/// Custom controller that highlights writing corrections inline.
 class WritingTextController extends TextEditingController {
   final List<WritingCorrection> corrections;
 
@@ -16,7 +17,11 @@ class WritingTextController extends TextEditingController {
     required bool withComposing,
   }) {
     if (corrections.isEmpty) {
-      return super.buildTextSpan(context: context, style: style, withComposing: withComposing);
+      return super.buildTextSpan(
+        context: context,
+        style: style,
+        withComposing: withComposing,
+      );
     }
 
     final List<TextSpan> children = [];
@@ -40,9 +45,9 @@ class WritingTextController extends TextEditingController {
       children.add(TextSpan(
         text: text.substring(start, end),
         style: const TextStyle(
-          backgroundColor: Color(0x33FF5252),
+          backgroundColor: Color(0x22EF5350),
           decoration: TextDecoration.underline,
-          decorationColor: Colors.redAccent,
+          decorationColor: Color(0xFFEF5350),
           decorationStyle: TextDecorationStyle.wavy,
           decorationThickness: 2.0,
         ),
@@ -85,9 +90,8 @@ class _WritingScreenState extends State<WritingScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<WritingProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
+    final cs = Theme.of(context).colorScheme;
 
-    // Sync provider text to controller when corrections update,
-    // only if they differ (to avoid losing cursor selection on typing).
     if (_controller.text != provider.text) {
       final cursorVal = _controller.selection;
       _controller.value = TextEditingValue(
@@ -96,126 +100,81 @@ class _WritingScreenState extends State<WritingScreen> {
       );
     }
 
-    // Keep controller corrections list synced
     _controller = WritingTextController(corrections: provider.corrections);
 
-    return Scaffold(
-      body: Column(
+    return SafeArea(
+      child: Column(
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: TextField(
                 controller: _controller,
                 maxLines: null,
                 expands: true,
                 textAlignVertical: TextAlignVertical.top,
-                decoration: const InputDecoration(
-                  hintText: 'Type or paste your foreign language writing text here...',
+                style: TextStyle(
+                  fontSize: 16,
+                  height: 1.6,
+                  color: cs.onSurface,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Write in your target language...',
                   alignLabelWithHint: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: cs.surface,
                 ),
                 onChanged: (val) => provider.setText(val),
               ),
             ),
           ),
-          if (provider.corrections.isNotEmpty) _buildCorrectionsList(context, provider),
-          _buildActionPanel(context, provider, settings),
+          if (provider.corrections.isNotEmpty)
+            _CorrectionStrip(corrections: provider.corrections, provider: provider),
+          _buildActions(context, provider, settings, cs),
         ],
       ),
     );
   }
 
-  Widget _buildCorrectionsList(BuildContext context, WritingProvider provider) {
-    return Container(
-      height: 140,
-      color: Theme.of(context).cardTheme.color,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        itemCount: provider.corrections.length,
-        itemBuilder: (context, index) {
-          final corr = provider.corrections[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            child: Container(
-              width: 250,
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        corr.mistakeText,
-                        style: const TextStyle(
-                          decoration: TextDecoration.lineThrough,
-                          color: Colors.redAccent,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Icon(Icons.arrow_forward, size: 16),
-                      Text(
-                        corr.correctionText,
-                        style: const TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    corr.longDescription,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => provider.dismissCorrection(corr),
-                        child: const Text('Dismiss', style: TextStyle(fontSize: 11)),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => provider.acceptCorrection(corr),
-                        child: const Text('Correct', style: TextStyle(fontSize: 11)),
-                      ),
-                    ],
-                  )
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildActionPanel(
+  Widget _buildActions(
     BuildContext context,
     WritingProvider provider,
     SettingsProvider settings,
+    ColorScheme cs,
   ) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: cs.onSurface.withValues(alpha: 0.06)),
+        ),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(Icons.delete_sweep),
+            icon: Icon(
+              Icons.delete_sweep_rounded,
+              color: cs.onSurface.withValues(alpha: 0.4),
+            ),
             onPressed: () => provider.clearAll(),
           ),
+          const Spacer(),
           ElevatedButton.icon(
             icon: provider.isAnalyzing
-                ? const SizedBox(
+                ? SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: cs.onPrimary,
+                    ),
                   )
-                : const Icon(Icons.auto_awesome),
-            label: Text(provider.isAnalyzing ? 'Analyzing...' : 'Polish Writing'),
+                : const Icon(Icons.auto_awesome_rounded, size: 18),
+            label: Text(provider.isAnalyzing ? 'Analyzing...' : 'Polish'),
             onPressed: provider.isAnalyzing
                 ? null
                 : () => provider.checkText(
@@ -224,6 +183,112 @@ class _WritingScreenState extends State<WritingScreen> {
                     ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Horizontal scrolling strip of correction cards.
+class _CorrectionStrip extends StatelessWidget {
+  final List<WritingCorrection> corrections;
+  final WritingProvider provider;
+
+  const _CorrectionStrip({
+    required this.corrections,
+    required this.provider,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      height: 130,
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(
+          top: BorderSide(color: cs.onSurface.withValues(alpha: 0.06)),
+        ),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        itemCount: corrections.length,
+        itemBuilder: (context, index) {
+          final corr = corrections[index];
+          return Card(
+            margin: const EdgeInsets.only(right: 10),
+            child: Container(
+              width: 240,
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        corr.mistakeText,
+                        style: TextStyle(
+                          decoration: TextDecoration.lineThrough,
+                          color: cs.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14,
+                          color: cs.onSurface.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      Flexible(
+                        child: Text(
+                          corr.correctionText,
+                          style: TextStyle(
+                            color: cs.tertiary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Expanded(
+                    child: Text(
+                      corr.longDescription,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurface.withValues(alpha: 0.55),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => provider.dismissCorrection(corr),
+                        child: const Text('Dismiss', style: TextStyle(fontSize: 11)),
+                      ),
+                      const SizedBox(width: 4),
+                      ElevatedButton(
+                        onPressed: () => provider.acceptCorrection(corr),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          minimumSize: const Size(0, 32),
+                        ),
+                        child: const Text('Fix', style: TextStyle(fontSize: 11)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

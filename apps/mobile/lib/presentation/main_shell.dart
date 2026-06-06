@@ -15,71 +15,120 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const ReaderScreen(),
-    const LearningScreen(),
-    const WritingScreen(),
-    const WordManagerScreen(),
+  static const _navItems = [
+    _NavItem(Icons.auto_stories_rounded, 'Reader'),
+    _NavItem(Icons.extension_rounded, 'Learn'),
+    _NavItem(Icons.draw_rounded, 'Write'),
+    _NavItem(Icons.collections_bookmark_rounded, 'Words'),
   ];
 
-  final List<String> _titles = [
-    'Smart Reader',
-    'Learning Mode',
-    'Interactive Writing',
-    'Word Manager',
+  final List<Widget> _screens = const [
+    ReaderScreen(),
+    LearningScreen(),
+    WritingScreen(),
+    WordManagerScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _titles[_currentIndex],
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
-        ],
-      ),
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book),
-            label: 'Reader',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          border: Border(
+            top: BorderSide(
+              color: cs.onSurface.withValues(alpha: 0.06),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_esports),
-            label: 'Learning',
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 8,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(_navItems.length, (i) {
+                final isActive = _currentIndex == i;
+                final item = _navItems[i];
+                return _buildNavItem(
+                  context,
+                  icon: item.icon,
+                  label: item.label,
+                  isActive: isActive,
+                  onTap: () => setState(() => _currentIndex = i),
+                );
+              }),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit_note),
-            label: 'Writing',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark),
-            label: 'Words',
-          ),
-        ],
+        ),
       ),
     );
   }
+
+  Widget _buildNavItem(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: isActive ? 16 : 12,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: isActive
+              ? cs.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: isActive
+                  ? cs.primary
+                  : cs.onSurface.withValues(alpha: 0.45),
+            ),
+            if (isActive) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem {
+  final IconData icon;
+  final String label;
+  const _NavItem(this.icon, this.label);
 }

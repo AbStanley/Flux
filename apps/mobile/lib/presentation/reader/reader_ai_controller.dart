@@ -91,4 +91,18 @@ class ReaderAiController {
       _provider.notify();
     }
   }
+
+  Future<String> translateWord(String word, String targetLanguage, String model) async {
+    try {
+      final data = await apiClient.post<Map<String, dynamic>>('/api/translate', {
+        'text': word,
+        'targetLanguage': targetLanguage,
+        'context': _provider.text,
+        if (model.isNotEmpty) 'model': model,
+      });
+      return (data['response'] ?? '') as String;
+    } catch (e) {
+      return 'Error: ${e.toString().replaceFirst('Exception: ', '')}';
+    }
+  }
 }

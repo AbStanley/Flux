@@ -10,29 +10,19 @@ class TranslationBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reader = Provider.of<ReaderProvider>(context);
+    final cs = Theme.of(context).colorScheme;
 
     if (reader.isLoadingTranslation) {
-      return const SizedBox(
+      return SizedBox(
         height: 250,
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: CircularProgressIndicator(color: cs.primary),
+        ),
       );
     }
 
     if (reader.translationError != null) {
-      return SizedBox(
-        height: 200,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, color: Colors.red, size: 40),
-              const SizedBox(height: 10),
-              Text(reader.translationError!, textAlign: TextAlign.center),
-            ],
-          ),
-        ),
-      );
+      return _buildError(context, reader.translationError!);
     }
 
     final translation = reader.activeTranslation;
@@ -43,128 +33,337 @@ class TranslationBottomSheet extends StatelessWidget {
       );
     }
 
+    return _buildContent(context, translation);
+  }
+
+  Widget _buildError(BuildContext context, String error) {
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 200,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline_rounded, color: cs.error, size: 40),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                error,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, RichTranslation translation) {
+    final cs = Theme.of(context).colorScheme;
+
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.75,
       ),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       child: DefaultTabController(
         length: 2,
-        child: Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  translation.segment,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                Text(
-                  translation.translation,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHandle(cs),
+            _buildHeader(context, cs, translation),
+            TabBar(
+              tabs: const [
+                Tab(text: 'Grammar'),
+                Tab(text: 'Examples'),
               ],
+              indicatorSize: TabBarIndicatorSize.label,
+              dividerColor: cs.onSurface.withValues(alpha: 0.06),
             ),
-            bottom: const TabBar(
-              tabs: [
-                Tab(text: 'Grammar & Details'),
-                Tab(text: 'Examples & Alternatives'),
-              ],
+            Flexible(
+              child: TabBarView(
+                children: [
+                  _GrammarTab(translation: translation),
+                  _ExamplesTab(translation: translation),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHandle(ColorScheme cs) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(top: 12, bottom: 4),
+        width: 36,
+        height: 4,
+        decoration: BoxDecoration(
+          color: cs.onSurface.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+    BuildContext context,
+    ColorScheme cs,
+    RichTranslation info,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            info.segment,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+              color: cs.onSurface,
             ),
           ),
-          body: TabBarView(
-            children: [
-              _buildGrammarTab(context, translation),
-              _buildExamplesTab(context, translation),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            info.translation,
+            style: TextStyle(
+              fontSize: 15,
+              color: cs.primary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GrammarTab extends StatelessWidget {
+  final RichTranslation translation;
+  const _GrammarTab({required this.translation});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        if (translation.grammar != null) ...[
+          _buildChip(cs, translation.grammar!.partOfSpeech),
+          const SizedBox(height: 12),
+          if (translation.grammar!.infinitive != null)
+            _buildInfoRow(cs, 'Infinitive', translation.grammar!.infinitive!),
+          if (translation.grammar!.tense != null)
+            _buildInfoRow(cs, 'Tense', translation.grammar!.tense!),
+          const SizedBox(height: 12),
+          Text(
+            translation.grammar!.explanation,
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.6,
+              color: cs.onSurface.withValues(alpha: 0.8),
+            ),
+          ),
+        ] else
+          Text(
+            'No grammatical breakdown available.',
+            style: TextStyle(
+              fontStyle: FontStyle.italic,
+              color: cs.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+        if (translation.conjugations != null &&
+            translation.conjugations!.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Text(
+            'Conjugations',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...translation.conjugations!.entries.map((entry) {
+            return ExpansionTile(
+              title: Text(entry.key),
+              childrenPadding: const EdgeInsets.only(bottom: 8),
+              children: entry.value.map((row) {
+                return ListTile(
+                  dense: true,
+                  title: Text(row.pronoun),
+                  trailing: Text(
+                    row.conjugation,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: cs.primary,
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          }),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildChip(ColorScheme cs, String label) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: cs.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            color: cs.primary,
+            letterSpacing: 0.5,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildGrammarTab(BuildContext context, RichTranslation info) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        if (info.grammar != null) ...[
+  Widget _buildInfoRow(ColorScheme cs, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
           Text(
-            'Part of Speech: ${info.grammar!.partOfSpeech.toUpperCase()}',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            '$label: ',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: cs.onSurface.withValues(alpha: 0.6),
+            ),
           ),
-          if (info.grammar!.infinitive != null)
-            Text('Infinitive: ${info.grammar!.infinitive}'),
-          if (info.grammar!.tense != null)
-            Text('Tense: ${info.grammar!.tense}'),
-          const SizedBox(height: 12),
-          const Text('Explanation:', style: TextStyle(fontWeight: FontWeight.bold)),
-          Text(info.grammar!.explanation),
-        ] else
-          const Text('No grammatical breakdown available.'),
-        if (info.conjugations != null && info.conjugations!.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          const Text('Conjugation Snippet:', style: TextStyle(fontWeight: FontWeight.bold)),
-          _buildConjugations(context, info.conjugations!),
-        ]
-      ],
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: cs.onSurface,
+            ),
+          ),
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildExamplesTab(BuildContext context, RichTranslation info) {
+class _ExamplesTab extends StatelessWidget {
+  final RichTranslation translation;
+  const _ExamplesTab({required this.translation});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       children: [
-        if (info.alternatives.isNotEmpty) ...[
-          const Text('Alternatives:', style: TextStyle(fontWeight: FontWeight.bold)),
-          Text(info.alternatives.join(', ')),
-          const SizedBox(height: 16),
+        if (translation.alternatives.isNotEmpty) ...[
+          Text(
+            'Alternatives',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: translation.alternatives
+                .map((alt) => Chip(
+                      label: Text(alt, style: const TextStyle(fontSize: 13)),
+                      backgroundColor: cs.secondary,
+                      side: BorderSide.none,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 20),
         ],
-        const Text('Examples:', style: TextStyle(fontWeight: FontWeight.bold)),
-        if (info.examples.isEmpty)
-          const Text('No examples available.')
+        Text(
+          'Examples',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            color: cs.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (translation.examples.isEmpty)
+          Text(
+            'No examples available.',
+            style: TextStyle(
+              fontStyle: FontStyle.italic,
+              color: cs.onSurface.withValues(alpha: 0.5),
+            ),
+          )
         else
-          ...info.examples.map((ex) => Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  title: Text(ex.sentence),
-                  subtitle: Text(ex.translation),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.volume_up),
-                    onPressed: () => ttsService.speak(
-                      ex.sentence,
-                      onProgress: (start, end) {},
-                      onComplete: () {},
-                    ),
+          ...translation.examples.map((ex) => Card(
+                margin: const EdgeInsets.only(bottom: 10),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              ex.sentence,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              ex.translation,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: cs.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.volume_up_rounded,
+                          color: cs.primary,
+                        ),
+                        onPressed: () => ttsService.speak(
+                          ex.sentence,
+                          onProgress: (start, end) {},
+                          onComplete: () {},
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               )),
       ],
-    );
-  }
-
-  Widget _buildConjugations(BuildContext context, Map<String, List<ConjugationRow>> table) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: table.entries.map((entry) {
-        return ExpansionTile(
-          title: Text(entry.key),
-          children: entry.value.map((row) {
-            return ListTile(
-              title: Text(row.pronoun),
-              trailing: Text(
-                row.conjugation,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-            );
-          }).toList(),
-        );
-      }).toList(),
     );
   }
 }

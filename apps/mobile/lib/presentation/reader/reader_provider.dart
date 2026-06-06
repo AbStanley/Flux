@@ -145,12 +145,12 @@ class ReaderProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
+  }
 
-    if (_selectedIndices.isNotEmpty) {
-      ai.fetchTranslationForSelection(selectedText, model);
-    } else {
-      ai.clearTranslation();
-    }
+  Future<void> fetchRichTranslation(String model) async {
+    final query = selectedText.trim();
+    if (query.isEmpty) return;
+    await ai.fetchTranslationForSelection(query, model);
   }
 
   void clearSelection() {
@@ -186,4 +186,9 @@ class ReaderProvider extends ChangeNotifier {
   Future<void> playAudio() => tts.play();
   Future<void> pauseAudio() => tts.pause();
   Future<void> stopAudio() => tts.stop();
+
+  Future<String> translateTextSimple(String word, String targetLanguage, String model) =>
+      ai.translateWord(word, targetLanguage, model);
+
+  Future<void> speakSingleWord(String word) => tts.speakWord(word);
 }
