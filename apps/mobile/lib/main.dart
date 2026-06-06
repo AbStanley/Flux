@@ -51,7 +51,7 @@ class FluxApp extends StatelessWidget {
           child: CircularProgressIndicator(),
         ),
       );
-    } else if (auth.isAuthenticated) {
+    } else if (auth.isAuthenticated || settings.isLocalMode) {
       homeWidget = const MainShell();
     } else {
       homeWidget = const LoginScreen();

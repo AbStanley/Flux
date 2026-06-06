@@ -19,4 +19,6 @@ class AppConstants {
   static const String keyTargetLang = 'flux_target_lang';
   static const String keyTargetLangCode = 'flux_target_lang_code';
   static const String keySelectedModel = 'flux_selected_model';
+  static const String keyLlmMode = 'flux_llm_mode';
+  static const String keySelectedLocalModel = 'flux_selected_local_model';
 }

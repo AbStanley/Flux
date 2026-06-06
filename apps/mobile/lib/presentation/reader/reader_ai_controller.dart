@@ -1,5 +1,5 @@
 import '../../domain/models.dart';
-import '../../infrastructure/api_client.dart';
+import '../../infrastructure/llm/llm_service.dart';
 import 'reader_provider.dart';
 
 class ReaderAiController {
@@ -35,7 +35,7 @@ class ReaderAiController {
     _provider.notify();
 
     try {
-      final data = await apiClient.post<Map<String, dynamic>>('/api/rich-translation', {
+      final data = await llmService.generate('/api/rich-translation', {
         'text': query,
         'targetLanguage': 'en',
         'context': _provider.text,
@@ -64,7 +64,7 @@ class ReaderAiController {
 
     try {
       final buffer = StringBuffer();
-      await apiClient.stream(
+      await llmService.stream(
         '/api/generate-content',
         {
           'topic': topic,
@@ -94,7 +94,7 @@ class ReaderAiController {
 
   Future<String> translateWord(String word, String targetLanguage, String model) async {
     try {
-      final data = await apiClient.post<Map<String, dynamic>>('/api/translate', {
+      final data = await llmService.generate('/api/translate', {
         'text': word,
         'targetLanguage': targetLanguage,
         'context': _provider.text,

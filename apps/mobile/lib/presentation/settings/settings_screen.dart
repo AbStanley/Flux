@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
+import 'inference_source_card.dart';
 import 'settings_data.dart';
 import 'settings_provider.dart';
 
@@ -35,6 +36,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
+          InferenceSourceCard(settings: s),
+          const SizedBox(height: 16),
           _card(cs, tt, Icons.wifi_rounded, 'Connection', [
             TextField(
               controller: _apiUrlController,
@@ -94,18 +97,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (l) { if (l != null) s.updateProficiencyLevel(l); },
             ),
             const SizedBox(height: 12),
-            if (s.availableModels.isNotEmpty)
-              DropdownButtonFormField<String>(
-                value: s.selectedModel,
-                decoration: const InputDecoration(labelText: 'LLM Model'),
-                items: s.availableModels
-                    .map((m) => DropdownMenuItem(value: m, child: Text(m)))
-                    .toList(),
-                onChanged: (m) { if (m != null) s.updateSelectedModel(m); },
-              )
-            else _warningTile(cs, tt,
-                'No local models detected. Ensure Ollama and the backend '
-                'are running.'),
+            // Server model selector (only visible in server mode)
+            if (!s.isLocalMode) ...[
+              if (s.availableModels.isNotEmpty)
+                DropdownButtonFormField<String>(
+                  value: s.selectedModel,
+                  decoration: const InputDecoration(labelText: 'Server LLM Model'),
+                  items: s.availableModels
+                      .map((m) => DropdownMenuItem(value: m, child: Text(m)))
+                      .toList(),
+                  onChanged: (m) { if (m != null) s.updateSelectedModel(m); },
+                )
+              else _warningTile(cs, tt,
+                  'No server models detected. Ensure Ollama and the backend '
+                  'are running.'),
+            ],
           ]),
         ],
       ),

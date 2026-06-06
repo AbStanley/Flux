@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../domain/llm_types.dart';
 import '../settings/settings_screen.dart';
+import '../settings/settings_provider.dart';
 import 'auth_provider.dart';
 import 'login_form_card.dart';
 
@@ -26,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
+    final settings = Provider.of<SettingsProvider>(context);
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -83,6 +86,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       const SizedBox(height: 24),
+                      TextButton.icon(
+                        icon: const Icon(Icons.cloud_off_rounded),
+                        label: const Text('Use Local Mode Offline'),
+                        onPressed: () {
+                          settings.updateLlmMode(LlmMode.local);
+                        },
+                      ),
                     ],
                   ),
                 ),

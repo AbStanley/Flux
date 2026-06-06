@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/writing_model.dart';
-import '../../infrastructure/api_client.dart';
+import '../../infrastructure/llm/llm_service.dart';
 
 class WritingProvider extends ChangeNotifier {
   String _text = '';
@@ -37,7 +37,7 @@ class WritingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await apiClient.post<Map<String, dynamic>>('/api/check-writing', {
+      final response = await llmService.generate('/api/check-writing', {
         'text': _text,
         'sourceLanguage': language,
         if (model.isNotEmpty) 'model': model,
