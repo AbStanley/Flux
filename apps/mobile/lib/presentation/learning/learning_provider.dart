@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../infrastructure/api_client.dart';
+import '../../infrastructure/llm/llm_service.dart';
 
 class GameQuestion {
   final String question;
@@ -90,7 +90,7 @@ class LearningProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final data = await apiClient.post<List<dynamic>>('/api/generate-game-content', {
+      final data = await llmService.generate('/api/generate-game-content', {
         'topic': topic.isEmpty ? 'General Vocabulary' : topic,
         'level': level,
         'mode': mode,
@@ -99,7 +99,9 @@ class LearningProvider extends ChangeNotifier {
         'model': model,
       });
 
-      _questions = data.map((x) => GameQuestion.fromJson(x as Map<String, dynamic>)).toList();
+      // Response may be a list directly or wrapped in a key
+      final List rawList = data is List ? data : (data['data'] ?? [data]);
+      _questions = rawList.map((x) => GameQuestion.fromJson(x as Map<String, dynamic>)).toList();
       _currentIndex = 0;
       _score = 0;
       _health = 5;
@@ -108,32 +110,34 @@ class LearningProvider extends ChangeNotifier {
         throw Exception('The AI failed to generate game questions. Please try again.');
       }
 
-      // Populate choices from the batch of questions to create realistic multiple choice options
-      for (final q in _questions) {
-        // Collect other unique answers in the batch as distractors
-        final distractors = _questions
-            .map((item) => item.answer)
-            .where((ans) => ans.trim().toLowerCase() != q.answer.trim().toLowerCase())
-            .toSet()
-            .toList();
-        distractors.shuffle();
-        final pickedDistractors = distractors.take(3).toList();
-        
-        // Fill up to 3 distractors if we have fewer questions in the batch
-        while (pickedDistractors.length < 3) {
-          pickedDistractors.add('${q.answer}_alt${pickedDistractors.length + 1}');
-        }
-        
-        final allChoices = [q.answer, ...pickedDistractors]..shuffle();
-        q.choices.clear();
-        q.choices.addAll(allChoices);
-      }
+      _populateChoices();
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
       _activeGame = null;
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Fill realistic multiple-choice options from the question batch.
+  void _populateChoices() {
+    for (final q in _questions) {
+      final distractors = _questions
+          .map((item) => item.answer)
+          .where((ans) => ans.trim().toLowerCase() != q.answer.trim().toLowerCase())
+          .toSet()
+          .toList();
+      distractors.shuffle();
+      final picked = distractors.take(3).toList();
+
+      while (picked.length < 3) {
+        picked.add('${q.answer}_alt${picked.length + 1}');
+      }
+
+      final allChoices = [q.answer, ...picked]..shuffle();
+      q.choices.clear();
+      q.choices.addAll(allChoices);
     }
   }
 
