@@ -49,7 +49,9 @@ export const useTranslationStore = create<TranslationState>()(
                 translationCache: state.translationCache,
                 showTranslations: state.showTranslations,
                 savedTranslationsByText: state.savedTranslationsByText,
-                currentTextHash: state.currentTextHash
+                currentTextHash: state.currentTextHash,
+                isRichInfoOpen: state.isRichInfoOpen,
+                activeTabId: state.activeTabId,
             } as Partial<TranslationState>),
         }
     )

@@ -9,6 +9,7 @@ describe('WebSpeechAudioService', () => {
         cancel: ReturnType<typeof vi.fn>;
         pause: ReturnType<typeof vi.fn>;
         resume: ReturnType<typeof vi.fn>;
+        paused?: boolean;
     };
     let mockUtterance: {
         voice: SpeechSynthesisVoice | null;
@@ -26,6 +27,7 @@ describe('WebSpeechAudioService', () => {
             cancel: vi.fn(),
             pause: vi.fn(),
             resume: vi.fn(),
+            paused: true,
         };
 
         // Mock generic window.speechSynthesis

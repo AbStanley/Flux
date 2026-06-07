@@ -200,6 +200,9 @@ export const useReaderStore = create<ReaderState>()(
                 currentPage: state.currentPage,
                 sessionId: state.sessionId,
                 sessionTitle: state.sessionTitle,
+                readingMode: state.readingMode,
+                selectionMode: state.selectionMode,
+                isReading: state.isReading,
             }),
         }
     )
