@@ -12,10 +12,10 @@ class ReaderProvider extends ChangeNotifier {
   final List<int> _tokenOffsets = [];
   final Set<int> _selectedIndices = {};
   int _currentPage = 1;
-  final int _pageSize = 300; // Mobile-friendly page size
+  final int _pageSize = 300;
 
   SelectionMode _selectionMode = SelectionMode.word;
-  String _readingMode = 'STANDARD'; // 'STANDARD' or 'GRAMMAR'
+  String _readingMode = 'STANDARD';
   bool _isZenMode = false;
   DateTime _lastNotifyTime = DateTime.fromMillisecondsSinceEpoch(0);
 
@@ -27,7 +27,6 @@ class ReaderProvider extends ChangeNotifier {
     ai = ReaderAiController(this);
   }
 
-  // Getters
   String get text => _text;
   List<String> get tokens => _tokens;
   List<int> get tokenOffsets => _tokenOffsets;
@@ -38,14 +37,12 @@ class ReaderProvider extends ChangeNotifier {
   String get readingMode => _readingMode;
   bool get isZenMode => _isZenMode;
 
-  // Delegated AI/Translation Getters
   bool get isGenerating => ai.isGenerating;
   String? get generationError => ai.generationError;
   RichTranslation? get activeTranslation => ai.activeTranslation;
   bool get isLoadingTranslation => ai.isLoadingTranslation;
   String? get translationError => ai.translationError;
 
-  // Delegated TTS Getters
   bool get isPlayingAudio => tts.isPlaying;
   int? get currentAudioTokenIndex => tts.currentAudioTokenIndex;
   double get playbackRate => tts.playbackRate;
@@ -66,14 +63,12 @@ class ReaderProvider extends ChangeNotifier {
     _tokens = text.split(RegExp(r'(\s+)'));
     _currentPage = 1;
     _selectedIndices.clear();
-
     _tokenOffsets.clear();
     int currentLen = 0;
     for (final token in _tokens) {
       _tokenOffsets.add(currentLen);
       currentLen += token.length;
     }
-
     tts.stop();
     ai.clearTranslation();
     notifyListeners();
@@ -96,7 +91,6 @@ class ReaderProvider extends ChangeNotifier {
       _tokenOffsets.add(currentLen);
       currentLen += token.length;
     }
-    
     final now = DateTime.now();
     if (force || now.difference(_lastNotifyTime).inMilliseconds > 150) {
       _lastNotifyTime = now;
@@ -132,19 +126,19 @@ class ReaderProvider extends ChangeNotifier {
     if (globalIndex < 0 || globalIndex >= _tokens.length) return;
 
     if (_selectedIndices.contains(globalIndex)) {
-      _selectedIndices.remove(globalIndex);
+      clearSelection();
     } else {
+      _selectedIndices.clear(); // Always clear previous selection on mobile so they don't accumulate
       if (_selectionMode == SelectionMode.word) {
         _selectedIndices.add(globalIndex);
       } else if (_selectionMode == SelectionMode.sentence) {
-        _selectedIndices.clear();
         _selectedIndices.addAll(TextUtils.getSentenceRange(globalIndex, _tokens));
       } else if (_selectionMode == SelectionMode.paragraph) {
-        _selectedIndices.clear();
         _selectedIndices.addAll(TextUtils.getParagraphRange(globalIndex, _tokens));
       }
+      notifyListeners();
+      fetchRichTranslation(model);
     }
-    notifyListeners();
   }
 
   Future<void> fetchRichTranslation(String model) async {
@@ -181,7 +175,10 @@ class ReaderProvider extends ChangeNotifier {
     );
   }
 
-  // Delegated TTS calls
+  Future<void> cancelGeneration() async {
+    await ai.cancelGeneration();
+  }
+
   Future<void> setPlaybackRate(double rate) => tts.setPlaybackRate(rate);
   Future<void> playAudio() => tts.play();
   Future<void> pauseAudio() => tts.pause();

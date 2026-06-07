@@ -54,14 +54,21 @@ class ApiClient {
     return _handleResponse<T>(response);
   }
 
-  Future<T> post<T>(String endpoint, dynamic body) async {
+  Future<T> post<T>(String endpoint, dynamic body, {http.Client? client}) async {
     final uri = Uri.parse('$_baseUrl$endpoint');
-    final response = await http.post(
-      uri,
-      headers: _headers(),
-      body: jsonEncode(body),
-    );
-    return _handleResponse<T>(response);
+    final activeClient = client ?? http.Client();
+    try {
+      final response = await activeClient.post(
+        uri,
+        headers: _headers(),
+        body: jsonEncode(body),
+      );
+      return _handleResponse<T>(response);
+    } finally {
+      if (client == null) {
+        activeClient.close();
+      }
+    }
   }
 
   Future<T> patch<T>(String endpoint, dynamic body) async {
@@ -83,16 +90,17 @@ class ApiClient {
   Future<void> stream(
     String endpoint,
     dynamic body,
-    Function(Map<String, dynamic> chunk) onChunk,
-  ) async {
+    Function(Map<String, dynamic> chunk) onChunk, {
+    http.Client? client,
+  }) async {
     final uri = Uri.parse('$_baseUrl$endpoint');
-    final client = http.Client();
+    final activeClient = client ?? http.Client();
     try {
       final request = http.Request('POST', uri)
         ..headers.addAll(_headers())
         ..body = jsonEncode(body);
 
-      final response = await client.send(request);
+      final response = await activeClient.send(request);
 
       if (response.statusCode == 401) {
         _handleUnauthorized();
@@ -117,7 +125,9 @@ class ApiClient {
         }
       });
     } finally {
-      client.close();
+      if (client == null) {
+        activeClient.close();
+      }
     }
   }
 

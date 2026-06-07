@@ -113,4 +113,52 @@ class TextUtils {
     }
     return range;
   }
+
+  static String cleanResponse(String text, {bool multiline = false}) {
+    if (text.isEmpty) return '';
+
+    // Remove <think>...</think> tags
+    String cleaned = text.replaceAll(RegExp(r'<think>[\s\S]*?</think>', caseSensitive: false), '').trim();
+
+    // Remove markdown code blocks if present
+    if (cleaned.contains('```')) {
+      final match = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```', caseSensitive: false).firstMatch(cleaned);
+      if (match != null) {
+        cleaned = match.group(1)!.trim();
+      }
+    }
+
+    // Remove quotes if the WHOLE response is quoted
+    if (cleaned.startsWith('"') && cleaned.endsWith('"') && cleaned.length > 2) {
+      cleaned = cleaned.substring(1, cleaned.length - 1);
+    }
+    if (cleaned.startsWith("'") && cleaned.endsWith("'") && cleaned.length > 2) {
+      cleaned = cleaned.substring(1, cleaned.length - 1);
+    }
+
+    // Remove common prefixes
+    final prefixes = [
+      'Translation:',
+      'The translation is:',
+      'Here is the translation:',
+      'Result:',
+      'Answer:',
+      'Translated text:',
+    ];
+    for (final prefix in prefixes) {
+      if (cleaned.toLowerCase().startsWith(prefix.toLowerCase())) {
+        cleaned = cleaned.substring(prefix.length).trim();
+      }
+    }
+
+    // Strip markdown formatting symbols from translation text if it's a simple response
+    if (!multiline) {
+      cleaned = cleaned.split('\n')[0].trim();
+      // Strip markdown header symbols (###, ##, #), bold/italic markers (**, *, _), horizontal lines (---, ***)
+      cleaned = cleaned.replaceAll(RegExp(r'^(?:#+\s*|\*+\s*|-\s*)'), '');
+      cleaned = cleaned.replaceAll(RegExp(r'[*_`~]'), '');
+    }
+
+    return cleaned.trim();
+  }
 }

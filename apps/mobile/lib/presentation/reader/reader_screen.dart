@@ -20,11 +20,28 @@ class ReaderScreen extends StatelessWidget {
         children: [
           _buildAppBar(context, reader, cs),
           if (reader.isGenerating)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                color: cs.primary,
-                backgroundColor: cs.primary.withValues(alpha: 0.12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        color: cs.primary,
+                        backgroundColor: cs.primary.withValues(alpha: 0.12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(Icons.stop_circle_outlined, color: cs.error, size: 24),
+                    tooltip: 'Stop Generating',
+                    onPressed: () => reader.cancelGeneration(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ),
           _buildModeBar(context, reader, cs),

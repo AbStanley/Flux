@@ -76,7 +76,7 @@ class TtsService {
   }
 
   Future<void> pause() async {
-    await _flutterTts.pause();
+    await _flutterTts.stop(); // Android doesn't support pause in flutter_tts, so we stop instead
     _isPlaying = false;
     _isPaused = true;
   }

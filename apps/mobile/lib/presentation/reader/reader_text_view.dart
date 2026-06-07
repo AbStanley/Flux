@@ -48,6 +48,7 @@ class ReaderTextView extends StatelessWidget {
 
           return GestureDetector(
             onTapDown: (details) {
+              if (reader.isGenerating) return;
               reader.handleSelection(index, settings.selectedModel);
               TranslationPopup.show(
                 context: context,

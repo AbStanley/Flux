@@ -2,15 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/text_utils.dart';
 import 'llm_strategy.dart';
+import 'local_llm_prompt_builder.dart';
 import 'local_model_manager.dart';
 
 /// Routes LLM requests to the on-device Gemma model via Platform Channels.
-///
-/// The heavy lifting (LiteRT-LM) runs in native Kotlin. This class
-/// translates the ILlmStrategy contract into MethodChannel/EventChannel
-/// calls and reconstructs the same `Map<String, dynamic>` chunks that
-/// the server strategy would produce, so callers see no difference.
 class LocalLlmStrategy implements ILlmStrategy {
   static const _channel = MethodChannel('com.flux.flux_mobile/gemma');
   static const _events = EventChannel('com.flux.flux_mobile/gemma_events');
@@ -21,11 +18,16 @@ class LocalLlmStrategy implements ILlmStrategy {
     Map<String, dynamic> body,
   ) async {
     await _ensureModelLoaded();
-    final prompt = _buildPrompt(endpoint, body);
+    final prompt = LocalLlmPromptBuilder.buildPrompt(endpoint, body);
     final result = await _channel.invokeMethod<String>('generate', {
       'prompt': prompt,
     });
-    return _wrapResponse(endpoint, result ?? '');
+    
+    // Clean raw result first to strip thinking, code blocks, and markdown markers.
+    final isMultiline = endpoint.contains('generate-content') || endpoint.contains('generate-game-content');
+    final cleaned = TextUtils.cleanResponse(result ?? '', multiline: isMultiline);
+    
+    return _wrapResponse(endpoint, cleaned);
   }
 
   @override
@@ -35,7 +37,7 @@ class LocalLlmStrategy implements ILlmStrategy {
     void Function(Map<String, dynamic> chunk) onChunk,
   ) async {
     await _ensureModelLoaded();
-    final prompt = _buildPrompt(endpoint, body);
+    final prompt = LocalLlmPromptBuilder.buildPrompt(endpoint, body);
     final completer = Completer<void>();
 
     // Start streaming on the native side
@@ -87,6 +89,7 @@ class LocalLlmStrategy implements ILlmStrategy {
   }
 
   /// Cancels an in-progress generation on the native side.
+  @override
   Future<void> cancelGeneration() async {
     await _channel.invokeMethod<void>('cancelGeneration');
   }
@@ -99,61 +102,6 @@ class LocalLlmStrategy implements ILlmStrategy {
     }
   }
 
-  /// Converts API-style endpoint + body into a plain text prompt
-  /// suitable for on-device inference (no server routing needed).
-  String _buildPrompt(String endpoint, Map<String, dynamic> body) {
-    if (endpoint.contains('generate-content')) {
-      return _buildContentPrompt(body);
-    }
-    if (endpoint.contains('translate') ||
-        endpoint.contains('rich-translation')) {
-      return _buildTranslationPrompt(body);
-    }
-    if (endpoint.contains('check-writing')) {
-      return _buildWritingCheckPrompt(body);
-    }
-    if (endpoint.contains('generate-game-content')) {
-      return _buildGamePrompt(body);
-    }
-    // Fallback: send raw text
-    return body['text'] as String? ?? body.toString();
-  }
-
-  String _buildContentPrompt(Map<String, dynamic> b) {
-    final topic = b['topic'] ?? 'general';
-    final lang = b['sourceLanguage'] ?? 'English';
-    final level = b['proficiencyLevel'] ?? 'B1';
-    final type = b['contentType'] ?? 'story';
-    return 'Write a $type in $lang about "$topic" for a $level level language learner. Keep it engaging and natural.';
-  }
-
-  String _buildTranslationPrompt(Map<String, dynamic> b) {
-    final text = b['text'] ?? '';
-    final target = b['targetLanguage'] ?? 'English';
-    final ctx = b['context'] ?? '';
-    return 'Translate "$text" to $target. ${ctx.toString().isNotEmpty ? "Context: $ctx. " : ""}'
-        'Return JSON: {"translation":"...","segment":"$text",'
-        '"grammar":{"partOfSpeech":"...","explanation":"..."},'
-        '"examples":[{"sentence":"...","translation":"..."}],'
-        '"alternatives":["..."]}';
-  }
-
-  String _buildWritingCheckPrompt(Map<String, dynamic> b) {
-    final text = b['text'] ?? '';
-    final lang = b['sourceLanguage'] ?? 'the target language';
-    return 'Check this $lang text for errors: "$text". Return JSON: {"corrections":[{"type":"grammar",'
-        '"shortDescription":"...","longDescription":"...","startIndex":0,"endIndex":5,"mistakeText":"...","correctionText":"..."}]}';
-  }
-
-  String _buildGamePrompt(Map<String, dynamic> b) {
-    final topic = b['topic'] ?? 'General Vocabulary';
-    final level = b['level'] ?? 'B1';
-    final src = b['sourceLanguage'] ?? 'English';
-    final tgt = b['targetLanguage'] ?? 'Spanish';
-    return 'Generate 8 vocabulary quiz questions about "$topic" from $src to $tgt at $level level. '
-        'Return a JSON array: [{"question":"word in $tgt","answer":"translation in $src","choices":["opt1","opt2","opt3","opt4"]}]';
-  }
-
   /// Wraps raw model output into the same shape the server returns,
   /// so callers don't need endpoint-specific handling.
   Map<String, dynamic> _wrapResponse(String endpoint, String raw) {
@@ -162,23 +110,48 @@ class LocalLlmStrategy implements ILlmStrategy {
         endpoint.contains('check-writing') ||
         endpoint.contains('generate-game-content')) {
       // Attempt to parse JSON from model output
-      return _tryParseJson(raw);
+      final parsed = _tryParseJson(raw);
+      if (endpoint.contains('translate') && !parsed.containsKey('response') && parsed.containsKey('translation')) {
+        parsed['response'] = parsed['translation'];
+      }
+      return parsed;
     }
     return {'response': raw};
   }
 
   Map<String, dynamic> _tryParseJson(String raw) {
     try {
-      // Strip markdown code fences if present
       var cleaned = raw.trim();
-      if (cleaned.startsWith('```')) {
+
+      // Extract JSON structure if wrapped in other text (handles arrays or objects)
+      final startObject = cleaned.indexOf('{');
+      final startArray = cleaned.indexOf('[');
+
+      int startIndex = -1;
+      int endIndex = -1;
+
+      if (startObject != -1 && (startArray == -1 || startObject < startArray)) {
+        startIndex = startObject;
+        endIndex = cleaned.lastIndexOf('}');
+      } else if (startArray != -1) {
+        startIndex = startArray;
+        endIndex = cleaned.lastIndexOf(']');
+      }
+
+      if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+        cleaned = cleaned.substring(startIndex, endIndex + 1);
+      } else if (cleaned.startsWith('```')) {
         cleaned = cleaned.replaceFirst(RegExp(r'^```\w*\n?'), '');
         cleaned = cleaned.replaceFirst(RegExp(r'\n?```$'), '');
       }
-      // Use dart:convert inline to avoid import at top of strategy
-      return Map<String, dynamic>.from(
-        jsonDecode(cleaned.trim()),
-      );
+
+      final decoded = jsonDecode(cleaned.trim());
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      } else if (decoded is List) {
+        return {'response': decoded};
+      }
+      return {'response': decoded};
     } catch (_) {
       return {'response': raw};
     }

@@ -18,4 +18,7 @@ abstract class ILlmStrategy {
 
   /// Whether this strategy is currently usable.
   Future<bool> isAvailable();
+
+  /// Cancel an ongoing generation request.
+  Future<void> cancelGeneration();
 }

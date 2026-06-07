@@ -25,9 +25,20 @@ class ReaderAiController {
     _provider.notify();
   }
 
+  Future<void> cancelGeneration() async {
+    try {
+      await llmService.cancelGeneration();
+    } catch (_) {}
+    _isGenerating = false;
+    _provider.notify();
+  }
+
   Future<void> fetchTranslationForSelection(String selectedText, String model) async {
     final query = selectedText.trim();
     if (query.isEmpty) return;
+
+    // Cancel any ongoing request first
+    await cancelGeneration();
 
     _isLoadingTranslation = true;
     _translationError = null;
@@ -57,6 +68,8 @@ class ReaderAiController {
     required String contentType,
     required String model,
   }) async {
+    await cancelGeneration();
+
     _isGenerating = true;
     _generationError = null;
     _provider.clearText();
@@ -93,6 +106,9 @@ class ReaderAiController {
   }
 
   Future<String> translateWord(String word, String targetLanguage, String model) async {
+    // Cancel any ongoing translation first to prevent accumulation of word taps
+    await cancelGeneration();
+
     try {
       final data = await llmService.generate('/api/translate', {
         'text': word,

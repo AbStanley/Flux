@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class GemmaInferenceEngine(private val context: Context) {
 
     private var engine: Engine? = null
+    private var activeConversation: Conversation? = null
     private val _isCancelled = AtomicBoolean(false)
 
     val isLoaded: Boolean get() = engine != null
@@ -50,10 +51,29 @@ class GemmaInferenceEngine(private val context: Context) {
         val currentEngine = engine
             ?: throw IllegalStateException("No model loaded — call loadModel() first")
 
+        _isCancelled.set(false)
         var result = ""
-        currentEngine.createConversation().use { conversation ->
+        
+        try {
+            activeConversation?.close()
+        } catch (_: Exception) {}
+
+        val conversation = currentEngine.createConversation()
+        activeConversation = conversation
+
+        try {
             conversation.sendMessageAsync(prompt).collect { token ->
+                if (_isCancelled.get()) {
+                    throw kotlinx.coroutines.CancellationException("Generation cancelled")
+                }
                 result += token.text
+            }
+        } finally {
+            try {
+                conversation.close()
+            } catch (_: Exception) {}
+            if (activeConversation == conversation) {
+                activeConversation = null
             }
         }
         result
@@ -75,13 +95,18 @@ class GemmaInferenceEngine(private val context: Context) {
         _isCancelled.set(false)
 
         try {
-            currentEngine.createConversation().use { conversation ->
-                conversation.sendMessageAsync(prompt).collect { token ->
-                    if (_isCancelled.get()) {
-                        throw kotlinx.coroutines.CancellationException("Generation cancelled")
-                    }
-                    onToken(token.text)
+            activeConversation?.close()
+        } catch (_: Exception) {}
+
+        val conversation = currentEngine.createConversation()
+        activeConversation = conversation
+
+        try {
+            conversation.sendMessageAsync(prompt).collect { token ->
+                if (_isCancelled.get()) {
+                    throw kotlinx.coroutines.CancellationException("Generation cancelled")
                 }
+                onToken(token.text)
             }
             if (!_isCancelled.get()) {
                 onDone()
@@ -90,15 +115,30 @@ class GemmaInferenceEngine(private val context: Context) {
             if (!_isCancelled.get()) {
                 onError(e)
             }
+        } finally {
+            try {
+                conversation.close()
+            } catch (_: Exception) {}
+            if (activeConversation == conversation) {
+                activeConversation = null
+            }
         }
     }
 
     fun cancelGeneration() {
         _isCancelled.set(true)
+        try {
+            activeConversation?.close()
+        } catch (_: Exception) {}
+        activeConversation = null
     }
 
     fun unloadModel() {
         _isCancelled.set(true)
+        try {
+            activeConversation?.close()
+        } catch (_: Exception) {}
+        activeConversation = null
         engine?.close()
         engine = null
     }
