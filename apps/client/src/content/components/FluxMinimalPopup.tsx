@@ -1,10 +1,8 @@
 import { useRef } from 'react';
-import { FluxSelect } from './ui/FluxSelect';
-import { FluxIconButton } from './ui/FluxIconButton';
-import { LANGUAGES, type FluxTheme } from '../constants';
-import { ArrowLeftRight, Save, Check, Volume2 } from 'lucide-react';
+import type { FluxTheme } from '../constants';
+import { Volume2 } from 'lucide-react';
 import { useFluxAudio } from '../hooks/useFluxAudio';
-
+import { FluxMinimalPopupControls } from './FluxMinimalPopupControls';
 
 interface FluxMinimalPopupProps {
     result: string;
@@ -51,7 +49,6 @@ export function FluxMinimalPopup({
     const accent = theme.accent;
     const border = theme.border;
     const errColor = theme.error;
-    const successColor = theme.success;
 
     const { playAudio } = useFluxAudio();
 
@@ -104,12 +101,28 @@ export function FluxMinimalPopup({
             }}>
                 <div style={{ flex: 1 }}>
                     {(loading || isDebouncing) ? (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.8 }}>
-                            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: accent }}>
+                        <span style={{ display: 'flex', alignItems: 'center', opacity: 0.8 }}>
+                            <style>{`
+                                @keyframes flux-spin {
+                                    from { transform: rotate(0deg); }
+                                    to { transform: rotate(360deg); }
+                                }
+                            `}</style>
+                            <svg 
+                                width="16" 
+                                height="16" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                style={{ 
+                                    color: accent, 
+                                    animation: 'flux-spin 1s linear infinite',
+                                    flexShrink: 0
+                                }}
+                            >
                                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.2 }} />
                                 <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor" />
                             </svg>
-                            <span>Translating...</span>
                         </span>
                     ) : error ? (
                         <span style={{ color: errColor }}>⚠️ {error}</span>
@@ -146,77 +159,19 @@ export function FluxMinimalPopup({
             </div>
 
             {/* Controls Row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px', borderTop: `1px solid ${border}`, paddingTop: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FluxSelect
-                        value={sourceLang}
-                        onChange={onSourceLangChange}
-                        options={[{ value: 'auto', label: 'Auto' }, ...LANGUAGES.map(l => ({ value: l, label: l }))]}
-                        title="Source Language"
-                        theme={theme}
-                        style={{
-                            padding: '4px 8px',
-                            fontSize: '12px',
-                            border: 'none',
-                            borderRadius: '6px',
-                            maxWidth: '80px'
-                        }}
-                    />
-                    <FluxIconButton
-                        onClick={() => onSwapLanguages?.()}
-                        title="Swap Languages"
-                        theme={theme}
-                        style={{
-                            padding: '4px',
-                            color: textSec,
-                            fontSize: '12px',
-                            minWidth: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <ArrowLeftRight size={14} strokeWidth={2.5} />
-                    </FluxIconButton>
-                    <FluxSelect
-                        value={targetLang}
-                        onChange={onLangChange}
-                        options={LANGUAGES}
-                        title="Target Language"
-                        theme={theme}
-                        style={{
-                            padding: '4px 8px',
-                            fontSize: '12px',
-                            border: 'none',
-                            borderRadius: '6px',
-                            maxWidth: '80px'
-                        }}
-                    />
-                </div>
-
-                {result && !loading && !isDebouncing && (
-                    <FluxIconButton
-                        onClick={() => onSave?.()}
-                        title="Save to vocabulary"
-                        theme={theme}
-                        style={{
-                            padding: '4px',
-                            borderRadius: '6px',
-                            backgroundColor: isSaved ? 'transparent' : 'transparent',
-                            color: isSaved ? successColor : accent,
-                        }}
-                    >
-                        {isSaved ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: successColor }}>
-                                <Check size={16} strokeWidth={3} />
-                                <span style={{ fontSize: '12px', fontWeight: 600 }}>Saved</span>
-                            </div>
-                        ) : (
-                            <Save size={16} strokeWidth={2.5} />
-                        )}
-                    </FluxIconButton>
-                )}
-            </div>
+            <FluxMinimalPopupControls
+                theme={theme}
+                sourceLang={sourceLang}
+                onSourceLangChange={onSourceLangChange}
+                targetLang={targetLang}
+                onLangChange={onLangChange}
+                onSwapLanguages={onSwapLanguages}
+                result={result}
+                loading={loading}
+                isDebouncing={isDebouncing}
+                onSave={onSave}
+                isSaved={isSaved}
+            />
 
             {saveError && (
                 <div style={{ fontSize: '11px', color: errColor, textAlign: 'center', padding: '0 4px 4px' }}>

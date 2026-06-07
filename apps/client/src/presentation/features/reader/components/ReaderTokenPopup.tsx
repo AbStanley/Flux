@@ -1,5 +1,5 @@
 import ReactMarkdown from 'react-markdown';
-import { Search, Volume2, RefreshCcw, Save, Check, Loader2, ChevronRight } from 'lucide-react';
+import { Search, Volume2, RefreshCcw, Save, Check, ChevronRight } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 
 interface ReaderTokenPopupProps {
@@ -58,14 +58,9 @@ export function ReaderTokenPopup({
             onClick={(e) => e.stopPropagation()}
         >
             <span className="flex-1 min-w-0 flex items-center">
-                {isLoading ? (
-                    <span className="flex items-center gap-2 text-sm font-medium px-2">
-                        <Loader2 className="animate-spin" size={12} />
-                        <span>Translating...</span>
-                    </span>
-                ) : (
+               
                     <ReactMarkdown>{translation}</ReactMarkdown>
-                )}
+              
             </span>
 
             <div className={`flex items-center flex-shrink-0 transition-all duration-300 ease-in-out ${isLoading ? 'opacity-100 w-auto' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'}`}>
