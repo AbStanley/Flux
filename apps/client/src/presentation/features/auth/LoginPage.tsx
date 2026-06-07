@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { useAuthStore, getUserStats } from './store/useAuthStore';
+import { useAuthStore } from './store/useAuthStore';
+import { getUserStats } from './store/auth-storage';
 import { X, ArrowLeft, Loader2 } from 'lucide-react';
 
 function getInitials(email: string): string {

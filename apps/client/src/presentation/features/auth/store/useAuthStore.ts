@@ -2,66 +2,21 @@ import { create } from 'zustand';
 import { authApi } from '@/infrastructure/api/auth';
 import { wordsApi } from '@/infrastructure/api/words';
 import { defaultClient } from '@/infrastructure/api/api-client';
-
-const USER_KEY = 'flux_auth_user';
-const REMEMBERED_KEY = 'flux_remembered_users';
-
-export interface AuthUser {
-    id: string;
-    email: string;
-}
-
-
-function setStoredUser(user: AuthUser | null) {
-    if (user) {
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-    } else {
-        localStorage.removeItem(USER_KEY);
-    }
-}
-
-function getRememberedUsers(): string[] {
-    try {
-        const raw = localStorage.getItem(REMEMBERED_KEY);
-        return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
-}
-
-function addRememberedUser(email: string) {
-    const users = getRememberedUsers().filter(e => e !== email);
-    users.unshift(email); // most recent first
-    localStorage.setItem(REMEMBERED_KEY, JSON.stringify(users.slice(0, 5)));
-}
-
-function removeRememberedUser(email: string) {
-    const users = getRememberedUsers().filter(e => e !== email);
-    localStorage.setItem(REMEMBERED_KEY, JSON.stringify(users));
-}
-
-const STATS_KEY = 'flux_user_stats';
-
-export function getUserStats(email: string): { wordCount: number } | null {
-    try {
-        const raw = localStorage.getItem(STATS_KEY);
-        const all = raw ? JSON.parse(raw) : {};
-        return all[email] || null;
-    } catch { return null; }
-}
-
-export function setUserStats(email: string, stats: { wordCount: number }) {
-    try {
-        const raw = localStorage.getItem(STATS_KEY);
-        const all = raw ? JSON.parse(raw) : {};
-        all[email] = stats;
-        localStorage.setItem(STATS_KEY, JSON.stringify(all));
-    } catch { /* ignore */ }
-}
+import type { AuthUser } from './auth-storage';
+import { 
+    setStoredUser, 
+    getRememberedUsers, 
+    addRememberedUser, 
+    removeRememberedUser, 
+    setUserStats 
+} from './auth-storage';
 
 interface AuthState {
     token: string | null;
     user: AuthUser | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    isInitializing: boolean;
     error: string | null;
     rememberedUsers: string[];
     login: (email: string, password: string) => Promise<void>;
@@ -75,7 +30,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     token: null,
     user: null,
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: false,
+    isInitializing: true,
     error: null,
     rememberedUsers: getRememberedUsers(),
 
@@ -126,6 +82,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                     user: verifiedUser, 
                     isAuthenticated: true, 
                     isLoading: false, 
+                    isInitializing: false,
                     rememberedUsers: getRememberedUsers() 
                 });
             } catch (err) {
@@ -140,11 +97,12 @@ export const useAuthStore = create<AuthState>((set) => ({
                     user: null, 
                     isAuthenticated: false, 
                     isLoading: false, 
+                    isInitializing: false,
                     rememberedUsers: getRememberedUsers() 
                 });
             }
         } else {
-            set({ isLoading: false, rememberedUsers: getRememberedUsers() });
+            set({ isLoading: false, isInitializing: false, rememberedUsers: getRememberedUsers() });
         }
     },
 
@@ -152,8 +110,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ error: null, isLoading: true });
         try {
             const response = await authApi.login(email, password);
-            // Store token in BOTH localStorage and chrome storage before updating state.
-            // This ensures getAuthToken() can find it when components fire API calls on mount.
             authApi.setStoredToken(response.accessToken);
             setStoredUser(response.user);
             addRememberedUser(email);
@@ -207,7 +163,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     logout: () => {
         authApi.clearStoredToken();
         setStoredUser(null);
-        // Also clear chrome storage and notify other extension contexts
         if (typeof chrome !== 'undefined' && chrome?.storage?.local) {
             chrome.storage.local.remove(['flux_auth_token', 'flux_user']);
             chrome.runtime?.sendMessage?.({ type: 'AUTH_LOGOUT' });

@@ -31,7 +31,7 @@ function App() {
   const config = useGameStore(state => state.config);
 
   // Auth: initialize from localStorage
-  const { isAuthenticated, isLoading: authLoading, initialize } = useAuthStore();
+  const { isAuthenticated, isInitializing, initialize } = useAuthStore();
   const isExtension = typeof window !== 'undefined'
     && window.location.protocol === 'chrome-extension:';
 
@@ -153,7 +153,7 @@ function App() {
   }, [isReading, visualReadingMode]);
 
   // Auth gate: show login for unauthenticated users (both web app and side panel)
-  if (authLoading) {
+  if (isInitializing) {
     return null;
   }
   if (!isAuthenticated) {
