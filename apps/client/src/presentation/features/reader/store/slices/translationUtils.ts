@@ -86,26 +86,41 @@ export const fetchTranslationHelper = async (
     targetLang: string,
     aiService: IAIService,
     retries = 3,
-    timeoutMs = 60000,
+    signal?: AbortSignal,
     traceId?: string,
 ): Promise<string | null> => {
     if (!text.trim()) return null;
 
     let attempt = 0;
     while (attempt < retries) {
-        try {
-            const fetchPromise = aiService.translateText(text.trim(), targetLang, context, sourceLang, undefined, traceId);
-            const timeoutPromise = new Promise<null>((_, reject) =>
-                setTimeout(() => reject(new Error("Timeout")), timeoutMs)
-            );
+        if (signal?.aborted) return null;
 
-            const result = await Promise.race([fetchPromise, timeoutPromise]);
+        const attemptController = new AbortController();
+        const onParentAbort = () => attemptController.abort();
+
+        if (signal) {
+            signal.addEventListener("abort", onParentAbort);
+        }
+
+        try {
+            const result = await aiService.translateText(
+                text.trim(),
+                targetLang,
+                context,
+                sourceLang,
+                attemptController.signal,
+                traceId
+            );
             if (typeof result === 'object' && result !== null && 'response' in result) {
                 return (result as { response: string }).response;
             }
             return result as string;
         } catch (error: unknown) {
             attempt++;
+            
+            // If the parent request was aborted (user hovered off or re-triggered), exit immediately
+            if (signal?.aborted) return null;
+
             const errorMsg = error instanceof Error ? error.message : String(error);
             console.warn(`Translation attempt ${attempt} failed:`, errorMsg);
 
@@ -116,6 +131,10 @@ export const fetchTranslationHelper = async (
 
             // Exponential backoff: 500ms, 1s, 1.5s, etc.
             await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+        } finally {
+            if (signal) {
+                signal.removeEventListener("abort", onParentAbort);
+            }
         }
     }
 

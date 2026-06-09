@@ -43,7 +43,7 @@ export const useGrammarAnalysis = (): UseGrammarAnalysisReturn => {
                 sourceLanguage: sourceLang,
                 targetLanguage: targetLang,
                 model: model || ''
-            });
+            }, undefined, 35000);
 
             // Validate structure to prevent UI crashes
             if (!data || !Array.isArray(data.grammar)) {

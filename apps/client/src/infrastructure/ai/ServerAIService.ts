@@ -42,7 +42,7 @@ export class ServerAIService implements IAIService {
       model: this.model,
       prompt: prompt,
       stream: false,
-    });
+    }, undefined, 45000);
 
     return typeof data === 'string' ? data : (data as { response?: string; message?: string })?.response ?? (data as { response?: string; message?: string })?.message ?? JSON.stringify(data);
   }
@@ -63,7 +63,7 @@ export class ServerAIService implements IAIService {
       sourceLanguage,
       model: this.model,
       traceId,
-    }, signal);
+    }, signal, 20000);
 
     if (typeof data === 'object' && data !== null && 'sourceLanguage' in data) {
       return data;
@@ -86,7 +86,7 @@ export class ServerAIService implements IAIService {
       context: context,
       sourceLanguage,
       model: this.model,
-    }, signal);
+    }, signal, 30000);
 
     return typeof data === 'string' ? data : (data as { response?: string; message?: string })?.response ?? (data as { response?: string; message?: string })?.message ?? JSON.stringify(data);
   }
@@ -107,7 +107,7 @@ export class ServerAIService implements IAIService {
       sourceLanguage,
       model: this.model,
       traceId,
-    }, signal);
+    }, signal, 45000);
   }
 
   async getConjugations(
@@ -121,7 +121,7 @@ export class ServerAIService implements IAIService {
       sourceLanguage,
       model: this.model,
       traceId,
-    }, signal);
+    }, signal, 30000);
   }
 
   /**
@@ -356,7 +356,7 @@ export class ServerAIService implements IAIService {
     return defaultClient.post<string>('/api/generate-content', {
       ...params,
       model: this.model,
-    });
+    }, undefined, 60000);
   }
 
   async generateGameContent(params: {
@@ -385,7 +385,7 @@ export class ServerAIService implements IAIService {
       ...params,
       model: this.model,
       stream: params.stream ?? false,
-    });
+    }, undefined, 60000);
 
     // The backend might return a raw string (the JSON) or already parsed JSON object
     let rawText: string;

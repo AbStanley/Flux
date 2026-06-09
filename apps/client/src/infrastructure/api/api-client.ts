@@ -1,5 +1,10 @@
 import { getApiBaseUrl } from "./base-url";
 import { getStoredApiUrl } from "../settings/settings.store";
+import { createCombinedSignal } from "./signal-helper";
+
+export interface RequestOptions extends RequestInit {
+  timeout?: number;
+}
 
 export async function getAuthToken(): Promise<string | null> {
   // Use extension storage if we are in an extension context (popup OR content script)
@@ -55,7 +60,7 @@ export class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {},
+    options: RequestOptions = {},
     signal?: AbortSignal,
   ): Promise<T> {
     const activeBaseUrl = await this.getActiveBaseUrl();
@@ -171,56 +176,68 @@ export class ApiClient {
       });
     }
 
+    const { timeout, ...fetchOptions } = options;
+    const timeoutMs = timeout ?? 15000; // default 15s timeout
+
+    const { signal: combinedSignal, cleanup } = createCombinedSignal(signal, timeoutMs);
+
     const config: RequestInit = {
-      ...options,
+      ...fetchOptions,
       headers,
-      signal,
+      signal: combinedSignal,
     };
 
-    const response = await fetch(url, config);
+    try {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        throw new Error("No internet connection detected.");
+      }
+      const response = await fetch(url, config);
 
-    if (!response.ok) {
-      if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/register')) {
-        const tokenAtError = await getAuthToken();
+      if (!response.ok) {
+        if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/register')) {
+          const tokenAtError = await getAuthToken();
 
-        if (tokenAtError) {
-          // Only clear and logout if we actually thought we had a valid session
-          localStorage.removeItem("flux_auth_token");
-          if (this.onUnauthorized) {
-            this.onUnauthorized();
+          if (tokenAtError) {
+            // Only clear and logout if we actually thought we had a valid session
+            localStorage.removeItem("flux_auth_token");
+            if (this.onUnauthorized) {
+              this.onUnauthorized();
+            }
+            throw new Error("Session expired. Please log in again.");
+          } else {
+            // No token was sent, so just inform the user/app without clearing anything
+            throw new Error("Login required. Please sign in first.");
           }
-          throw new Error("Session expired. Please log in again.");
-        } else {
-          // No token was sent, so just inform the user/app without clearing anything
-          throw new Error("Login required. Please sign in first.");
         }
-      }
-      const text = await response.text();
-      let errorMessage = text || response.statusText;
+        const text = await response.text();
+        let errorMessage = text || response.statusText;
 
-      try {
-        const parsed = JSON.parse(text);
-        if (parsed.message) {
-          errorMessage = Array.isArray(parsed.message)
-            ? parsed.message[0]
-            : parsed.message;
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed.message) {
+            errorMessage = Array.isArray(parsed.message)
+              ? parsed.message[0]
+              : parsed.message;
+          }
+        } catch {
+          // Not JSON or no message, stick with statusText
         }
-      } catch {
-        // Not JSON or no message, stick with statusText
+
+        throw new Error(errorMessage);
       }
 
-      throw new Error(errorMessage);
-    }
+      if (response.status === 204) {
+        return {} as T;
+      }
 
-    if (response.status === 204) {
-      return {} as T;
+      const contentType = response.headers?.get?.("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        return response.json();
+      }
+      return response.text() as unknown as T;
+    } finally {
+      cleanup();
     }
-
-    const contentType = response.headers?.get?.("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      return response.json();
-    }
-    return response.text() as unknown as T;
   }
 
   get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
@@ -228,12 +245,13 @@ export class ApiClient {
     return this.request<T>(`${endpoint}${queryStr}`, { method: "GET" });
   }
 
-  post<T>(endpoint: string, data: unknown, signal?: AbortSignal): Promise<T> {
+  post<T>(endpoint: string, data: unknown, signal?: AbortSignal, timeout?: number): Promise<T> {
     return this.request<T>(
       endpoint,
       {
         method: "POST",
         body: JSON.stringify(data),
+        timeout,
       },
       signal,
     );

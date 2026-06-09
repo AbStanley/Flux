@@ -22,6 +22,7 @@ export const backendAiApi = {
       '/api/check-writing',
       params,
       signal,
+      45000,
     ),
 
   getTrace: (id: string) =>

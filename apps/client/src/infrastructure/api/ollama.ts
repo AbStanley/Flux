@@ -20,6 +20,6 @@ const ENDPOINT = '/api';
 
 export const ollamaApi = {
     generateExamples: async (params: GenerateExamplesRequest): Promise<GeneratedExample[]> => {
-        return defaultClient.post<GeneratedExample[]>(`${ENDPOINT}/generate-examples`, params);
+        return defaultClient.post<GeneratedExample[]>(`${ENDPOINT}/generate-examples`, params, undefined, 35000);
     },
 };

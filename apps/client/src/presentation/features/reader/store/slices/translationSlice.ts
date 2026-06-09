@@ -18,6 +18,7 @@ export interface TranslationSlice {
     hoverTranslation: string | null;
     hoverSource: 'token' | 'popup' | null;
     showTranslations: boolean;
+    hoverAbortController: AbortController | null;
 
     translateSelection: (
         indices: Set<number>,
@@ -68,6 +69,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
     hoverTranslation: null,
     hoverSource: null,
     showTranslations: true,
+    hoverAbortController: null,
 
     translateSelection: async (indices, tokens, sourceLang, targetLang, aiService, force = false, targetIndex?: number) => {
         if (indices.size === 0) return;
@@ -200,7 +202,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             } else {
                 const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
                 const context = getContextForIndex(tokens, start);
-                const promise = fetchTranslationHelper(textToTranslate, context, sourceLang, targetLang, aiService, 3, 60000, traceId);
+                const promise = fetchTranslationHelper(textToTranslate, context, sourceLang, targetLang, aiService, 3, undefined, traceId);
                 pendingRequests.set(cacheKey, promise);
                 try {
                     result = await promise;
@@ -255,13 +257,25 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
     },
 
     handleHover: async (index, source, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService) => {
+        const prevController = get().hoverAbortController;
+        if (prevController) {
+            prevController.abort();
+        }
+
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
         const rawToken = tokens[globalIndex];
-        if (!rawToken?.trim()) return;
+        if (!rawToken?.trim()) {
+            set({ hoverAbortController: null });
+            return;
+        }
         const token = stripPunctuation(rawToken);
-        if (!token) return;
+        if (!token) {
+            set({ hoverAbortController: null });
+            return;
+        }
 
-        set({ hoveredIndex: globalIndex, hoverTranslation: null, hoverSource: source });
+        const controller = new AbortController();
+        set({ hoveredIndex: globalIndex, hoverTranslation: null, hoverSource: source, hoverAbortController: controller });
 
         // If hovering via popup, we DO NOT fetch single word translation to avoid confusion.
         // We only want to highlight the group.
@@ -273,7 +287,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         const currentCache = get().translationCache;
 
         if (currentCache.has(cacheKey)) {
-            set({ hoverTranslation: currentCache.get(cacheKey)! });
+            set({ hoverTranslation: currentCache.get(cacheKey)!, hoverAbortController: null });
             return;
         }
 
@@ -284,7 +298,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         } else {
             const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
             const context = getContextForIndex(tokens, globalIndex);
-            const promise = fetchTranslationHelper(token, context, sourceLang, targetLang, aiService, 3, 60000, traceId);
+            const promise = fetchTranslationHelper(token, context, sourceLang, targetLang, aiService, 3, controller.signal, traceId);
             pendingRequests.set(cacheKey, promise);
             try {
                 result = await promise;
@@ -296,44 +310,66 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         if (get().hoveredIndex === globalIndex && result) {
             set(state => ({
                 hoverTranslation: result,
-                translationCache: new Map(state.translationCache).set(cacheKey, result!)
+                translationCache: new Map(state.translationCache).set(cacheKey, result!),
+                hoverAbortController: state.hoverAbortController === controller ? null : state.hoverAbortController
+            }));
+        } else {
+            set(state => ({
+                hoverAbortController: state.hoverAbortController === controller ? null : state.hoverAbortController
             }));
         }
     },
 
     regenerateHover: async (index, tokens, currentPage, PAGE_SIZE, sourceLang, targetLang, aiService) => {
+        const prevController = get().hoverAbortController;
+        if (prevController) {
+            prevController.abort();
+        }
+
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
         const rawToken = tokens[globalIndex];
-        if (!rawToken?.trim()) return;
+        if (!rawToken?.trim()) {
+            set({ hoverAbortController: null });
+            return;
+        }
         const token = stripPunctuation(rawToken);
-        if (!token) return;
+        if (!token) {
+            set({ hoverAbortController: null });
+            return;
+        }
 
+        const controller = new AbortController();
         // Force Loading State for Hover
-        set({ hoverTranslation: "..." });
+        set({ hoverTranslation: "...", hoverAbortController: controller });
 
         const context = getContextForIndex(tokens, globalIndex);
         const cacheKey = `${token}_${targetLang}`;
         const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
         // Force Fetch (bypass cache check initially)
-        const result = await fetchTranslationHelper(token, context, sourceLang, targetLang, aiService, 3, 60000, traceId);
+        const result = await fetchTranslationHelper(token, context, sourceLang, targetLang, aiService, 3, controller.signal, traceId);
 
-        if (result) {
-            // Update Cache AND Current Hover if still matching
-            set(state => {
-                const newCache = new Map(state.translationCache);
+        set(state => {
+            const newCache = new Map(state.translationCache);
+            if (result) {
                 newCache.set(cacheKey, result);
+            }
 
-                // Only update hover display if user is still hovering same word
-                if (state.hoveredIndex === globalIndex) {
-                    return {
-                        translationCache: newCache,
-                        hoverTranslation: result
-                    };
-                }
-                return { translationCache: newCache };
-            });
-        }
+            const isStillCurrent = state.hoveredIndex === globalIndex;
+            const nextAbortController = state.hoverAbortController === controller ? null : state.hoverAbortController;
+
+            if (isStillCurrent && result) {
+                return {
+                    translationCache: newCache,
+                    hoverTranslation: result,
+                    hoverAbortController: nextAbortController
+                };
+            }
+            return {
+                translationCache: newCache,
+                hoverAbortController: nextAbortController
+            };
+        });
     },
 
     removeTranslation: (key: string, text?: string, targetLang?: string) => {
@@ -363,7 +399,13 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         }
     },
 
-    clearHover: () => set({ hoveredIndex: null, hoverTranslation: null, hoverSource: null }),
+    clearHover: () => {
+        const prevController = get().hoverAbortController;
+        if (prevController) {
+            prevController.abort();
+        }
+        set({ hoveredIndex: null, hoverTranslation: null, hoverSource: null, hoverAbortController: null });
+    },
     toggleShowTranslations: () => set(state => ({ showTranslations: !state.showTranslations })),
     clearSelectionTranslations: (tokens?: string[], targetLang?: string) => set(state => {
         if (!tokens || !targetLang) {
