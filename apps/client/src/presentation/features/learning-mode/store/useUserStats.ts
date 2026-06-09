@@ -37,7 +37,16 @@ export const useUserStats = create<UserStatsStore>()(
         }),
         {
             name: 'flux-user-stats',
-            storage: createJSONStorage(() => chromeStorage),
+            storage: createJSONStorage(() => ({
+                getItem: (name) => chromeStorage.getItem(name),
+                setItem: (name, value) => {
+                    if (useUserStats.persist.hasHydrated()) {
+                        return chromeStorage.setItem(name, value);
+                    }
+                    return Promise.resolve();
+                },
+                removeItem: (name) => chromeStorage.removeItem(name),
+            })),
         }
     )
 );
