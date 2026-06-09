@@ -7,7 +7,7 @@ This project uses a layered environment configuration system to support Local, D
 | File | Location | Environment | Purpose |
 | :--- | :--- | :--- | :--- |
 | **`.env`** | Root | **All** | Contains global secrets like `JWT_SECRET` and Caddy port mappings. |
-| **`.env.local`** | `apps/server/` | **Local** | Native host settings for `npm run server:dev`. |
+| **`.env.local`** | `apps/server/` | **Local** | Native host settings for `pnpm run server:dev`. |
 | **`.env.docker`** | `apps/server/` | **Docker** | Internal container networking settings for Docker builds. |
 | **`.env.local`** | `apps/client/` | **Local** | Extension config to target `localhost:3000`. |
 | **`.env.development`**| `apps/client/` | **Dev (Docker)**| Extension config to target `localhost:8443`. |
@@ -34,10 +34,10 @@ The client uses different "modes" to determine which API to talk to.
 
 | Build Command | Mode | Target API | Used For |
 | :--- | :--- | :--- | :--- |
-| `npm run dev` | `development` | `http://localhost:3000` | Local web app dev |
-| **`npm run build:local`** | `local` | `http://localhost:3000` | Testing extension vs local server |
-| **`npm run build:dev`** | `development` | `https://localhost:8443`| Testing extension vs Dev Docker |
-| **`npm run build`** | `production` | `https://localhost` | Standard Production deployment |
+| `pnpm run dev` | `development` | `http://localhost:3000` | Local web app dev |
+| **`pnpm run build:local`** | `local` | `http://localhost:3000` | Testing extension vs local server |
+| **`pnpm run build:dev`** | `development` | `https://localhost:8443`| Testing extension vs Dev Docker |
+| **`pnpm run build`** | `production` | `https://localhost` | Standard Production deployment |
 
 ---
 

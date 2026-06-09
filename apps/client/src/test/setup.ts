@@ -55,3 +55,33 @@ global.ResizeObserver = class ResizeObserver {
     unobserve() { }
     disconnect() { }
 };
+
+// Mock localStorage globally for JSDOM compatibility in newer Node versions
+const mockStorage = (() => {
+    let store: Record<string, string> = {};
+    return {
+        getItem: vi.fn((key: string) => store[key] || null),
+        setItem: vi.fn((key: string, value: string) => {
+            store[key] = String(value);
+        }),
+        removeItem: vi.fn((key: string) => {
+            delete store[key];
+        }),
+        clear: vi.fn(() => {
+            store = {};
+        }),
+        key: vi.fn((index: number) => Object.keys(store)[index] || null),
+        get length() {
+            return Object.keys(store).length;
+        }
+    };
+})();
+
+Object.defineProperty(window, 'localStorage', {
+    value: mockStorage,
+    writable: true,
+});
+Object.defineProperty(global, 'localStorage', {
+    value: mockStorage,
+    writable: true,
+});

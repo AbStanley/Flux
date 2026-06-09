@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ServerAIService } from './ServerAIService';
 
 import { defaultClient } from '../api/api-client';
@@ -22,6 +22,10 @@ describe('ServerAIService', () => {
         defaultClient.setBaseUrl(mockBaseUrl);
         vi.stubGlobal('fetch', vi.fn());
         vi.stubGlobal('chrome', undefined);
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
     });
 
     it('should initialize with correct base URL and model', () => {

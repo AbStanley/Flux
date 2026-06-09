@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "build:local": "tsc -b && vite build --mode local",
     "build:dev": "tsc -b && vite build --mode development",
-    "start": "npm run build && npm run dev",
+    "start": "pnpm run build && pnpm run dev",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
@@ -18,7 +18,7 @@
     "docker:up": "docker compose -p flux-prod up -d --build",
     "docker:dev": "docker compose -f ../../docker-compose.dev.yml -p flux-dev up --build",
     "docker:down": "docker compose -p flux-prod down",
-    "build:all": "npm run build && npm run docker:up",
+    "build:all": "pnpm run build && pnpm run docker:up",
     "prepare": "husky"
   },
   "dependencies": {
@@ -65,7 +65,8 @@
     "socket.io-client": "4.8.3",
     "tailwind-merge": "3.5.0",
     "tailwindcss-animate": "1.0.7",
-    "zustand": "5.0.12"
+    "zustand": "5.0.12",
+    "workbox-window": "7.4.1"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
@@ -95,5 +96,13 @@
     "vite-plugin-checker": "0.12.0",
     "vite-plugin-pwa": "1.2.0",
     "vitest": "4.1.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "core-js",
+      "es5-ext",
+      "esbuild",
+      "msw"
+    ]
   }
 }

@@ -1,20 +1,22 @@
 # Stage 1: Build the application
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json first to leverage Docker cache
+# Enable Corepack and pin pnpm v11
+RUN corepack enable && corepack prepare pnpm@11.1.2 --activate
+
 # Copy package.json
 COPY package.json ./
 
-# Install dependencies (standalone mode)
-RUN npm install
+# Install dependencies
+RUN pnpm config set strict-dep-builds false && pnpm install
 
 # Copy the rest of the application code
 COPY . .
 
 # Build the application with explicit empty API URL
-RUN VITE_API_URL='' VITE_OLLAMA_URL='' VITE_IS_WEB_APP='true' npm run build
+RUN VITE_API_URL='' VITE_OLLAMA_URL='' VITE_IS_WEB_APP='true' pnpm run build
 
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine
