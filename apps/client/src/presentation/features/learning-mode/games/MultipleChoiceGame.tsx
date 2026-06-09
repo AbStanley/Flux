@@ -200,7 +200,7 @@ export function MultipleChoiceGame() {
         }
     };
 
-    if (!currentItem || options.length === 0) return null;
+    if (!currentItem) return null;
 
     if (items.length < 4) {
         return (
@@ -211,6 +211,8 @@ export function MultipleChoiceGame() {
             </div>
         )
     }
+
+    if (options.length === 0) return null;
 
     const isWrongOrTimeout = (isProcessing && selectedOption !== currentItem.answer) || timedOut;
 

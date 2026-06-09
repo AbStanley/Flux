@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OllamaController } from './ollama.controller';
 import { OllamaService } from './services/ollama.service';
 import { OllamaClientService } from './services/ollama-client.service';
+import { DebugTraceService } from './services/debug-trace.service';
 
 describe('OllamaController', () => {
   let controller: OllamaController;
@@ -17,6 +18,10 @@ describe('OllamaController', () => {
         },
         {
           provide: OllamaClientService,
+          useValue: {},
+        },
+        {
+          provide: DebugTraceService,
           useValue: {},
         },
       ],

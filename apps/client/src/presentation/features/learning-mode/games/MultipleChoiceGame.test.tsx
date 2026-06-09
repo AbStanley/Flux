@@ -35,12 +35,16 @@ describe('MultipleChoiceGame', () => {
         nextItem: mockNextItem,
         timeLeft: 100,
         config: { timerEnabled: true },
+        recentDistractorIds: [],
+        setRecentDistractorIds: vi.fn(),
         ...overrides
     });
 
     beforeEach(() => {
         vi.clearAllMocks();
-        (useGameStore as any).mockReturnValue(createMockStore());
+        const storeState = createMockStore();
+        (useGameStore as any).mockReturnValue(storeState);
+        (useGameStore as any).getState = vi.fn().mockReturnValue(storeState);
         (useGameAudio as any).mockReturnValue({
             playAudio: mockPlayAudio,
             stopAudio: mockStopAudio

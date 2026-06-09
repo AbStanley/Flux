@@ -15,14 +15,17 @@ vi.mock('./useTranslationStore', () => {
 describe('useReaderStore', () => {
     const mockCloseRichInfo = vi.fn();
     const mockClearSelectionTranslations = vi.fn();
+    const mockSwitchText = vi.fn();
 
     beforeEach(() => {
         // Reset mocks
         mockCloseRichInfo.mockReset();
         mockClearSelectionTranslations.mockReset();
+        mockSwitchText.mockReset();
         (useTranslationStore.getState as any).mockReturnValue({
             closeRichInfo: mockCloseRichInfo,
             clearSelectionTranslations: mockClearSelectionTranslations,
+            switchText: mockSwitchText,
         });
 
         // Reset store state
@@ -58,7 +61,7 @@ describe('useReaderStore', () => {
         // "Hello" (0), " " (1), "world" (2) -> split by (\s+)
         expect(state.tokens).toEqual(["Hello", " ", "world"]);
         expect(mockCloseRichInfo).toHaveBeenCalled();
-        expect(mockClearSelectionTranslations).toHaveBeenCalled();
+        expect(mockSwitchText).toHaveBeenCalledWith(text);
     });
 
     it('setText should update tokens and reset selection', () => {

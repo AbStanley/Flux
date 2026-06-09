@@ -49,6 +49,6 @@ describe('ReaderInput', () => {
         expect(screen.queryByTitle('Clear text')).not.toBeInTheDocument();
 
         // Loading indicator
-        expect(screen.getByText('Creating Story...')).toBeInTheDocument();
+        expect(screen.getByTestId('story-generator-loader')).toBeInTheDocument();
     });
 });

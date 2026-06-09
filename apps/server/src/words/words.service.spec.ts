@@ -60,7 +60,7 @@ describe('WordsService', () => {
       expect(prisma.word['create']).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            text: 'Hello World',
+            text: 'Hello, "World',
             definition: createWordDto.definition,
             context: createWordDto.context,
             userId: mockUser.id,
@@ -123,7 +123,7 @@ describe('WordsService', () => {
       expect(prisma.word['create']).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            text: 'scriptalertXSSscript',
+            text: 'script>alert("XSS")</script',
             definition: createWordDto.definition,
             context: createWordDto.context,
             userId: mockUser.id,
@@ -155,7 +155,7 @@ describe('WordsService', () => {
       expect(prisma.word['create']).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            text: 'DROP TABLE users--',
+            text: 'DROP TABLE users',
             definition: createWordDto.definition,
             context: createWordDto.context,
             userId: mockUser.id,

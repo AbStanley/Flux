@@ -43,7 +43,7 @@ export function ReaderInput({
 
             {isGenerating && (
                 <div className={cn("absolute bottom-4 right-4 z-10 flex flex-col items-center justify-center transition-all duration-500")}>
-                    <div className={cn("flex items-center gap-2 p-3 bg-background/80 rounded-full shadow-lg border border-primary/20 backdrop-blur-md animate-pulse")}>
+                    <div className={cn("flex items-center gap-2 p-3 bg-background/80 rounded-full shadow-lg border border-primary/20 backdrop-blur-md animate-pulse")} data-testid="story-generator-loader">
                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     </div>
                 </div>
