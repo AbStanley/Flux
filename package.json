@@ -2,35 +2,23 @@
   "name": "flux-monorepo",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
   "scripts": {
-    "client:dev": "npm run dev --workspace=@flux/client",
-    "extension:dev": "npm run dev:extension --workspace=@flux/client",
-    "server:dev": "npm run start:dev --workspace=@flux/server",
-    "prisma-prepare": "npx prisma generate --workspace=@flux/server",
-    "prisma-studio": "npx prisma studio --schema=apps/server/prisma/schema.prisma",
+    "client:dev": "pnpm --filter @flux/client run dev",
+    "extension:dev": "pnpm --filter @flux/client run dev:extension",
+    "server:dev": "pnpm --filter @flux/server run start:dev",
+    "prisma-prepare": "pnpm --filter @flux/server exec prisma generate",
+    "prisma-studio": "pnpm --filter @flux/server exec prisma studio --schema=prisma/schema.prisma",
     "mobile:run": "cd apps/mobile && flutter run",
     "mobile:build": "cd apps/mobile && flutter build apk",
-    "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces",
+    "test": "pnpm --recursive run test",
+    "lint": "pnpm --recursive run lint",
     "prepare": "husky",
-    "build": "npm run build --workspaces",
-    "start:local:dev": "start \"Client\" npm run client:dev & start \"Server\" npm run server:dev",
+    "build": "pnpm --recursive run build",
+    "start:local:dev": "start \"Client\" pnpm client:dev & start \"Server\" pnpm server:dev",
     "db:dev": "docker compose -f docker-compose.dev.yml -p flux-dev up -d postgres",
     "docker:dev": "docker compose -f docker-compose.dev.yml -p flux-dev up --build",
     "docker:prod": "docker compose -f docker-compose.yml -p flux-prod up --build",
     "docker:prod:no-cache": "docker compose -f docker-compose.yml -p flux-prod build --no-cache && docker compose -f docker-compose.yml -p flux-prod up -d"
-  },
-  "overrides": {
-    "@nestjs/common": "11.1.18",
-    "@nestjs/core": "11.1.18",
-    "@xmldom/xmldom": "0.9.10",
-    "lodash": "4.17.21",
-    "serialize-javascript": "7.0.5",
-    "fast-uri": "3.1.2",
-    "postcss": "8.5.15"
   },
   "devDependencies": {
     "concurrently": "8.2.2",
@@ -39,7 +27,7 @@
   },
   "lint-staged": {
     "apps/client/**/*.{ts,tsx}": [
-      "npm exec --workspace=@flux/client -- eslint --fix"
+      "pnpm --filter @flux/client exec eslint --fix"
     ]
   }
 }

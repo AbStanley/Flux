@@ -13,14 +13,14 @@
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-000000?style=for-the-badge&logo=framer&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![NPM](https://img.shields.io/badge/NPM-CB3837?style=for-the-badge&logo=npm&logoColor=white)
+![PNPM](https://img.shields.io/badge/PNPM-E8F0FE?style=for-the-badge&logo=pnpm&logoColor=orange)
 
 ![Architecture](https://img.shields.io/badge/Architecture-Clean-orange?style=for-the-badge)
 
 **Flux** is a premium, privacy-focused reading and learning assistant designed to bridge the gap between language learning and fluent reading. It leverages **Self-Hosted AI** (Ollama) to provide context-aware translations, grammar analysis, gamified learning, and a natural audio reading experience -- all running locally on your machine.
 
 > [!NOTE]
-> This project is a **Monorepo** containing both the React 19 Frontend (Vite) and the NestJS Backend, managed with NPM Workspaces.
+> This project is a **Monorepo** containing both the React 19 Frontend (Vite) and the NestJS Backend, managed with pnpm Workspaces.
 
 ## ✨ Core Features
 
@@ -143,21 +143,21 @@ New-NetFirewallRule -DisplayName "Flux Prod Server (443)" -Direction Inbound -Lo
 
 ### 2. Installation & Run
 
-We use **NPM Workspaces** to manage the full stack from the root directory.
+We use **pnpm Workspaces** to manage the full stack from the root directory.
 
 ```bash
 # 1. Install Dependencies (Frontend + Backend)
-npm install
+pnpm install
 
 # 2. Start Infrastructure (Postgres)
 # (In a separate terminal)
 docker compose up -d postgres
 
 # 3. Setup Database
-npx prisma migrate dev --schema=apps/server/prisma/schema.prisma
+pnpm --filter @flux/server exec prisma migrate dev --schema=prisma/schema.prisma
 
 # 4. Start Development (Both Apps)
-npm run dev
+pnpm run dev
 ```
 
 The platform will be available at:
@@ -201,13 +201,13 @@ After changing `apps/server/prisma/schema.prisma`:
 
 ```bash
 # 1. Create & apply the migration
-cd apps/server && npx prisma migrate dev --name your_migration_name
+cd apps/server && pnpm exec prisma migrate dev --name your_migration_name
 
 # 2. Regenerate the Prisma client (so TypeScript picks up new types)
-npx prisma generate
+pnpm exec prisma generate
 
 # 3. Restart the server
-cd ../.. && npm run server:dev
+cd ../.. && pnpm run server:dev
 ```
 
 ### Production Deployment
@@ -221,16 +221,16 @@ cd apps/server && npx prisma migrate deploy
 
 | Command | Description |
 |---------|-------------|
-| `cd apps/server && npx prisma migrate dev --name <name>` | Create + apply migration (dev only) |
-| `cd apps/server && npx prisma migrate deploy` | Apply pending migrations (prod) |
-| `cd apps/server && npx prisma migrate status` | Check migration status |
-| `cd apps/server && npx prisma migrate reset --force` | Reset DB & reapply all migrations (dev only, destructive) |
-| `cd apps/server && npx prisma generate` | Regenerate Prisma client after schema changes |
-| `npm run prisma-prepare` | Shortcut: generate Prisma client from root |
-| `npm run prisma-studio` | Open Prisma Studio GUI to view/edit data |
-| `cd apps/server && npx prisma db push` | Push schema without creating migration (dev prototyping) |
-| `cd apps/server && npx prisma format` | Format the schema file |
-| `cd apps/server && npx prisma validate` | Validate the schema file |
+| `cd apps/server && pnpm exec prisma migrate dev --name <name>` | Create + apply migration (dev only) |
+| `cd apps/server && pnpm exec prisma migrate deploy` | Apply pending migrations (prod) |
+| `cd apps/server && pnpm exec prisma migrate status` | Check migration status |
+| `cd apps/server && pnpm exec prisma migrate reset --force` | Reset DB & reapply all migrations (dev only, destructive) |
+| `cd apps/server && pnpm exec prisma generate` | Regenerate Prisma client after schema changes |
+| `pnpm run prisma-prepare` | Shortcut: generate Prisma client from root |
+| `pnpm run prisma-studio` | Open Prisma Studio GUI to view/edit data |
+| `cd apps/server && pnpm exec prisma db push` | Push schema without creating migration (dev prototyping) |
+| `cd apps/server && pnpm exec prisma format` | Format the schema file |
+| `cd apps/server && pnpm exec prisma validate` | Validate the schema file |
 
 ---
 
@@ -260,7 +260,7 @@ Flux is architected as a **"Self-Hosted Cloud"**.
 If Docker fails to start with port errors:
 
 1. **Restart Docker Desktop** (Right-click -> Quit -> Start). This clears zombie ports.
-2. Run `npm run docker:dev` again.
+2. Run `pnpm run docker:dev` again.
 
 ### LAN Access Issues
 

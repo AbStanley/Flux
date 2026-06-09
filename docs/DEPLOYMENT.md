@@ -5,7 +5,7 @@
 Start the entire application (Client + Server + Database + Caddy) in production mode:
 
 ```bash
-npm run docker:prod
+pnpm run docker:prod
 ```
 
 - **Web App**: `https://localhost` (via Caddy reverse proxy)
@@ -26,7 +26,7 @@ docker compose -f docker-compose.yml down
 Run a separate development stack (with different ports to avoid conflicts with production):
 
 ```bash
-npm run docker:dev
+pnpm run docker:dev
 ```
 
 - **Client**: `http://localhost:8083`
@@ -50,10 +50,10 @@ Run frontend and backend natively for the fastest development cycle:
 docker compose up -d postgres
 
 # Run migrations
-npx prisma migrate dev --schema=apps/server/prisma/schema.prisma
+pnpm --filter @flux/server exec prisma migrate dev --schema=prisma/schema.prisma
 
 # Start both apps
-npm run dev
+pnpm run dev
 ```
 
 - **Client**: `http://localhost:5173` (Vite dev server)
@@ -73,12 +73,12 @@ If you modify `apps/server/prisma/schema.prisma`, run this to update the DB:
 ```bash
 # macOS / Linux
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db" \
-  npx --workspace=@flux/server prisma migrate dev
+  pnpm --filter @flux/server exec prisma migrate dev
 ```
 
 ```powershell
 # Windows PowerShell
-$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db"; npx --workspace=@flux/server prisma migrate dev
+$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db"; pnpm --filter @flux/server exec prisma migrate dev
 ```
 
 ### 2. Open Database GUI (Prisma Studio)
@@ -88,12 +88,12 @@ To inspect production data:
 ```bash
 # macOS / Linux
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db" \
-  npx --workspace=@flux/server prisma studio
+  pnpm --filter @flux/server exec prisma studio
 ```
 
 ```powershell
 # Windows PowerShell
-$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db"; npx --workspace=@flux/server prisma studio
+$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db"; pnpm --filter @flux/server exec prisma studio
 ```
 
 ### 3. Reset Database
@@ -102,7 +102,7 @@ To wipe the database and re-apply all migrations:
 
 ```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/flux_db" \
-  npx --workspace=@flux/server prisma migrate reset
+  pnpm --filter @flux/server exec prisma migrate reset
 ```
 
 ---

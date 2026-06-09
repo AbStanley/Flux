@@ -16,7 +16,12 @@ describe('DbSetup', () => {
             sourceLang: 'en',
             targetLang: 'es'
         },
-        updateConfig: updateConfigSpy
+        updateConfig: updateConfigSpy,
+        availableLangs: ['en', 'es'],
+        languageGraph: {
+            es: ['en'],
+            en: ['es']
+        }
     };
 
     beforeEach(() => {
@@ -29,13 +34,6 @@ describe('DbSetup', () => {
         render(<DbSetup />);
         expect(screen.getByText(/Foreign Language/i)).toBeDefined();
         expect(screen.getByText(/Native Language/i)).toBeDefined();
-    });
-
-    it('should fetch languages on mount', async () => {
-        render(<DbSetup />);
-        await waitFor(() => {
-            expect(wordsApi.getLanguages).toHaveBeenCalled();
-        });
     });
 
     it('should swap languages when button is clicked', async () => {
@@ -52,20 +50,10 @@ describe('DbSetup', () => {
         });
     });
 
-    it('should filter available options based on graph', async () => {
-        const mockLangs = [
-            { sourceLanguage: 'en', targetLanguage: 'es' },
-            { sourceLanguage: 'en', targetLanguage: 'fr' },
-        ];
-        (wordsApi.getLanguages as any).mockResolvedValue(mockLangs);
-
+    it('should render correct languages based on store configuration', async () => {
         render(<DbSetup />);
 
-        await waitFor(() => {
-            expect(wordsApi.getLanguages).toHaveBeenCalled();
-        });
-
-        // Use findByText to wait for re-render
+        // Use findByText to find languages in document
         expect(await screen.findByText(/English/i)).toBeDefined();
         expect(await screen.findByText(/Spanish/i)).toBeDefined();
     });

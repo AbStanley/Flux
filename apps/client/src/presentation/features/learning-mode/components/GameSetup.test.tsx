@@ -23,7 +23,13 @@ describe('GameSetup', () => {
             targetLang: 'es'
         },
         updateConfig: updateConfigSpy,
-        startGame: startGameSpy
+        startGame: startGameSpy,
+        initializeLanguages: vi.fn(),
+        availableLangs: ['en', 'es'],
+        languageGraph: {
+            es: ['en'],
+            en: ['es']
+        }
     };
 
     beforeEach(() => {

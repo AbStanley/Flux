@@ -69,7 +69,7 @@ sequenceDiagram
 
 ### 1. Monorepo Structure
 
-We use **NPM Workspaces** to manage multiple applications in a single repository.
+We use **pnpm Workspaces** to manage multiple applications in a single repository.
 
 - `apps/client`: The Frontend application (Vite + React 19).
 - `apps/server`: The Backend API (NestJS 11).

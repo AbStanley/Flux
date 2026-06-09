@@ -10,7 +10,7 @@ export const chromeStorage: StateStorage = {
     getItem: async (name: string): Promise<string | null> => {
         return new Promise((resolve) => {
             if (typeof chrome === 'undefined' || !chrome.storage) {
-                resolve(localStorage.getItem(name));
+                resolve(window.localStorage.getItem(name));
                 return;
             }
             chrome.storage.local.get([name], (result) => {
@@ -22,7 +22,7 @@ export const chromeStorage: StateStorage = {
     setItem: async (name: string, value: string): Promise<void> => {
         return new Promise((resolve) => {
             if (typeof chrome === 'undefined' || !chrome.storage) {
-                localStorage.setItem(name, value);
+                window.localStorage.setItem(name, value);
                 resolve();
                 return;
             }
@@ -34,7 +34,7 @@ export const chromeStorage: StateStorage = {
     removeItem: async (name: string): Promise<void> => {
         return new Promise((resolve) => {
             if (typeof chrome === 'undefined' || !chrome.storage) {
-                localStorage.removeItem(name);
+                window.localStorage.removeItem(name);
                 resolve();
                 return;
             }

@@ -62,14 +62,14 @@ describe('AiSetup', () => {
 
     it('should update source language', () => {
         render(<AiSetup />);
-        const sourceSelect = screen.getByTestId('select-Foreign Language 🌍');
+        const sourceSelect = screen.getByTestId('select-Native Language (Reference) 🏠');
         fireEvent.change(sourceSelect, { target: { value: 'en' } });
         expect(mockUpdateConfig).toHaveBeenCalledWith({ sourceLang: 'en' });
     });
 
     it('should update target language', () => {
         render(<AiSetup />);
-        const targetSelect = screen.getByTestId('select-Native Language 🏠');
+        const targetSelect = screen.getByTestId('select-Foreign Language (Target) 🌍');
         fireEvent.change(targetSelect, { target: { value: 'es' } });
         expect(mockUpdateConfig).toHaveBeenCalledWith({ targetLang: 'es' });
     });

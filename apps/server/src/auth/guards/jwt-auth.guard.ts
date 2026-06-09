@@ -30,7 +30,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (result instanceof Observable) {
       return firstValueFrom(result);
     }
-    return result as Promise<boolean> | boolean;
+    return result;
   }
 
   handleRequest<TUser>(err: Error | null, user: TUser | false): TUser {

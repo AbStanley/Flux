@@ -86,7 +86,7 @@ describe('ControlPanel', () => {
         // For a more robust test we would need a proper store mock.
         // However, we can assert that the button exists.
         render(<ControlPanel />);
-        const readBtn = screen.getByText('Open Reading Mode');
+        const readBtn = screen.getByText(/Open Reading Mode/i);
         expect(readBtn).toBeDisabled(); // Disabled because text is empty in default mock
     });
 });
