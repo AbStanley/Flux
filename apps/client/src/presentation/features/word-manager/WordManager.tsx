@@ -1,106 +1,41 @@
-import { useState, useEffect } from 'react';
-import { useWordsStore } from './store/useWordsStore';
+import { useWordManager } from './hooks/useWordManager';
 import { WordList } from './components/WordList';
 import { EditWordDialog } from './components/EditWordDialog';
+import { ExportDialog } from './components/ExportDialog';
 import { Button } from '../../components/ui/button';
-import { Plus, Download, FileDown, Search } from 'lucide-react';
-import { type CreateWordRequest, type Word, wordsApi } from '../../../infrastructure/api/words';
-import { exportToCSV, exportToAnki } from './utils/exportUtils';
+import { Plus, Download, Search } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 
 export function WordManager() {
-    const { wordsState, phrasesState, error, addWord, updateWord, deleteWord, fetchWords } = useWordsStore();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingWord, setEditingWord] = useState<Word | undefined>(undefined);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [sortOption, setSortOption] = useState('date_desc');
-    const [sourceLanguage, setSourceLanguage] = useState('all');
-    const [targetLanguage, setTargetLanguage] = useState('all');
-    const [availableLanguages, setAvailableLanguages] = useState<{ sourceLanguage: string; targetLanguage: string }[]>([]);
+    const {
+        wordsState,
+        phrasesState,
+        error,
+        isDialogOpen,
+        setIsDialogOpen,
+        isExportOpen,
+        setIsExportOpen,
+        editingWord,
+        setEditingWord,
+        searchQuery,
+        setSearchQuery,
+        sortOption,
+        setSortOption,
+        sourceLanguage,
+        setSourceLanguage,
+        targetLanguage,
+        setTargetLanguage,
+        availableLanguages,
+        activeTab,
+        setActiveTab,
+        handleCreate,
+        handleUpdate,
+        handleDelete,
+        openEditDialog,
+        fetchWords
+    } = useWordManager();
 
-    useEffect(() => {
-        const loadLanguages = async () => {
-            try {
-                const response = await wordsApi.getLanguages();
-                setAvailableLanguages(Array.isArray(response) ? response : []);
-            } catch (err) {
-                console.error('Failed to load languages', err);
-                setAvailableLanguages([]);
-            }
-        };
-        loadLanguages();
-    }, []);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchWords(
-                'word',
-                1,
-                searchQuery,
-                sortOption,
-                sourceLanguage !== 'all' ? sourceLanguage : undefined,
-                targetLanguage !== 'all' ? targetLanguage : undefined
-            );
-            fetchWords(
-                'phrase',
-                1,
-                searchQuery,
-                sortOption,
-                sourceLanguage !== 'all' ? sourceLanguage : undefined,
-                targetLanguage !== 'all' ? targetLanguage : undefined
-            );
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [searchQuery, sortOption, sourceLanguage, targetLanguage, fetchWords]);
-
-    const handleCreate = async (data: CreateWordRequest) => {
-        await addWord(data);
-        setIsDialogOpen(false);
-    };
-
-    const handleUpdate = async (data: CreateWordRequest) => {
-        if (editingWord) {
-            await updateWord(editingWord.id, data);
-            setIsDialogOpen(false);
-            setEditingWord(undefined);
-        }
-    };
-
-    const handleDelete = async (id: string, type: 'word' | 'phrase') => {
-        await deleteWord(id, type);
-    };
-
-
-
-    const openEditDialog = (word: Word) => {
-        setEditingWord(word);
-        setIsDialogOpen(true);
-    };
-
-    const handleExport = async (format: 'csv' | 'anki') => {
-        try {
-            // Fetch ALL items for both types
-            const [wordsResponse, phrasesResponse] = await Promise.all([
-                wordsApi.getAll({ type: 'word' }),
-                wordsApi.getAll({ type: 'phrase' })
-            ]);
-
-            const allItems = [...wordsResponse.items, ...phrasesResponse.items];
-
-            if (format === 'csv') {
-                exportToCSV(allItems);
-            } else {
-                exportToAnki(allItems);
-            }
-        } catch (error) {
-            console.error('Failed to export:', error);
-            // Optionally set error state here if you want UI feedback
-        }
-    };
-
-    const [activeTab, setActiveTab] = useState<'word' | 'phrase'>('word');
     const uniqueSourceLangs = Array.from(new Set(availableLanguages.map(l => l.sourceLanguage).filter(Boolean)));
     const uniqueTargetLangs = Array.from(new Set(availableLanguages.map(l => l.targetLanguage).filter(Boolean)));
 
@@ -115,13 +50,9 @@ export function WordManager() {
                 </div>
                 <div className="flex flex-wrap gap-2 w-full md:w-auto">
                     <div className="flex gap-2 ml-auto">
-                        <Button variant="outline" size="sm" onClick={() => handleExport('csv')} disabled={wordsState.total + phrasesState.total === 0}>
-                            <FileDown className="mr-2 h-4 w-4" />
-                            <span className="hidden sm:inline">CSV</span>
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleExport('anki')} disabled={wordsState.total + phrasesState.total === 0}>
+                        <Button variant="outline" size="sm" onClick={() => setIsExportOpen(true)} disabled={wordsState.total + phrasesState.total === 0}>
                             <Download className="mr-2 h-4 w-4" />
-                            <span className="hidden sm:inline">Anki</span>
+                            Export
                         </Button>
                         <Button size="sm" onClick={() => { setEditingWord(undefined); setIsDialogOpen(true); }} className="shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40">
                             <Plus className="mr-2 h-4 w-4" />
@@ -141,7 +72,6 @@ export function WordManager() {
             )}
 
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-
                 {/* Custom Tabs */}
                 <div className="flex p-1 bg-muted/30 rounded-lg w-full md:w-fit gap-1 border">
                     <button
@@ -248,9 +178,13 @@ export function WordManager() {
                 onClose={() => setIsDialogOpen(false)}
                 onSubmit={editingWord ? handleUpdate : handleCreate}
                 initialData={editingWord}
-                // Pass the active tab as default type for new entries
                 defaultType={activeTab}
+            />
+
+            <ExportDialog
+                isOpen={isExportOpen}
+                onClose={() => setIsExportOpen(false)}
             />
         </div>
     );
-};
+}
