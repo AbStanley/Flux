@@ -23,5 +23,23 @@
         }
     ],
     "eslint.useFlatConfig": true,
-    "prisma.pinToPrisma6": true
+    "prisma.pinToPrisma6": true,
+
+    "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
+
+    "jest.shell": {
+        "path": "/bin/zsh",
+        "args": ["-i"]
+    },
+    "jest.virtualFolders": [
+        {
+            "name": "server (unit)",
+            "rootPath": "apps/server"
+        },
+        {
+            "name": "server (e2e)",
+            "rootPath": "apps/server",
+            "jestCommandLine": "npx jest --config ./test/jest-e2e.json"
+        }
+    ]
 }

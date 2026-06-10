@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "Orta.vscode-jest",
+    "vitest.explorer",
+    "dbaeumer.vscode-eslint",
+    "Prisma.prisma"
+  ]
+}
