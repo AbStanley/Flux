@@ -39,7 +39,7 @@
         {
             "name": "server (e2e)",
             "rootPath": "apps/server",
-            "jestCommandLine": "npx jest --config ./test/jest-e2e.json"
+            "jestCommandLine": "pnpm exec jest --config ./test/jest-e2e.json"
         }
     ]
 }

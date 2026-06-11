@@ -181,11 +181,11 @@ Here's the exact sequence after pulling migration changes:
 
 ### Step 2: Apply any new migrations to your local DB
 
-  npx prisma migrate dev
+  pnpm exec prisma migrate dev
 
 ### Step 3: Regenerate the Prisma client (so TypeScript gets new types)
 
-  npx prisma generate
+  pnpm exec prisma generate
 
 ## Prisma Database Commands
 
@@ -214,7 +214,7 @@ cd ../.. && pnpm run server:dev
 
 ```bash
 # Apply pending migrations without creating new ones (safe for prod)
-cd apps/server && npx prisma migrate deploy
+cd apps/server && pnpm exec prisma migrate deploy
 ```
 
 ### All Commands Reference
