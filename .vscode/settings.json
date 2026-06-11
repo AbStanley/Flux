@@ -26,6 +26,10 @@
     "prisma.pinToPrisma6": true,
 
     "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
+    "terminal.integrated.automationProfile.osx": {
+        "path": "/bin/zsh",
+        "args": ["-l", "-i"]
+    },
 
     "jest.shell": {
         "path": "/bin/zsh",
