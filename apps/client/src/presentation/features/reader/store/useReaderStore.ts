@@ -191,7 +191,16 @@ export const useReaderStore = create<ReaderState>()(
         }),
         {
             name: 'reader-storage',
-            storage: createJSONStorage(() => chromeStorage),
+            storage: createJSONStorage(() => ({
+                getItem: (name) => chromeStorage.getItem(name),
+                setItem: (name, value) => {
+                    if (useReaderStore.persist.hasHydrated()) {
+                        return chromeStorage.setItem(name, value);
+                    }
+                    return Promise.resolve();
+                },
+                removeItem: (name) => chromeStorage.removeItem(name),
+            })),
             partialize: (state) => ({
                 text: state.text,
                 sourceLang: state.sourceLang,

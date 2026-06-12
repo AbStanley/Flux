@@ -11,6 +11,19 @@ type RichDto = {
   model?: string;
 };
 
+/**
+ * The subset of the parsed rich-translation JSON that these tests assert on.
+ * All fields are optional because the LLM output is best-effort and the
+ * assertions guard each access.
+ */
+type RichTranslationResult = {
+  isVerb?: boolean;
+  translation?: string;
+  translationConjugated?: string;
+  grammar?: { sourceInfinitive?: string };
+  _verbAnalysis?: { sourceInfinitive?: string };
+};
+
 jest.setTimeout(120000);
 
 describe('LLM Translation E2E (Ollama)', () => {
@@ -34,15 +47,14 @@ describe('LLM Translation E2E (Ollama)', () => {
   });
 
   /** Collect all streaming chunks and parse the final JSON from the LLM. */
-  const stream = async (dto: RichDto): Promise<any> => {
+  const stream = async (dto: RichDto): Promise<RichTranslationResult> => {
     const raw = await service.getRichTranslationStream(dto);
     let text = '';
     for await (const chunk of raw) {
-      const r = (chunk as any).response;
-      if (r) text += r;
+      if (chunk.response) text += chunk.response;
     }
     try {
-      return JSON.parse(text);
+      return JSON.parse(text) as RichTranslationResult;
     } catch {
       throw new Error(`LLM output not valid JSON:\n${text}`);
     }

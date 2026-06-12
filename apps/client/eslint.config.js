@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 export default tseslint.config(
-  { ignores: ['dist', '**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'] },
+  { ignores: ['dist', 'dev-dist', '**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'] },
   // 1. Base JS rules
   js.configs.recommended,
   // 2. TypeScript Strict + Stylistic rules (spread as they are arrays)
@@ -24,7 +24,18 @@ export default tseslint.config(
     },
     rules: reactHooks.configs.recommended.rules,
   },
-  // 4. Custom Configuration
+  // 4. Globals for public scripts running in extension/worker contexts
+  {
+    files: ['public/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.browser,
+        ...globals.webextensions,
+      },
+    },
+  },
+  // 5. Custom Configuration
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {

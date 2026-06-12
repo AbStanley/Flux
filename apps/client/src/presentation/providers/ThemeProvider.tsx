@@ -26,10 +26,19 @@ export function ThemeProvider({
         () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
     )
     const [extCustomThemes, setExtCustomThemes] = useState<CustomTheme[]>([]);
+    const [hydrated, setHydrated] = useState(() => useSettingsStore.persist.hasHydrated());
     const customThemesFromStore = useSettingsStore(state => state.customThemes);
     
-    // Use store themes if available (side panel), otherwise use synced themes (extension context)
-    const customThemes = customThemesFromStore.length > 0 ? customThemesFromStore : extCustomThemes;
+    // Use store themes once hydrated, otherwise use fast-loaded extension themes
+    const customThemes = hydrated ? customThemesFromStore : extCustomThemes;
+
+    // Track hydration of settings store
+    useEffect(() => {
+        const unsub = useSettingsStore.persist.onFinishHydration(() => {
+            setHydrated(true);
+        });
+        return unsub;
+    }, []);
 
     // Sync theme from extension popup → side panel
     useEffect(() => {
@@ -66,10 +75,10 @@ export function ThemeProvider({
 
     // Sync custom themes array TO extension storage whenever they change (only from side panel)
     useEffect(() => {
-        if (window.chrome?.storage?.local && customThemesFromStore.length > 0) {
+        if (window.chrome?.storage?.local && hydrated) {
             window.chrome.storage.local.set({ fluxCustomThemes: customThemesFromStore });
         }
-    }, [customThemesFromStore]);
+    }, [customThemesFromStore, hydrated]);
 
     useEffect(() => {
         const root = window.document.documentElement

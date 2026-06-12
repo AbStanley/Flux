@@ -23,5 +23,27 @@
         }
     ],
     "eslint.useFlatConfig": true,
-    "prisma.pinToPrisma6": true
+    "prisma.pinToPrisma6": true,
+
+    "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
+    "terminal.integrated.automationProfile.osx": {
+        "path": "/bin/zsh",
+        "args": ["-l", "-i"]
+    },
+
+    "jest.shell": {
+        "path": "/bin/zsh",
+        "args": ["-i"]
+    },
+    "jest.virtualFolders": [
+        {
+            "name": "server (unit)",
+            "rootPath": "apps/server"
+        },
+        {
+            "name": "server (e2e)",
+            "rootPath": "apps/server",
+            "jestCommandLine": "pnpm exec jest --config ./test/jest-e2e.json"
+        }
+    ]
 }

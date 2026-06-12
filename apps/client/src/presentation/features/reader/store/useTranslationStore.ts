@@ -33,6 +33,9 @@ export const useTranslationStore = create<TranslationState>()(
                     };
                 },
                 setItem: async (name, value) => {
+                    if (!useTranslationStore.persist.hasHydrated()) {
+                        return;
+                    }
                     const str = JSON.stringify({
                         state: {
                             ...value.state,

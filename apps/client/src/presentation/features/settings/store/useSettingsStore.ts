@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { ContentType, ProficiencyLevel } from '../../../../core/types/AIConfig';
+import { chromeStorage } from '@/lib/chrome-storage';
 
 export type ReaderFont =
     | 'system'
@@ -131,6 +132,25 @@ export const useSettingsStore = create<SettingsState>()(
         }),
         {
             name: 'flux-reader-settings',
+            storage: createJSONStorage(() => ({
+                getItem: (name) => chromeStorage.getItem(name),
+                setItem: (name, value) => {
+                    if (useSettingsStore.persist.hasHydrated()) {
+                        return chromeStorage.setItem(name, value);
+                    }
+                    return Promise.resolve();
+                },
+                removeItem: (name) => chromeStorage.removeItem(name),
+            })),
         }
     )
 );
+
+// Listen for storage changes from other contexts (like content scripts or popups) to keep settings in sync
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'local' && changes['flux-reader-settings']) {
+            useSettingsStore.persist.rehydrate();
+        }
+    });
+}
