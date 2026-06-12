@@ -54,12 +54,27 @@ export const getSelectionGroups = (indices: Set<number>, tokens: string[]): numb
         const curr = sorted[i];
         let isContiguous = true;
 
-        for (let k = prev + 1; k < curr; k++) {
-            const hasContent = /[\p{L}\p{N}]/u.test(tokens[k]);
-            if (hasContent || tokens[k].includes('\n')) {
-                isContiguous = false;
-                break;
+        // Check if the previous token ends a sentence/phrase
+        // or if we are crossing a sentence boundary
+        if (/[.!?;:…]["'»\]})]*\s*$/.test(tokens[prev])) {
+            isContiguous = false;
+        }
+
+        if (isContiguous) {
+            for (let k = prev + 1; k < curr; k++) {
+                const hasContent = /[\p{L}\p{N}]/u.test(tokens[k]);
+                // Any sentence boundary punctuation in the gap also breaks contiguity
+                const hasBoundary = /[.!?;:…¡¿]/.test(tokens[k]); 
+                if (hasContent || tokens[k].includes('\n') || hasBoundary) {
+                    isContiguous = false;
+                    break;
+                }
             }
+        }
+
+        // Check if current token starts with inverted punctuation (Spanish)
+        if (isContiguous && /^\s*["'«[{(]*[¡¿]/.test(tokens[curr])) {
+            isContiguous = false;
         }
 
         if (isContiguous) {

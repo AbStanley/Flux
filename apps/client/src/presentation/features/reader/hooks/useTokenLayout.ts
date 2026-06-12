@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useLayoutEffect, useState } from 'react';
 
 interface UseTokenLayoutProps {
@@ -9,12 +10,14 @@ interface UseTokenLayoutProps {
     isHovered: boolean;
     isSelected: boolean;
     groupEndId?: string;
+    globalIndex: number;
 }
 
 interface UseTokenLayoutResult {
     isRightAligned: boolean;
     dynamicMarginTop: number | undefined;
     dynamicMaxWidth: number | undefined;
+    dynamicBottom: string | undefined;
 }
 
 export const useTokenLayout = ({
@@ -25,11 +28,13 @@ export const useTokenLayout = ({
     hoverTranslation,
     isHovered,
     isSelected,
-    groupEndId
+    groupEndId,
+    globalIndex
 }: UseTokenLayoutProps): UseTokenLayoutResult => {
     const [isRightAligned, setIsRightAligned] = useState(false);
     const [dynamicMarginTop, setDynamicMarginTop] = useState<number | undefined>(undefined);
     const [dynamicMaxWidth, setDynamicMaxWidth] = useState<number | undefined>(undefined);
+    const [dynamicBottom, setDynamicBottom] = useState<string | undefined>(undefined);
 
     useLayoutEffect(() => {
         if ((groupTranslation || hoverTranslation) && tokenRef.current) {
@@ -102,20 +107,62 @@ export const useTokenLayout = ({
         }
     }, [groupTranslation, hoverTranslation, isHovered, isSelected, containerRef, groupEndId, tokenRef]);
 
-    // Height measurement effect (Separate to ensure it runs after width update)
     useLayoutEffect(() => {
         if (popupContainerRef.current && (groupTranslation || hoverTranslation)) {
-            const height = popupContainerRef.current.offsetHeight;
-            if (height > 0) {
-                setDynamicMarginTop(height + 30);
+            const el = popupContainerRef.current;
+            const rect = el.getBoundingClientRect();
+            
+            // Simple collision detection with other popups
+            const allPopups = Array.from(document.querySelectorAll('[data-popup="true"]')) as HTMLElement[];
+            
+            let verticalOffset = 0;
+
+            allPopups.forEach(otherEl => {
+                const otherIndexStr = otherEl.getAttribute('data-index');
+                if (!otherIndexStr) return;
+                const otherIndex = parseInt(otherIndexStr, 10);
+                
+                // Only yield to popups before us in the text to avoid cyclical adjustments
+                if (otherIndex < globalIndex) {
+                    const otherRect = otherEl.getBoundingClientRect();
+                    
+                    // Check if they are roughly on the same line (their anchors are similar)
+                    const sameLine = Math.abs(rect.bottom - otherRect.bottom) < 50; 
+                    
+                    // Check horizontal overlap with a small buffer
+                    const overlapX = rect.left < otherRect.right + 10 && rect.right > otherRect.left - 10;
+                    
+                    // Check vertical overlap to ensure they are actually colliding
+                    const overlapY = rect.top < otherRect.bottom && rect.bottom > otherRect.top;
+                    
+                    if (sameLine && overlapX && overlapY) {
+                        verticalOffset += (otherRect.height + 8); // 8px gap between stacked popups
+                    }
+                }
+            });
+
+            if (verticalOffset > 0) {
+                 
+                setDynamicBottom(`calc(120% + ${verticalOffset}px)`);
+                 
+                setDynamicMarginTop(rect.height + verticalOffset + 30);
+            } else {
+                 
+                setDynamicBottom(undefined);
+                if (rect.height > 0) {
+                     
+                    setDynamicMarginTop(rect.height + 30);
+                }
             }
         }
-    }, [dynamicMaxWidth, groupTranslation, hoverTranslation, popupContainerRef]);
+     
+    }, [dynamicMaxWidth, groupTranslation, hoverTranslation, popupContainerRef, globalIndex]);
 
     return {
         isRightAligned,
         dynamicMarginTop,
-        dynamicMaxWidth
+        dynamicMaxWidth,
+        dynamicBottom
     };
 };
 

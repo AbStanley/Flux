@@ -100,7 +100,7 @@ const ReaderTokenComponent = ({
     const tokenRef = useRef<HTMLSpanElement>(null);
     const popupContainerRef = useRef<HTMLSpanElement>(null);
 
-    const { isRightAligned, dynamicMarginTop, dynamicMaxWidth } = useTokenLayout({
+    const { isRightAligned, dynamicMarginTop, dynamicMaxWidth, dynamicBottom } = useTokenLayout({
         tokenRef,
         containerRef,
         popupContainerRef,
@@ -108,7 +108,8 @@ const ReaderTokenComponent = ({
         hoverTranslation: sanitizedHoverTranslation,
         isHovered,
         isSelected,
-        groupEndId
+        groupEndId,
+        globalIndex
     });
 
     const addWord = useWordsStore(state => state.addWord);
@@ -216,9 +217,12 @@ const ReaderTokenComponent = ({
             {sanitizedGroupTranslation && (
                 <span
                     ref={popupContainerRef}
+                    data-popup="true"
+                    data-index={globalIndex}
                     className={cn(popupStyles.selectionPopupValid, isRightAligned && popupStyles.popupRight)}
                     style={{
                         maxWidth: dynamicMaxWidth ? `${dynamicMaxWidth}px` : undefined,
+                        bottom: dynamicBottom
                     }}
                     onMouseOver={(e) => {
                         e.stopPropagation();
@@ -250,6 +254,8 @@ const ReaderTokenComponent = ({
              */}
             {(isHoveredWord) && sanitizedHoverTranslation && !(isSelected && position === 'single') && (
                 <span
+                    data-popup="true"
+                    data-index={globalIndex}
                     className={cn(isSelected ? popupStyles.hoverPopupBelow : popupStyles.hoverPopup, isRightAligned && popupStyles.popupRight)}
                     style={{ maxWidth: dynamicMaxWidth ? `${dynamicMaxWidth}px` : undefined }}
                     onMouseOver={(e) => {

@@ -111,6 +111,7 @@ const handleMergeInteraction = (params: {
     selectionMode: SelectionMode;
     validGroups: number[][];
     translateIndices: (indices: Set<number>) => void;
+    tokens: string[];
 }): boolean => {
     const {
         existingGroup,
@@ -118,7 +119,8 @@ const handleMergeInteraction = (params: {
         selectionMode,
         validGroups,
         globalIndex,
-        translateIndices
+        translateIndices,
+        tokens
     } = params;
 
     // Only merge if: NOT in a group, NOT multiselecting, and IN Word selection mode
@@ -132,7 +134,23 @@ const handleMergeInteraction = (params: {
         const distLeft = globalIndex - groupEnd;
         const distRight = groupStart - globalIndex;
         // Allow distance 1 (direct neighbor) or 2 (space in between)
-        return (distLeft > 0 && distLeft <= 2) || (distRight > 0 && distRight <= 2);
+        if ((distLeft > 0 && distLeft <= 2) || (distRight > 0 && distRight <= 2)) {
+            const minIdx = Math.min(globalIndex, groupStart);
+            const maxIdx = Math.max(globalIndex, groupEnd);
+            
+            for (let i = minIdx; i < maxIdx; i++) {
+                if (/[.!?;:…]["'»\]})]*\s*$/.test(tokens[i])) {
+                    return false;
+                }
+            }
+            for (let i = minIdx + 1; i <= maxIdx; i++) {
+                if (/^\s*["'«[{(]*[¡¿]/.test(tokens[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     });
 
     if (adjacentGroups.length > 0) {
@@ -203,7 +221,8 @@ export const useReaderInteractions = ({
             isMultiSelecting,
             selectionMode,
             validGroups,
-            translateIndices
+            translateIndices,
+            tokens
         });
 
         if (handledMerge) return;
