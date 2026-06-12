@@ -26,7 +26,13 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/prisma ./prisma
 
 # Install production dependencies only + generate Prisma client for this platform
-RUN pnpm config set strict-dep-builds false && pnpm install --prod && pnpm exec prisma generate
+# We set store-dir to /tmp and wipe it afterwards to prevent pnpm from caching tarballs in the final image layer
+RUN pnpm config set store-dir /tmp/pnpm-store && \
+    pnpm config set strict-dep-builds false && \
+    pnpm install --prod && \
+    pnpm exec prisma generate && \
+    rm -rf /tmp/pnpm-store && \
+    rm -rf /root/.npm
 
 # Copy compiled output
 COPY --from=builder /app/dist ./dist
