@@ -1,9 +1,10 @@
 # ---- Build stage ----
-FROM node:22-alpine3.20 AS builder
+FROM node:26-alpine3.23 AS builder
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@11.1.2 --activate
+# Patch any known Alpine vulnerabilities at build time
+RUN apk update && apk upgrade --no-cache && apk add --no-cache openssl pnpm && rm -rf /var/cache/apk/*
 
 COPY package.json ./
 RUN pnpm config set strict-dep-builds false && pnpm install
@@ -14,11 +15,10 @@ RUN pnpm exec prisma generate
 RUN pnpm run build
 
 # ---- Production stage ----
-FROM node:22-alpine3.20
+FROM node:26-alpine3.23
 
 # Patch any known Alpine vulnerabilities at build time
-RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
-RUN corepack enable && corepack prepare pnpm@11.1.2 --activate
+RUN apk update && apk upgrade --no-cache && apk add --no-cache openssl pnpm && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 

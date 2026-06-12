@@ -3,8 +3,8 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Enable Corepack and pin pnpm v11
-RUN corepack enable && corepack prepare pnpm@11.1.2 --activate
+# Patch any known Alpine vulnerabilities and install pnpm
+RUN apk update && apk upgrade --no-cache && apk add --no-cache pnpm && rm -rf /var/cache/apk/*
 
 # Copy package.json
 COPY package.json ./
@@ -20,6 +20,9 @@ RUN VITE_API_URL='' VITE_OLLAMA_URL='' VITE_IS_WEB_APP='true' pnpm run build
 
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine
+
+# Patch any known Alpine vulnerabilities at build time
+RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
 
 # Copy the built assets from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html

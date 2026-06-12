@@ -1,2 +1,6 @@
 FROM caddy:alpine
+
+# Patch any known Alpine vulnerabilities at build time
+RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
+
 COPY Caddyfile /etc/caddy/Caddyfile
