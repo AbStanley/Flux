@@ -106,6 +106,9 @@ export function FileImporter({ open, onOpenChange }: FileImporterProps) {
                     <Button variant="outline" className="mt-6 pointer-events-none">
                         Select File
                     </Button>
+                    <Button variant="ghost" className="mt-2" onClick={(e) => { e.stopPropagation(); onOpenChange(false); }}>
+                        Cancel
+                    </Button>
                 </div>
             );
         }
@@ -115,7 +118,7 @@ export function FileImporter({ open, onOpenChange }: FileImporterProps) {
         }
 
         // EPUB mime type varies slightly but check extension or part of mime
-        if (file.type === 'application/epub+zip' || file.name.endsWith('.epub')) {
+        if (file.type === 'application/epub+zip' || (file.name && file.name.endsWith('.epub'))) {
             return <EpubPreview file={file} onExtract={handleExtract} onCancel={handleCancel} />;
         }
 
@@ -128,8 +131,20 @@ export function FileImporter({ open, onOpenChange }: FileImporterProps) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-6">
+        <Dialog open={open} onOpenChange={(val) => {
+            // We NEVER allow Radix to automatically close the modal by clicking outside or pressing ESC,
+            // because on mobile browsers (like Brave), returning from the OS file picker fires an 
+            // artificial 'focus' event that tricks Radix into closing the modal before the file loads.
+            // The user MUST use the explicit 'Cancel' buttons to close.
+            if (!val) return;
+            onOpenChange(val);
+        }}>
+            <DialogContent 
+                className="max-w-4xl h-[80vh] flex flex-col p-6 overscroll-contain"
+                onInteractOutside={(e) => e.preventDefault()}
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onEscapeKeyDown={(e) => e.preventDefault()}
+            >
                 <DialogHeader>
                     <DialogTitle>Import Content from File</DialogTitle>
                     <DialogDescription>

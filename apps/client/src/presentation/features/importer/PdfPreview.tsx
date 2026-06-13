@@ -42,15 +42,8 @@ export function PdfPreview({ file, onExtract, onCancel }: PdfPreviewProps) {
 
     return (
         <div className="flex flex-col h-full gap-4">
-            <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">{file.name}</h3>
-                <div className="flex gap-2">
-                    <Button onClick={handleExtract} disabled={selectedPages.size === 0 || isExtracting}>
-                        {isExtracting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                        Import Selected ({selectedPages.size})
-                    </Button>
-                    <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-                </div>
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                <h3 className="text-lg font-semibold truncate" title={file.name}>{file.name}</h3>
             </div>
 
             <ScrollArea className="flex-1 border rounded-md p-4 bg-muted/20">
@@ -68,6 +61,14 @@ export function PdfPreview({ file, onExtract, onCancel }: PdfPreviewProps) {
                     />
                 </Document>
             </ScrollArea>
+
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+                <Button variant="ghost" className="w-full sm:w-auto" onClick={onCancel}>Cancel</Button>
+                <Button className="w-full sm:w-auto" onClick={handleExtract} disabled={selectedPages.size === 0 || isExtracting}>
+                    {isExtracting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+                    Import Selected ({selectedPages.size})
+                </Button>
+            </div>
         </div>
     );
 };
