@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { StatsModule } from './stats/stats.module';
 import { ReadingSessionsModule } from './reading-sessions/reading-sessions.module';
+import { UsersModule } from './users/users.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 import { ConfigModule } from '@nestjs/config';
@@ -24,6 +25,7 @@ import { ConfigModule } from '@nestjs/config';
     AuthModule,
     StatsModule,
     ReadingSessionsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],

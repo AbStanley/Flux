@@ -73,7 +73,8 @@ export function useSessionAutoSave() {
             const totalPages = Math.ceil(tokens.length / PAGE_SIZE);
             readingSessionsApi.update(sessionId, { currentPage, totalPages }).catch(err => {
                 // If session is not found, clear it from the store to stop further update attempts
-                if (err.message?.includes('404') || err.statusCode === 404) {
+                const msg = err.message?.toLowerCase() || '';
+                if (msg.includes('404') || msg.includes('not found')) {
                     useReaderStore.getState().setSession(null, null);
                 }
                 console.error('Failed to update session:', err);

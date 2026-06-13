@@ -197,10 +197,14 @@ import { WritingModePage } from './features/interactive-writing/WritingModePage'
 import { SrsReviewPage } from './features/srs-review/SrsReviewPage';
 import { ConversationPage } from './features/conversation/ConversationPage';
 import { StatsPage } from './features/stats/StatsPage';
+import { useSettingsSync } from './hooks/useSettingsSync';
 
 function AppContent() {
   const { isReading, hasText, exitReaderMode } = useFocusMode();
   const currentView = useViewStore(state => state.currentView);
+  
+  // Synchronize settings with backend
+  useSettingsSync();
 
   const [isScrolled, setIsScrolled] = useState(false);
 

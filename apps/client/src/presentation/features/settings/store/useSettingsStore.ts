@@ -80,6 +80,7 @@ export interface SettingsState {
     addCustomTheme: (theme: CustomTheme) => void;
     removeCustomTheme: (id: string) => void;
     updateCustomTheme: (theme: CustomTheme) => void;
+    setCustomThemes: (themes: CustomTheme[]) => void;
 }
 
 export const FONT_FAMILY_MAP: Record<ReaderFont, string> = {
@@ -129,6 +130,7 @@ export const useSettingsStore = create<SettingsState>()(
             updateCustomTheme: (theme) => set((state) => ({
                 customThemes: state.customThemes.map((t) => (t.id === theme.id ? theme : t)),
             })),
+            setCustomThemes: (themes) => set({ customThemes: themes }),
         }),
         {
             name: 'flux-reader-settings',
