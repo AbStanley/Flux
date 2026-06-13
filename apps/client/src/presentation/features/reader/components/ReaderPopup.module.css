@@ -20,7 +20,7 @@
     color: hsl(var(--popover-foreground));
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
-    font-size: 0.875rem;
+    font-size: 0.875em;
     white-space: pre-wrap;
     z-index: 100;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -54,7 +54,7 @@
     color: hsl(var(--link-foreground));
     padding: 0.25rem 0.75rem;
     border-radius: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.9em;
     white-space: pre-wrap;
     font-weight: 600;
     animation: fadeUpSimple 0.5s ease-out;

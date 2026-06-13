@@ -37,14 +37,14 @@ export function ReaderTokenPopup({
 
     if (collapsedText) {
         return (
-            <span className="flex items-center justify-center p-1 text-xs whitespace-nowrap"
+            <span className="flex items-center justify-center p-1 text-[0.8em] whitespace-nowrap"
                 onMouseDown={(e) => e.stopPropagation()}
                 onMouseUp={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
             >
                 {collapsedText}
-                <ChevronRight size={12} className="ml-0.5 inline-block opacity-70" strokeWidth={4} />
+                <ChevronRight size="0.85em" className="ml-0.5 inline-block opacity-70" strokeWidth={4} />
             </span>
         );
     }
@@ -72,7 +72,7 @@ export function ReaderTokenPopup({
                     onTouchStart={(e) => e.stopPropagation()}
                     title="Listen"
                 >
-                    <Volume2 size={14} strokeWidth={3} />
+                    <Volume2 size="1em" strokeWidth={3} />
                 </button>
 
                 {!isLoading && (
@@ -84,7 +84,7 @@ export function ReaderTokenPopup({
                         onTouchStart={(e) => e.stopPropagation()}
                         title="More Info"
                     >
-                        <Search size={14} strokeWidth={3} />
+                        <Search size="1em" strokeWidth={3} />
                     </button>
                 )}
 
@@ -96,7 +96,7 @@ export function ReaderTokenPopup({
                     onTouchStart={(e) => e.stopPropagation()}
                     title="Regenerate Translation"
                 >
-                    <RefreshCcw size={14} strokeWidth={3} className={isLoading ? "animate-spin" : ""} />
+                    <RefreshCcw size="1em" strokeWidth={3} className={isLoading ? "animate-spin" : ""} />
                 </button>
 
                 {!isLoading && (
@@ -109,7 +109,7 @@ export function ReaderTokenPopup({
                         title="Save Word"
                         disabled={isSaved}
                     >
-                        {isSaved ? <Check size={14} strokeWidth={3} className="text-green-400" /> : <Save size={14} strokeWidth={3} />}
+                        {isSaved ? <Check size="1em" strokeWidth={3} className="text-green-400" /> : <Save size="1em" strokeWidth={3} />}
                     </button>
                 )}
             </div>
