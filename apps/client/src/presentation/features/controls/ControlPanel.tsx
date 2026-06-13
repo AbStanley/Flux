@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/button";
 import { LanguageSelect } from "../../components/LanguageSelect";
 import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../../../core/constants/languages";
 import { LearningControls } from "./LearningControls";
-import { ArrowRightLeft, Loader2 } from "lucide-react";
+import { ArrowRightLeft, Loader2, BookOpen } from "lucide-react";
 import { useReaderStore } from '../reader/store/useReaderStore';
 import { useSettingsStore } from '../settings/store/useSettingsStore';
 
@@ -243,15 +243,20 @@ export function ControlPanel() {
                             <MotionButton
                                 onClick={handleStartReading}
                                 disabled={!text.trim() || isGenerating}
-                                whileHover={{ scale: 1.02, boxShadow: "0 0 15px hsl(var(--primary) / 0.25)" }}
-                                whileTap={{ scale: 0.98 }}
-
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
                                 className={cn(
-                                    "w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all",
-                                    "font-bold px-8"
+                                    "relative w-full sm:w-auto px-8 overflow-hidden group",
+                                    "bg-primary text-primary-foreground font-bold tracking-wide",
+                                    "shadow-[0_0_15px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.5)]",
+                                    "transition-all duration-300 border border-primary/20"
                                 )}
                             >
-                                ✨ Open Reading Mode
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                                <span className="relative flex items-center justify-center gap-2">
+                                    <BookOpen className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    <span>Open Reading Mode</span>
+                                </span>
                             </MotionButton>
                         </>
                     )}
