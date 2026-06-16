@@ -18,7 +18,7 @@ interface UseCentralLayoutProps {
 const getExpandedWidth = (items: TranslationItem[] | undefined, fallbackText: string) =>
     items && items.length > 0
         ? Math.min(600, items.reduce((sum, item) => sum + (item.translation?.length || 0), 0) * 7 + items.length * 100)
-        : Math.min(350, fallbackText.length * 7 + 120);
+        : Math.min(550, fallbackText.length * 7 + 120);
 
 export const useCentralLayout = ({
     tokens, groups, visualGroupStarts, groupStarts, currentPage, showTranslations,

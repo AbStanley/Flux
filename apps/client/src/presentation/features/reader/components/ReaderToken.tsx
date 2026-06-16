@@ -117,7 +117,7 @@ const ReaderTokenComponent = ({
                     data-index={globalIndex}
                     className={popupStyles.selectionPopupValid}
                     style={{ 
-                        maxWidth: (activeGroupItems && activeGroupItems.length > 1) ? 'min(600px, 85vw)' : '350px', 
+                        maxWidth: 'min(600px, 85vw)', 
                     }}
                     onMouseOver={(e) => { e.stopPropagation(); onHover(index, 'popup'); }}
                     onMouseEnter={() => setIsPopupHovered(true)}
@@ -148,7 +148,7 @@ const ReaderTokenComponent = ({
                     data-index={globalIndex}
                     className={isSelected ? popupStyles.hoverPopupBelow : popupStyles.hoverPopup}
                     style={{ 
-                        maxWidth: '350px',
+                        maxWidth: 'min(550px, 85vw)',
                     }}
                     onMouseOver={(e) => { e.stopPropagation(); onHover(index, 'token'); }}
                     onMouseEnter={() => setIsPopupHovered(true)}

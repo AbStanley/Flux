@@ -28,7 +28,7 @@
     pointer-events: auto !important;
     display: flex;
     align-items: center;
-    max-width: min(280px, 80vw);
+    max-width: min(550px, 85vw);
     width: max-content;
     text-align: left;
     box-sizing: border-box;
