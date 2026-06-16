@@ -108,6 +108,8 @@ export function ReaderMainPanel() {
         }
     }, [requiredAudioPage, currentPage, setCurrentPage]);
 
+    const clearSelection = useReaderStore(state => state.clearSelection);
+
     const {
         onTokenClick,
         onMoreInfoClick,
@@ -127,7 +129,8 @@ export function ReaderMainPanel() {
         sourceLang,
         selectionMode,
         fetchRichTranslation,
-        playSingle
+        playSingle,
+        clearSelection
     });
 
     // Progression: Give XP for reading (5 XP per page turn)

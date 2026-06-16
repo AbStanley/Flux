@@ -34,3 +34,14 @@
 .textAreaContainer::-webkit-scrollbar {
     display: none;
 }
+
+/* Dim inactive popups when one is hovered/active */
+.textArea:has([data-popup-active="true"]) [data-popup="true"] {
+    opacity: 0.15;
+}
+
+/* Ensure active popup remains fully opaque and sits on top */
+.textArea [data-popup="true"][data-popup-active="true"] {
+    opacity: 1 !important;
+    z-index: 1000 !important;
+}

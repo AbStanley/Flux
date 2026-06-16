@@ -25,8 +25,8 @@ async function bootstrap() {
 }
 
 function printBanner(url: string) {
-  const indigo = '\x1b[38;2;99;102;241m';
-  const violet = '\x1b[38;2;167;139;250m';
+  const emerald = '\x1b[38;2;16;185;129m';
+  const mint = '\x1b[38;2;52;211;153m';
   const dim = '\x1b[90m';
   const bold = '\x1b[1m';
   const reset = '\x1b[0m';
@@ -39,8 +39,8 @@ function printBanner(url: string) {
     '   ╚═╝     ╚══════╝ ╚═════╝ ╚═╝  ╚═╝',
   ];
   console.log('');
-  console.log(art.map((line) => `${bold}${indigo}${line}${reset}`).join('\n'));
-  console.log(`   ${violet}Backend${reset} ${dim}·${reset} NestJS API`);
+  console.log(art.map((line) => `${bold}${emerald}${line}${reset}`).join('\n'));
+  console.log(`   ${mint}Backend${reset} ${dim}·${reset} NestJS API`);
   console.log(`   ${dim}➜${reset} ${bold}${url}${reset}\n`);
 }
 bootstrap().catch((e) => {

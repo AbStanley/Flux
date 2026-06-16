@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import styles from '../ReaderView.module.css';
 import { ReaderToken } from './ReaderToken';
-import { HoverPosition } from '../../../../core/types';
+import { HoverPosition, SelectionMode } from '../../../../core/types';
 
 import { useTranslationStore } from '../store/useTranslationStore';
 import { useAudioStore } from '../store/useAudioStore';
@@ -9,7 +9,9 @@ import { useTranslation } from '../hooks/useTranslation';
 import { useHighlighting } from '../hooks/useHighlighting';
 import { useSettingsStore, FONT_FAMILY_MAP, FONT_SIZE_MAP } from '../../settings/store/useSettingsStore';
 
-import { SelectionMode } from '../../../../core/types';
+import { usePopupGroups } from '../hooks/usePopupGroups';
+import { useCentralLayout } from '../hooks/useCentralLayout';
+import { parseTitleAndSpaces } from '../utils/tokenUtils';
 
 interface ReaderTextContentProps {
     tokens: string[]; // Needed for highlighting logic
@@ -56,6 +58,17 @@ const ReaderTextContentComponent = ({
     // Actions
     const { handleHover, clearHover } = useTranslation();
 
+    const { popupGroups, suppressedPopupIndices } = usePopupGroups({
+        groups,
+        selectionTranslations: useTranslationStore(s => s.selectionTranslations),
+        visualGroupStarts,
+        groupStarts,
+        tokens,
+        currentPage,
+        PAGE_SIZE,
+        textAreaRef
+    });
+
     // Reader Settings
     const font = useSettingsStore(s => s.font);
     const fontSize = useSettingsStore(s => s.fontSize);
@@ -63,48 +76,22 @@ const ReaderTextContentComponent = ({
     // Highlighting Logic (Local to this component now)
     const highlightIndices = useHighlighting(tokens, groups);
 
-    // Pre-calculate title lines to avoid mutation during render
-    // We scan tokens once. If we encounter a header marker, we flag subsequent tokens as title until newline.
-    // However, map is linear, so we can't easily jump around without a prior pass or reduce.
-    // Or we keep `inTitle` but strictly as a derived value without reassignment error?
-    // The issue is `inTitle = true`.
-
-
-    // We need to iterate ALL tokens to build this map correctly if we want random access,
-    // but here we are mapping sequentially. The linter hates the side effect variable `inTitle`.
-    // But since we map linearly, we can just use a reducer or a plain loop to build the render list?
-    // Or just suppress the linter for this specific pattern which is performant and correct for linear scan?
-    // Suppressing is fastest and least risky for logic change.
-
-    // First pass: Identify title ranges
-    const headerParams = new Set<number>(); // Set of globalIndices that are titles
-    const skipSpaceIndices = new Set<number>();
-
-    let isTitlePass = false;
-    let skipSpacePass = false;
-
-    paginatedTokens.forEach((t, i) => {
-        const isHeader = /^#+$/.test(t.trim());
-        if (isHeader) {
-            isTitlePass = true;
-            skipSpacePass = true;
-        } else if (skipSpacePass) {
-            if (!t.trim()) {
-                skipSpaceIndices.add(i);
-                skipSpacePass = false;
-            } else {
-                skipSpacePass = false;
-            }
-        }
-
-        if (t.includes('\n')) {
-            isTitlePass = false;
-        }
-
-        if (isTitlePass && !isHeader) {
-            headerParams.add(i);
-        }
+    // Call centralized layout hook to position all popups deterministically
+    useCentralLayout({
+        tokens,
+        groups,
+        visualGroupStarts,
+        groupStarts,
+        currentPage,
+        showTranslations,
+        hoveredIndex,
+        hoverTranslation,
+        hoverSource,
+        textAreaRef,
+        popupGroups
     });
+
+    const { headerParams, skipSpaceIndices } = parseTitleAndSpaces(paginatedTokens);
 
     return (
         <div
@@ -138,50 +125,30 @@ const ReaderTextContentComponent = ({
 
                 const position = tokenPositions.get(globalIndex);
 
-                // Calculate hover position
-                let hoverPosition: HoverPosition | undefined;
-
-                // isHoveredSentence includes:
-                // 1. Rich Info highlights (highlightIndices)
-                // 2. The group containing the currently hovered word (handled inside useHighlighting)
-                // We rely solely on highlightIndices now as it already contains the group logic.
                 const isHoveredSentence = highlightIndices.has(globalIndex);
-
-                // If we are highlighting a full sentence group, we generally DON'T want the specific word 
-                // under the cursor to look different (darker) IF IT'S FROM THE POPUP.
-                // But if the user explicitly hovers the token ('token' source), we DO want the single word highlight to appear.
                 const isHoveredWord = (hoveredIndex === globalIndex) && hoverSource === 'token';
                 const isAudioHighlighted = currentWordIndex === globalIndex;
 
+                let hoverPosition: HoverPosition | undefined;
                 if (isHoveredSentence) {
-                    // We need to check neighbors based on the SAME logic
-                    const checkIsHovered = (idx: number) => highlightIndices.has(idx);
-
-                    const prev = checkIsHovered(globalIndex - 1);
-                    const next = checkIsHovered(globalIndex + 1);
-
+                    const prev = highlightIndices.has(globalIndex - 1);
+                    const next = highlightIndices.has(globalIndex + 1);
                     if (!prev && !next) hoverPosition = HoverPosition.Single;
-                    else if (!prev && next) hoverPosition = HoverPosition.Start;
-                    else if (prev && next) hoverPosition = HoverPosition.Middle;
-                    else if (prev && !next) hoverPosition = HoverPosition.End;
+                    else if (!prev) hoverPosition = HoverPosition.Start;
+                    else if (!next) hoverPosition = HoverPosition.End;
+                    else hoverPosition = HoverPosition.Middle;
                 }
 
-                // Correctly identify the end of the group for this specific token's group
-                let groupEndId: string | undefined;
                 let groupText: string | undefined;
-
                 if (groupTranslation) {
-                    // Find the group this token belongs to
-                    const group = groups.find(g => g.includes(globalIndex));
+                    const group = groups.find(g => g[0] === globalIndex);
                     if (group) {
-                        const lastIndex = group[group.length - 1];
-                        groupEndId = `token-${lastIndex}`;
-                        groupText = group
-                            .map(gIdx => tokens[gIdx])
-                            .filter(t => t !== undefined)
-                            .join('');
+                        groupText = group.map(gIdx => tokens[gIdx]).filter(Boolean).join('');
                     }
                 }
+
+                const popupGroupItems = popupGroups.get(globalIndex);
+                const isPopupSuppressed = suppressedPopupIndices.has(globalIndex);
 
                 return (
                     <ReaderToken
@@ -192,14 +159,12 @@ const ReaderTextContentComponent = ({
                         groupText={groupText} // Pass the full text
                         groupTranslation={groupTranslation}
                         position={position}
-                        groupEndId={groupEndId} // Passed for width calculation
                         isHovered={isHoveredSentence} // Now represents the full sentence hover
                         isHoveredWord={isHoveredWord} // Specific word
                         hoverPosition={hoverPosition}
                         hoverTranslation={isHoveredWord ? (hoverTranslation || undefined) : undefined}
                         isAudioHighlighted={isAudioHighlighted}
                         isTitle={isTitleToken}
-                        containerRef={textAreaRef}
                         onClick={handleTokenClick}
                         onHover={handleHover}
                         onClearHover={clearHover}
@@ -207,6 +172,8 @@ const ReaderTextContentComponent = ({
                         onPlay={onPlayClick}
                         onSeek={seek}
                         onRegenerate={onRegenerateClick}
+                        popupGroupItems={popupGroupItems}
+                        isPopupSuppressed={isPopupSuppressed}
                     />
                 );
             })}

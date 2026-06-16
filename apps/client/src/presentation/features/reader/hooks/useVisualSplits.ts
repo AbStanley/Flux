@@ -35,7 +35,13 @@ export const useVisualSplits = ({
                 for (let i = start; i <= end; i++) {
                     const el = document.getElementById(`token-${i}`);
                     if (el) {
-                        tokenElements.push({ index: i, el, top: el.getBoundingClientRect().top });
+                        if (!el.textContent?.trim()) {
+                            continue;
+                        }
+                        const rect = el.getBoundingClientRect();
+                        const margin = parseFloat(el.style.marginTop) || 0;
+                        const naturalTop = rect.top - margin;
+                        tokenElements.push({ index: i, el, top: naturalTop });
                     }
                 }
 
@@ -87,9 +93,7 @@ export const useVisualSplits = ({
         };
 
         // Initial run
-        // We use requestAnimationFrame to ensure the DOM has painted/laid out before measuring
-        // This is especially important for the first render
-        requestAnimationFrame(calculateVisualStarts);
+        calculateVisualStarts();
 
         // Use ResizeObserver to detect container size changes
         if (!textAreaRef.current) return;
@@ -99,7 +103,7 @@ export const useVisualSplits = ({
             // Debounce the calculation to improve performance during resize
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
-                requestAnimationFrame(calculateVisualStarts);
+                calculateVisualStarts();
             }, 50); // Small 50ms delay
         });
 

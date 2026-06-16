@@ -17,6 +17,7 @@ interface UseReaderInteractionsProps {
     selectionMode: SelectionMode;
     fetchRichTranslation: (text: string, context: string) => void;
     playSingle: (text: string) => void;
+    clearSelection: () => void;
 }
 
 // --- Helper Functions ---
@@ -189,7 +190,8 @@ export const useReaderInteractions = ({
     regenerateHover,
     selectionMode,
     fetchRichTranslation,
-    playSingle
+    playSingle,
+    clearSelection
 }: UseReaderInteractionsProps) => {
 
     const onTokenClick = useCallback((index: number, e: React.MouseEvent) => {
@@ -212,7 +214,10 @@ export const useReaderInteractions = ({
             translateIndices
         });
 
-        if (handledGroup) return;
+        if (handledGroup) {
+            clearSelection();
+            return;
+        }
 
         // 2. Try Merge Interaction (Word Mode Merge)
         const handledMerge = handleMergeInteraction({
@@ -225,12 +230,15 @@ export const useReaderInteractions = ({
             tokens
         });
 
-        if (handledMerge) return;
+        if (handledMerge) {
+            clearSelection();
+            return;
+        }
 
         // 3. Default Action
         handleTokenClickAction(index);
 
-    }, [currentPage, PAGE_SIZE, groups, selectionTranslations, handleTokenClickAction, removeTranslation, tokens, targetLang, translateIndices, selectionMode]);
+    }, [currentPage, PAGE_SIZE, groups, selectionTranslations, handleTokenClickAction, removeTranslation, tokens, targetLang, translateIndices, selectionMode, clearSelection]);
 
     const onMoreInfoClick = useCallback((index: number, forceSingle: boolean = false) => {
         const globalIndex = (currentPage - 1) * PAGE_SIZE + index;

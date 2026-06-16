@@ -158,8 +158,8 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         }
 
         // 2. FETCH & RESOLVE
-        // We re-read state in case it changed
-        const finalTranslations = new Map(get().selectionTranslations);
+        // We use the nextTranslations map directly to ensure we have the correct,
+        // up-to-date state without relying on synchronous store updates.
         const finalCache = new Map(get().translationCache);
 
 
@@ -171,7 +171,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             const end = group[group.length - 1];
             const key = `${start}-${end}`;
 
-            if (!finalTranslations.has(key) || finalTranslations.get(key) !== "...") {
+            if (!nextTranslations.has(key) || nextTranslations.get(key) !== "...") {
                 // If it's not in loading state, skip (unless we want to verify?)
                 return;
             }
@@ -185,6 +185,9 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
                 const cachedVal = finalCache.get(cacheKey)!;
                 set(state => {
                     const current = new Map(state.selectionTranslations);
+                    if (!current.has(key)) {
+                        return state;
+                    }
                     if (current.get(key) !== cachedVal) {
                         current.set(key, cachedVal);
                         return { selectionTranslations: current };
@@ -216,42 +219,48 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
                 const currentTranslations = new Map(state.selectionTranslations);
                 const currentCache = new Map(state.translationCache);
                 let stateChanged = false;
+                let cacheChanged = false;
 
                 if (result) {
                     currentCache.set(cacheKey, result);
+                    cacheChanged = true;
 
-                    // Race Condition / Superset Check against LATEST state
-                    let isSuperseded = false;
-                    for (const existingKey of currentTranslations.keys()) {
-                        const [exStart, exEnd] = existingKey.split('-').map(Number);
-                        if (existingKey !== key && exStart <= start && exEnd >= end) {
-                            isSuperseded = true;
-                            break;
+                    if (currentTranslations.has(key)) {
+                        // Race Condition / Superset Check against LATEST state
+                        let isSuperseded = false;
+                        for (const existingKey of currentTranslations.keys()) {
+                            const [exStart, exEnd] = existingKey.split('-').map(Number);
+                            if (existingKey !== key && exStart <= start && exEnd >= end) {
+                                isSuperseded = true;
+                                break;
+                            }
                         }
-                    }
 
-                    if (!isSuperseded) {
-                        currentTranslations.set(key, result);
-                        stateChanged = true;
-                    } else {
-                        // If superseded but still stuck in loading, remove it
-                        if (currentTranslations.get(key) === "...") {
-                            currentTranslations.delete(key);
+                        if (!isSuperseded) {
+                            currentTranslations.set(key, result);
                             stateChanged = true;
+                        } else {
+                            // If superseded but still stuck in loading, remove it
+                            if (currentTranslations.get(key) === "...") {
+                                currentTranslations.delete(key);
+                                stateChanged = true;
+                            }
                         }
                     }
                 } else {
                     // Failed to translate
-                    currentTranslations.delete(key);
-                    stateChanged = true;
+                    if (currentTranslations.has(key)) {
+                        currentTranslations.delete(key);
+                        stateChanged = true;
+                    }
                 }
 
-                if (!stateChanged) return state;
+                if (!stateChanged && !cacheChanged) return state;
 
-                return {
-                    selectionTranslations: currentTranslations,
-                    translationCache: currentCache
-                };
+                const nextState: Partial<TranslationSlice> = {};
+                if (stateChanged) nextState.selectionTranslations = currentTranslations;
+                if (cacheChanged) nextState.translationCache = currentCache;
+                return nextState;
             });
         }));
     },

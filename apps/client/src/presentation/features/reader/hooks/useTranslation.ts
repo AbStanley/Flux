@@ -19,13 +19,11 @@ export const useTranslation = (enableAutoFetch = false) => {
     const sourceLang = useReaderStore(state => state.sourceLang);
     const targetLang = useReaderStore(state => state.targetLang);
 
-
     // Translation Store State
     const selectionTranslations = useTranslationStore(state => state.selectionTranslations);
     // hoveredIndex and hoverTranslation removed to prevent top-level re-renders. 
     // Consumers like ReaderTextContent should select them directly.
 
-    // Rich Info State
     // Rich Info State
     const richDetailsTabs = useTranslationStore(state => state.richDetailsTabs);
     const activeTabId = useTranslationStore(state => state.activeTabId);
@@ -60,8 +58,9 @@ export const useTranslation = (enableAutoFetch = false) => {
 
         const timeoutId = setTimeout(async () => {
             if (selectedIndices.size > 0) {
-                await translateSelection(selectedIndices, tokens, sourceLang, targetLang, aiService);
+                const indices = new Set(selectedIndices);
                 clearSelection();
+                await translateSelection(indices, tokens, sourceLang, targetLang, aiService);
             }
         }, 500); // 500ms debounce for selection to allow grouping
 
@@ -190,6 +189,7 @@ export const useTranslation = (enableAutoFetch = false) => {
 
         // Exposed helper for manual triggering (e.g. click-to-merge)
         translateIndices: (indices: Set<number>, force: boolean = false) => {
+            clearSelection();
             translateSelection(indices, tokens, sourceLang, targetLang, aiService, force);
         },
         regenerateHover: (index: number) => {
