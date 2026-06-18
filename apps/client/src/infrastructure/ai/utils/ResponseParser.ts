@@ -47,6 +47,36 @@ export const extractJson = (response: string): unknown => {
 };
 
 export const normalizeRichTranslation = (data: Record<string, unknown>): RichTranslationResult => {
+    // Recursively delete properties with values like 'n/a', 'none', or empty strings
+    const cleanObject = (obj: any) => {
+        if (!obj || typeof obj !== 'object') return;
+        for (const key of Object.keys(obj)) {
+            const val = obj[key];
+            if (typeof val === 'string') {
+                const lower = val.trim().toLowerCase();
+                if (lower === 'n/a' || lower === 'none' || lower === '') {
+                    delete obj[key];
+                }
+            } else if (typeof val === 'object' && val !== null) {
+                cleanObject(val);
+            }
+        }
+    };
+    cleanObject(data);
+
+    // If isVerb is false, remove verb-only fields
+    if (data.isVerb === false) {
+        delete data.conjugations;
+        delete data.translationConjugated;
+        delete data._verbAnalysis;
+        if (data.grammar) {
+            const grammar = data.grammar as Record<string, unknown>;
+            delete grammar.infinitive;
+            delete grammar.sourceInfinitive;
+            delete grammar.tense;
+        }
+    }
+
     // Normalize type
     if (data.type) {
         const typeLower = (data.type as string).toLowerCase();

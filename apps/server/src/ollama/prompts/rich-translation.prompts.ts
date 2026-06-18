@@ -31,11 +31,19 @@ export const getRichTranslationPrompt = (
     }
   }
 
+  const isRussian =
+    targetLanguage.toLowerCase() === 'russian' ||
+    targetLanguage.toLowerCase() === 'ru';
+
+  const rule3 = isRussian
+    ? '\n3. Translate ONLY the tapped segment. Do NOT translate it using another word from the surrounding context that belongs to a different part of the sentence. If the segment has no direct equivalent in the target language (such as articles when translating to Russian which does not use articles), the "translation" should represent its primary grammatical role or a close equivalent (e.g., a demonstrative pronoun), and the "explanation" must describe its correct grammatical function.'
+    : '';
+
   return `You are a ${srcLang}→${targetLanguage} bilingual dictionary.
 
 CRITICAL ROLE & RULES:
 1. Ensure absolute parts-of-speech and category consistency. Never translate a verb form as a pronoun. If the input is a verb, the "translation" and "translationConjugated" fields MUST be verbs in the target language.
-2. Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural source words into singular target forms.
+2. Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural source words into singular target forms.${rule3}
 
 A learner is reading this ${srcLang} sentence:
 "${formattedContext}"

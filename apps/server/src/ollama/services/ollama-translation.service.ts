@@ -474,12 +474,39 @@ export class OllamaTranslationService {
    * fields the prompt may still have emitted.
    */
   private enforceVerbShape(rich: RichObj): void {
-    if (rich.isVerb === true) return;
-    delete rich.conjugations;
-    delete (rich as Record<string, unknown>).translationConjugated;
-    if (rich.grammar) {
-      delete rich.grammar.infinitive;
-      delete rich.grammar.tense;
+    if (rich.isVerb !== true) {
+      delete rich.conjugations;
+      delete (rich as Record<string, unknown>).translationConjugated;
+      delete (rich as Record<string, unknown>)._verbAnalysis;
+      if (rich.grammar) {
+        delete rich.grammar.infinitive;
+        delete rich.grammar.sourceInfinitive;
+        delete rich.grammar.tense;
+      }
+    }
+
+    // Recursively delete properties with values like 'n/a', 'none', or empty strings
+    const cleanObject = (obj: any) => {
+      if (!obj || typeof obj !== 'object') return;
+      for (const key of Object.keys(obj)) {
+        const val = obj[key];
+        if (typeof val === 'string') {
+          const lower = val.trim().toLowerCase();
+          if (lower === 'n/a' || lower === 'none' || lower === '') {
+            delete obj[key];
+          }
+        } else if (typeof val === 'object' && val !== null) {
+          cleanObject(val);
+        }
+      }
+    };
+    cleanObject(rich);
+
+    if (rich._verbAnalysis && Object.keys(rich._verbAnalysis).length === 0) {
+      delete rich._verbAnalysis;
+    }
+    if (rich.grammar && Object.keys(rich.grammar).length === 0) {
+      delete rich.grammar;
     }
   }
 

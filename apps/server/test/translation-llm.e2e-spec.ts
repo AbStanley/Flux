@@ -271,4 +271,24 @@ describe('LLM Translation E2E Ollama', () => {
       expect(srcInf).toBe('ir');
     });
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // Spanish → Russian
+  // ─────────────────────────────────────────────────────────────
+  describe('Spanish to Russian non-verbs', () => {
+    it('"las" article to isVerb is false, valid translation not n/a', async () => {
+      const r = await stream({
+        text: 'las',
+        context: 'María: Normalmente, a las 11 de la noche.',
+        sourceLanguage: 'Spanish',
+        targetLanguage: 'Russian',
+        model: 'translategemma:4b',
+      });
+      expect(r.isVerb).toBe(false);
+      expect(r.translation).toBeTruthy();
+      expect(r.translation?.toLowerCase()).not.toBe('n/a');
+      expect(r.translation?.toLowerCase()).not.toBe('none');
+      expect(r.translation?.toLowerCase()).not.toContain('ночью');
+    });
+  });
 });
