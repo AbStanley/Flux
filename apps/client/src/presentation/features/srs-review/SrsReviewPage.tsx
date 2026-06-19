@@ -2,11 +2,16 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSrsStore } from './store/useSrsStore';
 import { wordsApi } from '../../../infrastructure/api/words';
 import { Button } from '../../components/ui/button';
-import { RotateCcw, Brain, CheckCircle2, Flame, Clock, BookOpen, Volume2, VolumeX, RefreshCw } from 'lucide-react';
+import { RotateCcw, Brain, CheckCircle2, Flame, Clock, BookOpen, Volume2, VolumeX, RefreshCw, Settings } from 'lucide-react';
 import { getLanguageCode } from '../../features/word-manager/utils/languageUtils';
 import { useSettingsStore } from '../settings/store/useSettingsStore';
+import type { SrsRevealAudioMode } from '../settings/store/useSettingsStore';
 import confetti from 'canvas-confetti';
 import { motion, useAnimation } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../components/ui/dialog';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select';
+import { Switch } from '../../components/ui/switch';
+import { Label } from '../../components/ui/label';
 
 export function SrsReviewPage() {
     const {
@@ -20,7 +25,56 @@ export function SrsReviewPage() {
     const [audioEnabled, setAudioEnabled] = useState(true);
     const srsRevealAudioMode = useSettingsStore((s) => s.srsRevealAudioMode);
     const setSrsRevealAudioMode = useSettingsStore((s) => s.setSrsRevealAudioMode);
+    const srsVoices = useSettingsStore((s) => s.srsVoices);
+    const setSrsVoice = useSettingsStore((s) => s.setSrsVoice);
     const currentWord = words[currentIndex];
+
+    const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+    const [isAudioSettingsOpen, setIsAudioSettingsOpen] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) return;
+        const loadVoices = () => {
+            setAvailableVoices(window.speechSynthesis.getVoices());
+        };
+        loadVoices();
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        return () => {
+            if (window.speechSynthesis) {
+                window.speechSynthesis.onvoiceschanged = null;
+            }
+        };
+    }, []);
+
+    const sourceLangCode = currentWord ? getLanguageCode(currentWord.sourceLanguage) : 'en-US';
+    const targetLangCode = currentWord ? getLanguageCode(currentWord.targetLanguage) : 'en-US';
+
+    const getVoicesForLanguageCode = useCallback((langCode: string) => {
+        const shortCode = langCode.split('-')[0].toLowerCase();
+        return availableVoices.filter(voice => {
+            const voiceLang = voice.lang.toLowerCase().replace('_', '-');
+            return voiceLang === langCode.toLowerCase() || voiceLang.startsWith(shortCode + '-') || voiceLang === shortCode;
+        });
+    }, [availableVoices]);
+
+    const sourceVoices = currentWord ? getVoicesForLanguageCode(sourceLangCode) : [];
+    const targetVoices = currentWord ? getVoicesForLanguageCode(targetLangCode) : [];
+
+    const testVoice = useCallback((text: string, langCode: string) => {
+        if (!audioEnabled) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = langCode;
+        const preferredVoiceName = srsVoices[langCode];
+        if (preferredVoiceName && window.speechSynthesis) {
+            const voice = window.speechSynthesis.getVoices().find(v => v.name === preferredVoiceName);
+            if (voice) {
+                utterance.voice = voice;
+            }
+        }
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+    }, [audioEnabled, srsVoices]);
 
     const pronounce = useCallback((text: string, lang?: string, resetQueue = true) => {
         if (!audioEnabled) return;
@@ -28,10 +82,21 @@ export function SrsReviewPage() {
             window.speechSynthesis.cancel();
         }
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = getLanguageCode(lang);
+        const langCode = getLanguageCode(lang);
+        utterance.lang = langCode;
+
+        // Find preferred voice if it exists
+        const preferredVoiceName = srsVoices[langCode];
+        if (preferredVoiceName && window.speechSynthesis) {
+            const voice = window.speechSynthesis.getVoices().find(v => v.name === preferredVoiceName);
+            if (voice) {
+                utterance.voice = voice;
+            }
+        }
+
         utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
-    }, [audioEnabled]);
+    }, [audioEnabled, srsVoices]);
 
     const playRevealAudio = useCallback(() => {
         if (!audioEnabled || !currentWord || srsRevealAudioMode === 'none') return;
@@ -188,14 +253,6 @@ export function SrsReviewPage() {
     if (!word) return null;
 
     const progress = ((currentIndex) / words.length) * 100;
-    const revealAudioLabel =
-        srsRevealAudioMode === 'none'
-            ? 'silent'
-            : srsRevealAudioMode === 'source'
-                ? 'source'
-                : srsRevealAudioMode === 'target'
-                    ? 'target'
-                    : 'both';
 
     return (
         <div className="container py-8 max-w-2xl mx-auto space-y-6 animate-in fade-in">
@@ -241,21 +298,12 @@ export function SrsReviewPage() {
                 <div className="absolute top-3 right-3 flex gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button
                         variant="ghost"
-                        size="sm"
-                        className="h-8 rounded-full px-2 text-[11px]"
-                        onClick={() => {
-                            const nextMode = srsRevealAudioMode === 'none'
-                                ? 'source'
-                                : srsRevealAudioMode === 'source'
-                                    ? 'target'
-                                    : srsRevealAudioMode === 'target'
-                                        ? 'both'
-                                        : 'none';
-                            setSrsRevealAudioMode(nextMode);
-                        }}
-                        title="Reveal audio mode: silent/source/target/both"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => setIsAudioSettingsOpen(true)}
+                        title="Audio Settings"
                     >
-                        Reveal: {revealAudioLabel}
+                        <Settings className="h-4 w-4" />
                     </Button>
                     <Button
                         variant="ghost"
@@ -351,6 +399,122 @@ export function SrsReviewPage() {
                         onClick={() => submitReview(5)}
                     />
                 </div>
+            )}
+
+            {word && (
+                <Dialog open={isAudioSettingsOpen} onOpenChange={setIsAudioSettingsOpen}>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Audio Settings</DialogTitle>
+                            <DialogDescription>
+                                Configure the voices and audio options for your spaced repetition reviews.
+                            </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="grid gap-4 py-4">
+                            {/* Audio Enabled Switch */}
+                            <div className="flex items-center justify-between border-b pb-3">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="audio-toggle" className="text-sm font-medium">Enable Audio</Label>
+                                    <p className="text-xs text-muted-foreground">Play pronunciation automatically</p>
+                                </div>
+                                <Switch
+                                    id="audio-toggle"
+                                    checked={audioEnabled}
+                                    onCheckedChange={setAudioEnabled}
+                                />
+                            </div>
+
+                            {/* Reveal Mode Select */}
+                            <div className="flex flex-col gap-1.5">
+                                <Label htmlFor="reveal-mode" className="text-sm font-medium">Reveal Audio Mode</Label>
+                                <Select value={srsRevealAudioMode} onValueChange={(val) => setSrsRevealAudioMode(val as SrsRevealAudioMode)}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select mode" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-[60]">
+                                        <SelectItem value="none">Silent (Do not play on reveal)</SelectItem>
+                                        <SelectItem value="source">Play Front (Source Language)</SelectItem>
+                                        <SelectItem value="target">Play Back (Target Language)</SelectItem>
+                                        <SelectItem value="both">Play Both (Front then Back)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Source Language Voice Selector */}
+                            <div className="flex flex-col gap-1.5">
+                                <Label className="text-sm font-medium">
+                                    {word.sourceLanguage} Voice (Front)
+                                </Label>
+                                <div className="flex gap-2">
+                                    <Select
+                                        value={srsVoices[sourceLangCode] || 'default'}
+                                        onValueChange={(val) => setSrsVoice(sourceLangCode, val === 'default' ? '' : val)}
+                                    >
+                                        <SelectTrigger className="flex-1">
+                                            <SelectValue placeholder="System Default" />
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-[200px] overflow-y-auto z-[60]">
+                                            <SelectItem value="default">System Default</SelectItem>
+                                            {sourceVoices.map((voice) => (
+                                                <SelectItem key={voice.name} value={voice.name}>
+                                                    {voice.name} ({voice.lang})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        disabled={!audioEnabled}
+                                        onClick={() => testVoice(word.text, sourceLangCode)}
+                                        title="Test voice"
+                                    >
+                                        <Volume2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Target Language Voice Selector */}
+                            <div className="flex flex-col gap-1.5">
+                                <Label className="text-sm font-medium">
+                                    {word.targetLanguage} Voice (Back)
+                                </Label>
+                                <div className="flex gap-2">
+                                    <Select
+                                        value={srsVoices[targetLangCode] || 'default'}
+                                        onValueChange={(val) => setSrsVoice(targetLangCode, val === 'default' ? '' : val)}
+                                    >
+                                        <SelectTrigger className="flex-1">
+                                            <SelectValue placeholder="System Default" />
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-[200px] overflow-y-auto z-[60]">
+                                            <SelectItem value="default">System Default</SelectItem>
+                                            {targetVoices.map((voice) => (
+                                                <SelectItem key={voice.name} value={voice.name}>
+                                                    {voice.name} ({voice.lang})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        disabled={!audioEnabled}
+                                        onClick={() => testVoice(word.definition || 'No definition', targetLangCode)}
+                                        title="Test voice"
+                                    >
+                                        <Volume2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <DialogFooter>
+                            <Button onClick={() => setIsAudioSettingsOpen(false)}>Done</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
     );

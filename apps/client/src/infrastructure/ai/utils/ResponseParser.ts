@@ -48,7 +48,7 @@ export const extractJson = (response: string): unknown => {
 
 export const normalizeRichTranslation = (data: Record<string, unknown>): RichTranslationResult => {
     // Recursively delete properties with values like 'n/a', 'none', or empty strings
-    const cleanObject = (obj: any) => {
+    const cleanObject = (obj: Record<string, unknown>) => {
         if (!obj || typeof obj !== 'object') return;
         for (const key of Object.keys(obj)) {
             const val = obj[key];
@@ -58,7 +58,7 @@ export const normalizeRichTranslation = (data: Record<string, unknown>): RichTra
                     delete obj[key];
                 }
             } else if (typeof val === 'object' && val !== null) {
-                cleanObject(val);
+                cleanObject(val as Record<string, unknown>);
             }
         }
     };

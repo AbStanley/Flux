@@ -67,6 +67,7 @@ export interface SettingsState {
     speakOnHover: boolean;
     srsRevealAudioMode: SrsRevealAudioMode;
     aiHost: string;
+    srsVoices: Record<string, string>;
 
     setFont: (font: ReaderFont) => void;
     setFontSize: (size: FontSize) => void;
@@ -76,6 +77,7 @@ export interface SettingsState {
     setSpeakOnHover: (enabled: boolean) => void;
     setSrsRevealAudioMode: (mode: SrsRevealAudioMode) => void;
     setAiHost: (host: string) => void;
+    setSrsVoice: (langCode: string, voiceName: string) => void;
 
     addCustomTheme: (theme: CustomTheme) => void;
     removeCustomTheme: (id: string) => void;
@@ -114,6 +116,7 @@ export const useSettingsStore = create<SettingsState>()(
             speakOnHover: false,
             srsRevealAudioMode: 'target',
             aiHost: '',
+            srsVoices: {},
 
             setFont: (font) => set({ font }),
             setFontSize: (fontSize) => set({ fontSize }),
@@ -124,6 +127,10 @@ export const useSettingsStore = create<SettingsState>()(
             setSrsRevealAudioMode: (srsRevealAudioMode) =>
                 set({ srsRevealAudioMode }),
             setAiHost: (aiHost) => set({ aiHost }),
+            setSrsVoice: (langCode, voiceName) =>
+                set((state) => ({
+                    srsVoices: { ...state.srsVoices, [langCode]: voiceName },
+                })),
 
             addCustomTheme: (theme) => set((state) => ({ customThemes: [...state.customThemes, theme] })),
             removeCustomTheme: (id) => set((state) => ({ customThemes: state.customThemes.filter((t) => t.id !== id) })),
