@@ -31,10 +31,24 @@ export const getStoryPrompt = (params: {
   if (isLearningMode) {
     const topicPhrase = topic
       ? `about "${topic}"`
-      : 'about a random interesting topic';
-    return `Write ${contentDescription} ${topicPhrase} in ${sourceLang}. The ENTIRE output (title and body) MUST be written in ${sourceLang}. The vocabulary and grammar should be appropriate for a ${proficiencyLevel} proficiency level learner. Include a title starting with '## '. Output ONLY the title and the text. Do not include any introductory or concluding remarks. Do NOT include translations or English text.`;
+      : 'about an engaging, culturally authentic, or unique topic';
+    return `Write ${contentDescription} ${topicPhrase} in ${sourceLang}. 
+The ENTIRE output (title and body) MUST be written in ${sourceLang}. 
+The vocabulary, grammar structures, and complexity level MUST be appropriate for a ${proficiencyLevel} proficiency level language learner.
+
+CRITICAL INSTRUCTIONS FOR LEARNING CONTENT:
+1. Make the content versatile, engaging, and less generic (avoid repetitive patterns, clichés, or overly simple storylines). Use rich, natural language, diverse sentence structures, and contextualized vocabulary that aids acquisition.
+2. Include a title starting with '## ' (e.g., '## Title').
+3. Use Markdown formatting wisely and cleanly to improve structure:
+   - Use bold ('**') for dialogue tags, speaker names (e.g. '**Anna:**'), or key target words.
+   - Use italic ('*') for emphasis, inner thoughts, or narrator stage directions.
+   - Ensure all markdown tags are properly opened and closed.
+4. Output ONLY the title and the text of the story/monologue/conversation. Do NOT include any introductory or concluding remarks, translations, or English annotations.`;
   } else {
-    return `Write ${contentDescription} in ${sourceLang} about a robot learning to paint. Include a title starting with '## '. Output ONLY the title and the text. Do not include any introductory or concluding remarks. Do NOT include translations.`;
+    return `Write ${contentDescription} in ${sourceLang} about a robot learning to paint. 
+Include a title starting with '## '. 
+Use Markdown formatting ('**' for bold, '*' for italic) cleanly and wisely to highlight key actions, dialogue tags, or expressions.
+Output ONLY the title and the text. Do not include any introductory or concluding remarks or translations.`;
   }
 };
 
