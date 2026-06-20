@@ -26,10 +26,10 @@ interface ReaderTokenProps {
     onClick: (index: number, e: React.MouseEvent) => void;
     onHover: (index: number, source?: 'token' | 'popup') => void;
     onClearHover: () => void;
-    onMoreInfo: (index: number, forceSingle?: boolean) => void;
-    onPlay: (index: number, forceSingle?: boolean) => void;
+    onMoreInfo: (globalIndex: number, forceSingle?: boolean) => void;
+    onPlay: (globalIndex: number, forceSingle?: boolean) => void;
     onSeek: (index: number) => void;
-    onRegenerate: (index: number, forceSingle?: boolean) => void;
+    onRegenerate: (globalIndex: number, forceSingle?: boolean) => void;
     groupText?: string;
     popupGroupItems?: TranslationItem[];
     isPopupSuppressed?: boolean;
@@ -125,9 +125,9 @@ const ReaderTokenComponent = ({
                 >
                     <ReaderTokenPopup
                         items={activeGroupItems}
-                        onPlay={(idx) => onPlay(idx !== undefined ? idx : index, false)}
-                        onMoreInfo={(idx) => onMoreInfo(idx !== undefined ? idx : index, false)}
-                        onRegenerate={(idx) => onRegenerate(idx !== undefined ? idx : index, false)}
+                        onPlay={(idx) => onPlay(idx !== undefined ? idx : globalIndex, false)}
+                        onMoreInfo={(idx) => onMoreInfo(idx !== undefined ? idx : globalIndex, false)}
+                        onRegenerate={(idx) => onRegenerate(idx !== undefined ? idx : globalIndex, false)}
                         onSave={handleSaveItem}
                         isSaved={isSaved}
                         savedKeys={savedItemKeys}
@@ -156,9 +156,9 @@ const ReaderTokenComponent = ({
                 >
                     <ReaderTokenPopup
                         translation={sanitizedHoverTranslation}
-                        onPlay={() => onPlay(index, true)}
-                        onMoreInfo={() => onMoreInfo(index, true)}
-                        onRegenerate={() => onRegenerate(index, true)}
+                        onPlay={() => onPlay(globalIndex, true)}
+                        onMoreInfo={() => onMoreInfo(globalIndex, true)}
+                        onRegenerate={() => onRegenerate(globalIndex, true)}
                         onSave={() => handleSaveItem(undefined, sanitizedHoverTranslation, token)}
                         isSaved={isSaved}
                         collapsedText={getCollapsedText(token, sanitizedHoverTranslation, isPopupHovered)}

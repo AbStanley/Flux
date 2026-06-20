@@ -26,9 +26,9 @@ interface ReaderTextContentProps {
     tokenPositions: Map<number, string>;
     textAreaRef: React.RefObject<HTMLDivElement | null>;
     handleTokenClick: (index: number, e: React.MouseEvent) => void;
-    onMoreInfoClick: (index: number, forceSingle?: boolean) => void;
-    onPlayClick: (index: number, forceSingle?: boolean) => void;
-    onRegenerateClick: (index: number, forceSingle?: boolean) => void; // New Prop
+    onMoreInfoClick: (globalIndex: number, forceSingle?: boolean) => void;
+    onPlayClick: (globalIndex: number, forceSingle?: boolean) => void;
+    onRegenerateClick: (globalIndex: number, forceSingle?: boolean) => void;
     showTranslations: boolean;
 }
 
