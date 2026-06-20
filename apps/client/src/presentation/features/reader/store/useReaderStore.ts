@@ -4,9 +4,12 @@ import { SelectionMode } from '../../../../core/types';
 import { useTranslationStore } from './useTranslationStore';
 import { getSentenceRange, getParagraphRange } from '../../../../core/utils/text-utils';
 import { chromeStorage } from '@/lib/chrome-storage';
+import { tokenizeWithMarkdown } from '../utils/tokenUtils';
 
 interface ReaderState {
     tokens: string[];
+    boldIndices: number[];
+    italicIndices: number[];
     currentPage: number;
     selectedIndices: Set<number>;
 
@@ -49,6 +52,8 @@ export const useReaderStore = create<ReaderState>()(
     persist(
         (set, get) => ({
             tokens: [],
+            boldIndices: [],
+            italicIndices: [],
             currentPage: 1,
             selectedIndices: new Set(),
             text: "",
@@ -69,7 +74,7 @@ export const useReaderStore = create<ReaderState>()(
                     return;
                 }
 
-                const tokens = text.split(/(\s+)/);
+                const { tokens, boldIndices, italicIndices } = tokenizeWithMarkdown(text);
 
                 const { closeRichInfo, switchText } = useTranslationStore.getState();
                 closeRichInfo();
@@ -80,6 +85,8 @@ export const useReaderStore = create<ReaderState>()(
                     sourceLang,
                     targetLang,
                     tokens,
+                    boldIndices,
+                    italicIndices,
                     currentPage: 1,
                     selectedIndices: new Set(),
                 });
@@ -90,10 +97,12 @@ export const useReaderStore = create<ReaderState>()(
                 closeRichInfo();
                 switchText(text);
 
-                const tokens = text.split(/(\s+)/);
+                const { tokens, boldIndices, italicIndices } = tokenizeWithMarkdown(text);
                 set({
                     text,
                     tokens,
+                    boldIndices,
+                    italicIndices,
                     currentPage: 1,
                     selectedIndices: new Set(),
                     sessionId: null,
@@ -180,8 +189,8 @@ export const useReaderStore = create<ReaderState>()(
                 const { closeRichInfo, switchText } = useTranslationStore.getState();
                 closeRichInfo();
                 switchText(text);
-                const tokens = text.split(/(\s+)/);
-                set({ text, tokens, currentPage: 1, selectedIndices: new Set() });
+                const { tokens, boldIndices, italicIndices } = tokenizeWithMarkdown(text);
+                set({ text, tokens, boldIndices, italicIndices, currentPage: 1, selectedIndices: new Set() });
             },
             appendText: (newText) => {
                 const currentText = get().text;
@@ -206,6 +215,8 @@ export const useReaderStore = create<ReaderState>()(
                 sourceLang: state.sourceLang,
                 targetLang: state.targetLang,
                 tokens: state.tokens,
+                boldIndices: state.boldIndices,
+                italicIndices: state.italicIndices,
                 currentPage: state.currentPage,
                 sessionId: state.sessionId,
                 sessionTitle: state.sessionTitle,

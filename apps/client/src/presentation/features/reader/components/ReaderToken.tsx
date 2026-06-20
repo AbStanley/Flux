@@ -33,13 +33,15 @@ interface ReaderTokenProps {
     groupText?: string;
     popupGroupItems?: TranslationItem[];
     isPopupSuppressed?: boolean;
+    isBold?: boolean;
+    isItalic?: boolean;
 }
 
 const ReaderTokenComponent = ({
     token, index, globalIndex, groupTranslation, position, isHovered, isHoveredWord,
     hoverPosition, hoverTranslation, isAudioHighlighted, isTitle, onClick, onHover,
     onClearHover, onMoreInfo, onPlay, onSeek, onRegenerate, 
-    groupText, popupGroupItems, isPopupSuppressed
+    groupText, popupGroupItems, isPopupSuppressed, isBold, isItalic
 }: ReaderTokenProps) => {
     const sanitizedGroupTranslation = cleanTranslationObj(groupTranslation);
     const sanitizedHoverTranslation = cleanTranslationObj(hoverTranslation);
@@ -100,7 +102,9 @@ const ReaderTokenComponent = ({
                 ${(isHoveredWord && !isSelected) ? tokenStyles.hoveredWord : ''}
                 ${(isHoveredWord && isSelected) ? tokenStyles.hoveredSelected : ''} 
                 ${(isHoveredWord || isPopupHovered) ? tokenStyles.zIndexTop : ''}
-                ${isTitle ? 'text-xl font-bold text-foreground inline-block my-2' : ''}`}
+                ${isTitle ? 'text-xl font-bold text-foreground inline-block my-2' : ''}
+                ${isBold ? 'font-bold' : ''}
+                ${isItalic ? 'italic' : ''}`}
             onClick={(e) => { if (!isWhitespace) { onClearHover(); onClick(index, e); } }}
             onMouseOver={() => { if (!isWhitespace) onHover(index, 'token'); }}
             onMouseLeave={onClearHover}

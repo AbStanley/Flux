@@ -68,3 +68,60 @@ export const parseTitleAndSpaces = (paginatedTokens: string[]): TitleAndSpacesRe
 
     return { headerParams, skipSpaceIndices };
 };
+
+export interface TokenizeMarkdownResult {
+    tokens: string[];
+    boldIndices: number[];
+    italicIndices: number[];
+}
+
+export const tokenizeWithMarkdown = (text: string): TokenizeMarkdownResult => {
+    const rawTokens = text.split(/(\s+)/);
+    const tokens: string[] = [];
+    const boldIndices: number[] = [];
+    const italicIndices: number[] = [];
+
+    let isBold = false;
+    let isItalic = false;
+
+    rawTokens.forEach((rawToken) => {
+        const tokenText = rawToken;
+        let tokenHasBold = false;
+        let tokenHasItalic = false;
+        let processedText = "";
+        let i = 0;
+
+        while (i < tokenText.length) {
+            if (tokenText.startsWith("**", i)) {
+                isBold = !isBold;
+                i += 2;
+            } else if (tokenText.startsWith("*", i)) {
+                isItalic = !isItalic;
+                i += 1;
+            } else {
+                if (isBold) tokenHasBold = true;
+                if (isItalic) tokenHasItalic = true;
+                processedText += tokenText[i];
+                i += 1;
+            }
+        }
+
+        // If it's a pure whitespace token, inherit the current state
+        if (!processedText.trim()) {
+            tokenHasBold = isBold;
+            tokenHasItalic = isItalic;
+        }
+
+        const tokenIndex = tokens.length;
+        tokens.push(processedText);
+
+        if (tokenHasBold) {
+            boldIndices.push(tokenIndex);
+        }
+        if (tokenHasItalic) {
+            italicIndices.push(tokenIndex);
+        }
+    });
+
+    return { tokens, boldIndices, italicIndices };
+};

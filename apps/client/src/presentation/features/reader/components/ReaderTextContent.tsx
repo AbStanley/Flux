@@ -1,9 +1,10 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import styles from '../ReaderView.module.css';
 import { ReaderToken } from './ReaderToken';
 import { HoverPosition, SelectionMode } from '../../../../core/types';
 
 import { useTranslationStore } from '../store/useTranslationStore';
+import { useReaderStore } from '../store/useReaderStore';
 import { useAudioStore } from '../store/useAudioStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { useHighlighting } from '../hooks/useHighlighting';
@@ -49,6 +50,11 @@ const ReaderTextContentComponent = ({
     showTranslations
 }: ReaderTextContentProps) => {
     // State Consumption
+    const boldIndices = useReaderStore(s => s.boldIndices);
+    const italicIndices = useReaderStore(s => s.italicIndices);
+    const boldSet = useMemo(() => new Set(boldIndices || []), [boldIndices]);
+    const italicSet = useMemo(() => new Set(italicIndices || []), [italicIndices]);
+
     const hoveredIndex = useTranslationStore(s => s.hoveredIndex);
     const hoverSource = useTranslationStore(s => s.hoverSource);
     const hoverTranslation = useTranslationStore(s => s.hoverTranslation);
@@ -150,6 +156,9 @@ const ReaderTextContentComponent = ({
                 const popupGroupItems = popupGroups.get(globalIndex);
                 const isPopupSuppressed = suppressedPopupIndices.has(globalIndex);
 
+                const isBold = boldSet.has(globalIndex);
+                const isItalic = italicSet.has(globalIndex);
+
                 return (
                     <ReaderToken
                         key={index}
@@ -174,6 +183,8 @@ const ReaderTextContentComponent = ({
                         onRegenerate={onRegenerateClick}
                         popupGroupItems={popupGroupItems}
                         isPopupSuppressed={isPopupSuppressed}
+                        isBold={isBold}
+                        isItalic={isItalic}
                     />
                 );
             })}

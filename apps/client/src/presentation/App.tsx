@@ -135,6 +135,22 @@ function App() {
     }
   }, [setText, setIsReading]);
 
+  // Auto-migrate cached sessions to tokenize Markdown bold/italic on startup
+  useEffect(() => {
+    const store = useReaderStore.getState();
+    if (
+      store.text &&
+      (!store.boldIndices || store.boldIndices.length === 0) &&
+      (!store.italicIndices || store.italicIndices.length === 0) &&
+      (store.text.includes('**') || store.text.includes('*'))
+    ) {
+      import('./features/reader/utils/tokenUtils').then(({ tokenizeWithMarkdown }) => {
+        const { tokens, boldIndices, italicIndices } = tokenizeWithMarkdown(store.text);
+        useReaderStore.setState({ tokens, boldIndices, italicIndices });
+      });
+    }
+  }, []);
+
   // Use a delayed state for the layout classes to prevent "jumping" before transitions finish
   const [visualReadingMode, setVisualReadingMode] = useState(isReading);
   
