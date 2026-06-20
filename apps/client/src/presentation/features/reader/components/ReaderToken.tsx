@@ -88,7 +88,17 @@ const ReaderTokenComponent = ({
     }] : undefined);
 
     if (isHeaderMarker) return null;
-    if (isWhitespace && token.includes('\n')) return <br />;
+    
+    const newlineCount = (token.match(/\n/g) || []).length;
+    if (isWhitespace && newlineCount > 0) {
+        return (
+            <>
+                {Array.from({ length: newlineCount }).map((_, i) => (
+                    <br key={i} />
+                ))}
+            </>
+        );
+    }
 
     return (
         <span
