@@ -9,38 +9,8 @@ export const getTranslatePrompt = (
 
   const isBlock = text.length > 100 || text.includes('\n');
 
-  let formattedContext = context || 'None';
-  if (!isBlock) {
-    const isSingleWord = !text.trim().includes(' ');
-    const shouldIncludeContext = context && isSingleWord;
-
-    if (shouldIncludeContext && text.trim().length <= 2) {
-      try {
-        const escapedText = text.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(
-          `(?<=^|[^\\p{L}\\p{N}_])${escapedText}(?=[^\\p{L}\\p{N}_]|$)`,
-          'u',
-        );
-        formattedContext = context.replace(regex, `'${text.trim()}'`);
-      } catch {
-        // Fallback to raw context if regex fails
-      }
-    }
-
-    return `[CONTEXT] ${shouldIncludeContext ? formattedContext : 'None'}
-[TO_TRANSLATE] ${text}
-[TARGET_LANGUAGE] ${targetLanguage}
-[RULES]
-1. Translate strictly ONLY the text: "${text}" into ${targetLanguage}.
-2. Return JSON ONLY.
-[JSON_FORMAT]
-{
-  "detectedLanguage": "${isAuto ? 'string' : sourceLanguage}",
-  "translation": "string"
-}`;
-  }
-
-  return `Role: Professional Translator.
+  if (isBlock) {
+    return `Role: Professional Translator.
 Task: Translate the following text ${fromLang} into ${targetLanguage}.
 
 Instructions:
@@ -51,6 +21,60 @@ Instructions:
 
 Text to Translate:
 "${text}"`;
+  }
+
+  const shouldIncludeContext = !!context && context.trim().length > 0;
+  const hasQuestionMark =
+    shouldIncludeContext && (context.includes('?') || context.includes('¿'));
+
+  if (shouldIncludeContext && hasQuestionMark) {
+    const fromLangSuffix = isAuto ? '' : ` (${sourceLanguage})`;
+    return `Translate the following segment from the context${fromLangSuffix}.
+Context: "${context.trim()}"
+Segment to translate: "${text.trim()}"
+Target Language: ${targetLanguage}
+
+[RULES]
+1. Translate ONLY the segment "${text.trim()}" to the ${targetLanguage} equivalent.
+2. The translation must strictly represent ONLY the words in the segment "${text.trim()}". Do NOT translate or include any adjacent words or question words from the surrounding context (such as helper verbs, pronouns, adjectives, adverbs, or question words that are outside the segment).
+3. If the segment is not a complete sentence, the translation must be a fragment, not a complete sentence or question.
+4. Return JSON ONLY.
+[JSON_FORMAT]
+{
+  "detectedLanguage": "${isAuto || !sourceLanguage ? 'string' : sourceLanguage.toLowerCase()}",
+  "translation": "string"
+}`;
+  }
+
+  let formattedContext = context || 'None';
+  if (shouldIncludeContext && text.trim().length <= 2) {
+    try {
+      const escapedText = text.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(
+        `(?<=^|[^\\p{L}\\p{N}_])${escapedText}(?=[^\\p{L}\\p{N}_]|$)`,
+        'u',
+      );
+      formattedContext = context.replace(regex, `'${text.trim()}'`);
+    } catch {
+      // Fallback to raw context if regex fails
+    }
+  }
+
+  const langPhrase = isAuto ? 'phrase' : `${sourceLanguage} phrase`;
+  const instruction = shouldIncludeContext
+    ? `From the ${langPhrase}: "${formattedContext}", translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent, do not introduce, simply respond precisely what I want to know.`
+    : `Translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent, do not introduce, simply respond precisely what I want to know.`;
+
+  return `${instruction}
+
+[RULES]
+1. Translate strictly ONLY the text: "${text.trim()}" into ${targetLanguage}.
+2. Return JSON ONLY.
+[JSON_FORMAT]
+{
+  "detectedLanguage": "${isAuto || !sourceLanguage ? 'string' : sourceLanguage.toLowerCase()}",
+  "translation": "string"
+}`;
 };
 
 export const getSingleTensePrompt = (

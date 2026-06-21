@@ -52,7 +52,7 @@ describe('EpubPreview', () => {
     });
 
     it('calls extract when chapters selected and import clicked', async () => {
-        mockExtract.mockResolvedValue('Extracted EPUB Text');
+        mockExtract.mockResolvedValue('### Chapter 1\nExtracted EPUB Text');
         render(<EpubPreview file={file} onExtract={mockOnExtract} onCancel={mockOnCancel} />);
 
         // Select a chapter
@@ -65,7 +65,11 @@ describe('EpubPreview', () => {
 
         await waitFor(() => {
             expect(mockExtract).toHaveBeenCalled();
-            expect(mockOnExtract).toHaveBeenCalledWith('Extracted EPUB Text');
+            expect(mockOnExtract).toHaveBeenCalledWith(
+                '### Chapter 1\n\nExtracted EPUB Text\n\n',
+                mockChapters,
+                '### Chapter 1\nExtracted EPUB Text'
+            );
         });
     });
 });

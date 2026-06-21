@@ -17,16 +17,15 @@ vi.mock('../../infrastructure/ai/ServerAIService', () => {
 import { ServiceProvider } from '../../presentation/contexts/ServiceContext';
 
 const mockSetAiModel = vi.fn();
-const mockStoreState = {
-    aiModel: null,
-    aiHost: '',
-    setAiModel: mockSetAiModel
+const mockSettingsStoreState = {
+    llmModel: null,
+    setLlmModel: mockSetAiModel
 };
 
-vi.mock('../../presentation/features/reader/store/useReaderStore', () => ({
-    useReaderStore: (selector?: (state: any) => any) => {
-        if (selector) return selector(mockStoreState);
-        return mockStoreState;
+vi.mock('../../presentation/features/settings/store/useSettingsStore', () => ({
+    useSettingsStore: (selector?: (state: any) => any) => {
+        if (selector) return selector(mockSettingsStoreState);
+        return mockSettingsStoreState;
     }
 }));
 
@@ -73,7 +72,14 @@ describe('useAIHandler', () => {
 
         expect(result.current.result).toBe('Translated Text');
         expect(result.current.error).toBe(null);
-        expect(mockService.translateText).toHaveBeenCalledWith('Source Text', 'Spanish', undefined, 'Auto');
+        expect(mockService.translateText).toHaveBeenCalledWith(
+            'Source Text',
+            'Spanish',
+            undefined,
+            'Auto',
+            expect.any(AbortSignal),
+            expect.any(String)
+        );
         expect(mockService.setModel).toHaveBeenCalledWith('llama3');
     });
 
@@ -91,7 +97,13 @@ describe('useAIHandler', () => {
         });
 
         expect(result.current.result).toBe('Explanation Text');
-        expect(mockService.explainText).toHaveBeenCalledWith('Source', 'English', undefined, 'Auto');
+        expect(mockService.explainText).toHaveBeenCalledWith(
+            'Source',
+            'English',
+            undefined,
+            'Auto',
+            expect.any(AbortSignal)
+        );
     });
 
     it('handles error state', async () => {
@@ -137,7 +149,14 @@ describe('useAIHandler', () => {
         });
 
         expect(result.current.result).toBe('Hola Mundo');
-        expect(aiResult).toEqual({ detectedLang: 'Spanish' });
-        expect(mockService.translateText).toHaveBeenCalledWith('Hello World', 'Spanish', undefined, 'Auto');
+        expect(aiResult).toEqual({ detectedLang: 'Spanish', response: 'Hola Mundo' });
+        expect(mockService.translateText).toHaveBeenCalledWith(
+            'Hello World',
+            'Spanish',
+            undefined,
+            'Auto',
+            expect.any(AbortSignal),
+            expect.any(String)
+        );
     });
 });

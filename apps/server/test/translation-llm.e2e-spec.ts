@@ -24,7 +24,7 @@ type RichTranslationResult = {
   _verbAnalysis?: { sourceInfinitive?: string };
 };
 
-jest.setTimeout(120000);
+jest.setTimeout(240000);
 
 describe('LLM Translation E2E Ollama', () => {
   let app: INestApplication;

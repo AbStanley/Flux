@@ -15,7 +15,7 @@ describe('DatabaseContentStrategy', () => {
         (wordsApi.getAll as any).mockImplementation(async (params: any) => {
             if (params.type === 'phrase') {
                 return {
-                    items: [{ id: 'p1', text: 'A phrase', type: 'phrase', definition: 'Une phrase longue', sourceLanguage: 'en', targetLanguage: 'fr' }],
+                    items: [{ id: 'p1', text: 'A longer phrase', type: 'phrase', definition: 'Une phrase longue', sourceLanguage: 'en', targetLanguage: 'fr' }],
                     total: 1
                 };
             }
@@ -88,7 +88,7 @@ describe('DatabaseContentStrategy', () => {
 
         const phraseItem = scrambleItems.find(i => i.type === 'phrase');
         expect(phraseItem).toBeDefined();
-        expect(phraseItem?.question).toBe('A phrase');
+        expect(phraseItem?.question).toBe('Une phrase longue');
 
         // 2. Verify Dictation DOES NOT fetch phrases
         (wordsApi.getAll as any).mockClear();

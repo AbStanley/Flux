@@ -150,6 +150,8 @@ export function FluxHeader({
                 <button
                     onClick={(e) => { e.stopPropagation(); onClose(); }}
                     onMouseDown={(e) => e.stopPropagation()}
+                    aria-label="Close"
+                    title="Close"
                     style={{
                         background: theme.borderLight,
                         border: `1px solid ${theme.borderLight}`,

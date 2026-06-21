@@ -27,7 +27,7 @@ describe('AnkiContentStrategy', () => {
 
     it('should throw if no collectionId (deck name) provided', async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await expect(strategy.fetchItems({} as unknown as any)).rejects.toThrow("Deck name");
+        await expect(strategy.fetchItems({} as unknown as any)).rejects.toThrow(/deck name/i);
     });
 
     it('should return empty list if no cards found', async () => {

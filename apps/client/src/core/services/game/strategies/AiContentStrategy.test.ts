@@ -6,7 +6,7 @@ import { serverAIService } from '@/infrastructure/ai/ServerAIService';
 vi.mock('@/infrastructure/ai/ServerAIService', () => ({
     serverAIService: {
         checkHealth: vi.fn(),
-        generateGameContent: vi.fn(),
+        generateGameContentStream: vi.fn(),
         setModel: vi.fn(),
     }
 }));
@@ -33,7 +33,11 @@ describe('AiContentStrategy', () => {
         const mockResponse = [
             { question: "Casa", answer: "House", context: "Mi casa es grande", type: "word" as const }
         ];
-        vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContentStream).mockImplementation(async function* () {
+            for (const item of mockResponse) {
+                yield item;
+            }
+        });
 
         const items = await strategy.fetchItems({
             aiTopic: 'Real Estate',
@@ -50,7 +54,11 @@ describe('AiContentStrategy', () => {
         const mockResponse = [
             { context: "Once upon a time", question: "time", answer: "tiempo", type: "phrase" as const }
         ];
-        vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContentStream).mockImplementation(async function* () {
+            for (const item of mockResponse) {
+                yield item;
+            }
+        });
 
         const items = await strategy.fetchItems({
             aiTopic: 'Magic',
@@ -66,7 +74,11 @@ describe('AiContentStrategy', () => {
         const mockResponse = [
             { question: "The dog runs.", answer: "El perro corre.", context: "Simple sentence", type: "phrase" as const }
         ];
-        vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContentStream).mockImplementation(async function* () {
+            for (const item of mockResponse) {
+                yield item;
+            }
+        });
 
         const items = await strategy.fetchItems({
             aiTopic: 'Animals',
@@ -78,18 +90,22 @@ describe('AiContentStrategy', () => {
         expect(items).toHaveLength(1);
         expect(items[0].answer).toBe('El perro corre.');
         // Verify language metadata is swapped (Source=English, Target=Spanish)
-        expect(items[0].lang?.source).toBe('en-US');
-        expect(items[0].lang?.target).toBe('es-ES');
+        expect(items[0].lang?.source).toBe('es-ES');
+        expect(items[0].lang?.target).toBe('en-US');
 
         // Verify call args to ensure correct prompt/model passed
-        expect(serverAIService.generateGameContent).toHaveBeenCalledWith(
+        expect(serverAIService.generateGameContentStream).toHaveBeenCalledWith(
             expect.objectContaining({ mode: 'scramble', topic: 'Animals' })
         );
     });
 
     it('should convert language codes to full names in prompt', async () => {
         const mockResponse = [{ question: "Hello", answer: "Hola", type: "word" as const }];
-        serverAIService.generateGameContent = vi.fn().mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContentStream).mockImplementation(async function* () {
+            for (const item of mockResponse) {
+                yield item;
+            }
+        });
 
         await strategy.fetchItems({
             aiTopic: 'Test',
@@ -97,14 +113,18 @@ describe('AiContentStrategy', () => {
         });
 
         // Backend handles prompt, we just check args passed to service
-        expect(serverAIService.generateGameContent).toHaveBeenCalledWith(
+        expect(serverAIService.generateGameContentStream).toHaveBeenCalledWith(
             expect.objectContaining({ sourceLanguage: 'English', targetLanguage: 'Spanish' })
         );
     });
 
     it('should handle AI response with extra text', async () => {
         const mockResponse = [{ question: "Gato", answer: "Cat", type: "word" as const }];
-        vi.mocked(serverAIService.generateGameContent).mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContentStream).mockImplementation(async function* () {
+            for (const item of mockResponse) {
+                yield item;
+            }
+        });
 
         const items = await strategy.fetchItems({ aiTopic: 'Pets' });
         expect(items).toHaveLength(1);
@@ -113,20 +133,26 @@ describe('AiContentStrategy', () => {
 
     it('should throw error if all items are filtered (duplicates)', async () => {
         const mockResponse = [
-            { question: "Same", answer: "Same", type: "word" },
-            { question: "Test", answer: "test", type: "word" }
+            { question: "Same", answer: "Same", type: "word" as const },
+            { question: "Test", answer: "test", type: "word" as const }
         ];
 
-        serverAIService.generateGameContent = vi.fn().mockResolvedValue(mockResponse);
+        vi.mocked(serverAIService.generateGameContentStream).mockImplementation(async function* () {
+            for (const item of mockResponse) {
+                yield item;
+            }
+        });
 
         await expect(strategy.fetchItems({
             aiTopic: 'Fail',
             language: { source: 'English', target: 'Spanish' }
-        })).rejects.toThrow(/AI generated 2 items but all were invalid/);
+        })).rejects.toThrow(/AI failed to generate valid items/);
     });
 
     it('should throw error on invalid JSON', async () => {
-        vi.mocked(serverAIService.generateGameContent).mockResolvedValue([]);
+        vi.mocked(serverAIService.generateGameContentStream).mockImplementation(async function* () {
+            throw new Error("No valid content generated");
+        });
         await expect(strategy.fetchItems({ aiTopic: 'Test' })).rejects.toThrow("No valid content generated");
     });
 });

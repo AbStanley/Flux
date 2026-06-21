@@ -4,6 +4,30 @@ import { FluxContentApp } from './FluxContentApp';
 import * as UseAIHandler from './hooks/useAIHandler';
 import * as UseTextSelection from './hooks/useTextSelection';
 
+import { ServiceProvider } from '../presentation/contexts/ServiceContext';
+
+vi.mock('../infrastructure/ai/ServerAIService', () => {
+    const ServerAIServiceMock = vi.fn();
+    ServerAIServiceMock.prototype.getAvailableModels = vi.fn().mockResolvedValue(['llama3']);
+    ServerAIServiceMock.prototype.setModel = vi.fn();
+    ServerAIServiceMock.prototype.getModel = vi.fn().mockReturnValue('llama3');
+    ServerAIServiceMock.prototype.explainText = vi.fn();
+    ServerAIServiceMock.prototype.translateText = vi.fn();
+    ServerAIServiceMock.prototype.checkHealth = vi.fn();
+    return { ServerAIService: ServerAIServiceMock };
+});
+
+vi.mock('@/infrastructure/ai/ServerAIService', () => {
+    const ServerAIServiceMock = vi.fn();
+    ServerAIServiceMock.prototype.getAvailableModels = vi.fn().mockResolvedValue(['llama3']);
+    ServerAIServiceMock.prototype.setModel = vi.fn();
+    ServerAIServiceMock.prototype.getModel = vi.fn().mockReturnValue('llama3');
+    ServerAIServiceMock.prototype.explainText = vi.fn();
+    ServerAIServiceMock.prototype.translateText = vi.fn();
+    ServerAIServiceMock.prototype.checkHealth = vi.fn();
+    return { ServerAIService: ServerAIServiceMock };
+});
+
 // Mock child components to simplify testing
 // Mock child components to simplify testing
 vi.mock('./components/FluxPopup', () => ({
@@ -44,7 +68,7 @@ describe('FluxContentApp', () => {
     });
 
     beforeEach(() => {
-        vi.resetAllMocks();
+        vi.clearAllMocks();
 
         // Setup useAIHandler mock
         vi.spyOn(UseAIHandler, 'useAIHandler').mockReturnValue(useAIHandlerMock);
@@ -58,12 +82,12 @@ describe('FluxContentApp', () => {
     });
 
     it('renders nothing initially (HIDDEN state)', () => {
-        render(<FluxContentApp />);
+        render(<ServiceProvider><FluxContentApp /></ServiceProvider>);
         expect(screen.queryByTestId('flux-popup')).toBeNull();
     });
 
     it('shows popup when selection is detected', async () => {
-        render(<FluxContentApp />);
+        render(<ServiceProvider><FluxContentApp /></ServiceProvider>);
 
         const mockSelection = { text: 'Hello World', x: 100, y: 100 };
 
@@ -81,7 +105,7 @@ describe('FluxContentApp', () => {
     });
 
     it('hides popup when cleared', () => {
-        render(<FluxContentApp />);
+        render(<ServiceProvider><FluxContentApp /></ServiceProvider>);
 
         // Show logic
         act(() => {
@@ -97,7 +121,7 @@ describe('FluxContentApp', () => {
     });
 
     it('calls handleAction manually when requested', () => {
-        render(<FluxContentApp />);
+        render(<ServiceProvider><FluxContentApp /></ServiceProvider>);
 
         // Show
         act(() => {
@@ -117,7 +141,7 @@ describe('FluxContentApp', () => {
     });
 
     it('updates mode correctly', () => {
-        render(<FluxContentApp />);
+        render(<ServiceProvider><FluxContentApp /></ServiceProvider>);
 
         act(() => {
             triggerSelection({ text: 'Mode Test', x: 0, y: 0 });
@@ -136,7 +160,7 @@ describe('FluxContentApp', () => {
     });
 
     it('triggers action when mode changes', () => {
-        render(<FluxContentApp />);
+        render(<ServiceProvider><FluxContentApp /></ServiceProvider>);
 
         act(() => {
             triggerSelection({ text: 'Mode Trigger', x: 0, y: 0 });

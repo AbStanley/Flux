@@ -29,7 +29,7 @@ describe('FluxHeader', () => {
             theme={THEMES.dark}
         />);
 
-        const closeButton = screen.getByRole('button', { name: /✕/i });
+        const closeButton = screen.getByRole('button', { name: /close/i });
         fireEvent.click(closeButton);
 
         expect(handleClose).toHaveBeenCalledTimes(1);

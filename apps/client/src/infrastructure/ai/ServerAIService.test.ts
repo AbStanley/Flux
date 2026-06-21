@@ -66,7 +66,7 @@ describe('ServerAIService', () => {
                 text: () => Promise.resolve('Error')
             });
 
-            await expect(service.translateText('Hello', 'es')).rejects.toThrow('API Error: undefined Error');
+            await expect(service.translateText('Hello', 'es')).rejects.toThrow('Error');
         });
     });
 

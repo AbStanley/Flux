@@ -53,6 +53,11 @@ vi.mock('../importer/FileImporter', () => ({
     FileImporter: () => <div data-testid="file-importer-mock">File Importer</div>
 }));
 
+// Mock SessionLibrary to avoid network requests on mount
+vi.mock('../reader/components/SessionLibrary', () => ({
+    SessionLibrary: () => <div data-testid="session-library-mock">Session Library</div>
+}));
+
 describe('ControlPanel', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -86,7 +91,7 @@ describe('ControlPanel', () => {
         // For a more robust test we would need a proper store mock.
         // However, we can assert that the button exists.
         render(<ControlPanel />);
-        const readBtn = screen.getByText(/Open Reading Mode/i);
+        const readBtn = screen.getByRole('button', { name: /Open Reading Mode/i });
         expect(readBtn).toBeDisabled(); // Disabled because text is empty in default mock
     });
 });

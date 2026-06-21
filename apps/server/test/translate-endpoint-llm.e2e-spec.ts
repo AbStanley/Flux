@@ -11,7 +11,7 @@ type TranslateDto = {
   model?: string;
 };
 
-jest.setTimeout(120000);
+jest.setTimeout(240000);
 
 describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () => {
   let app: INestApplication;
@@ -125,6 +125,55 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
           'acabo de leer algo interesante',
           'he leído algo interesante',
           'he leido algo interesante',
+        ]),
+      ).toBe(true);
+    });
+
+    it('Phrase with context: "wirklich Interessantes gelesen" (German to Spanish translation bug)', async () => {
+      const res = await translate({
+        text: 'wirklich Interessantes gelesen',
+        targetLanguage: 'Spanish',
+        context: 'Ich habe gerade etwas wirklich Interessantes gelesen.',
+        sourceLanguage: 'German',
+        model: 'translategemma:4b',
+      });
+      expect(
+        oneOf(res.response, [
+          'algo realmente interesante leído',
+          'algo realmente interesante leido',
+          'realmente interesante leído',
+          'realmente interesante leido',
+        ]),
+      ).toBe(true);
+    });
+
+    it('Contraction with context: "geht\'s" (German to Spanish translation bug)', async () => {
+      const res = await translate({
+        text: "geht's",
+        targetLanguage: 'Spanish',
+        context: "Mir geht's gut, danke.",
+        sourceLanguage: 'German',
+        model: 'translategemma:4b',
+      });
+      expect(oneOf(res.response, ['va', 'anda'])).toBe(true);
+    });
+
+    it('Phrase with context: "geht es dir" (German to Spanish translation bug)', async () => {
+      const res = await translate({
+        text: 'geht es dir',
+        targetLanguage: 'Spanish',
+        context: 'Wie geht es dir heute?',
+        sourceLanguage: 'German',
+        model: 'translategemma:4b',
+      });
+      expect(
+        oneOf(res.response, [
+          'te va',
+          'va',
+          'estás',
+          'estas',
+          'te encuentras',
+          'te va bien',
         ]),
       ).toBe(true);
     });

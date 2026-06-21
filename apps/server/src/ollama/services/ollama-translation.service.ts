@@ -108,7 +108,7 @@ export class OllamaTranslationService {
       params.signal,
       params.traceId,
     );
-    const response = (generateResult as any).response;
+    const response = generateResult.response;
     this.logger.debug(`[TRANSLATE RESPONSE]\n${response}`);
 
     if (isBlock) {
@@ -139,8 +139,6 @@ export class OllamaTranslationService {
   private trimContextBleed(translation: string, original: string): string {
     const isSingleWord = !original.trim().includes(' ');
     if (!isSingleWord || !translation) return translation;
-
-    const lowerOriginal = original.toLowerCase();
 
     let cleaned = translation;
 
@@ -486,7 +484,7 @@ export class OllamaTranslationService {
     }
 
     // Recursively delete properties with values like 'n/a', 'none', or empty strings
-    const cleanObject = (obj: any) => {
+    const cleanObject = (obj: Record<string, unknown>) => {
       if (!obj || typeof obj !== 'object') return;
       for (const key of Object.keys(obj)) {
         const val = obj[key];
@@ -496,11 +494,11 @@ export class OllamaTranslationService {
             delete obj[key];
           }
         } else if (typeof val === 'object' && val !== null) {
-          cleanObject(val);
+          cleanObject(val as Record<string, unknown>);
         }
       }
     };
-    cleanObject(rich);
+    cleanObject(rich as Record<string, unknown>);
 
     if (rich._verbAnalysis && Object.keys(rich._verbAnalysis).length === 0) {
       delete rich._verbAnalysis;

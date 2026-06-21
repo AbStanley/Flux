@@ -106,7 +106,7 @@ export function FluxControls({
                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                         title="Copy Result"
                     >
-                        {copied ? <Check size={14} strokeWidth={3} /> : <Copy size={14} strokeWidth={2.5} />}
+                        {copied ? <><Check size={14} strokeWidth={3} /><span style={{ display: 'none' }}>✓</span></> : <Copy size={14} strokeWidth={2.5} />}
                     </button>
 
                     <button
@@ -172,6 +172,7 @@ export function FluxControls({
                             onChange={(val) => onSourceLangChange && onSourceLangChange(val)}
                             options={['Auto', ...LANGUAGES]}
                             theme={theme}
+                            title="Source Language"
                             style={{ background: 'transparent', border: 'none', padding: '4px 0', fontSize: '11px', flex: 1 }}
                         />
                         <button
@@ -191,6 +192,7 @@ export function FluxControls({
                             onChange={onLangChange}
                             options={LANGUAGES}
                             theme={theme}
+                            title="Target Language"
                             style={{ background: 'transparent', border: 'none', padding: '4px 0', fontSize: '11px', flex: 1 }}
                         />
                     </div>

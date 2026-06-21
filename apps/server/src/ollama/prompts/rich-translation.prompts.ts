@@ -63,7 +63,7 @@ Reply with ONE JSON object in this exact shape:
     "targetInfinitive": "<${targetLanguage} INFINITIVE — the dictionary/citation form. NEVER write the conjugated form here.>",
     "grammaticalPerson": "<grammatical person and number (required when isVerb=true)>"
   },
-  "translationConjugated": "<${targetLanguage} CONJUGATED verb. Check grammaticalPerson carefully! Conjugate for 'I', 'you', 'he/she', etc. accordingly. Omit if not a verb.>",
+  "translationConjugated": "<${targetLanguage} CONJUGATED verb. Check grammaticalPerson carefully! Conjugate to match the context sentence subject exactly. Omit if not a verb.>",
   "translation": "<${targetLanguage} translation. MUST be the dictionary base form (pure INFINITIVE for verbs). NEVER the source language word. NEVER a conjugated form. NEVER write 'n/a'.>",
   "grammar": {
     "sourceInfinitive": "<The pure ${srcLang} INFINITIVE — must exactly match '_verbAnalysis.sourceInfinitive'. NEVER copy '${text}' here if it is conjugated.>",
@@ -85,7 +85,7 @@ Reply with ONE JSON object in this exact shape:
 Rules:
 1. Identify if "${text}" is a verb in the context of the sentence.
 2. The "translation" field is strictly for the DICTIONARY BASE FORM. If the input is a verb, this field MUST be the pure infinitive. NEVER put a conjugated verb here.
-3. The "translationConjugated" field is for the contextual translation. It MUST match "${text}" exactly in tense, person, and number. Apply correct vowel changes for irregular Spanish verbs (o -> ue, e -> ie). Ensure the correct grammatical person based on the sentence subject.
+3. The "translationConjugated" field is the translation of the word as it is used in the context sentence. It MUST match the grammatical person, number, and tense of the sentence subject exactly. Verify the grammatical subject of the context sentence and ensure that the conjugated verb aligns with that subject in person and number.
 4. ALL translation fields MUST be in the target language (${targetLanguage}). Do NOT copy the source language word into the translation fields.
 - Grammatical Agreement: Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural forms as singular.
 - Parts-of-Speech Matching: Never translate a verb form as a pronoun.
