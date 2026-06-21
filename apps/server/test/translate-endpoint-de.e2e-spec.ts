@@ -177,5 +177,17 @@ describe('LLM Translation E2E - German to Spanish (/api/translate)', () => {
         ]),
       ).toBe(true);
     });
+
+    it('Single word with context: "muss" (German to Spanish grammatical agreement)', async () => {
+      const res = await translate({
+        text: 'muss',
+        targetLanguage: 'Spanish',
+        context: 'Ich muss wirklich aufstehen.',
+        sourceLanguage: 'German',
+        model: 'translategemma:4b',
+      });
+      // Accept first-person singular forms matching "Ich" (I) context: 'debo', 'tengo'
+      expect(oneOf(res.response, ['debo', 'tengo'])).toBe(true);
+    });
   });
 });

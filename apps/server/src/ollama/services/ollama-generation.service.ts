@@ -149,11 +149,9 @@ export class OllamaGenerationService {
       params.sourceLanguage,
       params.targetLanguage,
       params.limit,
-      false, // isStreaming
       params.sourceLangCode || 'en-US',
       params.targetLangCode || 'es-ES',
       params.verb,
-      params.tense,
     );
 
     const response = await this.ollamaClient.generate(
@@ -193,7 +191,6 @@ export class OllamaGenerationService {
       params.sourceLanguage,
       params.targetLanguage,
       params.limit,
-      true, // isStreaming
       params.sourceLangCode || 'en-US',
       params.targetLangCode || 'es-ES',
       params.verb,

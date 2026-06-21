@@ -69,7 +69,8 @@ Target Language: ${targetLanguage}
 
 [RULES]
 1. Translate strictly ONLY the text: "${text.trim()}" into ${targetLanguage}.
-2. Return JSON ONLY.
+2. Match the grammatical person, number, and tense of the context (e.g., translate verbs using the same person/tense conjugation as in the source sentence).
+3. Return JSON ONLY.
 [JSON_FORMAT]
 {
   "detectedLanguage": "${isAuto || !sourceLanguage ? 'string' : sourceLanguage.toLowerCase()}",

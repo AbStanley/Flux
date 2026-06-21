@@ -5,7 +5,6 @@ export const getGameContentPrompt = (
   sourceLang: string,
   targetLang: string,
   limit: number = 10,
-  _isStreaming: boolean = false,
   sourceLangCode: string = 'en-US',
   targetLangCode: string = 'es-ES',
   verb?: string,
