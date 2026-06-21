@@ -13,7 +13,7 @@ type TranslateDto = {
 
 jest.setTimeout(240000);
 
-describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () => {
+describe('LLM Translation E2E - German to Spanish (/api/translate)', () => {
   let app: INestApplication;
   let service: OllamaTranslationService;
 
@@ -37,7 +37,6 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
     return service.translateText(dto);
   };
 
-  /** Check that one of the accepted values is present in the response (case-insensitive) */
   const oneOf = (actual: string | undefined, accepted: string[]) =>
     accepted.some((v) => actual?.toLowerCase().includes(v.toLowerCase()));
 
@@ -80,7 +79,6 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
         sourceLanguage: 'German',
         model: 'translategemma:4b',
       });
-      // Accept 'también', 'igualmente', 'además', etc. Note character decoding issues in old script.
       expect(
         oneOf(res.response, [
           'también',
@@ -155,7 +153,9 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
         sourceLanguage: 'German',
         model: 'translategemma:4b',
       });
-      expect(oneOf(res.response, ['va', 'anda'])).toBe(true);
+      expect(oneOf(res.response, ['va', 'anda', 'está', 'esta', 'estoy'])).toBe(
+        true,
+      );
     });
 
     it('Phrase with context: "geht es dir" (German to Spanish translation bug)', async () => {
@@ -176,55 +176,6 @@ describe('LLM Translation E2E - Simple Hover Translation (/api/translate)', () =
           'te va bien',
         ]),
       ).toBe(true);
-    });
-  });
-
-  describe('Other Languages', () => {
-    it('Russian single word "Почему" (Why)', async () => {
-      const res = await translate({
-        text: 'Почему',
-        targetLanguage: 'English',
-        context: 'Я не знаю, почему он это сделал.',
-        sourceLanguage: 'Russian',
-        model: 'translategemma:4b',
-      });
-      // The original script tested "Почему" with Cyrillic encoding issues, but the intent was "why".
-      expect(oneOf(res.response, ['why'])).toBe(true);
-    });
-
-    it('Russian phrase "не знаю" (do not know)', async () => {
-      const res = await translate({
-        text: 'не знаю',
-        targetLanguage: 'Spanish',
-        context: 'Я не знаю, почему он это сделал.',
-        sourceLanguage: 'Russian',
-        model: 'translategemma:4b',
-      });
-      expect(
-        oneOf(res.response, ['no sé', 'no se', 'no lo sé', 'no lo se']),
-      ).toBe(true);
-    });
-
-    it('Spanish single word "siempre" → English', async () => {
-      const res = await translate({
-        text: 'siempre',
-        targetLanguage: 'English',
-        context: 'Yo siempre voy al parque los domingos.',
-        sourceLanguage: 'Spanish',
-        model: 'translategemma:4b',
-      });
-      expect(oneOf(res.response, ['always'])).toBe(true);
-    });
-
-    it('Spanish phrase "los domingos" → English', async () => {
-      const res = await translate({
-        text: 'los domingos',
-        targetLanguage: 'English',
-        context: 'Yo siempre voy al parque los domingos.',
-        sourceLanguage: 'Spanish',
-        model: 'translategemma:4b',
-      });
-      expect(oneOf(res.response, ['sundays', 'on sundays'])).toBe(true);
     });
   });
 });

@@ -62,8 +62,8 @@ Target Language: ${targetLanguage}
 
   const langPhrase = isAuto ? 'phrase' : `${sourceLanguage} phrase`;
   const instruction = shouldIncludeContext
-    ? `From the ${langPhrase}: "${formattedContext}", translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent, do not introduce, simply respond precisely what I want to know.`
-    : `Translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent, do not introduce, simply respond precisely what I want to know.`;
+    ? `From the ${langPhrase}: "${formattedContext}", translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent within the context mentioned, without introductions, just a precise word by word in order get the meaning of the words in this context.`
+    : `Translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent, without introductions, just a precise word by word in order to get the meaning of the words.`;
 
   return `${instruction}
 

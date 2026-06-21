@@ -85,4 +85,28 @@ describe('getTranslatePrompt', () => {
     expect(prompt).toContain('Segment to translate: "hallo"');
     expect(prompt).toContain('"detectedLanguage": "string"');
   });
+
+  it('should generate a prompt with context for "wollte dich" context from German to Spanish', () => {
+    const text = 'wollte dich';
+    const context = 'Ich wollte dich unbedingt fragen...';
+    const sourceLanguage = 'German';
+
+    const prompt = getTranslatePrompt(
+      text,
+      targetLanguage,
+      context,
+      sourceLanguage,
+    );
+
+    expect(prompt).toContain(
+      'From the German phrase: "Ich wollte dich unbedingt fragen..."',
+    );
+    expect(prompt).toContain(
+      'translate exclusively and only the words "wollte dich" to the Spanish equivalent within the context mentioned',
+    );
+    expect(prompt).toContain(
+      'without introductions, just a precise word by word in order get the meaning of the words in this context',
+    );
+    expect(prompt).toContain('"detectedLanguage": "german"');
+  });
 });

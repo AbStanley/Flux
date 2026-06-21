@@ -22,7 +22,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:llm": "jest --config ./test/jest-e2e.json test/translation-llm.e2e-spec.ts test/translate-endpoint-llm.e2e-spec.ts --runInBand"
+    "test:llm": "jest --config ./test/jest-e2e.json test/translation-llm.e2e-spec.ts test/translate-endpoint-de.e2e-spec.ts test/translate-endpoint-other.e2e-spec.ts --runInBand"
   },
   "dependencies": {
     "@nestjs/common": "11.1.18",

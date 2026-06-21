@@ -31,10 +31,6 @@
         "args": ["-l", "-i"]
     },
 
-    "jest.shell": {
-        "path": "/bin/zsh",
-        "args": ["-i"]
-    },
     "jest.virtualFolders": [
         {
             "name": "server (unit)",
