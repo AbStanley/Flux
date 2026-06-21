@@ -86,7 +86,7 @@ export function ReaderTokenPopup({
 
                 return (
                     <span
-                        key={item.key || idx}
+                        key={`${item.key}-${item.globalIndex}-${idx}`}
                         className="flex items-center gap-2 px-3 first:pl-0 last:pr-0 group/segment whitespace-normal h-6"
                     >
                         <span className="text-sm font-semibold leading-none">

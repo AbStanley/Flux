@@ -175,7 +175,6 @@ const ReaderTokenComponent = ({
                         onRegenerate={() => onRegenerate(globalIndex, true)}
                         onSave={() => handleSaveItem(undefined, sanitizedHoverTranslation, token)}
                         isSaved={isSaved}
-                        collapsedText={getCollapsedText(token, sanitizedHoverTranslation, isPopupHovered)}
                     />
                 </span>
             )}

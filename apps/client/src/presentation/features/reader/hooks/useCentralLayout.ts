@@ -18,6 +18,13 @@ interface UseCentralLayoutProps {
   font?: string;
 }
 
+interface LineInfo {
+  y: number;
+  tokens: HTMLElement[];
+  maxMargin: number;
+}
+
+
 
 export const useCentralLayout = ({
   tokens,
@@ -55,11 +62,6 @@ export const useCentralLayout = ({
         return;
       }
 
-      interface LineInfo {
-        y: number;
-        tokens: HTMLElement[];
-        maxMargin: number;
-      }
       const lines: LineInfo[] = [];
       const tokenToLineMap = new Map<HTMLElement, LineInfo>();
 
@@ -77,18 +79,15 @@ export const useCentralLayout = ({
         tokenToLineMap.set(tokenEl, line);
       });
 
-      const containerRect = containerEl.getBoundingClientRect();
-      const parentEl = containerEl.parentElement;
-      const scrollRect = parentEl ? parentEl.getBoundingClientRect() : containerRect;
-      const rightEdge = scrollRect.right;
-      const leftEdge = scrollRect.left;
+      const scrollRect = containerEl.parentElement ? containerEl.parentElement.getBoundingClientRect() : containerEl.getBoundingClientRect();
+      const rightEdge = scrollRect.right, leftEdge = scrollRect.left;
       const padding = window.innerWidth <= 1200 ? 8 : 16;
 
 
+
       popups.forEach((popupEl) => {
-        const indexStr = popupEl.getAttribute("data-index");
-        if (!indexStr) return;
-        const globalIndex = parseInt(indexStr, 10);
+        const globalIndex = parseInt(popupEl.getAttribute("data-index") || "", 10);
+        if (isNaN(globalIndex)) return;
 
         const tokenEl = popupEl.parentElement;
         if (!tokenEl) return;
@@ -100,27 +99,32 @@ export const useCentralLayout = ({
         const targetLeft = tokenRect.left;
         let targetRight = tokenRect.right;
 
-        // Center combined popup groups over their entire span of tokens on the same line
         const items = popupGroups?.get(globalIndex);
-        const anchorIndices = items && items.length > 0
-          ? items.map((it) => it.globalIndex)
-          : [globalIndex];
+        const isHoverPopup = popupEl.className.includes("hoverPopup");
 
-        const indicesToTry = anchorIndices
-          .map((idx) => {
-            const g = groups.find((gr) => gr.includes(idx));
-            return g ? g[g.length - 1] : idx;
-          })
-          .reverse();
+        if (!isHoverPopup) {
+          // Center combined popup groups over their entire span of tokens on the same line
+          const anchorIndices = items && items.length > 0
+            ? items.map((it) => it.globalIndex)
+            : [globalIndex];
 
-        for (const lastIdx of indicesToTry) {
-          const el = document.getElementById(`token-${lastIdx}`);
-          if (el && tokenToLineMap.get(el) === myLine) {
-            const w = el.querySelector(".token-text") || el;
-            targetRight = w.getBoundingClientRect().right;
-            break;
+          const indicesToTry = anchorIndices
+            .map((idx) => {
+              const g = groups.find((gr) => gr.includes(idx));
+              return g ? g[g.length - 1] : idx;
+            })
+            .reverse();
+
+          for (const lastIdx of indicesToTry) {
+            const el = document.getElementById(`token-${lastIdx}`);
+            if (el && tokenToLineMap.get(el) === myLine) {
+              const w = el.querySelector(".token-text") || el;
+              targetRight = w.getBoundingClientRect().right;
+              break;
+            }
           }
         }
+
 
 
         const popupRect = popupEl.getBoundingClientRect();
@@ -158,10 +162,8 @@ export const useCentralLayout = ({
 
       lines.forEach((line) => {
         const marginStr = line.maxMargin > 0 ? `${line.maxMargin}px` : "";
-        line.tokens.forEach((tokenEl) => {
-          if (tokenEl.style.marginTop !== marginStr) {
-            tokenEl.style.marginTop = marginStr;
-          }
+        line.tokens.forEach((t) => {
+          if (t.style.marginTop !== marginStr) t.style.marginTop = marginStr;
         });
       });
     };

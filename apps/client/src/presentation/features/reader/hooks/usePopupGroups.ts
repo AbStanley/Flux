@@ -20,16 +20,8 @@ interface UsePopupGroupsParams {
 }
 
 export const usePopupGroups = ({
-    groups,
-    selectionTranslations,
-    visualGroupStarts,
-    groupStarts,
-    tokens,
-    currentPage,
-    PAGE_SIZE,
-    textAreaRef,
-    fontSize,
-    font
+    groups, selectionTranslations, visualGroupStarts, groupStarts, tokens,
+    currentPage, PAGE_SIZE, textAreaRef, fontSize, font
 }: UsePopupGroupsParams) => {
     const [popupGroups, setPopupGroups] = useState<Map<number, TranslationItem[]>>(new Map());
     const [suppressedPopupIndices, setSuppressedPopupIndices] = useState<Set<number>>(new Set());
@@ -40,7 +32,6 @@ export const usePopupGroups = ({
             const newSuppressed = new Set<number>();
 
             // 1. Gather all active visual popups that are rendered
-            // We use visualGroupStarts if present, otherwise groupStarts
             const activeStarts = new Set<number>();
             const activeStartToTranslation = new Map<number, string>();
 
@@ -78,14 +69,21 @@ export const usePopupGroups = ({
             // Sort by index so we process linearly
             activeStartElements.sort((a, b) => a.index - b.index);
 
-            console.log("Flux Debug: popup calculation details", {
-                selectionTranslations: Array.from(selectionTranslations.entries()),
-                groups,
-                visualGroupStarts: Array.from(visualGroupStarts.entries()),
-                groupStarts: Array.from(groupStarts.entries()),
-                activeStarts: Array.from(activeStarts),
-                activeStartElements: activeStartElements.map(e => ({ index: e.index, top: e.top })),
-            });
+            // Helper to estimate popup screen span for overlap checking
+            const getEstimatedSpan = (startIndex: number, translationStr: string) => {
+                const startEl = document.getElementById(`token-${startIndex}`);
+                if (!startEl) return null;
+                const grp = groups.find(g => g.includes(startIndex));
+                const lastIdx = grp ? grp[grp.length - 1] : startIndex;
+                const lastEl = document.getElementById(`token-${lastIdx}`) || startEl;
+
+                const rectStart = (startEl.querySelector('.token-text') || startEl).getBoundingClientRect();
+                const rectEnd = (lastEl.querySelector('.token-text') || lastEl).getBoundingClientRect();
+
+                const center = (rectStart.left + rectEnd.right) / 2;
+                const estWidth = Math.min(400, translationStr.length * 7 + 40);
+                return { left: center - estWidth / 2, right: center + estWidth / 2 };
+            };
 
             // 3. Horizontal Merging / Grouping
             const groupedList: PopupGroup[] = [];
@@ -113,8 +111,6 @@ export const usePopupGroups = ({
                 } else {
                     const lastItem = currentGroup.items[currentGroup.items.length - 1];
                     const lastElData = activeStartElements.find(e => e.index === lastItem.globalIndex);
-                    
-                    // Find the end token index of the last item's group
                     const lastGroup = groups.find(g => g.includes(lastItem.globalIndex));
                     const lastEndIndex = lastGroup ? lastGroup[lastGroup.length - 1] : lastItem.globalIndex;
 
@@ -127,14 +123,24 @@ export const usePopupGroups = ({
                         }
                     }
 
-                    // We check if:
-                    // A. On the same visual line (top coordinates within 10px)
-                    // B. Close index distance (gap between end of last and start of current <= 5 tokens)
-                    // C. No untranslated content words exist in the physical gap between them
                     const sameLine = lastElData ? Math.abs(item.top - lastElData.top) < 12 : false;
                     const closeIndex = (item.index - lastEndIndex) <= 5;
 
+                    let overlaps = false;
                     if (sameLine && closeIndex && !hasWordBetween) {
+                        const spanLast = getEstimatedSpan(lastItem.globalIndex, lastItem.translation);
+                        const spanCurrent = getEstimatedSpan(item.index, translation);
+
+                        if (spanLast && spanCurrent) {
+                            const minGap = 16;
+                            overlaps = (spanLast.right + minGap > spanCurrent.left) &&
+                                       (spanCurrent.right + minGap > spanLast.left);
+                        } else {
+                            overlaps = true;
+                        }
+                    }
+
+                    if (sameLine && closeIndex && !hasWordBetween && overlaps) {
                         currentGroup.items.push(popupItem);
                     } else {
                         groupedList.push(currentGroup);
@@ -150,12 +156,9 @@ export const usePopupGroups = ({
                 groupedList.push(currentGroup);
             }
 
-            console.log("Flux Debug: groupedList result", groupedList);
-
             // 4. Construct final maps
             groupedList.forEach(g => {
                 newPopupGroups.set(g.anchorIndex, g.items);
-                // All items other than the anchor item are suppressed
                 g.items.slice(1).forEach(item => {
                     newSuppressed.add(item.globalIndex);
                 });
@@ -165,7 +168,6 @@ export const usePopupGroups = ({
             setSuppressedPopupIndices(newSuppressed);
         };
 
-        // Run synchronously to avoid visual flashing of duplicate popups
         calculateGroups();
 
         if (!textAreaRef.current) return;
