@@ -79,10 +79,8 @@ describe('getTranslatePrompt', () => {
     const prompt = getTranslatePrompt(text, targetLanguage, context, 'Auto');
 
     expect(prompt).toContain(
-      'Translate the following segment from the context.',
+      'Translate the segment "hallo" from the context "Hallo, wie geht es dir?" to Spanish.',
     );
-    expect(prompt).toContain('Context: "Hallo, wie geht es dir?"');
-    expect(prompt).toContain('Segment to translate: "hallo"');
     expect(prompt).toContain('"detectedLanguage": "string"');
   });
 

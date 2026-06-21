@@ -27,17 +27,15 @@ Text to Translate:
   const hasQuestionMark =
     shouldIncludeContext && (context.includes('?') || context.includes('¿'));
 
+  const fromLangSuffix = isAuto ? '' : ` (${sourceLanguage})`;
+
   if (shouldIncludeContext && hasQuestionMark) {
-    const fromLangSuffix = isAuto ? '' : ` (${sourceLanguage})`;
-    return `Translate the following segment from the context${fromLangSuffix}.
-Context: "${context.trim()}"
-Segment to translate: "${text.trim()}"
-Target Language: ${targetLanguage}
+    return `Translate the segment "${text.trim()}" from the context "${context.trim()}" to ${targetLanguage}${fromLangSuffix}.
 
 [RULES]
-1. Translate ONLY the segment "${text.trim()}" to the ${targetLanguage} equivalent.
-2. The translation must strictly represent ONLY the words in the segment "${text.trim()}". Do NOT translate or include any adjacent words or question words from the surrounding context (such as helper verbs, pronouns, adjectives, adverbs, or question words that are outside the segment).
-3. If the segment is not a complete sentence, the translation must be a fragment, not a complete sentence or question.
+1. Translate strictly ONLY the segment "${text.trim()}".
+2. Do not translate or include any adjacent words or question marks from the context.
+3. The translation must be written entirely in standard ${targetLanguage} (do not mix in or use words, cognates, or endings from other languages).
 4. Return JSON ONLY.
 [JSON_FORMAT]
 {
@@ -65,12 +63,19 @@ Target Language: ${targetLanguage}
     ? `From the ${langPhrase}: "${formattedContext}", translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent within the context mentioned, without introductions, just a precise word by word in order get the meaning of the words in this context.`
     : `Translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent, without introductions, just a precise word by word in order to get the meaning of the words.`;
 
+  const rules = [
+    `Translate strictly ONLY the text: "${text.trim()}" into ${targetLanguage}.`,
+    `The translation must be written entirely in standard ${targetLanguage} (do not mix in or use words, cognates, or endings from other languages).`,
+    `Match the grammatical person, number, and tense of the context (only if the text is a verb or contains a verb. Do NOT translate or include adjacent verbs, pronouns, or other words from the surrounding context for nouns, adjectives, or other non-verb words).`,
+    'Return JSON ONLY.',
+  ];
+
+  const rulesText = rules.map((r, i) => `${i + 1}. ${r}`).join('\n');
+
   return `${instruction}
 
 [RULES]
-1. Translate strictly ONLY the text: "${text.trim()}" into ${targetLanguage}.
-2. Match the grammatical person, number, and tense of the context (e.g., translate verbs using the same person/tense conjugation as in the source sentence).
-3. Return JSON ONLY.
+${rulesText}
 [JSON_FORMAT]
 {
   "detectedLanguage": "${isAuto || !sourceLanguage ? 'string' : sourceLanguage.toLowerCase()}",

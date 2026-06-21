@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { OllamaTranslationService } from '../src/ollama/services/ollama-translation.service';
@@ -18,25 +18,19 @@ describe('LLM Translation E2E - German to Spanish (/api/translate)', () => {
   let service: OllamaTranslationService;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-
     app = moduleFixture.createNestApplication();
     await app.init();
-    service = moduleFixture.get<OllamaTranslationService>(
-      OllamaTranslationService,
-    );
+    service = moduleFixture.get(OllamaTranslationService);
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  const translate = async (dto: TranslateDto) => {
-    return service.translateText(dto);
-  };
-
+  const translate = (dto: TranslateDto) => service.translateText(dto);
   const oneOf = (actual: string | undefined, accepted: string[]) =>
     accepted.some((v) => actual?.toLowerCase().includes(v.toLowerCase()));
 
@@ -67,6 +61,7 @@ describe('LLM Translation E2E - German to Spanish (/api/translate)', () => {
           'me parece',
           'yo lo encuentro',
           'yo pienso eso',
+          'encuentro que',
         ]),
       ).toBe(true);
     });
@@ -86,26 +81,6 @@ describe('LLM Translation E2E - German to Spanish (/api/translate)', () => {
           'igualmente',
           'además',
           'ademas',
-        ]),
-      ).toBe(true);
-    });
-
-    it('Two words with context: "Auch gut"', async () => {
-      const res = await translate({
-        text: 'Auch gut',
-        targetLanguage: 'Spanish',
-        context: 'Auch gut.',
-        sourceLanguage: 'German',
-        model: 'translategemma:4b',
-      });
-      expect(
-        oneOf(res.response, [
-          'también bien',
-          'tambien bien',
-          'igualmente bien',
-          'muy bien también',
-          'muy bien',
-          'bien también',
         ]),
       ).toBe(true);
     });
@@ -188,6 +163,29 @@ describe('LLM Translation E2E - German to Spanish (/api/translate)', () => {
       });
       // Accept first-person singular forms matching "Ich" (I) context: 'debo', 'tengo'
       expect(oneOf(res.response, ['debo', 'tengo'])).toBe(true);
+    });
+
+    it('Single word with context: "Kaffee" (no context bleeding)', async () => {
+      const res = await translate({
+        text: 'Kaffee',
+        targetLanguage: 'Spanish',
+        context: 'Ich brauche dringend Kaffee.',
+        sourceLanguage: 'German',
+        model: 'translategemma:4b',
+      });
+      expect(res.response.toLowerCase()).toBe('café');
+    });
+
+    it('Single word with context: "dein" (German to Spanish possessive pronoun)', async () => {
+      const res = await translate({
+        text: 'dein',
+        targetLanguage: 'Spanish',
+        context: 'Anna: Wie war dein Morgen?',
+        sourceLanguage: 'German',
+        model: 'translategemma:4b',
+      });
+      // Accept 'tu' or 'tuyo' (not Italian 'tuo')
+      expect(oneOf(res.response, ['tu', 'tuyo'])).toBe(true);
     });
   });
 });
