@@ -1,3 +1,5 @@
+import type { TranslationItem } from '../components/ReaderTokenPopup';
+
 // Helper to sanitize translation objects from legacy or bad cache entries safely
 export const cleanTranslationObj = (val: unknown): string | undefined => {
     if (!val) return undefined;
@@ -125,3 +127,17 @@ export const tokenizeWithMarkdown = (text: string): TokenizeMarkdownResult => {
 
     return { tokens, boldIndices, italicIndices };
 };
+
+export const getExpandedWidth = (
+  items: TranslationItem[] | undefined,
+  fallbackText: string,
+) =>
+  items && items.length > 0
+    ? Math.min(
+        600,
+        items.reduce((sum, item) => sum + (item.translation?.length || 0), 0) *
+          7 +
+          items.length * 100,
+      )
+    : Math.min(550, fallbackText.length * 7 + 120);
+

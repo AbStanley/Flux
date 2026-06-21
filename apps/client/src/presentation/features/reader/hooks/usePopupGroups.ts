@@ -15,6 +15,8 @@ interface UsePopupGroupsParams {
     currentPage: number;
     PAGE_SIZE: number;
     textAreaRef: RefObject<HTMLDivElement | null>;
+    fontSize?: string;
+    font?: string;
 }
 
 export const usePopupGroups = ({
@@ -25,7 +27,9 @@ export const usePopupGroups = ({
     tokens,
     currentPage,
     PAGE_SIZE,
-    textAreaRef
+    textAreaRef,
+    fontSize,
+    font
 }: UsePopupGroupsParams) => {
     const [popupGroups, setPopupGroups] = useState<Map<number, TranslationItem[]>>(new Map());
     const [suppressedPopupIndices, setSuppressedPopupIndices] = useState<Set<number>>(new Set());
@@ -127,7 +131,7 @@ export const usePopupGroups = ({
                     // A. On the same visual line (top coordinates within 10px)
                     // B. Close index distance (gap between end of last and start of current <= 5 tokens)
                     // C. No untranslated content words exist in the physical gap between them
-                    const sameLine = lastElData ? Math.abs(item.top - lastElData.top) < 15 : false;
+                    const sameLine = lastElData ? Math.abs(item.top - lastElData.top) < 12 : false;
                     const closeIndex = (item.index - lastEndIndex) <= 5;
 
                     if (sameLine && closeIndex && !hasWordBetween) {
@@ -180,7 +184,7 @@ export const usePopupGroups = ({
             resizeObserver.disconnect();
             clearTimeout(resizeTimer);
         };
-    }, [groups, selectionTranslations, visualGroupStarts, groupStarts, currentPage, PAGE_SIZE, tokens, textAreaRef]);
+    }, [groups, selectionTranslations, visualGroupStarts, groupStarts, currentPage, PAGE_SIZE, tokens, textAreaRef, fontSize, font]);
 
     return { popupGroups, suppressedPopupIndices };
 };

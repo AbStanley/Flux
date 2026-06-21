@@ -86,7 +86,19 @@ export const getSelectionGroups = (indices: Set<number>, tokens: string[]): numb
     }
 
     groups.push(currentGroup);
-    return groups;
+    return groups
+        .map(group => {
+            let start = 0;
+            while (start < group.length && !tokens[group[start]].trim()) {
+                start++;
+            }
+            let end = group.length - 1;
+            while (end >= start && !tokens[group[end]].trim()) {
+                end--;
+            }
+            return group.slice(start, end + 1);
+        })
+        .filter(group => group.length > 0);
 };
 
 /**

@@ -64,6 +64,10 @@ const ReaderTextContentComponent = ({
     // Actions
     const { handleHover, clearHover } = useTranslation();
 
+    // Reader Settings
+    const font = useSettingsStore(s => s.font);
+    const fontSize = useSettingsStore(s => s.fontSize);
+
     const { popupGroups, suppressedPopupIndices } = usePopupGroups({
         groups,
         selectionTranslations: useTranslationStore(s => s.selectionTranslations),
@@ -72,12 +76,10 @@ const ReaderTextContentComponent = ({
         tokens,
         currentPage,
         PAGE_SIZE,
-        textAreaRef
+        textAreaRef,
+        fontSize,
+        font
     });
-
-    // Reader Settings
-    const font = useSettingsStore(s => s.font);
-    const fontSize = useSettingsStore(s => s.fontSize);
 
     // Highlighting Logic (Local to this component now)
     const highlightIndices = useHighlighting(tokens, groups);
@@ -94,7 +96,9 @@ const ReaderTextContentComponent = ({
         hoverTranslation,
         hoverSource,
         textAreaRef,
-        popupGroups
+        popupGroups,
+        fontSize,
+        font
     });
 
     const { headerParams, skipSpaceIndices } = parseTitleAndSpaces(paginatedTokens);
