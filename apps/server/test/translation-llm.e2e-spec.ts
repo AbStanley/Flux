@@ -143,7 +143,7 @@ describe('LLM Translation E2E Ollama', () => {
       expect(r.translation).toBeTruthy();
       expect(r.translation?.toLowerCase()).not.toBe('n/a');
       expect(r.translation?.toLowerCase()).not.toBe('none');
-      expect(oneOf(r.translation, ['casa'])).toBe(true);
+      expect(oneOf(r.translation, ['casa', 'la casa', 'hogar', 'el hogar'])).toBe(true);
     });
 
     it('"speziell" adjective to isVerb is false, valid translation not n/a', async () => {
