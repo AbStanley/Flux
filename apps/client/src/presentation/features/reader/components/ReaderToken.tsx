@@ -6,8 +6,7 @@ import { HoverPosition } from '../../../../core/types';
 import { ReaderTokenPopup } from './ReaderTokenPopup';
 import { TokenText } from './TokenText';
 
-import { useWordsStore } from '../../word-manager/store/useWordsStore';
-import { useReaderStore } from '../store/useReaderStore';
+import { useTokenSave } from '../hooks/useTokenSave';
 import type { TranslationItem } from './ReaderTokenPopup';
 import { cleanTranslationObj, getCollapsedText } from '../utils/tokenUtils';
 
@@ -54,38 +53,22 @@ const ReaderTokenComponent = ({
 
 
 
-    const addWord = useWordsStore(state => state.addWord);
-    const [isSaved, setIsSaved] = useState(false);
-    const [savedItemKeys, setSavedItemKeys] = useState<Set<string>>(new Set());
-    const sourceLang = useReaderStore(state => state.sourceLang);
-    const targetLang = useReaderStore(state => state.targetLang);
+    const { isSavedTemp, savedItemKeys, isTextSaved, handleSaveItem } = useTokenSave(token, sanitizedGroupTranslation);
 
     const [isPopupHovered, setIsPopupHovered] = useState(false);
 
-    const handleSaveItem = (itemIndex?: number, translationText?: string, sourceText?: string) => {
-        const textToSave = sourceText || token;
-        const transToSave = translationText || sanitizedGroupTranslation || '';
-        if (!textToSave.trim()) return;
-
-        addWord({
-            text: textToSave, definition: transToSave, context: "",
-            sourceLanguage: sourceLang, targetLanguage: targetLang,
-            type: textToSave.includes(' ') && textToSave.length > 20 ? 'phrase' : 'word'
-        }).then(() => {
-            const key = itemIndex !== undefined ? `${itemIndex}-${itemIndex}` : 'single';
-            setSavedItemKeys(prev => new Set(prev).add(key));
-            setIsSaved(true);
-            setTimeout(() => setIsSaved(false), 2000);
-        }).catch(err => console.error(err));
-    };
-
-    const activeGroupItems = popupGroupItems || (sanitizedGroupTranslation ? [{
-        key: groupText ? `${globalIndex}-${globalIndex + groupText.split('').length}` : `${globalIndex}-${globalIndex}`,
-        text: groupText || token,
-        translation: sanitizedGroupTranslation,
-        globalIndex: globalIndex,
-        isSaved: isSaved
-    }] : undefined);
+    const activeGroupItems = popupGroupItems
+        ? popupGroupItems.map(item => ({
+            ...item,
+            isSaved: item.isSaved || isTextSaved(item.text)
+          }))
+        : (sanitizedGroupTranslation ? [{
+            key: groupText ? `${globalIndex}-${globalIndex + groupText.split('').length}` : `${globalIndex}-${globalIndex}`,
+            text: groupText || token,
+            translation: sanitizedGroupTranslation,
+            globalIndex: globalIndex,
+            isSaved: isSavedTemp || isTextSaved(groupText || token)
+          }] : undefined);
 
     if (isHeaderMarker) return null;
     
@@ -143,7 +126,7 @@ const ReaderTokenComponent = ({
                         onMoreInfo={(idx) => onMoreInfo(idx !== undefined ? idx : globalIndex, false)}
                         onRegenerate={(idx) => onRegenerate(idx !== undefined ? idx : globalIndex, false)}
                         onSave={handleSaveItem}
-                        isSaved={isSaved}
+                        isSaved={isSavedTemp || (activeGroupItems?.[0] ? isTextSaved(activeGroupItems[0].text) : false)}
                         savedKeys={savedItemKeys}
                         collapsedText={activeGroupItems.length === 1 ? getCollapsedText(activeGroupItems[0].text, activeGroupItems[0].translation, isPopupHovered) : undefined}
                     />
@@ -174,7 +157,7 @@ const ReaderTokenComponent = ({
                         onMoreInfo={() => onMoreInfo(globalIndex, true)}
                         onRegenerate={() => onRegenerate(globalIndex, true)}
                         onSave={() => handleSaveItem(undefined, sanitizedHoverTranslation, token)}
-                        isSaved={isSaved}
+                        isSaved={isSavedTemp || isTextSaved(token)}
                     />
                 </span>
             )}

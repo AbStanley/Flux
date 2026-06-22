@@ -116,6 +116,7 @@ export const useTextSelection = (
             }
 
             if (!isHoveringRef.current) {
+                selectionRef.current = null;
                 onClearSelection();
             }
         };
