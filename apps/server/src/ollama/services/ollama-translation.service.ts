@@ -6,6 +6,7 @@ import {
   getExplainPrompt,
   getRichTranslationPrompt,
   getSingleTensePrompt,
+  getRawTranslatePrompt,
 } from '../prompts';
 import { cleanResponse, cleanAndParseJson } from '../utils/ollama-utils';
 import {
@@ -77,8 +78,43 @@ export class OllamaTranslationService {
     this.logger.debug(
       `[INCOMING PAYLOAD]\n${JSON.stringify({ ...params, signal: undefined }, null, 2)}`,
     );
+    const isAuto = !params.sourceLanguage || params.sourceLanguage === 'Auto';
     const isBlock = params.text.length > 100 || params.text.includes('\n');
+    const isSingleWord = !/\s/.test(params.text.trim());
     const model = await this.ollamaClient.ensureModel(params.model);
+
+    // If it's a simple single-word lookup and the language is already known, bypass JSON mode to optimize latency.
+    if (isSingleWord && !isAuto) {
+      const prompt = getRawTranslatePrompt(
+        params.text,
+        params.targetLanguage,
+        params.context,
+        params.sourceLanguage,
+      );
+      this.logger.debug(`[RAW TRANSLATE PROMPT]\n${prompt}`);
+      const generateResult = await this.ollamaClient.generate(
+        model,
+        prompt,
+        false,
+        undefined, // bypass JSON constrained decoding
+        {
+          num_predict: 16, // only need a few tokens for a word/phrase
+          num_ctx: 512, // small context window to speed up prefill
+          temperature: 0,
+        },
+        params.signal,
+        params.traceId,
+      );
+      const response = generateResult.response;
+      this.logger.debug(`[RAW TRANSLATE RESPONSE]\n${response}`);
+      const cleaned = cleanResponse(response, { multiline: false });
+      return {
+        response: this.trimContextBleed(cleaned, params.text),
+        sourceLanguage: params.sourceLanguage,
+      };
+    }
+
+    // Fallback to original JSON mode (or raw block mode) when language is Auto or is a block
     const prompt = getTranslatePrompt(
       params.text,
       params.targetLanguage,

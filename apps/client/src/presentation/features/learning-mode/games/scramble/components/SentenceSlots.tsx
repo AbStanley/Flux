@@ -1,10 +1,12 @@
-import { cn } from "@/lib/utils";
+import { ScrambleWordSlot } from './ScrambleWordSlot';
 import type { WordSlotData } from '../types';
+import type { GameItem } from '@/core/services/game/interfaces';
 
 interface SentenceSlotsProps {
     slots: WordSlotData[];
     isRevealed: boolean;
     isComplete: boolean;
+    currentItem: GameItem;
     onSlotClick: (index: number) => void;
 }
 
@@ -16,38 +18,20 @@ export const SentenceSlots: React.FC<SentenceSlotsProps> = ({
     slots,
     isRevealed,
     isComplete,
+    currentItem,
     onSlotClick
 }) => {
     return (
         <div className="flex flex-wrap gap-1.5 md:gap-3 justify-center items-center p-3 md:p-6 bg-card/30 rounded-xl md:rounded-2xl border border-white/5 min-h-[80px] md:min-h-[100px]">
             {slots.map((slot) => (
-                <div
+                <ScrambleWordSlot
                     key={slot.index}
-                    onClick={() => onSlotClick(slot.index)}
-                    className={cn(
-                        "min-w-[60px] md:min-w-[80px] h-10 md:h-14 px-2 md:px-4 flex items-center justify-center text-sm md:text-lg font-bold rounded-lg md:rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer select-none",
-
-                        // Empty slot
-                        !slot.isFilled && "border-muted-foreground/30 bg-muted/20 text-muted-foreground",
-
-                        // Filled - normal
-                        slot.isFilled && slot.status === 'none' && "border-primary/50 bg-primary/10 text-foreground hover:scale-105",
-
-                        // Correct
-                        (slot.status === 'correct' || isComplete) && "border-chart-success bg-chart-success/20 text-chart-success",
-
-                        // Wrong
-                        slot.status === 'wrong' && "border-chart-alert bg-chart-alert/20 text-chart-alert animate-shake",
-
-                        // Revealed
-                        slot.status === 'revealed' && "border-blue-500 bg-blue-500/20 text-blue-400",
-
-                        // Disabled interactions during reveal/complete
-                        (isRevealed || isComplete) && "cursor-default"
-                    )}
-                >
-                    {slot.isFilled ? slot.word : '_____'}
-                </div>
+                    slot={slot}
+                    isRevealed={isRevealed}
+                    isComplete={isComplete}
+                    currentItem={currentItem}
+                    onSlotClick={onSlotClick}
+                />
             ))}
         </div>
     );

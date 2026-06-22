@@ -2,9 +2,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SentenceScrambleGame } from './SentenceScrambleGame';
 import { useSentenceScrambleLogic } from './hooks/useSentenceScrambleLogic';
+import * as ServiceContextModule from '../../../../contexts/ServiceContext';
 
 // Mock the custom hook
 vi.mock('./hooks/useSentenceScrambleLogic');
+
+// Mock the game store
+vi.mock('../../store/useGameStore', () => ({
+    useGameStore: vi.fn(() => ({
+        updateConfig: vi.fn()
+    }))
+}));
+
+// Mock the ServiceContext
+const mockUseServices = vi.fn();
+vi.spyOn(ServiceContextModule, 'useServices').mockImplementation(() => mockUseServices());
 
 describe('SentenceScrambleGame', () => {
     const mockHandleWordClick = vi.fn();
@@ -44,11 +56,17 @@ describe('SentenceScrambleGame', () => {
         handleGiveUp: mockHandleGiveUp,
         handleNext: mockHandleNext,
         playAudio: mockPlayAudio,
+        config: { scrambleManualNext: false },
         ...overrides
     });
 
     beforeEach(() => {
         vi.clearAllMocks();
+        mockUseServices.mockReturnValue({
+            aiService: {
+                translateText: vi.fn().mockResolvedValue('gato')
+            }
+        });
         (useSentenceScrambleLogic as any).mockReturnValue(createMockLogic());
     });
 

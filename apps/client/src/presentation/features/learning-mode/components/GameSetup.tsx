@@ -114,16 +114,31 @@ export function GameSetup() {
 
                         <div className="flex flex-col justify-start space-y-4">
                             <Label>Options</Label>
-                            <div className="flex items-center justify-between space-x-2 border rounded-lg p-4 bg-muted/20">
-                                <Label htmlFor="timer-mode" className="flex flex-col space-y-1 cursor-pointer">
-                                    <span className="font-semibold">Speed Mode</span>
-                                    <span className="font-normal text-xs text-muted-foreground">Enable 10s timer per question</span>
-                                </Label>
-                                <Switch
-                                    id="timer-mode"
-                                    checked={config.timerEnabled}
-                                    onCheckedChange={(val) => updateConfig({ timerEnabled: val })}
-                                />
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center justify-between space-x-2 border rounded-lg p-4 bg-muted/20">
+                                    <Label htmlFor="timer-mode" className="flex flex-col space-y-1 cursor-pointer">
+                                        <span className="font-semibold">Speed Mode</span>
+                                        <span className="font-normal text-xs text-muted-foreground">Enable 10s timer per question</span>
+                                    </Label>
+                                    <Switch
+                                        id="timer-mode"
+                                        checked={config.timerEnabled}
+                                        onCheckedChange={(val) => updateConfig({ timerEnabled: val })}
+                                    />
+                                </div>
+                                {config.mode === 'scramble' && (
+                                    <div className="flex items-center justify-between space-x-2 border rounded-lg p-4 bg-muted/20 animate-in fade-in duration-200">
+                                        <Label htmlFor="manual-next" className="flex flex-col space-y-1 cursor-pointer">
+                                            <span className="font-semibold">Manual Next Round</span>
+                                            <span className="font-normal text-xs text-muted-foreground">Review and translate words before advancing</span>
+                                        </Label>
+                                        <Switch
+                                            id="manual-next"
+                                            checked={config.scrambleManualNext ?? false}
+                                            onCheckedChange={(val) => updateConfig({ scrambleManualNext: val })}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

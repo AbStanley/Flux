@@ -135,3 +135,23 @@ Instructions:
 
 Output:`;
 };
+
+export const getRawTranslatePrompt = (
+  text: string,
+  targetLanguage: string = 'en',
+  context?: string,
+  sourceLanguage?: string,
+): string => {
+  const shouldIncludeContext = !!context && context.trim().length > 0;
+  const langPhrase = !sourceLanguage || sourceLanguage === 'Auto' ? 'phrase' : `${sourceLanguage} phrase`;
+  const instruction = shouldIncludeContext
+    ? `From the ${langPhrase}: "${context.trim()}", translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent within the context mentioned, without introductions, just a precise word by word in order to get the meaning of the words in this context.`
+    : `Translate exclusively and only the words "${text.trim()}" to the ${targetLanguage} equivalent, without introductions, just a precise word by word in order to get the meaning of the words.`;
+
+  return `${instruction}
+
+[RULES]
+1. Translate strictly ONLY the text: "${text.trim()}" into ${targetLanguage}.
+2. Match the grammatical person, number, and tense of the context (e.g., translate verbs using the same person/tense conjugation as in the source sentence).
+3. Output ONLY the raw translated word/phrase itself. Do NOT include punctuation, JSON format, markdown, introductions, or conversational filler. Output just the raw translation.`;
+};

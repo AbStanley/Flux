@@ -14,6 +14,7 @@ export interface GameConfig {
     strictDirection?: boolean;
     sourceLang: string;
     targetLang: string;
+    scrambleManualNext?: boolean;
     // Anki Specific
     ankiDeckName?: string;
     ankiFieldSource?: string;
@@ -79,7 +80,8 @@ export const useGameStore = create<GameState>()(persist((set, get) => ({
         mixMode: false,
         strictDirection: false,
         sourceLang: 'all',
-        targetLang: 'all'
+        targetLang: 'all',
+        scrambleManualNext: false
     },
     items: [],
     currentIndex: 0,
