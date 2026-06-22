@@ -7,6 +7,7 @@ interface WordPoolProps {
     wordPool: WordBrickData[];
     isComplete: boolean;
     isRevealed: boolean;
+    scrambleManualNext?: boolean;
     onWordClick: (brickId: string) => void;
     onGiveUp: () => void;
     onNext: () => void;
@@ -20,6 +21,7 @@ export const WordPool: React.FC<WordPoolProps> = ({
     wordPool,
     isComplete,
     isRevealed,
+    scrambleManualNext = false,
     onWordClick,
     onGiveUp,
     onNext
@@ -36,6 +38,11 @@ export const WordPool: React.FC<WordPoolProps> = ({
             ) : isComplete ? (
                 <div className="flex flex-col items-center gap-4 animate-in zoom-in-95">
                     <div className="text-lg md:text-xl font-bold text-green-400">Correct! 🎉</div>
+                    {scrambleManualNext && (
+                        <Button size="lg" className="w-full md:w-auto px-8" onClick={onNext}>
+                            Next Sentence <ArrowRight className="ml-2 w-4 h-4" />
+                        </Button>
+                    )}
                 </div>
             ) : (
                 <>

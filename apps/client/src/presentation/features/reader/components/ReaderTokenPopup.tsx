@@ -129,7 +129,7 @@ export function ReaderTokenPopup({
                                 onTouchStart={(e) => e.stopPropagation()}
                                 title="Regenerate Translation"
                             >
-                                <RefreshCcw size="0.9em" strokeWidth={2.5} className={isLoading ? "animate-spin" : ""} />
+                                <RefreshCcw size="0.9em" strokeWidth={2.5} className={isLoading ? "animate-spin-reverse" : ""} />
                             </button>
 
                             {!isLoading && (

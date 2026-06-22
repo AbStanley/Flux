@@ -4,6 +4,21 @@ import { useGameAudio } from '../../hooks/useGameAudio';
 import { soundService } from '@/core/services/SoundService';
 import type { WordBrickData, WordSlotData } from '../types';
 
+// Tokenize sentence into words
+const tokenize = (sentence: string): string[] => {
+    return sentence.split(/\s+/).filter(s => s.length > 0);
+};
+
+// Shuffle array (Fisher-Yates)
+const shuffle = <T,>(arr: T[]): T[] => {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+};
+
 /**
  * Custom hook for Sentence Scramble game logic.
  * Tokenizes target sentence, shuffles words, handles placement and validation.
@@ -19,21 +34,6 @@ export function useSentenceScrambleLogic() {
     const [wordPool, setWordPool] = useState<WordBrickData[]>([]);
     const [isRevealed, setIsRevealed] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
-
-    // Tokenize sentence into words
-    const tokenize = useCallback((sentence: string): string[] => {
-        return sentence.split(/\s+/).filter(s => s.length > 0);
-    }, []);
-
-    // Shuffle array (Fisher-Yates)
-    const shuffle = useCallback(<T,>(arr: T[]): T[] => {
-        const copy = [...arr];
-        for (let i = copy.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [copy[i], copy[j]] = [copy[j], copy[i]];
-        }
-        return copy;
-    }, []);
 
     // Initialize round
     useEffect(() => {
@@ -60,7 +60,7 @@ export function useSentenceScrambleLogic() {
             setIsRevealed(false);
             setIsComplete(false);
         }, 0);
-    }, [currentItem, tokenize, shuffle]);
+    }, [currentItem]);
 
     // Auto-play question audio
     useEffect(() => {
@@ -77,7 +77,6 @@ export function useSentenceScrambleLogic() {
         return () => stopAudio();
     }, [stopAudio]);
 
-    // Handle clicking a word in the pool
     // Handle clicking a word in the pool
     const handleWordClick = useCallback((brickId: string) => {
         if (isComplete || isRevealed) return;
@@ -137,13 +136,15 @@ export function useSentenceScrambleLogic() {
                 submitAnswer(true);
 
                 playAudio(currentItem.answer, currentItem.lang?.target, undefined).then(() => {
-                    setTimeout(() => nextItem(), 1000);
+                    if (!config.scrambleManualNext) {
+                        setTimeout(() => nextItem(), 1000);
+                    }
                 });
             } else {
                 soundService.playWrong();
             }
         }
-    }, [isComplete, isRevealed, wordPool, slots, currentItem, tokenize, playAudio, submitAnswer, nextItem]);
+    }, [isComplete, isRevealed, wordPool, slots, currentItem, playAudio, submitAnswer, nextItem, config.scrambleManualNext]);
 
     // Handle clicking a filled slot to return word
     const handleSlotClick = useCallback((slotIndex: number) => {
@@ -167,10 +168,6 @@ export function useSentenceScrambleLogic() {
         ));
     }, [isComplete, isRevealed, slots]);
 
-    // Check completion when all slots filled
-    // Completion check moved to handleWordClick to avoid set-state-in-effect
-    // Removed useEffect that was here
-
     // Handle give up
     const handleGiveUp = useCallback(() => {
         if (!currentItem) return;
@@ -189,7 +186,7 @@ export function useSentenceScrambleLogic() {
         })));
 
         playAudio(currentItem.answer, currentItem.lang?.target, undefined);
-    }, [currentItem, submitAnswer, tokenize, playAudio]);
+    }, [currentItem, submitAnswer, playAudio]);
 
     // Watch for Timeout
     useEffect(() => {
@@ -213,6 +210,7 @@ export function useSentenceScrambleLogic() {
         handleSlotClick,
         handleGiveUp,
         handleNext,
-        playAudio
+        playAudio,
+        config
     };
 }
