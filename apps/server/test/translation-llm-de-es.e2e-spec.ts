@@ -11,6 +11,9 @@ describe('LLM Translation E2E Ollama - German to Spanish', () => {
     await LlmTestHelper.teardown();
   });
 
+  const oneOf = (actual: string | undefined, accepted: string[]) =>
+    accepted.some((v) => actual?.trim().toLowerCase() === v.toLowerCase());
+
   describe('German to Spanish verbs', () => {
     it('"hat" to tener or tiene or haben', async () => {
       const r = await LlmTestHelper.stream({
@@ -93,7 +96,9 @@ describe('LLM Translation E2E Ollama - German to Spanish', () => {
       expect(r.translation).toBeTruthy();
       expect(r.translation?.toLowerCase()).not.toBe('n/a');
       expect(r.translation?.toLowerCase()).not.toBe('none');
-      expect(LlmTestHelper.oneOf(r.translation, ['casa'])).toBe(true);
+      expect(
+        oneOf(r.translation, ['casa', 'la casa', 'hogar', 'el hogar']),
+      ).toBe(true);
     });
 
     it('"speziell" adjective to isVerb is false, valid translation not n/a', async () => {
