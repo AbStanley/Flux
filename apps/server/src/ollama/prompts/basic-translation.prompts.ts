@@ -66,7 +66,7 @@ Text to Translate:
   const rules = [
     `Translate strictly ONLY the text: "${text.trim()}" into ${targetLanguage}.`,
     `The translation must be written entirely in standard ${targetLanguage} (do not mix in or use words, cognates, or endings from other languages).`,
-    `Match the grammatical person, number, and tense of the context (only if the text is a verb or contains a verb. Do NOT translate or include adjacent verbs, pronouns, or other words from the surrounding context for nouns, adjectives, or other non-verb words).`,
+    `Match the grammatical person, number, case, gender, and tense of the context (for verbs, match person, number, and tense; for pronouns/nouns, match their grammatical case, gender, and role, such as subject vs object based on the context. For pronouns, translate accusative/dative/object pronouns to their corresponding target language object pronoun forms (like "lo"/"la"/"le" in Spanish), not subject/nominative pronouns (like "él")). Do NOT translate or include adjacent verbs, pronouns, or other words from the surrounding context.`,
     'Return JSON ONLY.',
   ];
 
@@ -155,6 +155,6 @@ export const getRawTranslatePrompt = (
 
 [RULES]
 1. Translate strictly ONLY the text: "${text.trim()}" into ${targetLanguage}.
-2. Match the grammatical person, number, and tense of the context (only if the text is a verb or contains a verb. Do NOT translate or include adjacent verbs, pronouns, or other words from the surrounding context for nouns, adjectives, or other non-verb words).
+2. Match the grammatical person, number, case, gender, and tense of the context (for verbs, match person, number, and tense; for pronouns/nouns, match their grammatical case, gender, and role, such as subject vs object based on the context. For pronouns, translate accusative/dative/object pronouns to their corresponding target language object pronoun forms (like "lo"/"la"/"le" in Spanish), not subject/nominative pronouns (like "él")). Do NOT translate or include adjacent verbs, pronouns, or other words from the surrounding context.
 3. Output ONLY the raw translated word/phrase itself. Do NOT include punctuation, JSON format, markdown, introductions, or conversational filler. Output just the raw translation.`;
 };

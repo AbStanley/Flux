@@ -153,39 +153,6 @@ describe('LLM Translation E2E - German to Spanish (/api/translate)', () => {
       ).toBe(true);
     });
 
-    it('Single word with context: "muss" (German to Spanish grammatical agreement)', async () => {
-      const res = await translate({
-        text: 'muss',
-        targetLanguage: 'Spanish',
-        context: 'Ich muss wirklich aufstehen.',
-        sourceLanguage: 'German',
-        model: 'translategemma:4b',
-      });
-      // Accept first-person singular forms matching "Ich" (I) context: 'debo', 'tengo'
-      expect(oneOf(res.response, ['debo', 'tengo'])).toBe(true);
-    });
-
-    it('Single word with context: "Kaffee" (no context bleeding)', async () => {
-      const res = await translate({
-        text: 'Kaffee',
-        targetLanguage: 'Spanish',
-        context: 'Ich brauche dringend Kaffee.',
-        sourceLanguage: 'German',
-        model: 'translategemma:4b',
-      });
-      expect(res.response.toLowerCase()).toBe('café');
-    });
-
-    it('Single word with context: "dein" (German to Spanish possessive pronoun)', async () => {
-      const res = await translate({
-        text: 'dein',
-        targetLanguage: 'Spanish',
-        context: 'Anna: Wie war dein Morgen?',
-        sourceLanguage: 'German',
-        model: 'translategemma:4b',
-      });
-      // Accept 'tu' or 'tuyo' (not Italian 'tuo')
-      expect(oneOf(res.response, ['tu', 'tuyo'])).toBe(true);
-    });
+    // Relocated 'muss', 'Kaffee', and 'dein' to translate-endpoint-de-extra.e2e-spec.ts
   });
 });
