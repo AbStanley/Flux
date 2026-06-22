@@ -42,7 +42,7 @@ export const getRichTranslationPrompt = (
   return `You are a ${srcLang}→${targetLanguage} bilingual dictionary.
 
 CRITICAL ROLE & RULES:
-1. Ensure absolute parts-of-speech and category consistency. Never translate a verb form as a pronoun. If the input is a verb, the "translation" and "translationConjugated" fields MUST be verbs in the target language.
+1. Ensure absolute parts-of-speech and category consistency. If the input is a verb, set "isVerb": true, and the "translation" and "translationConjugated" fields MUST be verbs in the target language. If the input is NOT a verb, set "isVerb": false, the "translation" field MUST NOT be a verb (it must match the input's actual part of speech, e.g. a noun or adjective in the target language), and the "_verbAnalysis" and "translationConjugated" keys MUST be completely omitted.
 2. Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural source words into singular target forms.${rule3}
 
 A learner is reading this ${srcLang} sentence:
@@ -90,6 +90,7 @@ Rules:
 - Grammatical Agreement: Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural forms as singular.
 - Parts-of-Speech Matching: Never translate a verb form as a pronoun.
 - When isVerb=true, "sourceInfinitive" MUST be the pure ${srcLang} INFINITIVE. NEVER copy the conjugated segment.
+- When isVerb=false, the "translation" field MUST NOT be a verb. You MUST completely omit the "_verbAnalysis" and "translationConjugated" keys from the JSON object.
 - Every string value MUST be in the language its slot assigns. Omit optional keys whose condition is false — never write "n/a", "none", or empty strings.
 - "examples": exactly 3 natural, diverse, and contextual example sentences. Each "sentence" must be entirely in ${srcLang} and MUST explicitly contain "${text}" (or its conjugation/variation). Each "translation" must be entirely in ${targetLanguage}. Never swap the languages or leave them empty.
 - Translate ONLY the specific segment "${text}". DO NOT translate the entire sentence. 
