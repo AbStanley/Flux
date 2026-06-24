@@ -41,8 +41,16 @@ export const readingSessionsApi = {
         chapters?: ChapterInfo[];
     }) => defaultClient.post<ReadingSession>(ENDPOINT, data),
 
-    update: (id: string, data: { currentPage?: number; title?: string; totalPages?: number }) =>
-        defaultClient.patch<ReadingSession>(`${ENDPOINT}/${id}`, data),
+    update: (
+        id: string,
+        data: {
+            currentPage?: number;
+            title?: string;
+            totalPages?: number;
+            sourceLang?: string;
+            targetLang?: string;
+        }
+    ) => defaultClient.patch<ReadingSession>(`${ENDPOINT}/${id}`, data),
 
     remove: (id: string) => defaultClient.delete<void>(`${ENDPOINT}/${id}`),
 };

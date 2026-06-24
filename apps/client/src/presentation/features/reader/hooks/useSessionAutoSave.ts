@@ -17,6 +17,8 @@ export function useSessionAutoSave() {
     const isReading = useReaderStore(s => s.isReading);
     const isGenerating = useReaderStore(s => s.isGenerating);
     const setSession = useReaderStore(s => s.setSession);
+    const sourceLang = useReaderStore(s => s.sourceLang);
+    const targetLang = useReaderStore(s => s.targetLang);
 
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const createDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -63,7 +65,7 @@ export function useSessionAutoSave() {
         };
     }, [text, sessionId, isGenerating, setSession]);
 
-    // Auto-update page on changes (debounced)
+    // Auto-update page or language on changes (debounced)
     useEffect(() => {
         if (!sessionId || sessionId === '_importing') return;
 
@@ -71,7 +73,12 @@ export function useSessionAutoSave() {
 
         debounceRef.current = setTimeout(() => {
             const totalPages = Math.ceil(tokens.length / PAGE_SIZE);
-            readingSessionsApi.update(sessionId, { currentPage, totalPages }).catch(err => {
+            readingSessionsApi.update(sessionId, {
+                currentPage,
+                totalPages,
+                sourceLang,
+                targetLang
+            }).catch(err => {
                 // If session is not found, clear it from the store to stop further update attempts
                 const msg = err.message?.toLowerCase() || '';
                 if (msg.includes('404') || msg.includes('not found')) {
@@ -84,5 +91,5 @@ export function useSessionAutoSave() {
         return () => {
             if (debounceRef.current) clearTimeout(debounceRef.current);
         };
-    }, [sessionId, currentPage, isReading, tokens.length, PAGE_SIZE]);
+    }, [sessionId, currentPage, isReading, tokens.length, PAGE_SIZE, sourceLang, targetLang]);
 }

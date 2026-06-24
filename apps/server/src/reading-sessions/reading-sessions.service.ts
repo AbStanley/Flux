@@ -86,7 +86,13 @@ export class ReadingSessionsService {
 
   async update(
     id: string,
-    data: { currentPage?: number; title?: string; totalPages?: number },
+    data: {
+      currentPage?: number;
+      title?: string;
+      totalPages?: number;
+      sourceLang?: string;
+      targetLang?: string;
+    },
     userId: string,
   ) {
     const resolvedUserId = await this.resolveUserId(userId);

@@ -61,7 +61,14 @@ export class ReadingSessionsController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() body: { currentPage?: number; title?: string; totalPages?: number },
+    @Body()
+    body: {
+      currentPage?: number;
+      title?: string;
+      totalPages?: number;
+      sourceLang?: string;
+      targetLang?: string;
+    },
     @Request() req: AuthenticatedRequest,
   ) {
     const result = await this.service.update(id, body, req.user?.id ?? '');
