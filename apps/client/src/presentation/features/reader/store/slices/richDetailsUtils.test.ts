@@ -1,9 +1,38 @@
 import { describe, it, expect } from "vitest";
-import { asString, sanitizeGrammar, asExampleArray } from "./richDetailsUtils";
+import { asString, sanitizeGrammar, asExampleArray, stripPronounPrefix } from "./richDetailsUtils";
 import { isSameLanguage } from "./richDetailsHealer";
 
 describe("richDetailsUtils", () => {
+  describe("stripPronounPrefix", () => {
+    it("should strip simple pronouns", () => {
+      expect(stripPronounPrefix("er wollte")).toBe("wollte");
+      expect(stripPronounPrefix("yo hablo")).toBe("hablo");
+      expect(stripPronounPrefix("he wanted")).toBe("wanted");
+    });
+
+    it("should strip compound or slash-separated pronouns", () => {
+      expect(stripPronounPrefix("er/sie/es wollte")).toBe("wollte");
+      expect(stripPronounPrefix("il/elle/on voulait")).toBe("voulait");
+      expect(stripPronounPrefix("er, sie, es wollte")).toBe("wollte");
+      expect(stripPronounPrefix("er (sie, es) wollte")).toBe("wollte");
+    });
+
+    it("should strip French elided pronouns", () => {
+      expect(stripPronounPrefix("j'aime")).toBe("aime");
+    });
+
+    it("should not strip if the word is only a pronoun", () => {
+      expect(stripPronounPrefix("es")).toBe("es");
+      expect(stripPronounPrefix("he")).toBe("he");
+    });
+
+    it("should not strip pronouns embedded in other words", () => {
+      expect(stripPronounPrefix("hello")).toBe("hello");
+    });
+  });
+
   describe("asString sanitizer", () => {
+
     it("should return valid strings", () => {
       expect(asString("hello")).toBe("hello");
       expect(asString("  verb  ")).toBe("  verb  ");

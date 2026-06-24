@@ -1,6 +1,8 @@
 import type { RichTranslationResult } from "../../../../../core/interfaces/IAIService";
+import { stripPronounPrefix } from "./verbHelpers";
 
 export * from "./verbHelpers";
+
 
 /**
  * Small models occasionally emit nested objects or `null` where a JSON
@@ -92,17 +94,31 @@ export const sanitizeConjugations = (
   return Object.keys(out).length > 0 ? out : null;
 };
 
+
 export const sanitizeRichResult = (
   raw: RichTranslationResult,
   fallbackSegment: string,
 ): RichTranslationResult => {
   const rawObj = raw as unknown as Record<string, unknown>;
   const isVerb = typeof raw.isVerb === "boolean" ? raw.isVerb : undefined;
-  const translationConjugated = isVerb ? asString(rawObj.translationConjugated) : undefined;
+  let translationConjugated = isVerb ? asString(rawObj.translationConjugated) : undefined;
   
   const grammar = sanitizeGrammar(rawObj.grammar, isVerb);
-  const translationStr = asString(raw.translation) ?? "";
+  let translationStr = asString(raw.translation) ?? "";
   
+  const isSingleWord = !fallbackSegment.trim().includes(" ");
+  if (isSingleWord) {
+    if (translationConjugated) {
+      translationConjugated = stripPronounPrefix(translationConjugated);
+    }
+    if (translationStr) {
+      translationStr = stripPronounPrefix(translationStr);
+    }
+    if (grammar?.infinitive) {
+      grammar.infinitive = stripPronounPrefix(grammar.infinitive);
+    }
+  }
+
   // Anti-hallucination: If the model placed the target language translation 
   // into the source infinitive slot, discard it.
   if (grammar?.infinitive && translationStr && grammar.infinitive.toLowerCase() === translationStr.toLowerCase()) {
@@ -134,11 +150,25 @@ export const sanitizePartialRich = (
   if (typeof isVerb === "boolean") out.isVerb = isVerb;
   const segment = asString(r.segment);
   if (segment) out.segment = segment;
-  const translationStr = asString(r.translation);
-  if (translationStr) out.translation = translationStr;
-  const translationConjugated = asString(r.translationConjugated);
-  if (translationConjugated && isVerb) out.translationConjugated = translationConjugated;
+  let translationStr = asString(r.translation);
+  let translationConjugated = asString(r.translationConjugated);
   const grammar = sanitizeGrammar(r.grammar, isVerb);
+  
+  const isSingleWord = !segment || !segment.trim().includes(" ");
+  if (isSingleWord) {
+    if (translationConjugated) {
+      translationConjugated = stripPronounPrefix(translationConjugated);
+    }
+    if (translationStr) {
+      translationStr = stripPronounPrefix(translationStr);
+    }
+    if (grammar?.infinitive) {
+      grammar.infinitive = stripPronounPrefix(grammar.infinitive);
+    }
+  }
+  
+  if (translationStr) out.translation = translationStr;
+  if (translationConjugated && isVerb) out.translationConjugated = translationConjugated;
   
   if (grammar) {
     if (grammar.infinitive && translationStr && grammar.infinitive.toLowerCase() === translationStr.toLowerCase()) {

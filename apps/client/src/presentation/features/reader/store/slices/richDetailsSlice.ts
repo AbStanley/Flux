@@ -409,9 +409,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
     };
 
     const modelInfinitive = tab.data.grammar?.infinitive?.trim();
-    // Never fall back to tab.text: it may be a conjugated form (e.g. "macht"),
-    // which would confuse the conjugation model into guessing a different verb.
-    const infinitive = modelInfinitive ?? "";
+    const infinitive = modelInfinitive || tab.text.trim();
     if (!infinitive) {
       updateTab((t) => ({
         ...t,

@@ -250,7 +250,18 @@ export class OllamaTranslationService {
 
     this.trimRunawayTranslation(rich, params.text);
     this.enforceVerbShape(rich);
-    this.dropSameLanguageExamples(rich);
+    this.stripPronounPrefix(rich, params.text);
+
+    const sourceLanguage =
+      params.sourceLanguage && params.sourceLanguage !== 'Auto'
+        ? params.sourceLanguage
+        : 'English';
+    await this.dropSameLanguageExamples(
+      rich,
+      sourceLanguage,
+      params.targetLanguage,
+      model,
+    );
 
     return rich as unknown as RichTranslation;
   }
@@ -424,29 +435,42 @@ export class OllamaTranslationService {
    * Latin-alphabet pairs (e.g., English/Spanish) can't be caught this way
    * without a real language detector — we rely on the prompt for those.
    */
-  private dropSameLanguageExamples(rich: RichObj): void {
+  private async dropSameLanguageExamples(
+    rich: RichObj,
+    sourceLanguage: string,
+    targetLanguage: string,
+    model: string,
+  ): Promise<void> {
     const examples = rich.examples;
     if (!Array.isArray(examples)) return;
-    const filtered = examples.filter((ex) => {
-      if (!ex || typeof ex !== 'object') return false;
-      const entry = ex as { sentence?: unknown; translation?: unknown };
-      const sentence =
-        typeof entry.sentence === 'string' ? entry.sentence.trim() : '';
-      const translation =
-        typeof entry.translation === 'string' ? entry.translation.trim() : '';
-      if (!sentence || !translation) return false;
+    const mappedAndFiltered: any[] = [];
+
+    const segment = typeof rich.segment === 'string' ? rich.segment : '';
+
+    for (const ex of examples) {
+      if (!ex || typeof ex !== 'object') continue;
+      const entry = ex as Record<string, unknown>;
+      const sentenceKey =
+        Object.keys(entry).find((k) => k.toLowerCase().includes('sentence')) ||
+        'sentence';
+      const translationKey =
+        Object.keys(entry).find((k) =>
+          k.toLowerCase().includes('translation'),
+        ) || 'translation';
+
+      const sentenceVal = entry[sentenceKey];
+      const translationVal = entry[translationKey];
+      let sentence = typeof sentenceVal === 'string' ? sentenceVal.trim() : '';
+      let translation =
+        typeof translationVal === 'string' ? translationVal.trim() : '';
+      if (!sentence || !translation) continue;
+
       const srcScript = detectScript(sentence);
       const tgtScript = detectScript(translation);
-      if (
+      const isScriptConflict =
         srcScript !== 'latin' &&
         srcScript !== 'unknown' &&
-        srcScript === tgtScript
-      ) {
-        this.logger.warn(
-          `[RichTranslation] dropped same-script example (${srcScript}): "${sentence}" / "${translation}"`,
-        );
-        return false;
-      }
+        srcScript === tgtScript;
 
       // Word overlap check (for latin or other scripts)
       const cleanWords = (text: string) =>
@@ -454,10 +478,11 @@ export class OllamaTranslationService {
           .toLowerCase()
           .replace(/[.,/#!$%^&*;:{}=\-_`~()?'"]/g, '')
           .split(/\s+/)
-          .filter((w) => w.length > 2);
+          .filter((w) => w.length > 1);
 
       const wordsSrc = cleanWords(sentence);
       const wordsTgt = cleanWords(translation);
+      let isOverlapConflict = false;
       if (wordsSrc.length > 0 && wordsTgt.length > 0) {
         const setSrc = new Set(wordsSrc);
         let commonCount = 0;
@@ -466,17 +491,48 @@ export class OllamaTranslationService {
         }
         const overlap =
           commonCount / Math.max(wordsSrc.length, wordsTgt.length);
-        if (overlap > 0.5) {
-          this.logger.warn(
-            `[RichTranslation] dropped overlapping example (ratio ${overlap.toFixed(2)}): "${sentence}" / "${translation}"`,
-          );
-          return false;
+        if (overlap > 0.85) {
+          isOverlapConflict = true;
         }
       }
 
-      return true;
-    });
-    rich.examples = filtered;
+      if (isScriptConflict || isOverlapConflict) {
+        this.logger.log(
+          `[RichTranslation] Healing same-language example: "${sentence}" / "${translation}"`,
+        );
+        const cleanSegment = segment.toLowerCase().trim();
+        const containsSegment = sentence.toLowerCase().includes(cleanSegment);
+
+        try {
+          if (containsSegment) {
+            // Both are in the source language. Translate to target language.
+            const res = await this.translateText({
+              text: sentence,
+              targetLanguage,
+              sourceLanguage,
+              model,
+            });
+            translation = res.response.trim();
+          } else {
+            // Both are in target language. Translate to source language.
+            const res = await this.translateText({
+              text: translation,
+              targetLanguage: sourceLanguage,
+              sourceLanguage: targetLanguage,
+              model,
+            });
+            sentence = res.response.trim();
+          }
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          this.logger.error(`Failed to heal same-language example: ${errMsg}`);
+        }
+      }
+
+      mappedAndFiltered.push({ sentence, translation });
+    }
+
+    rich.examples = mappedAndFiltered;
   }
 
   private async fetchRichTranslation(
@@ -575,6 +631,101 @@ export class OllamaTranslationService {
     }
     if (rich.grammar && Object.keys(rich.grammar).length === 0) {
       delete rich.grammar;
+    }
+  }
+
+  private stripPronounPrefix(rich: RichObj, input: string): void {
+    const isSingleWord = !input.trim().includes(' ');
+    if (!isSingleWord) return;
+
+    const pronouns = new Set([
+      'ich',
+      'du',
+      'er',
+      'sie',
+      'es',
+      'wir',
+      'ihr',
+      'Sie',
+      'yo',
+      'tú',
+      'él',
+      'ella',
+      'usted',
+      'nosotros',
+      'nosotras',
+      'vosotros',
+      'vosotras',
+      'ellos',
+      'ellas',
+      'ustedes',
+      'je',
+      "j'",
+      'tu',
+      'il',
+      'elle',
+      'on',
+      'nous',
+      'vous',
+      'ils',
+      'elles',
+      'io',
+      'tu',
+      'lui',
+      'lei',
+      'noi',
+      'voi',
+      'loro',
+      'я',
+      'ты',
+      'он',
+      'она',
+      'оно',
+      'мы',
+      'вы',
+      'они',
+      'i',
+      'you',
+      'he',
+      'she',
+      'it',
+      'we',
+      'they',
+    ]);
+
+    const strip = (text: unknown): string => {
+      if (typeof text !== 'string') return '';
+      const cleaned = text.trim();
+      const tokens = cleaned.split(/([\s/,()]+)/);
+      let firstNonPronounIndex = -1;
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (!token) continue;
+        if (/^[\s/,()]+$/.test(token)) continue;
+        const isPronoun =
+          pronouns.has(token.toLowerCase()) ||
+          (token.toLowerCase().endsWith("'") &&
+            pronouns.has(token.toLowerCase().slice(0, -1))) ||
+          pronouns.has(token.toLowerCase() + "'");
+        if (isPronoun) continue;
+        firstNonPronounIndex = i;
+        break;
+      }
+      if (firstNonPronounIndex > 0) {
+        const remainder = tokens.slice(firstNonPronounIndex).join('').trim();
+        if (remainder) return remainder;
+      }
+      if (/^j'/i.test(cleaned) && cleaned.length > 2) {
+        return cleaned.slice(2).trim();
+      }
+      return cleaned;
+    };
+
+    if (rich.translationConjugated) {
+      rich.translationConjugated = strip(rich.translationConjugated);
+    }
+    if (rich.translation) {
+      rich.translation = strip(rich.translation);
     }
   }
 

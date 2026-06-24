@@ -16,7 +16,6 @@ import { ContentType } from '../prompts';
 
 @Injectable()
 export class OllamaService {
-
   constructor(
     private readonly client: OllamaClientService,
     private readonly translation: OllamaTranslationService,
@@ -163,7 +162,7 @@ export class OllamaService {
     return this.generation.generateGameContent(params);
   }
 
-  async generateGameContentStream(params: {
+  generateGameContentStream(params: {
     topic: string;
     level: string;
     mode: string;
@@ -190,7 +189,12 @@ export class OllamaService {
     return this.grammar.analyzeGrammar(params);
   }
 
-  async analyzeWriting(params: { text: string; sourceLanguage: string; model?: string; signal?: AbortSignal }): Promise<WritingAnalysisResponse> {
+  async analyzeWriting(params: {
+    text: string;
+    sourceLanguage: string;
+    model?: string;
+    signal?: AbortSignal;
+  }): Promise<WritingAnalysisResponse> {
     return this.writing.analyzeWriting(params);
   }
 }
