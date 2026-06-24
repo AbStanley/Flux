@@ -76,6 +76,7 @@ export interface IAIService {
             signal?: AbortSignal;
             onPartial: (partial: Partial<RichTranslationResult>) => void;
             traceId?: string;
+            regenerate?: boolean;
         },
     ): Promise<RichTranslationResult>;
 

@@ -36,9 +36,15 @@ export const asExampleArray = (
   const safe = v
     .map((entry) => {
       if (!entry || typeof entry !== "object") return null;
-      const e = entry as { sentence?: unknown; translation?: unknown };
-      const sentence = asString(e.sentence);
-      const translation = asString(e.translation);
+      const e = entry as Record<string, unknown>;
+      const sentenceKey = Object.keys(e).find(
+        (k) => k.toLowerCase().includes("sentence")
+      ) || "sentence";
+      const translationKey = Object.keys(e).find(
+        (k) => k.toLowerCase().includes("translation")
+      ) || "translation";
+      const sentence = asString(e[sentenceKey]);
+      const translation = asString(e[translationKey]);
       if (!sentence || !translation) return null;
       return { sentence, translation };
     })

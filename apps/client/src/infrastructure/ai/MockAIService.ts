@@ -85,6 +85,7 @@ export class MockAIService implements IAIService {
             signal?: AbortSignal;
             onPartial: (partial: Partial<RichTranslationResult>) => void;
             traceId?: string;
+            regenerate?: boolean;
         },
     ): Promise<RichTranslationResult> {
         const final = await this.getRichTranslation(text, opts.targetLanguage, opts.context);

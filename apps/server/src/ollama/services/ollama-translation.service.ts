@@ -236,6 +236,7 @@ export class OllamaTranslationService {
     model?: string;
     signal?: AbortSignal;
     traceId?: string;
+    regenerate?: boolean;
   }): Promise<RichTranslation> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const rich = await this.fetchRichTranslation(
@@ -269,6 +270,7 @@ export class OllamaTranslationService {
     model?: string;
     signal?: AbortSignal;
     traceId?: string;
+    regenerate?: boolean;
   }): Promise<AsyncIterable<GenerateResponse>> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getRichTranslationPrompt(
@@ -287,7 +289,7 @@ export class OllamaTranslationService {
       {
         num_ctx: 2048,
         num_predict: 768,
-        temperature: 0,
+        temperature: params.regenerate ? 0.3 : 0,
       },
       params.signal,
       params.traceId,
@@ -445,6 +447,33 @@ export class OllamaTranslationService {
         );
         return false;
       }
+
+      // Word overlap check (for latin or other scripts)
+      const cleanWords = (text: string) =>
+        text
+          .toLowerCase()
+          .replace(/[.,/#!$%^&*;:{}=\-_`~()?'"]/g, '')
+          .split(/\s+/)
+          .filter((w) => w.length > 2);
+
+      const wordsSrc = cleanWords(sentence);
+      const wordsTgt = cleanWords(translation);
+      if (wordsSrc.length > 0 && wordsTgt.length > 0) {
+        const setSrc = new Set(wordsSrc);
+        let commonCount = 0;
+        for (const w of wordsTgt) {
+          if (setSrc.has(w)) commonCount++;
+        }
+        const overlap =
+          commonCount / Math.max(wordsSrc.length, wordsTgt.length);
+        if (overlap > 0.5) {
+          this.logger.warn(
+            `[RichTranslation] dropped overlapping example (ratio ${overlap.toFixed(2)}): "${sentence}" / "${translation}"`,
+          );
+          return false;
+        }
+      }
+
       return true;
     });
     rich.examples = filtered;
@@ -457,6 +486,7 @@ export class OllamaTranslationService {
       context?: string;
       sourceLanguage?: string;
       signal?: AbortSignal;
+      regenerate?: boolean;
     },
     model: string,
     traceId?: string,
@@ -472,7 +502,11 @@ export class OllamaTranslationService {
       prompt,
       false,
       'json',
-      { num_ctx: 2048, num_predict: 768, temperature: 0 },
+      {
+        num_ctx: 2048,
+        num_predict: 768,
+        temperature: params.regenerate ? 0.3 : 0,
+      },
       params.signal,
       traceId,
     );

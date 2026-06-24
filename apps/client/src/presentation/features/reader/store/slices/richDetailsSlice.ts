@@ -11,6 +11,7 @@ import {
   sanitizeRichResult,
   sanitizePartialRich,
 } from "./richDetailsUtils";
+import { healExamples } from "./richDetailsHealer";
 import { useSettingsStore } from "../../../settings/store/useSettingsStore";
 
 export { coreLooksLikeVerb, shouldFetchConjugations };
@@ -123,6 +124,7 @@ async function runRichLoad(
   syncHoverCache: (translation: string) => void,
   signal: AbortSignal,
   traceId?: string,
+  regenerate?: boolean,
 ): Promise<void> {
   let lastSyncedTranslation: string | null = null;
 
@@ -178,6 +180,7 @@ async function runRichLoad(
     signal,
     onPartial,
     traceId,
+    regenerate,
   });
 
   // Final write: run the full sanitize so missing fields get their
@@ -193,6 +196,7 @@ async function runRichLoad(
     conjugationsError: null,
   }));
   syncHoverCache(safe.translation);
+  healExamples(safe.examples, text, sourceLang, targetLang, aiService, updateTab);
 }
 
 export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
@@ -375,6 +379,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
           syncRichIntoHoverCache(set, tab.text, tab.targetLang, translation),
         controller.signal,
         traceId,
+        true,
       );
     } catch (error: unknown) {
       if (controller.signal.aborted) {

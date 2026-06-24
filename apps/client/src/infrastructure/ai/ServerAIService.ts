@@ -227,6 +227,7 @@ export class ServerAIService implements IAIService {
       signal?: AbortSignal;
       onPartial: (partial: Partial<RichTranslationResult>) => void;
       traceId?: string;
+      regenerate?: boolean;
     },
   ): Promise<RichTranslationResult> {
     const targetLanguage = opts.targetLanguage ?? "en";
@@ -239,6 +240,7 @@ export class ServerAIService implements IAIService {
       model: this.model,
       stream: true,
       traceId: opts.traceId,
+      regenerate: opts.regenerate,
     });
 
     try {

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from "../../../../components/ui/button";
 import { Loader2, Volume2, BookA, Square, AudioLines, RotateCw } from "lucide-react";
@@ -7,11 +6,13 @@ import { ConjugationsDisplay } from '../ConjugationsDisplay';
 import { AnalysisSection } from './AnalysisSection';
 import { GrammarTable } from './GrammarTable';
 import { shouldFetchConjugations, type RichDetailsTab } from '../../store/slices/richDetailsSlice';
-import { Skeleton } from "../../../../components/ui/skeleton";
 import { motion } from "framer-motion";
 import { LANGUAGE_CODE_MAP } from '../../../../../core/constants/languages';
-import { DictionaryModal, type TabType } from './DictionaryModal';
 import { AccordionsSection } from './AccordionsSection';
+import { AlternativesList } from './AlternativesList';
+import { RichDetailsSkeleton } from './RichDetailsSkeleton';
+import { RichDetailsError } from './RichDetailsError';
+import { DictionariesSection } from './DictionariesSection';
 
 interface RichDetailsContentProps {
     tab: RichDetailsTab;
@@ -40,40 +41,13 @@ export function RichDetailsContent({
 }: RichDetailsContentProps) {
     const activeSingleText = useAudioStore(state => state.activeSingleText);
     const { data, isLoading, isStreaming, error, sourceLang, conjugationsLoading, conjugationsError } = tab;
-    const [isDictOpen, setIsDictOpen] = useState(false);
-    const [dictTab, setDictTab] = useState<TabType>('oxford');
-
-    const openDictionary = (tabName: TabType) => {
-        setDictTab(tabName);
-        setIsDictOpen(true);
-    };
 
     if (isLoading) {
-        return (
-            <div className="space-y-6 animate-in fade-in duration-300">
-                <div><Skeleton className="h-6 w-3/4 mb-2" /><Skeleton className="h-8 w-full" /></div>
-                <div className="bg-muted/50 p-4 rounded-lg border space-y-3">
-                    <Skeleton className="h-5 w-40" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" />
-                </div>
-                <div className="rounded-md border p-4 space-y-3">
-                    <Skeleton className="h-5 w-32" />
-                    <div className="flex gap-2"><Skeleton className="h-6 w-16 rounded-full" /><Skeleton className="h-6 w-20 rounded-full" /></div>
-                </div>
-                <div className="flex justify-center mt-4">
-                    <Button variant="outline" size="sm" onClick={onCancel} className="gap-2"><Square className="h-3 w-3 fill-current" /> Stop</Button>
-                </div>
-            </div>
-        );
+        return <RichDetailsSkeleton onCancel={onCancel} />;
     }
 
     if (error) {
-        return (
-            <div className="flex flex-col items-center justify-center h-40 space-y-4 text-center p-4">
-                <p className="text-destructive font-medium">Error loading details</p>
-                <p className="text-sm text-muted-foreground">{error}</p>
-                <Button variant="outline" size="sm" onClick={onRegenerate}>Retry</Button>
-            </div>
-        );
+        return <RichDetailsError error={error} onRegenerate={onRegenerate} />;
     }
 
     if (!data) return null;
@@ -137,43 +111,18 @@ export function RichDetailsContent({
                     }
                 </div>
 
-                {/* Direct Pill Lookups Dictionaries Card */}
-                <div className="bg-muted/30 border border-border/60 rounded-xl p-3.5 mt-3 space-y-3 shadow-sm hover:shadow-md transition-all">
-                    <div className="space-y-0.5">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                            <BookA className="h-3.5 w-3.5 text-primary" /> Dictionaries
+                {/* Alternative Translations */}
+                {data.alternatives && data.alternatives.length > 0 && (
+                    <div className="mt-3.5 space-y-1.5">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            Alternative Translations
                         </p>
-                        <p className="text-xs text-muted-foreground/80 leading-normal">Select an option to look up the word in-app:</p>
+                        <AlternativesList alternatives={data.alternatives} />
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                        {langCode === 'en' && (
-                            <Button
-                                variant="outline" size="sm" onClick={() => openDictionary('oxford')}
-                                className="text-xs font-semibold border-border/80 hover:bg-muted bg-card text-foreground/80 hover:text-foreground rounded-full h-8 px-3.5 transition-all"
-                            >
-                                Google Define 🔍
-                            </Button>
-                        )}
-                        <Button
-                            variant="outline" size="sm" onClick={() => openDictionary('wiktionary')}
-                            className="text-xs font-semibold border-border/80 hover:bg-muted bg-card text-foreground/80 hover:text-foreground rounded-full h-8 px-3.5 transition-all"
-                        >
-                            Wiktionary 📖
-                        </Button>
-                        <Button
-                            variant="outline" size="sm" onClick={() => openDictionary('freedict')}
-                            className="text-xs font-semibold border-border/80 hover:bg-muted bg-card text-foreground/80 hover:text-foreground rounded-full h-8 px-3.5 transition-all"
-                        >
-                            Free Dictionary 🌐
-                        </Button>
-                    </div>
-                </div>
+                )}
 
-                {/* Unified Widescreen Lookup Modal */}
-                <DictionaryModal
-                    isOpen={isDictOpen} onOpenChange={setIsDictOpen} word={data.segment}
-                    langCode={langCode} activeTab={dictTab} onTabChange={setDictTab}
-                />
+                {/* Direct Pill Lookups Dictionaries Card */}
+                <DictionariesSection word={data.segment} langCode={langCode} />
             </motion.div>
 
             <motion.div variants={itemVariants}>
@@ -220,7 +169,7 @@ export function RichDetailsContent({
             {/* Accordion Lists */}
             <motion.div variants={itemVariants}>
                 <AccordionsSection
-                    examples={data.examples || []} alternatives={data.alternatives || []}
+                    examples={data.examples || []}
                     onGenerateMoreExamples={onGenerateMoreExamples} isStreaming={!!isStreaming}
                 />
             </motion.div>

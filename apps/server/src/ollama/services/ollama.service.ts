@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { GenerateResponse } from 'ollama';
 import { OllamaClientService } from './ollama-client.service';
 import { OllamaTranslationService } from './ollama-translation.service';
@@ -16,7 +16,6 @@ import { ContentType } from '../prompts';
 
 @Injectable()
 export class OllamaService {
-  private readonly logger = new Logger(OllamaService.name);
 
   constructor(
     private readonly client: OllamaClientService,
@@ -82,6 +81,7 @@ export class OllamaService {
     model?: string;
     signal?: AbortSignal;
     traceId?: string;
+    regenerate?: boolean;
   }): Promise<RichTranslation> {
     return this.translation.getRichTranslation(params);
   }
@@ -94,6 +94,7 @@ export class OllamaService {
     model?: string;
     signal?: AbortSignal;
     traceId?: string;
+    regenerate?: boolean;
   }): Promise<AsyncIterable<GenerateResponse>> {
     return this.translation.getRichTranslationStream(params);
   }
@@ -189,12 +190,7 @@ export class OllamaService {
     return this.grammar.analyzeGrammar(params);
   }
 
-  async analyzeWriting(params: {
-    text: string;
-    sourceLanguage: string;
-    model?: string;
-    signal?: AbortSignal;
-  }): Promise<WritingAnalysisResponse> {
+  async analyzeWriting(params: { text: string; sourceLanguage: string; model?: string; signal?: AbortSignal }): Promise<WritingAnalysisResponse> {
     return this.writing.analyzeWriting(params);
   }
 }

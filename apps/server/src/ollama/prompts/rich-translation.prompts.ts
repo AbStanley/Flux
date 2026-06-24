@@ -10,6 +10,14 @@ export const getRichTranslationPrompt = (
       : 'source language';
   const isSentence = text.length > 40 || /\s/.test(text.trim());
 
+  const cleanSrcLang = srcLang.toLowerCase().replace(/[^a-z]/g, '');
+  const cleanTgtLang = targetLanguage.toLowerCase().replace(/[^a-z]/g, '');
+  const srcKey =
+    cleanSrcLang && cleanSrcLang !== 'sourcelanguage'
+      ? `${cleanSrcLang}_sentence`
+      : 'source_sentence';
+  const tgtKey = `${cleanTgtLang}_translation`;
+
   let formattedContext = context || 'none';
   let isHighlighted = false;
   if (!isSentence && context) {
@@ -76,7 +84,7 @@ Reply with ONE JSON object in this exact shape:
     "gender":       "<${targetLanguage}; ONLY when grammatically gendered>",
     "explanation":  "<${targetLanguage}, one full sentence about how the word functions in THIS sentence>"
   },
-  "examples":     [ {"sentence":"<${srcLang} ONLY>","translation":"<${targetLanguage} ONLY>"}, 3 entries — REQUIRED ],
+  "examples":     [ {"${srcKey}":"<sentence in ${srcLang} containing '${text}'>","${tgtKey}":"<translation in ${targetLanguage}>"}, 3 entries — REQUIRED ],
   "alternatives": [ "<${targetLanguage}>", 1-2 entries — REQUIRED ]${
     isSentence
       ? `,
@@ -95,7 +103,7 @@ Rules:
 - Parts-of-Speech Matching: Never translate a verb form as a pronoun.
 - When isVerb=true, "sourceInfinitive" MUST be the pure ${srcLang} INFINITIVE. NEVER copy the conjugated segment.
 - Every string value MUST be in the language its slot assigns. Omit optional keys whose condition is false — never write "n/a", "none", or empty strings.
-- "examples": exactly 3 natural, diverse, and contextual example sentences. Each "sentence" must be entirely in ${srcLang} and MUST explicitly contain "${text}" (or its conjugation/variation). Each "translation" must be entirely in ${targetLanguage}. Never swap the languages or leave them empty.
+- "examples": exactly 3 natural, diverse, and contextual example sentences. Each "${srcKey}" MUST be entirely in the source language (${srcLang}) and contain "${text}" (or its conjugation/variation). Each "${tgtKey}" MUST be entirely in the target language (${targetLanguage}). NEVER write the same language in both fields.
 - Translate ONLY the specific segment "${text}". DO NOT translate the entire sentence. 
 - If "${text}" is a single word, the translation MUST be a single word (or minimal equivalent). DO NOT translate the full compound verb if only the auxiliary verb was tapped.
 ${isSentence ? '- Multi-word input: type="sentence", isVerb=false.' : ''}
