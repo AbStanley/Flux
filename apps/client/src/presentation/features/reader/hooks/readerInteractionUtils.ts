@@ -118,7 +118,7 @@ export const handleMergeInteraction = (params: {
             const maxIdx = Math.max(globalIndex, groupEnd);
             
             for (let i = minIdx; i < maxIdx; i++) {
-                if (/[.!?;:…]["'»\]})]*\s*$/.test(tokens[i])) {
+                if (/[.!?;:…]["'»\]})]*\s*$/.test(tokens[i]) || tokens[i].includes('\n')) {
                     return false;
                 }
             }
