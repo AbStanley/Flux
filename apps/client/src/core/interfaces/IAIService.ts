@@ -56,10 +56,7 @@ export interface IAIService {
      */
     translateText(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal, traceId?: string): Promise<string | { response: string; sourceLanguage?: string }>;
 
-    /**
-     * Helper to get rich translation info with grammar and examples
-     */
-    getRichTranslation(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal, traceId?: string): Promise<RichTranslationResult>;
+    getRichTranslation(text: string, targetLanguage?: string, context?: string, sourceLanguage?: string, signal?: AbortSignal, traceId?: string, preferredTranslation?: string): Promise<RichTranslationResult>;
 
     /**
      * Streaming variant of getRichTranslation. Calls `onPartial` with a
@@ -77,6 +74,7 @@ export interface IAIService {
             onPartial: (partial: Partial<RichTranslationResult>) => void;
             traceId?: string;
             regenerate?: boolean;
+            preferredTranslation?: string;
         },
     ): Promise<RichTranslationResult>;
 

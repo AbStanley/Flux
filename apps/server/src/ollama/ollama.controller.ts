@@ -247,6 +247,7 @@ export class OllamaController {
       stream?: boolean;
       traceId?: string;
       regenerate?: boolean;
+      preferredTranslation?: string;
     },
     @Res() res: Response,
     @Req() req: Request,

@@ -40,7 +40,7 @@ export class MockAIService implements IAIService {
         return `[Explanation in ${targetLanguage}]: This is a mock explanation for "${text}".`;
     }
 
-    async getRichTranslation(text: string, _targetLanguage?: string, _context?: string, _sourceLanguage?: string, _signal?: AbortSignal, _traceId?: string): Promise<RichTranslationResult> {
+    async getRichTranslation(text: string, _targetLanguage?: string, _context?: string, _sourceLanguage?: string, _signal?: AbortSignal, _traceId?: string, _preferredTranslation?: string): Promise<RichTranslationResult> {
         console.log(`[MockAI] Getting rich translation for "${text}" to ${_targetLanguage} (Context: ${_context})`);
         return {
             translation: `[Mock Rich] ${text}`,
@@ -86,9 +86,10 @@ export class MockAIService implements IAIService {
             onPartial: (partial: Partial<RichTranslationResult>) => void;
             traceId?: string;
             regenerate?: boolean;
+            preferredTranslation?: string;
         },
     ): Promise<RichTranslationResult> {
-        const final = await this.getRichTranslation(text, opts.targetLanguage, opts.context);
+        const final = await this.getRichTranslation(text, opts.targetLanguage, opts.context, opts.sourceLanguage, opts.signal, opts.traceId, opts.preferredTranslation);
         opts.onPartial({ segment: final.segment, translation: final.translation });
         await new Promise(resolve => setTimeout(resolve, 200));
         opts.onPartial({ ...final, alternatives: [] });

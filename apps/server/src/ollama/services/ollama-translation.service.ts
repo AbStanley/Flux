@@ -4,10 +4,10 @@ import { OllamaClientService } from './ollama-client.service';
 import {
   getTranslatePrompt,
   getExplainPrompt,
-  getRichTranslationPrompt,
   getSingleTensePrompt,
   getRawTranslatePrompt,
 } from '../prompts';
+import { getRichTranslationPrompt } from '../prompts/rich-translation.prompts';
 import { cleanResponse, cleanAndParseJson } from '../utils/ollama-utils';
 import {
   RichTranslation,
@@ -237,6 +237,7 @@ export class OllamaTranslationService {
     signal?: AbortSignal;
     traceId?: string;
     regenerate?: boolean;
+    preferredTranslation?: string;
   }): Promise<RichTranslation> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const rich = await this.fetchRichTranslation(
@@ -282,13 +283,16 @@ export class OllamaTranslationService {
     signal?: AbortSignal;
     traceId?: string;
     regenerate?: boolean;
+    preferredTranslation?: string;
   }): Promise<AsyncIterable<GenerateResponse>> {
     const model = await this.ollamaClient.ensureModel(params.model);
+    // Generate prompt with preferred target alignment hint
     const prompt = getRichTranslationPrompt(
       params.text,
       params.targetLanguage,
       params.context,
       params.sourceLanguage,
+      params.preferredTranslation,
     );
     this.logger.debug(`[RICH TRANSLATION PROMPT]\n${prompt}`);
 
@@ -543,15 +547,18 @@ export class OllamaTranslationService {
       sourceLanguage?: string;
       signal?: AbortSignal;
       regenerate?: boolean;
+      preferredTranslation?: string;
     },
     model: string,
     traceId?: string,
   ): Promise<RichObj> {
+    // Generate prompt with preferred target alignment hint for static fetch
     const prompt = getRichTranslationPrompt(
       params.text,
       params.targetLanguage,
       params.context,
       params.sourceLanguage,
+      params.preferredTranslation,
     );
     const { response } = await this.ollamaClient.generate(
       model,

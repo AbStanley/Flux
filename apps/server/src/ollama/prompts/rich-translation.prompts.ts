@@ -1,8 +1,10 @@
+// Prompt builder for rich translations with syntax, grammar, and preferred translation hint alignment.
 export const getRichTranslationPrompt = (
   text: string,
   targetLanguage: string = 'en',
   context?: string,
   sourceLanguage?: string,
+  preferredTranslation?: string,
 ): string => {
   const srcLang =
     sourceLanguage && sourceLanguage !== 'Auto'
@@ -50,6 +52,13 @@ export const getRichTranslationPrompt = (
   const translationDesc = isRussian
     ? `<Russian translation. MUST be the dictionary base form (pure INFINITIVE for verbs). For non-verbs, if there is no direct translation (like articles), you MUST write its grammatical role e.g. 'артикль' or a close equivalent like 'те'. NEVER omit this field. NEVER write 'n/a'. — REQUIRED>`
     : `<${targetLanguage} translation. MUST be the dictionary base form (pure INFINITIVE for verbs). NEVER the source language word. NEVER a conjugated form. NEVER write 'n/a'.>`;
+
+  const preferredInstruction = preferredTranslation
+    ? `\nPREFERRED TRANSLATION TARGET HINT: The user previously saw the translation "${preferredTranslation}" for this word. If possible, align your primary translations with this preferred translation:
+- If "${text}" is a verb, the "translation" field MUST be the pure dictionary infinitive form of "${preferredTranslation}" in ${targetLanguage}.
+- The "translationConjugated" field MUST be the correctly conjugated form of that SAME verb in ${targetLanguage}, matching the grammatical subject and tense of the context sentence exactly.
+- If it is not a verb, the "translation" field MUST match "${preferredTranslation}".`
+    : '';
 
   return `You are a ${srcLang}→${targetLanguage} bilingual dictionary.
 
@@ -108,5 +117,6 @@ Rules:
 - If "${text}" is a single word, the translation MUST be a single word (or minimal equivalent). DO NOT translate the full compound verb if only the auxiliary verb was tapped.
 ${isSentence ? '- Multi-word input: type="sentence", isVerb=false.' : ''}
 
-Output JSON only. No markdown, no preamble. Do NOT include a "conjugations" field.`;
+Output JSON only. No markdown, no preamble. Do NOT include a "conjugations" field.${preferredInstruction}`;
 };
+

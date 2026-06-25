@@ -98,6 +98,7 @@ export class ServerAIService implements IAIService {
     sourceLanguage?: string,
     signal?: AbortSignal,
     traceId?: string,
+    preferredTranslation?: string,
   ): Promise<RichTranslationResult> {
     const cleanedText = this.cleanSelection(text);
     return defaultClient.post<RichTranslationResult>('/api/rich-translation', {
@@ -107,6 +108,7 @@ export class ServerAIService implements IAIService {
       sourceLanguage,
       model: this.model,
       traceId,
+      preferredTranslation,
     }, signal, 45000);
   }
 
@@ -228,6 +230,7 @@ export class ServerAIService implements IAIService {
       onPartial: (partial: Partial<RichTranslationResult>) => void;
       traceId?: string;
       regenerate?: boolean;
+      preferredTranslation?: string;
     },
   ): Promise<RichTranslationResult> {
     const targetLanguage = opts.targetLanguage ?? "en";
@@ -241,6 +244,7 @@ export class ServerAIService implements IAIService {
       stream: true,
       traceId: opts.traceId,
       regenerate: opts.regenerate,
+      preferredTranslation: opts.preferredTranslation,
     });
 
     try {
@@ -323,6 +327,7 @@ export class ServerAIService implements IAIService {
         opts.sourceLanguage,
         opts.signal,
         opts.traceId,
+        opts.preferredTranslation,
       );
       opts.onPartial(fallback);
       return fallback;

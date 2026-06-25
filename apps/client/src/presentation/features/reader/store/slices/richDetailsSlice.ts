@@ -13,6 +13,7 @@ import {
 } from "./richDetailsUtils";
 import { healExamples } from "./richDetailsHealer";
 import { useSettingsStore } from "../../../settings/store/useSettingsStore";
+import type { TranslationSlice } from "./translationSlice";
 
 export { coreLooksLikeVerb, shouldFetchConjugations };
 
@@ -125,6 +126,7 @@ async function runRichLoad(
   signal: AbortSignal,
   traceId?: string,
   regenerate?: boolean,
+  preferredTranslation?: string,
 ): Promise<void> {
   let lastSyncedTranslation: string | null = null;
 
@@ -181,6 +183,7 @@ async function runRichLoad(
     onPartial,
     traceId,
     regenerate,
+    preferredTranslation,
   });
 
   // Final write: run the full sanitize so missing fields get their
@@ -266,6 +269,9 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
     const controller = new AbortController();
     activeRichAborts.set(text, controller);
 
+    const cacheKey = `${text.trim()}_${targetLang}`;
+    const preferredTranslation = (get() as unknown as TranslationSlice).translationCache?.get(cacheKey);
+
     try {
       await runRichLoad(
         text,
@@ -278,6 +284,8 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
           syncRichIntoHoverCache(set, text, targetLang, translation),
         controller.signal,
         traceId,
+        false,
+        preferredTranslation,
       );
     } catch (error: unknown) {
       // User-triggered abort is a clean stop, not an error banner.
@@ -367,6 +375,9 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
     const controller = new AbortController();
     activeRichAborts.set(id, controller);
 
+    const cacheKey = `${tab.text.trim()}_${tab.targetLang}`;
+    const preferredTranslation = (get() as unknown as TranslationSlice).translationCache?.get(cacheKey);
+
     try {
       await runRichLoad(
         tab.text,
@@ -380,6 +391,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
         controller.signal,
         traceId,
         true,
+        preferredTranslation,
       );
     } catch (error: unknown) {
       if (controller.signal.aborted) {
