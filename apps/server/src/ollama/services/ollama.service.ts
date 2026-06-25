@@ -81,6 +81,7 @@ export class OllamaService {
     signal?: AbortSignal;
     traceId?: string;
     regenerate?: boolean;
+    preferredTranslation?: string;
   }): Promise<RichTranslation> {
     return this.translation.getRichTranslation(params);
   }
@@ -94,6 +95,7 @@ export class OllamaService {
     signal?: AbortSignal;
     traceId?: string;
     regenerate?: boolean;
+    preferredTranslation?: string;
   }): Promise<AsyncIterable<GenerateResponse>> {
     return this.translation.getRichTranslationStream(params);
   }

@@ -46,7 +46,7 @@ export const getRichTranslationPrompt = (
     targetLanguage.toLowerCase() === 'ru';
 
   const rule3 = isRussian
-    ? '\n3. Translate ONLY the tapped segment. Do NOT translate it using another word from the surrounding context that belongs to a different part of the sentence. If the segment has no direct equivalent in the target language (such as articles when translating to Russian which does not use articles), the "translation" should represent its primary grammatical role or a close equivalent (e.g. a demonstrative pronoun), and the "explanation" must describe its correct grammatical function.'
+    ? '\n3. Translate ONLY the selected segment. Do NOT translate it using another word from the surrounding context that belongs to a different part of the sentence. If the segment has no direct equivalent in the target language (such as articles when translating to Russian which does not use articles), the "translation" should represent its primary grammatical role or a close equivalent (e.g. a demonstrative pronoun), and the "explanation" must describe its correct grammatical function.'
     : '';
 
   const translationDesc = isRussian
@@ -61,62 +61,51 @@ export const getRichTranslationPrompt = (
     : '';
 
   return `You are a ${srcLang}→${targetLanguage} bilingual dictionary.
-
-CRITICAL ROLE & RULES:
-1. Ensure absolute parts-of-speech and category consistency. Never translate a verb form as a pronoun. If the input is a verb, the "translation" and "translationConjugated" fields MUST be verbs in the target language. If the input is NOT a verb, the "translation" field MUST match the input's part of speech in the target language (it MUST NOT be a verb).
-2. Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural source words into singular target forms.${rule3}
-
-A learner is reading this ${srcLang} sentence:
-"${formattedContext}"
-
-Within that sentence they tapped: "${text}"${isHighlighted ? ' (marked with single quotes above)' : ''}
+Context sentence: "${formattedContext}"
+Within that sentence they selected: "${text}"${isHighlighted ? ' (marked with single quotes above)' : ''}
 
 CRITICAL: "${text}" is a ${srcLang} word as used in the ${srcLang} sentence above. Do NOT interpret it as a word from any other language.
+CRITICAL: Translate ONLY "${text}" as used in the context sentence. Do NOT translate other parts of the sentence.
 
-Reply with ONE JSON object in this exact shape:
-
+Output ONE JSON object matching this exact shape:
 {
   "type": "word" | "sentence",
   "isVerb": true | false,
   "segment": "${text}",
   "_verbAnalysis": {
-    "sourceInfinitive": "<${srcLang} INFINITIVE — the dictionary/citation form. NEVER copy the conjugated text here.>",
-    "targetInfinitive": "<${targetLanguage} INFINITIVE — the dictionary/citation form. NEVER write the conjugated form here.>",
-    "grammaticalPerson": "<grammatical person and number (required when isVerb=true)>"
+    "sourceInfinitive": "<${srcLang} infinitive base form>",
+    "targetInfinitive": "<${targetLanguage} infinitive base form>",
+    "grammaticalPerson": "<person and number (e.g. 3rd person singular), omit if isVerb=false>"
   },
-  "translationConjugated": "<${targetLanguage} CONJUGATED verb. Check grammaticalPerson carefully! Conjugate to match the context sentence subject exactly. Omit if not a verb.>",
+  "translationConjugated": "<${targetLanguage} conjugated verb matching subject/tense of context sentence, omit if isVerb=false>",
   "translation": "${translationDesc}",
   "grammar": {
-    "sourceInfinitive": "<The pure ${srcLang} INFINITIVE — must exactly match '_verbAnalysis.sourceInfinitive'. NEVER copy '${text}' here if it is conjugated.>",
-    "partOfSpeech": "<${targetLanguage}>",
-    "tense":        "<${targetLanguage}; REQUIRED when isVerb=true>",
-    "gender":       "<${targetLanguage}; ONLY when grammatically gendered>",
-    "explanation":  "<${targetLanguage}, one full sentence about how the word functions in THIS sentence>"
+    "sourceInfinitive": "<${srcLang} infinitive, must match _verbAnalysis.sourceInfinitive>",
+    "partOfSpeech": "<${targetLanguage} part of speech>",
+    "tense":        "<${targetLanguage} tense, omit if isVerb=false>",
+    "gender":       "<${targetLanguage} gender, omit if not gendered>",
+    "explanation":  "<${targetLanguage} definition and a brief description of grammatical function in context sentence (1 sentence)>"
   },
-  "examples":     [ {"${srcKey}":"<sentence in ${srcLang} containing '${text}'>","${tgtKey}":"<translation in ${targetLanguage}>"}, 3 entries — REQUIRED ],
-  "alternatives": [ "<${targetLanguage}>", 1-2 entries — REQUIRED ]${
-    isSentence
+  "examples":     [ {"${srcKey}":"<sentence in ${srcLang} containing '${text}'>","${tgtKey}":"<translation in ${targetLanguage}>"}, exactly 3 entries ],
+  "alternatives": [ "<alternative translation in ${targetLanguage}>", 1-2 entries ]${isSentence
       ? `,
-  "syntaxAnalysis": "<${targetLanguage}, 1-2 sentences describing structure>",
-  "grammarRules":   [ "<${targetLanguage}, one grammar point>", 2-4 entries ]`
+  "syntaxAnalysis": "<structure description in ${targetLanguage}>",
+  "grammarRules":   [ "<grammar point in ${targetLanguage}>", 2-4 entries ]`
       : ''
-  }
+    }
 }
 
 Rules:
-1. Identify if "${text}" is a verb in the context of the sentence.
-2. The "translation" field is strictly for the DICTIONARY BASE FORM. If the input is a verb, this field MUST be the pure infinitive. NEVER put a conjugated verb here.
-3. The "translationConjugated" field is the translation of the word as it is used in the context sentence. It MUST match the grammatical person, number, and tense of the sentence subject exactly. Verify the grammatical subject of the context sentence and ensure that the conjugated verb aligns with that subject in person and number.
-4. ALL translation fields MUST be in the target language (${targetLanguage}). Do NOT copy the source language word into the translation fields.
-- Grammatical Agreement: Maintain strict grammatical agreement (number, person, gender, tense). Do NOT translate plural forms as singular.
-- Parts-of-Speech Matching: Never translate a verb form as a pronoun.
-- When isVerb=true, "sourceInfinitive" MUST be the pure ${srcLang} INFINITIVE. NEVER copy the conjugated segment.
-- Every string value MUST be in the language its slot assigns. Omit optional keys whose condition is false — never write "n/a", "none", or empty strings.
-- "examples": exactly 3 natural, diverse, and contextual example sentences. Each "${srcKey}" MUST be entirely in the source language (${srcLang}) and contain "${text}" (or its conjugation/variation). Each "${tgtKey}" MUST be entirely in the target language (${targetLanguage}). NEVER write the same language in both fields.
-- Translate ONLY the specific segment "${text}". DO NOT translate the entire sentence. 
-- If "${text}" is a single word, the translation MUST be a single word (or minimal equivalent). DO NOT translate the full compound verb if only the auxiliary verb was tapped.
-${isSentence ? '- Multi-word input: type="sentence", isVerb=false.' : ''}
+1. "isVerb" MUST be true if "${text}" acts as a verb (representing action, existence, possession, state, or auxiliary function) in the context sentence. Be extremely careful: if a single-letter word is the word carrying the action, state, or possession in the clause (since every complete clause must have a verb), it is a verb. In such cases, "isVerb" MUST be true, and "translation" MUST be the infinitive form of that verb in ${targetLanguage}.
+2. If "${text}" is a verb, "translation" and "_verbAnalysis.targetInfinitive" MUST match exactly and be the pure dictionary infinitive of the translation in ${targetLanguage}. "translationConjugated" MUST be the correctly conjugated form of that exact same verb in ${targetLanguage}, matching the tense, person, and number of the context sentence subject.
+3. If "${text}" is NOT a verb, the "translation" field MUST match the input's part of speech (it MUST NOT be a verb, e.g. use "especial" instead of "especializar" for the adjective "speziell").
+4. "sourceInfinitive" (in both places) MUST be the pure dictionary infinitive form of "${text}" in ${srcLang}. NEVER copy "${text}" if it is conjugated.
+5. Every translation, explanation, and alternative MUST be in the target language (${targetLanguage}).
+6. "alternatives" MUST contain 1-2 synonyms or alternative translations of "${text}" strictly in ${targetLanguage}. Never write source language (${srcLang}) words here.
+7. "examples": exactly 3 sentences. Each "${srcKey}" MUST contain "${text}" (or its conjugation) in ${srcLang}. Each "${tgtKey}" MUST be the target translation in ${targetLanguage}.
+8. Maintain strict grammatical agreement (tense, person, number, gender). Do not mix singular/plural.
+9. Omit optional keys with false conditions. Do not output empty strings, "n/a", "none", or a "conjugations" field.
 
-Output JSON only. No markdown, no preamble. Do NOT include a "conjugations" field.${preferredInstruction}`;
+Output JSON only. No markdown, no preamble.${preferredInstruction}`;
 };
 

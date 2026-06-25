@@ -167,3 +167,7 @@ export const fetchTranslationHelper = async (
 
     return null;
 };
+
+/** Strip leading/trailing punctuation so translations and cache keys are clean */
+export const stripPunctuation = (s: string): string =>
+    s.replace(/^[\s.,;:!?¡¿"""''«»()[\]{}\-–—…]+|[\s.,;:!?¡¿"""''«»()[\]{}\-–—…]+$/g, '');

@@ -14,6 +14,7 @@ import {
 import { healExamples } from "./richDetailsHealer";
 import { useSettingsStore } from "../../../settings/store/useSettingsStore";
 import type { TranslationSlice } from "./translationSlice";
+import { stripPunctuation } from "./translationUtils";
 
 export { coreLooksLikeVerb, shouldFetchConjugations };
 
@@ -61,7 +62,7 @@ const syncRichIntoHoverCache = (
   translation: string,
 ) => {
   if (!translation) return;
-  const cacheKey = `${text.trim()}_${targetLang}`;
+  const cacheKey = `${stripPunctuation(text)}_${targetLang}`;
   set((state) => {
     const s = state as unknown as { translationCache?: Map<string, string> };
     const nextCache = new Map(s.translationCache ?? new Map());
@@ -269,7 +270,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
     const controller = new AbortController();
     activeRichAborts.set(text, controller);
 
-    const cacheKey = `${text.trim()}_${targetLang}`;
+    const cacheKey = `${stripPunctuation(text)}_${targetLang}`;
     const preferredTranslation = (get() as unknown as TranslationSlice).translationCache?.get(cacheKey);
 
     try {
@@ -375,7 +376,7 @@ export const createRichDetailsSlice: StateCreator<RichDetailsSlice> = (
     const controller = new AbortController();
     activeRichAborts.set(id, controller);
 
-    const cacheKey = `${tab.text.trim()}_${tab.targetLang}`;
+    const cacheKey = `${stripPunctuation(tab.text)}_${tab.targetLang}`;
     const preferredTranslation = (get() as unknown as TranslationSlice).translationCache?.get(cacheKey);
 
     try {

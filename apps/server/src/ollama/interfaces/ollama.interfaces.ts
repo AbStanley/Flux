@@ -26,14 +26,29 @@ export interface GrammarAnalysisResponse {
 }
 
 export interface RichTranslation {
-  word: string;
-  pronunciation: string;
-  definitions: {
-    type: string;
-    definition: string;
-    example: string;
+  type?: string;
+  isVerb?: boolean;
+  translation: string;
+  translationConjugated?: string;
+  segment: string;
+  grammar?: {
+    partOfSpeech: string;
+    tense?: string;
+    gender?: string;
+    number?: string;
+    infinitive?: string;
+    explanation: string;
+  };
+  syntaxAnalysis?: string;
+  grammarRules?: string[];
+  examples: Array<{
+    sentence: string;
     translation: string;
-  }[];
+  }>;
+  alternatives: string[];
+  conjugations?: {
+    [tense: string]: Array<{ pronoun: string; conjugation: string }>;
+  };
 }
 
 export interface RichConjugations {

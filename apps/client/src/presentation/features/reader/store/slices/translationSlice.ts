@@ -5,11 +5,8 @@ import {
     getSelectionGroups,
     fetchTranslationHelper,
     pendingRequests,
+    stripPunctuation,
 } from './translationUtils';
-
-/** Strip leading/trailing punctuation so translations are clean */
-const stripPunctuation = (s: string): string =>
-    s.replace(/^[\s.,;:!?¡¿"""''«»()[\]{}\-–—…]+|[\s.,;:!?¡¿"""''«»()[\]{}\-–—…]+$/g, '');
 
 export interface TranslationSlice {
     translationCache: Map<string, string>;
@@ -135,7 +132,8 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             }
 
             const textToTranslate = tokens.slice(start, end + 1).join('');
-            const cacheKey = `${textToTranslate}_${targetLang}`;
+            const strippedText = stripPunctuation(textToTranslate);
+            const cacheKey = `${strippedText}_${targetLang}`;
 
             // If FORCE is true, we ignore the cache for the purposes of setting the placeholder
             // to show the user that something is happening within the UI.
@@ -177,7 +175,8 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             }
 
             const textToTranslate = tokens.slice(start, end + 1).join('');
-            const cacheKey = `${textToTranslate}_${targetLang}`;
+            const strippedText = stripPunctuation(textToTranslate);
+            const cacheKey = `${strippedText}_${targetLang}`;
 
             // Check Cache
             // If FORCE is true, we SKIP returning from cache here, ensuring a fetch.
@@ -391,7 +390,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         let cacheUpdated = false;
 
         if (translation && text && targetLang) {
-            const cacheKey = `${text.trim()}_${targetLang}`;
+            const cacheKey = `${stripPunctuation(text)}_${targetLang}`;
             if (!nextCache.has(cacheKey)) {
                 nextCache = new Map(nextCache);
                 nextCache.set(cacheKey, translation);
@@ -425,7 +424,7 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
         for (const key of state.selectionTranslations.keys()) {
             const [start, end] = key.split('-').map(Number);
             const textToTranslate = tokens.slice(start, end + 1).join('');
-            const cacheKey = `${textToTranslate}_${targetLang}`;
+            const cacheKey = `${stripPunctuation(textToTranslate)}_${targetLang}`;
             nextCache.delete(cacheKey);
         }
 
