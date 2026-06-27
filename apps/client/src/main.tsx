@@ -1,7 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/global.css'
-import { registerSW } from 'virtual:pwa-register'
 
 // Self-hosted book fonts for reading
 import '@fontsource/merriweather'
@@ -15,9 +14,6 @@ import '@fontsource/opendyslexic'
 
 import App from './presentation/App.tsx'
 import { ThemeProvider } from './presentation/providers/ThemeProvider'
-
-// Register Service Worker for PWA
-registerSW({ immediate: true });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

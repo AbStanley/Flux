@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
       VitePWA({
-        registerType: "autoUpdate",
+        registerType: "prompt",
         injectRegister: null,
         includeAssets: ["flux-logo.png"],
         manifest: {
@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         devOptions: {
-          enabled: true,
+          enabled: false,
           type: "module",
         },
       }),
