@@ -64,7 +64,7 @@ describe('useTextSelection', () => {
         renderHook(() => useTextSelection(isHoveringRef, onSelect, onClear));
 
         // Mock selection
-        const mockRect = { left: 50, bottom: 100 };
+        const mockRect = { left: 50, right: 150, top: 80, bottom: 100 };
         const mockRange = {
             getBoundingClientRect: () => mockRect
         };
@@ -85,7 +85,9 @@ describe('useTextSelection', () => {
         expect(onSelect).toHaveBeenCalledWith({
             text: 'Selected Check',
             x: 50,
-            y: 110 // bottom + 10
+            y: 110, // bottom + 10
+            fabX: 100, // (50 + 150) / 2
+            fabY: 80,
         });
     });
 

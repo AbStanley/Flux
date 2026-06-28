@@ -4,6 +4,8 @@ export interface SelectionState {
     text: string;
     x: number;
     y: number;
+    fabX?: number;
+    fabY?: number;
 }
 
 export const useTextSelection = (
@@ -80,6 +82,8 @@ export const useTextSelection = (
                             text: selectionText,
                             x: selectionRect.left,
                             y: selectionRect.bottom + 10,
+                            fabX: (selectionRect.left + selectionRect.right) / 2,
+                            fabY: selectionRect.top,
                         };
 
                         selectionRef.current = newSelection;
@@ -121,11 +125,32 @@ export const useTextSelection = (
             }
         };
 
+        const handleSelectionChange = () => {
+            const winSelection = window.getSelection();
+            const text = winSelection?.toString().trim() || '';
+            
+            let shadowText = '';
+            const host = document.getElementById('flux-reader-host');
+            if (host && host.shadowRoot) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const shadowSelection = (host.shadowRoot as any).getSelection();
+                shadowText = shadowSelection?.toString().trim() || '';
+            }
+
+            const currentText = text || shadowText;
+            if (!currentText && !isHoveringRef.current) {
+                selectionRef.current = null;
+                onClearSelection();
+            }
+        };
+
         document.addEventListener('mouseup', handleMouseUp);
         document.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('selectionchange', handleSelectionChange);
         return () => {
             document.removeEventListener('mouseup', handleMouseUp);
             document.removeEventListener('mousedown', handleMouseDown);
+            document.removeEventListener('selectionchange', handleSelectionChange);
         };
     }, [isHoveringRef, onSelectionDetected, onClearSelection]);
 

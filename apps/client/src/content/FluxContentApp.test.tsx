@@ -86,7 +86,7 @@ describe('FluxContentApp', () => {
         expect(screen.queryByTestId('flux-popup')).toBeNull();
     });
 
-    it('shows popup when selection is detected', async () => {
+    it('shows popup when selection is detected by default', async () => {
         render(<ServiceProvider><FluxContentApp /></ServiceProvider>);
 
         const mockSelection = { text: 'Hello World', x: 100, y: 100 };
@@ -100,7 +100,7 @@ describe('FluxContentApp', () => {
         expect(popup).toBeTruthy();
         expect(screen.getByText('Popup for: Hello World')).toBeTruthy();
 
-        // It should also auto-trigger action
+        // It should auto-trigger action
         expect(handleActionMock).toHaveBeenCalledWith('Hello World', 'TRANSLATE', 'English', 'Auto');
     });
 
@@ -128,7 +128,7 @@ describe('FluxContentApp', () => {
             triggerSelection({ text: 'Manual', x: 0, y: 0 });
         });
 
-        // Reset auto-trigger call
+        // Reset auto-trigger call (which happened automatically)
         handleActionMock.mockClear();
 
         // Click Manual Action
@@ -166,7 +166,7 @@ describe('FluxContentApp', () => {
             triggerSelection({ text: 'Mode Trigger', x: 0, y: 0 });
         });
 
-        // Clear initial auto-call
+        // Clear initial auto-call from selection
         handleActionMock.mockClear();
 
         // Change mode via UI (mocked button)
@@ -177,5 +177,52 @@ describe('FluxContentApp', () => {
 
         // Verify handleAction called with new mode
         expect(handleActionMock).toHaveBeenCalledWith('Mode Trigger', 'EXPLAIN', 'English', 'Auto');
+    });
+
+    it('adapts trigger mode to FAB on intentional dismissal and restores to Popup on FAB click', async () => {
+        render(<ServiceProvider><FluxContentApp /></ServiceProvider>);
+
+        // 1. Initial selection: opens popup directly
+        act(() => {
+            triggerSelection({ text: 'First Selection', x: 0, y: 0 });
+        });
+        expect(screen.getByTestId('flux-popup')).toBeTruthy();
+        expect(screen.queryByTitle('Translate with Flux')).toBeNull();
+
+        // 2. Intentional dismissal: click close button
+        const closeBtn = screen.getByText('Close');
+        act(() => {
+            closeBtn.click();
+        });
+        expect(screen.queryByTestId('flux-popup')).toBeNull();
+
+        // 3. Subsequent selection: shows FAB only (does not auto-trigger popup)
+        handleActionMock.mockClear();
+        act(() => {
+            triggerSelection({ text: 'Second Selection', x: 0, y: 0 });
+        });
+        expect(screen.queryByTestId('flux-popup')).toBeNull();
+        const fab = screen.getByTitle('Translate with Flux');
+        expect(fab).toBeTruthy();
+        expect(handleActionMock).not.toHaveBeenCalled();
+
+        // 4. Click FAB: triggers popup and resets auto-trigger
+        act(() => {
+            fab.click();
+        });
+        expect(screen.getByTestId('flux-popup')).toBeTruthy();
+        expect(handleActionMock).toHaveBeenCalledWith('Second Selection', 'TRANSLATE', 'English', 'Auto');
+
+        // 5. Clear selection (unfocus) - autoShowPopup should remain true
+        act(() => {
+            triggerClear();
+        });
+        expect(screen.queryByTestId('flux-popup')).toBeNull();
+
+        // 6. Third selection: opens popup directly again
+        act(() => {
+            triggerSelection({ text: 'Third Selection', x: 0, y: 0 });
+        });
+        expect(screen.getByTestId('flux-popup')).toBeTruthy();
     });
 });

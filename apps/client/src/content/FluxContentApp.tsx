@@ -3,6 +3,7 @@ import { useAIHandler, type Mode } from './hooks/useAIHandler';
 import { useTextSelection } from './hooks/useTextSelection';
 import { useYouTubeSubtitles } from './hooks/useYouTubeSubtitles';
 import { FluxPopup } from './components/FluxPopup';
+import { FluxFAB } from './components/FluxFAB';
 import { YouTubeSubtitleOverlay } from './components/YouTubeSubtitleOverlay';
 import { UniversalSubtitleOverlay } from './components/universal-subs/UniversalSubtitleOverlay';
 import { VideoPickerOverlay } from './components/universal-subs/VideoPickerOverlay';
@@ -20,10 +21,11 @@ type ViewState = 'HIDDEN' | 'FAB' | 'POPUP';
 
 export function FluxContentApp() {
     const [view, setView] = useState<ViewState>('HIDDEN');
-    const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
+    const [selection, setSelection] = useState<{ text: string; x: number; y: number; fabX?: number; fabY?: number } | null>(null);
     const [mode, setMode] = useState<Mode>('TRANSLATE');
     const [isOverlayActive, setIsOverlayActive] = useState(false);
     const [isPinned, setIsPinnedState] = useState(false);
+    const [autoShowPopup, setAutoShowPopup] = useState(true);
     const isPinnedRef = useRef(false);
 
     const { aiService } = useServices();
@@ -84,13 +86,29 @@ export function FluxContentApp() {
         if (view === 'POPUP' && selection && !isOverlayActive) handleAction(newText, newMode, tLang, sLang);
     };
 
-    const onSelectionDetected = async (newSel: { text: string; x: number; y: number }) => {
+    const onSelectionDetected = async (newSel: { text: string; x: number; y: number; fabX?: number; fabY?: number }) => {
         setSelection(newSel);
+        if (autoShowPopup) {
+            setView('POPUP');
+            const res = await handleAction(newSel.text, mode, settings.targetLang, settings.sourceLang);
+            if (settings.autoSave) {
+                handleSave(newSel.text, res?.response);
+                window.chrome?.runtime?.sendMessage?.({ type: 'TEXT_SELECTED', text: newSel.text });
+                window.chrome?.runtime?.sendMessage?.({ type: 'OPEN_SIDE_PANEL' });
+            }
+        } else {
+            setView('FAB');
+        }
+    };
+
+    const handleTriggerPopup = async () => {
+        if (!selection) return;
+        setAutoShowPopup(true);
         setView('POPUP');
-        const res = await handleAction(newSel.text, mode, settings.targetLang, settings.sourceLang);
+        const res = await handleAction(selection.text, mode, settings.targetLang, settings.sourceLang);
         if (settings.autoSave) {
-            handleSave(newSel.text, res?.response);
-            window.chrome?.runtime?.sendMessage?.({ type: 'TEXT_SELECTED', text: newSel.text });
+            handleSave(selection.text, res?.response);
+            window.chrome?.runtime?.sendMessage?.({ type: 'TEXT_SELECTED', text: selection.text });
             window.chrome?.runtime?.sendMessage?.({ type: 'OPEN_SIDE_PANEL' });
         }
     };
@@ -144,6 +162,17 @@ export function FluxContentApp() {
                 />
             )}
 
+            {view === 'FAB' && selection && settings.fluxEnabled && (
+                <FluxFAB
+                    x={selection.fabX ?? selection.x}
+                    y={selection.fabY ?? selection.y}
+                    theme={theme}
+                    onClick={handleTriggerPopup}
+                    onMouseEnter={() => { isHoveringRef.current = true; }}
+                    onMouseLeave={() => { isHoveringRef.current = false; }}
+                />
+            )}
+
             {view === 'POPUP' && selection && !isOverlayActive && settings.fluxEnabled && (
                 <FluxPopup
                     selection={selection} result={result} loading={loading} error={error} mode={mode}
@@ -154,7 +183,17 @@ export function FluxContentApp() {
                     onSwapLanguages={() => { const { newSource, newTarget } = settings.swapLanguages(); handleActionSync(selection.text, mode, newTarget, newSource); }}
                     onAction={() => handleAction(selection.text, mode, settings.targetLang, settings.sourceLang)}
                     onSave={handleSave} autoSave={settings.autoSave} onAutoSaveChange={settings.persistAutoSave}
-                    isSaving={isSaving} onClose={() => setView('HIDDEN')}
+                    isSaving={isSaving} onClose={() => {
+                        isHoveringRef.current = false;
+                        setView('HIDDEN');
+                        setAutoShowPopup(false);
+                        window.getSelection()?.removeAllRanges();
+                        const host = document.getElementById('flux-reader-host');
+                        if (host && host.shadowRoot) {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (host.shadowRoot as any).getSelection()?.removeAllRanges();
+                        }
+                    }}
                     onMouseEnter={() => (isHoveringRef.current = true)} onMouseLeave={() => (isHoveringRef.current = false)}
                     theme={theme} themeId={settings.themeId} onThemeChange={settings.persistTheme}
                     model={settings.selectedModel} availableModels={settings.availableModels}
