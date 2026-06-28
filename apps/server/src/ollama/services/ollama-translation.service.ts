@@ -137,9 +137,8 @@ export class OllamaTranslationService {
             required: ['detectedLanguage', 'translation'],
           },
       {
-        num_predict: isBlock ? 512 : 64,
+        num_predict: isBlock ? 2048 : 64,
         temperature: 0,
-        stop: isBlock ? ['\n'] : undefined,
       },
       params.signal,
       params.traceId,
