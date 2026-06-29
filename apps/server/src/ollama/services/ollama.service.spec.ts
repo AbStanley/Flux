@@ -7,6 +7,7 @@ import { OllamaTranslationService } from './ollama-translation.service';
 import { OllamaGrammarService } from './ollama-grammar.service';
 import { OllamaGenerationService } from './ollama-generation.service';
 import { OllamaWritingService } from './ollama-writing.service';
+import { OllamaModelManagerService } from './ollama-model-manager.service';
 
 describe('OllamaService', () => {
   let service: OllamaService;
@@ -21,6 +22,13 @@ describe('OllamaService', () => {
           useValue: {
             chat: jest.fn(),
             generate: jest.fn(),
+            listTags: jest.fn(),
+            ensureModel: jest.fn(),
+          },
+        },
+        {
+          provide: OllamaModelManagerService,
+          useValue: {
             listTags: jest.fn(),
             ensureModel: jest.fn(),
           },
@@ -64,6 +72,7 @@ describe('OllamaService', () => {
     // Manually link dependencies to the service instance to bypass Vitest/Nest DI metadata issues
     const serviceInternal = service as unknown as {
       client: OllamaClientService;
+      modelManager: OllamaModelManagerService;
       translation: OllamaTranslationService;
       grammar: OllamaGrammarService;
       generation: OllamaGenerationService;
@@ -71,6 +80,9 @@ describe('OllamaService', () => {
     };
     serviceInternal.client =
       module.get<OllamaClientService>(OllamaClientService);
+    serviceInternal.modelManager = module.get<OllamaModelManagerService>(
+      OllamaModelManagerService,
+    );
     serviceInternal.translation = module.get<OllamaTranslationService>(
       OllamaTranslationService,
     );

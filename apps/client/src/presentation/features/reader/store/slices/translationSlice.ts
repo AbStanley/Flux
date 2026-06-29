@@ -315,12 +315,16 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
             }
         }
 
-        if (get().hoveredIndex === globalIndex && result) {
-            set(state => ({
-                hoverTranslation: result,
-                translationCache: new Map(state.translationCache).set(cacheKey, result!),
-                hoverAbortController: state.hoverAbortController === controller ? null : state.hoverAbortController
-            }));
+        if (result) {
+            set(state => {
+                const nextCache = new Map(state.translationCache).set(cacheKey, result!);
+                const isStillHovered = state.hoveredIndex === globalIndex;
+                return {
+                    translationCache: nextCache,
+                    hoverTranslation: isStillHovered ? result : state.hoverTranslation,
+                    hoverAbortController: state.hoverAbortController === controller ? null : state.hoverAbortController
+                };
+            });
         } else {
             set(state => ({
                 hoverAbortController: state.hoverAbortController === controller ? null : state.hoverAbortController
@@ -408,10 +412,6 @@ export const createTranslationSlice: StateCreator<TranslationSlice> = (set, get)
     },
 
     clearHover: () => {
-        const prevController = get().hoverAbortController;
-        if (prevController) {
-            prevController.abort();
-        }
         set({ hoveredIndex: null, hoverTranslation: null, hoverSource: null, hoverAbortController: null });
     },
     toggleShowTranslations: () => set(state => ({ showTranslations: !state.showTranslations })),

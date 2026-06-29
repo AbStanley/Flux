@@ -54,7 +54,19 @@ export const useStoryGeneration = ({
                 signal: abortControllerRef.current.signal,
             });
 
-            if (!response.ok) throw new Error(`Generation failed: ${response.status}`);
+            if (!response.ok) {
+                const text = await response.text();
+                let errMsg = `Generation failed: ${response.status}`;
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed.message) {
+                        errMsg = Array.isArray(parsed.message) ? parsed.message[0] : parsed.message;
+                    }
+                } catch {
+                    if (text) errMsg = text;
+                }
+                throw new Error(errMsg);
+            }
 
             const reader = response.body?.getReader();
             if (!reader) throw new Error('No response stream');
@@ -82,7 +94,7 @@ export const useStoryGeneration = ({
                 console.log('Generation aborted by user');
             } else {
                 console.error(error);
-                alert("Failed to generate text");
+                alert(errorMessage || "Failed to generate text");
             }
         } finally {
             setIsGenerating(false);

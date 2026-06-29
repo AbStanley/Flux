@@ -16,6 +16,9 @@ interface DebugTrace {
   parsedResponse?: unknown;
   error?: string;
   durationMs: number;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
 }
 
 interface GlobalDebugConsoleModalProps {
@@ -62,6 +65,9 @@ export function GlobalDebugConsoleModal({ isOpen, onOpenChange }: GlobalDebugCon
     report += `- **Method:** ${data.method}\n`;
     report += `- **Model:** ${data.model || 'Unknown'}\n`;
     report += `- **Duration:** ${data.durationMs}ms\n`;
+    if (data.promptTokens !== undefined) report += `- **Prompt Tokens:** ${data.promptTokens}\n`;
+    if (data.completionTokens !== undefined) report += `- **Completion Tokens:** ${data.completionTokens}\n`;
+    if (data.totalTokens !== undefined) report += `- **Total Tokens:** ${data.totalTokens}\n`;
     report += `- **Time:** ${data.timestamp}\n`;
     if (data.error) report += `- **Error:** \`${data.error}\`\n`;
     report += `\n### Request Payload\n\`\`\`json\n${JSON.stringify(data.requestPayload, null, 2)}\n\`\`\`\n`;
@@ -146,7 +152,12 @@ export function GlobalDebugConsoleModal({ isOpen, onOpenChange }: GlobalDebugCon
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-muted-foreground/85">
                       <span className="font-mono">{t.method}</span>
-                      <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {t.durationMs}ms</span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {t.totalTokens !== undefined && (
+                          <span className="bg-primary/10 text-primary px-1 rounded-[3px] text-[9px] font-medium font-mono">{t.totalTokens} tkn</span>
+                        )}
+                        <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {t.durationMs}ms</span>
+                      </div>
                     </div>
                   </button>
                 );
@@ -181,6 +192,23 @@ export function GlobalDebugConsoleModal({ isOpen, onOpenChange }: GlobalDebugCon
                     <div className="p-3 bg-muted/40 border rounded-xl"><p className="text-[9px] text-muted-foreground font-bold uppercase">Endpoint</p><p className="text-xs font-semibold truncate">{selectedTrace.endpoint}</p></div>
                     <div className="p-3 bg-muted/40 border rounded-xl"><p className="text-[9px] text-muted-foreground font-bold uppercase">Duration</p><p className="text-xs font-semibold">{selectedTrace.durationMs} ms</p></div>
                   </div>
+
+                  {(selectedTrace.promptTokens !== undefined || selectedTrace.completionTokens !== undefined) && (
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="p-3 bg-muted/40 border rounded-xl">
+                        <p className="text-[9px] text-muted-foreground font-bold uppercase">Prompt Tokens</p>
+                        <p className="text-xs font-semibold">{selectedTrace.promptTokens ?? 0}</p>
+                      </div>
+                      <div className="p-3 bg-muted/40 border rounded-xl">
+                        <p className="text-[9px] text-muted-foreground font-bold uppercase">Completion Tokens</p>
+                        <p className="text-xs font-semibold">{selectedTrace.completionTokens ?? 0}</p>
+                      </div>
+                      <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl">
+                        <p className="text-[9px] text-primary font-bold uppercase">Total Tokens</p>
+                        <p className="text-xs font-bold text-primary">{selectedTrace.totalTokens ?? 0}</p>
+                      </div>
+                    </div>
+                  )}
 
                   {selectedTrace.error && (
                     <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-xs rounded-xl font-mono whitespace-pre-wrap">{selectedTrace.error}</div>

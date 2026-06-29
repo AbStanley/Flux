@@ -25,6 +25,6 @@ export class AuthController {
 
   @Get('me')
   getProfile(@Request() req: AuthenticatedRequest) {
-    return req.user;
+    return this.authService.getFreshProfile(req.user.id);
   }
 }

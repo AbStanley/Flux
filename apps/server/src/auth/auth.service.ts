@@ -54,6 +54,34 @@ export class AuthService {
     return { id: user.id, email: user.email };
   }
 
+  async getFreshProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        aiRequestsToday: true,
+        dailyAiLimit: true,
+        tokensToday: true,
+        tokensTotal: true,
+      },
+    });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const defaultLimit = process.env.DEFAULT_DAILY_AI_LIMIT
+      ? parseInt(process.env.DEFAULT_DAILY_AI_LIMIT, 10)
+      : 100;
+
+    const dailyAiLimit = user.dailyAiLimit === 100 ? defaultLimit : user.dailyAiLimit;
+
+    return {
+      ...user,
+      dailyAiLimit,
+    };
+  }
+
   private buildTokenResponse(userId: string, email: string) {
     const payload: JwtPayload = { sub: userId, email };
     return {

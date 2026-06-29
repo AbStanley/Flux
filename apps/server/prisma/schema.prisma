@@ -21,6 +21,11 @@ model User {
   sourceLang   String?
   targetLang   String?
   customThemes Json?
+  aiRequestsToday Int      @default(0)
+  lastAiRequestAt DateTime @default(now())
+  dailyAiLimit    Int      @default(100)
+  tokensToday     Int      @default(0)
+  tokensTotal     Int      @default(0)
 
   words           Word[]
   decks           Deck[]

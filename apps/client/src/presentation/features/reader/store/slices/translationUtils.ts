@@ -151,6 +151,15 @@ export const fetchTranslationHelper = async (
             const errorMsg = error instanceof Error ? error.message : String(error);
             console.warn(`Translation attempt ${attempt} failed:`, errorMsg);
 
+            // Immediately fail and alert on quota limit/throttling errors to avoid useless retries
+            const isLimitError = errorMsg.toLowerCase().includes('limit') || 
+                                 errorMsg.toLowerCase().includes('throttler') || 
+                                 errorMsg.toLowerCase().includes('too many requests');
+            if (isLimitError) {
+                alert(errorMsg);
+                return null;
+            }
+
             if (attempt >= retries) {
                 console.error(`Translation failed after ${retries} retries for text: "${text}"`);
                 return null;

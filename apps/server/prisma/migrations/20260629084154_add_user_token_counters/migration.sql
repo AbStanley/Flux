@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "tokensToday" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "tokensTotal" INTEGER NOT NULL DEFAULT 0;
