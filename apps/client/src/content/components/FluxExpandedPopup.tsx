@@ -163,6 +163,7 @@ export function FluxExpandedPopup({
                         error={error}
                         result={result}
                         theme={theme}
+                        onRetry={onAction}
                     />
                 </div>
 

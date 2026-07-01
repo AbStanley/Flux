@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { Check, Maximize2, Save, X, Volume2 } from 'lucide-react';
+import { Check, Maximize2, Save, X, Volume2, RefreshCw } from 'lucide-react';
 import { UI_CONSTANTS, type FluxTheme } from '../constants';
 
 interface FluxCollapsedPopupProps {
@@ -15,6 +15,7 @@ interface FluxCollapsedPopupProps {
     onExpand: () => void;
     handlePlayAudio: () => void;
     handleInternalSave: () => void;
+    onRetry?: () => void;
 }
 
 export function FluxCollapsedPopup({
@@ -30,6 +31,7 @@ export function FluxCollapsedPopup({
     onExpand,
     handlePlayAudio,
     handleInternalSave,
+    onRetry,
 }: FluxCollapsedPopupProps) {
     return (
         <div
@@ -85,7 +87,32 @@ export function FluxCollapsedPopup({
                             flex: 1
                         }}>
                             {error ? (
-                                <span style={{ color: theme.error }}>⚠️ {error}</span>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: theme.error }}>
+                                    ⚠️ {error}
+                                    {onRetry && (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onRetry(); }}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                color: theme.error,
+                                                padding: '2px',
+                                                cursor: 'pointer',
+                                                borderRadius: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.color = theme.accent; e.currentTarget.style.transform = 'rotate(180deg)'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.color = theme.error; e.currentTarget.style.transform = 'rotate(0deg)'; }}
+                                            title="Retry Translation"
+                                        >
+                                            <RefreshCw size={12} strokeWidth={2.5} />
+                                        </button>
+                                    )}
+                                </span>
                             ) : loading ? (
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: theme.textSecondary }}>
                                     <div className="animate-spin" style={{

@@ -151,6 +151,7 @@ export function FluxPopup({
                 onExpand={() => setIsCollapsed(false)}
                 handlePlayAudio={handlePlayAudio}
                 handleInternalSave={handleInternalSave}
+                onRetry={onAction}
             />
         );
     }

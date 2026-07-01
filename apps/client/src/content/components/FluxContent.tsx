@@ -1,14 +1,16 @@
 import ReactMarkdown from 'react-markdown';
 import type { FluxTheme } from '../constants';
+import { RefreshCw } from 'lucide-react';
 
 interface FluxContentProps {
     loading: boolean;
     error: string | null;
     result: string;
     theme: FluxTheme;
+    onRetry?: () => void;
 }
 
-export function FluxContent({ loading, error, result, theme }: FluxContentProps) {
+export function FluxContent({ loading, error, result, theme, onRetry }: FluxContentProps) {
     return (
         <div>
 
@@ -20,11 +22,36 @@ export function FluxContent({ loading, error, result, theme }: FluxContentProps)
             )}
 
             {error && (
-                <div style={{ color: theme.error, padding: '8px 0' }}>
-                    {error}
+                <div style={{ color: theme.error, padding: '8px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{error}</span>
+                        {onRetry && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onRetry(); }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: theme.error,
+                                    padding: '4px',
+                                    cursor: 'pointer',
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s ease',
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = theme.accent; e.currentTarget.style.transform = 'rotate(180deg)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = theme.error; e.currentTarget.style.transform = 'rotate(0deg)'; }}
+                                title="Retry Translation"
+                            >
+                                <RefreshCw size={14} strokeWidth={2.5} />
+                            </button>
+                        )}
+                    </div>
                     {(error.includes('401') || error.includes('auth') || error.includes('Failed to connect')) && (
                         <div style={{
-                            marginTop: '8px',
+                            marginTop: '4px',
                             padding: '8px 12px',
                             backgroundColor: `${theme.info}1a`,
                             border: `1px solid ${theme.info}4d`,
