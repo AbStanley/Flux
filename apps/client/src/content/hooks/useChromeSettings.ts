@@ -28,6 +28,8 @@ const STORAGE_KEYS = [
     'fluxTheme',
     'fluxPopupCollapsed',
     'fluxCustomThemes',
+    'fluxYtOpacity',
+    'fluxYtBlur',
 ] as const;
 
 function persistToStorage(data: Record<string, unknown>) {
@@ -44,6 +46,8 @@ export function useChromeSettings(aiService: AIServiceLike) {
     const [availableModels, setAvailableModels] = useState<string[]>([]);
     const [popupCollapsed, setPopupCollapsed] = useState(false);
     const [customThemes, setCustomThemes] = useState<CustomTheme[]>([]);
+    const [ytOpacity, setYtOpacity] = useState(45);
+    const [ytBlur, setYtBlur] = useState(24);
 
     // Fetch available models on mount
     useEffect(() => {
@@ -70,12 +74,16 @@ export function useChromeSettings(aiService: AIServiceLike) {
             if (result.fluxTheme) setThemeId(result.fluxTheme as string);
             if (result.fluxPopupCollapsed !== undefined) setPopupCollapsed(result.fluxPopupCollapsed as boolean);
             if (Array.isArray(result.fluxCustomThemes)) setCustomThemes(result.fluxCustomThemes);
+            if (result.fluxYtOpacity !== undefined) setYtOpacity(Number(result.fluxYtOpacity));
+            if (result.fluxYtBlur !== undefined) setYtBlur(Number(result.fluxYtBlur));
         });
 
         const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
             if (changes.fluxEnabled) setFluxEnabled(changes.fluxEnabled.newValue as boolean);
             if (changes.fluxTheme) setThemeId(changes.fluxTheme.newValue as string);
             if (changes.fluxCustomThemes) setCustomThemes(changes.fluxCustomThemes.newValue as CustomTheme[]);
+            if (changes.fluxYtOpacity) setYtOpacity(Number(changes.fluxYtOpacity.newValue));
+            if (changes.fluxYtBlur) setYtBlur(Number(changes.fluxYtBlur.newValue));
             if (changes.fluxModel) {
                 const model = changes.fluxModel.newValue as string;
                 setSelectedModel(model);
@@ -117,6 +125,16 @@ export function useChromeSettings(aiService: AIServiceLike) {
         persistToStorage({ fluxPopupCollapsed: collapsed });
     };
 
+    const persistYtOpacity = (val: number) => {
+        setYtOpacity(val);
+        persistToStorage({ fluxYtOpacity: val });
+    };
+
+    const persistYtBlur = (val: number) => {
+        setYtBlur(val);
+        persistToStorage({ fluxYtBlur: val });
+    };
+
     const swapLanguages = (): { newSource: string; newTarget: string } => {
         const newSource = targetLang;
         const newTarget = sourceLang === 'Auto' ? 'English' : sourceLang;
@@ -138,6 +156,8 @@ export function useChromeSettings(aiService: AIServiceLike) {
         availableModels,
         popupCollapsed,
         customThemes,
+        ytOpacity,
+        ytBlur,
 
         persistAutoSave,
         persistSourceLang,
@@ -145,6 +165,8 @@ export function useChromeSettings(aiService: AIServiceLike) {
         persistModel,
         persistTheme,
         persistPopupCollapsed,
+        persistYtOpacity,
+        persistYtBlur,
         swapLanguages,
     };
 }

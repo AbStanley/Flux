@@ -72,46 +72,62 @@ export function FluxCollapsedPopup({
                         zIndex: 2,
                     }} />
                 )}
+
                 {/* Translation text */}
-                <div style={{ padding: '10px 14px', maxHeight: '200px', overflowY: 'auto', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {loading && (
-                            <div className="animate-spin" style={{
-                                width: '14px',
-                                height: '14px',
-                                border: `2px solid ${theme.accent}`,
-                                borderTopColor: 'transparent',
-                                borderRadius: '50%',
-                                flexShrink: 0
-                            }}></div>
+                <div style={{ padding: '10px 14px', maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', boxSizing: 'border-box' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                        <div style={{ 
+                            fontSize: '13px', 
+                            lineHeight: '1.5', 
+                            fontWeight: 500, 
+                            color: theme.text,
+                            whiteSpace: 'pre-wrap', // Preserve line breaks for multi-line text!
+                            flex: 1
+                        }}>
+                            {error ? (
+                                <span style={{ color: theme.error }}>⚠️ {error}</span>
+                            ) : loading ? (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: theme.textSecondary }}>
+                                    <div className="animate-spin" style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        border: `2px solid ${theme.accent}`,
+                                        borderTopColor: 'transparent',
+                                        borderRadius: '50%',
+                                        flexShrink: 0
+                                    }}></div>
+                                    Processing...
+                                </span>
+                            ) : (
+                                result || '—'
+                            )}
+                        </div>
+                        
+                        {result && !loading && !error && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handlePlayAudio(); }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: theme.textSecondary,
+                                    padding: '4px',
+                                    cursor: 'pointer',
+                                    borderRadius: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s',
+                                    flexShrink: 0
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
+                                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textSecondary)}
+                                title="Listen"
+                            >
+                                <Volume2 size={14} strokeWidth={2.5} />
+                            </button>
                         )}
-                        <span>{error ? 'Error' : (loading ? 'Processing...' : result || '—')}</span>
                     </div>
-                    
-                    {result && !loading && !error && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); handlePlayAudio(); }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: theme.textSecondary,
-                                padding: '4px',
-                                cursor: 'pointer',
-                                borderRadius: '4px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transition: 'all 0.2s',
-                                flexShrink: 0
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
-                            onMouseLeave={(e) => (e.currentTarget.style.color = theme.textSecondary)}
-                            title="Listen"
-                        >
-                            <Volume2 size={14} strokeWidth={2.5} />
-                        </button>
-                    )}
                 </div>
 
                 {/* Action bar */}

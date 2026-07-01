@@ -146,6 +146,7 @@ export function FluxContentApp() {
                     sourceLang={settings.sourceLang} onSourceLangChange={settings.persistSourceLang}
                     onPrev={seekPrev} onNext={seekNext} hasPrev={hasPrev} hasNext={hasNext}
                     fluxEnabled={settings.fluxEnabled} theme={theme}
+                    ytOpacity={settings.ytOpacity} ytBlur={settings.ytBlur}
                 />
             )}
             {showUniversalSubs && (

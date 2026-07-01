@@ -88,6 +88,10 @@ export default function FluxExtensionPopup() {
                 userEmail={user?.email}
                 onLogout={logout}
                 theme={theme}
+                ytOpacity={storage.ytOpacity}
+                onYtOpacityChange={storage.persistYtOpacity}
+                ytBlur={storage.ytBlur}
+                onYtBlurChange={storage.persistYtBlur}
             />
         );
     }

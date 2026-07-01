@@ -29,7 +29,9 @@ export const getOverlayStyles = (
     size: { width: number, height: number }, 
     isDragging: boolean, 
     isResizing: boolean,
-    theme: FluxTheme
+    theme: FluxTheme,
+    ytOpacity: number = 45,
+    ytBlur: number = 24
 ): React.CSSProperties => ({
     position: 'fixed',
     top: pos.y, left: pos.x,
@@ -40,16 +42,16 @@ export const getOverlayStyles = (
     height: 'auto',
     maxHeight: '60vh',
     transform: (isDragging || isResizing) ? 'translate(-50%, -50%) scale(1.02)' : 'translate(-50%, -50%) scale(1)',
-    backgroundColor: getTranslucentColor(theme.bgSolid, 0.45),
-    backdropFilter: 'blur(24px)', color: theme.text,
+    backgroundColor: getTranslucentColor(theme.bgSolid, ytOpacity / 100),
+    backdropFilter: `blur(${ytBlur}px)`, color: theme.text,
     padding: '16px 48px', borderRadius: '24px',
     fontSize: '24px', fontWeight: 600, zIndex: 2147483646,
     textAlign: 'center', display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center', gap: '4px',
     cursor: isDragging ? 'grabbing' : 'grab',
     boxShadow: (isDragging || isResizing)
-        ? `0 40px 80px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px ${theme.border}`
-        : `0 30px 60px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px ${theme.border}`,
+        ? `0 20px 40px -8px rgba(0, 0, 0, 0.3), 0 0 0 1px ${theme.border}`
+        : `0 10px 30px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px ${theme.border}`,
     border: `1px solid ${theme.border}`,
     transition: (isDragging || isResizing) ? 'none' : 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), top 0.1s ease-out, left 0.1s ease-out',
     userSelect: 'none', overflow: 'hidden',

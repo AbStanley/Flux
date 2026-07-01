@@ -12,12 +12,17 @@ interface Props {
     userEmail?: string;
     onLogout: () => void;
     theme: FluxTheme;
+    ytOpacity: number;
+    onYtOpacityChange: (v: number) => void;
+    ytBlur: number;
+    onYtBlurChange: (v: number) => void;
 }
 
 export function PopupSettingsView({
     onBack, tempUrl, onTempUrlChange, onSave,
     testStatus, testMessage, onTestConnection,
     isAuthenticated, userEmail, onLogout, theme,
+    ytOpacity, onYtOpacityChange, ytBlur, onYtBlurChange,
 }: Props) {
     return (
         <div style={{
@@ -52,7 +57,7 @@ export function PopupSettingsView({
                 </div>
             )}
 
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: theme.textSecondary }}>
                     Server URL
                 </label>
@@ -66,12 +71,47 @@ export function PopupSettingsView({
                         backgroundColor: theme.surface, color: theme.text, outline: 'none', boxSizing: 'border-box',
                     }}
                 />
-                <p style={{ fontSize: '0.75rem', color: theme.textDim, marginTop: '6px' }}>
+                <p style={{ fontSize: '0.75rem', color: theme.textDim, marginTop: '6px', marginBottom: 0 }}>
                     Leave empty to use default.
                 </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            {/* YouTube subtitle settings */}
+            <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.9rem', color: theme.textSecondary }}>
+                        Subtitles Opacity
+                    </label>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{ytOpacity}%</span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={ytOpacity}
+                    onChange={(e) => onYtOpacityChange(Number(e.target.value))}
+                    style={{ width: '100%', accentColor: theme.accent, cursor: 'pointer' }}
+                />
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.9rem', color: theme.textSecondary }}>
+                        Subtitles Blur
+                    </label>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{ytBlur}px</span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="40"
+                    value={ytBlur}
+                    onChange={(e) => onYtBlurChange(Number(e.target.value))}
+                    style={{ width: '100%', accentColor: theme.accent, cursor: 'pointer' }}
+                />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                 <button
                     onClick={onTestConnection}
                     disabled={testStatus === 'testing'}
@@ -99,7 +139,7 @@ export function PopupSettingsView({
 
             {testMessage && (
                 <p style={{
-                    marginTop: '15px', fontSize: '0.85rem', textAlign: 'center',
+                    marginTop: '5px', fontSize: '0.85rem', textAlign: 'center',
                     color: testStatus === 'success' ? theme.success : theme.error,
                 }}>
                     {testMessage}

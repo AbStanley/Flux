@@ -24,12 +24,15 @@ interface Props {
     hasNext?: boolean;
     fluxEnabled: boolean;
     theme: FluxTheme;
+    ytOpacity: number;
+    ytBlur: number;
 }
 
 export const YouTubeSubtitleOverlay = ({
     activeCue, prevCue, historyCount = 0, onExport, onHover, onPopupStateChange,
     targetLang, onTargetLangChange, sourceLang, onSourceLangChange,
     onPrev, onNext, hasPrev, hasNext, fluxEnabled, theme,
+    ytOpacity, ytBlur,
 }: Props) => {
     const logic = useYouTubeOverlayLogic({ cue: activeCue, targetLang, sourceLang, onHover, onPopupStateChange });
     const { hover, draggable, resizable } = logic;
@@ -77,9 +80,9 @@ export const YouTubeSubtitleOverlay = ({
                 onMouseLeave={() => { logic.setIsOverlayHovered(false); logic.clearLastTranslatedText(); }}
                 onMouseDown={draggable.handleMouseDown}
                 onClick={(e) => (e.target as HTMLElement).classList.contains('flux-youtube-overlay') && hover.clearHover()}
-                style={getOverlayStyles(draggable.pos, resizable.size, draggable.isDragging, resizable.isResizing, theme)}
+                style={getOverlayStyles(draggable.pos, resizable.size, draggable.isDragging, resizable.isResizing, theme, ytOpacity, ytBlur)}
             >
-                {hasPrev && (
+                {hasPrev && logic.isOverlayHovered && (
                     <div className="flux-nav-btn">
                         <SubtitleNavigationButton direction="prev" onClick={onPrev} theme={theme} />
                     </div>
@@ -96,8 +99,12 @@ export const YouTubeSubtitleOverlay = ({
                 <div className="flux-youtube-translation-area" style={getActionAreaStyles(logic.fullError, theme, !!(logic.fullResult || logic.fullLoading || logic.fullError))}>
                     {logic.fullLoading ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', opacity: 0.8 }}>Translating...</span> : logic.fullError ? <span>⚠️ {logic.fullError}</span> : logic.fullResult ? <span>{logic.fullResult}</span> : <span>&nbsp;</span>}
                 </div>
-                {hasNext && <SubtitleNavigationButton direction="next" onClick={onNext} theme={theme} />}
-                {historyCount > 0 && (
+                {hasNext && logic.isOverlayHovered && (
+                    <div className="flux-nav-btn">
+                        <SubtitleNavigationButton direction="next" onClick={onNext} theme={theme} />
+                    </div>
+                )}
+                {historyCount > 0 && logic.isOverlayHovered && (
                     <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
                         <button onClick={(e) => { e.stopPropagation(); onExport?.(); }} style={{ background: 'rgba(0,0,0,0.05)', color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '6px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer' }}>Export ({historyCount})</button>
                     </div>

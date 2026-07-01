@@ -103,6 +103,8 @@ describe('YouTubeSubtitleOverlay', () => {
         onPrev: vi.fn(),
         onNext: vi.fn(),
         theme: THEMES.dark,
+        ytOpacity: 45,
+        ytBlur: 24,
     };
 
     it('renders tokens', () => {

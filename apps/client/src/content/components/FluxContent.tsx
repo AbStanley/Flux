@@ -11,6 +11,7 @@ interface FluxContentProps {
 export function FluxContent({ loading, error, result, theme }: FluxContentProps) {
     return (
         <div>
+
             {loading && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: theme.textSecondary, padding: '20px 0' }}>
                     <div className="animate-spin" style={{ width: '16px', height: '16px', border: `2px solid ${theme.accent}`, borderTopColor: 'transparent', borderRadius: '50%' }}></div>
