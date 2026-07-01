@@ -81,10 +81,12 @@ export class OllamaTranslationService {
     const isAuto = !params.sourceLanguage || params.sourceLanguage === 'Auto';
     const isBlock = params.text.length > 100 || params.text.includes('\n');
     const isSingleWord = !/\s/.test(params.text.trim());
+    const isShortText =
+      params.text.length <= 120 && !params.text.includes('\n');
     const model = await this.ollamaClient.ensureModel(params.model);
 
-    // If it's a simple single-word lookup and the language is already known, bypass JSON mode to optimize latency.
-    if (isSingleWord && !isAuto) {
+    // If the language is already known and the text is short, bypass JSON mode to optimize latency.
+    if (isShortText && !isAuto) {
       const prompt = getRawTranslatePrompt(
         params.text,
         params.targetLanguage,
@@ -98,8 +100,8 @@ export class OllamaTranslationService {
         false,
         undefined, // bypass JSON constrained decoding
         {
-          num_predict: 16, // only need a few tokens for a word/phrase
-          num_ctx: 512, // small context window to speed up prefill
+          num_predict: isSingleWord ? 16 : 128, // limit tokens generated depending on single word vs phrase
+          num_ctx: isSingleWord ? 512 : 1024, // small context window to speed up prefill
           temperature: 0,
         },
         params.signal,

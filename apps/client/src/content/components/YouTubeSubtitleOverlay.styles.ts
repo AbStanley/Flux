@@ -1,5 +1,29 @@
 import type { FluxTheme } from '../constants';
 
+export const getTranslucentColor = (color: string, alpha: number): string => {
+    if (!color) return `rgba(0, 0, 0, ${alpha})`;
+    if (color.startsWith('#')) {
+        let hex = color.slice(1);
+        if (hex.length === 3) {
+            hex = hex.split('').map(c => c + c).join('');
+        }
+        const r = parseInt(hex.slice(0, 2), 16) || 0;
+        const g = parseInt(hex.slice(2, 4), 16) || 0;
+        const b = parseInt(hex.slice(4, 6), 16) || 0;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    if (color.startsWith('rgb')) {
+        return color.replace(/rgb(a)?\(([^)]+)\)/, (_, __, content) => {
+            const parts = content.split(',');
+            const r = parts[0]?.trim();
+            const g = parts[1]?.trim();
+            const b = parts[2]?.trim();
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        });
+    }
+    return color;
+};
+
 export const getOverlayStyles = (
     pos: { x: number, y: number }, 
     size: { width: number, height: number }, 
@@ -16,7 +40,7 @@ export const getOverlayStyles = (
     height: 'auto',
     maxHeight: '60vh',
     transform: (isDragging || isResizing) ? 'translate(-50%, -50%) scale(1.02)' : 'translate(-50%, -50%) scale(1)',
-    backgroundColor: theme.bgSolid,
+    backgroundColor: getTranslucentColor(theme.bgSolid, 0.45),
     backdropFilter: 'blur(24px)', color: theme.text,
     padding: '16px 48px', borderRadius: '24px',
     fontSize: '24px', fontWeight: 600, zIndex: 2147483646,

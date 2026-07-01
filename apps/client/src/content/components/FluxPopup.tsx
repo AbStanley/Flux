@@ -1,13 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Mode } from '../hooks/useAIHandler';
-import { FluxHeader } from './FluxHeader';
-import { FluxControls } from './FluxControls';
-import { FluxContent } from './FluxContent';
 import { useDraggable } from '../hooks/useDraggable';
-import { UI_CONSTANTS, type FluxTheme } from '../constants';
-import { Check, Maximize2, Save, X, Volume2 } from 'lucide-react';
+import { type FluxTheme } from '../constants';
 import { useFluxMessaging } from '../hooks/useFluxMessaging';
 import { useFluxAudio } from '../hooks/useFluxAudio';
+import { FluxCollapsedPopup } from './FluxCollapsedPopup';
+import { FluxExpandedPopup } from './FluxExpandedPopup';
 
 interface FluxPopupProps {
     selection: { text: string; x: number; y: number };
@@ -138,273 +136,60 @@ export function FluxPopup({
         ? { position: 'fixed', left: pos.x, top: pos.y }
         : { position: 'absolute', left: pos.x + window.scrollX, top: pos.y + window.scrollY };
 
-    // Collapsed = compact translation chip (not draggable, follows selection)
     if (isCollapsed) {
         return (
-            <div
+            <FluxCollapsedPopup
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
-                style={{
-                    ...positioning,
-                    zIndex: UI_CONSTANTS.Z_INDEX,
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                }}
-                onMouseDown={e => e.stopPropagation()}
-            >
-                {loading && (
-                    <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '2px',
-                        background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.info} 50%, ${theme.accent} 100%)`,
-                        backgroundSize: '200% 100%',
-                        animation: 'flux-loading-bar 1.5s infinite linear',
-                        borderRadius: '12px 12px 0 0',
-                        zIndex: 2,
-                    }} />
-                )}
-                <div
-                    style={{
-                        backgroundColor: theme.bg,
-                        backdropFilter: 'blur(12px)',
-                        WebkitBackdropFilter: 'blur(12px)',
-                        color: theme.text,
-                        borderRadius: '12px',
-                        boxShadow: `0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px ${theme.border}`,
-                        fontSize: '14px',
-                        lineHeight: '1.5',
-                        width: 'max-content',
-                        maxWidth: 'min(480px, 90vw)',
-                        border: `1px solid ${theme.border}`,
-                        overflow: 'hidden',
-                    }}
-                >
-                    {/* Translation text */}
-                    <div style={{ padding: '10px 14px', maxHeight: '200px', overflowY: 'auto', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {loading && (
-                                <div className="animate-spin" style={{
-                                    width: '14px',
-                                    height: '14px',
-                                    border: `2px solid ${theme.accent}`,
-                                    borderTopColor: 'transparent',
-                                    borderRadius: '50%',
-                                    flexShrink: 0
-                                }}></div>
-                            )}
-                            <span>{error ? 'Error' : (loading ? 'Processing...' : result || '—')}</span>
-                        </div>
-                        
-                        {result && !loading && !error && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handlePlayAudio(); }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: theme.textSecondary,
-                                    padding: '4px',
-                                    cursor: 'pointer',
-                                    borderRadius: '4px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    transition: 'all 0.2s',
-                                    flexShrink: 0
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.color = theme.accent)}
-                                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textSecondary)}
-                                title="Listen"
-                            >
-                                <Volume2 size={14} strokeWidth={2.5} />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Action bar */}
-                    <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                        gap: '4px', padding: '6px 10px',
-                        borderTop: `1px solid ${theme.borderLight}`,
-                        background: `${theme.surface}e6`,
-                    }}>
-                        {(
-                            [
-                                {
-                                    title: 'Save to vocabulary',
-                                    color: isSaving ? theme.success : theme.accent,
-                                    onClick: () => handleInternalSave(),
-                                    disabled: loading || isSaving,
-                                    icon: isSaving ? (
-                                        <Check size={12} strokeWidth={3} />
-                                    ) : (
-                                        <Save size={12} strokeWidth={2.5} />
-                                    )
-                                },
-                                {
-                                    title: 'Expand',
-                                    color: theme.textSecondary,
-                                    onClick: () => { setIsCollapsed(false); },
-                                    disabled: false,
-                                    icon: <Maximize2 size={12} strokeWidth={2.5} />
-                                },
-                                {
-                                    title: 'Close',
-                                    color: theme.textSecondary,
-                                    onClick: () => onClose(),
-                                    disabled: false,
-                                    icon: <X size={12} strokeWidth={2.5} />
-                                },
-                            ] as Array<{ title: string; color: string; onClick: () => void; disabled: boolean; icon: React.ReactNode }>
-                        ).map((btn) => (
-                            <button
-                                key={btn.title}
-                                onClick={(e) => { e.stopPropagation(); btn.onClick(); }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                disabled={btn.disabled}
-                                title={btn.title}
-                                style={{
-                                    background: theme.borderLight, border: `1px solid ${theme.borderLight}`, color: btn.color,
-                                    cursor: btn.disabled ? 'not-allowed' : 'pointer',
-                                    opacity: btn.disabled ? 0.4 : 1,
-                                    padding: '4px', display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center',
-                                    width: '24px', height: '24px', borderRadius: '50%',
-                                    transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={(e) => { if (!btn.disabled) { e.currentTarget.style.backgroundColor = theme.surface; e.currentTarget.style.borderColor = theme.border; } }}
-                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = theme.borderLight; e.currentTarget.style.borderColor = theme.borderLight; }}
-                            >
-                                {btn.icon}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
+                positioning={positioning}
+                loading={loading}
+                error={error}
+                result={result}
+                theme={theme}
+                isSaving={isSaving}
+                onClose={onClose}
+                onExpand={() => setIsCollapsed(false)}
+                handlePlayAudio={handlePlayAudio}
+                handleInternalSave={handleInternalSave}
+            />
         );
     }
 
-    const popupStyles: React.CSSProperties = {
-        background: theme.bg,
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        color: theme.text,
-        width: `${UI_CONSTANTS.POPUP_WIDTH}px`,
-        padding: '0',
-        borderRadius: '16px',
-        boxShadow: isDragging
-            ? `0 20px 40px -12px rgba(0,0,0,0.45), 0 0 0 1px ${theme.border}`
-            : `0 12px 32px rgba(0,0,0,0.35), 0 0 0 1px ${theme.border}`,
-        fontSize: '13px',
-        lineHeight: '1.6',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-        border: `1px solid ${theme.border}`,
-        transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-        transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        overflow: 'hidden'
-    };
-
     return (
-        <div
-            ref={popupRef}
+        <FluxExpandedPopup
+            popupRef={popupRef}
             onMouseEnter={onMouseEnter}
-            onMouseLeave={() => {
-                if (!isPinned) onMouseLeave();
-                onAutoPlay?.();
-            }}
-            style={{
-                ...positioning,
-                zIndex: UI_CONSTANTS.Z_INDEX,
-                fontFamily: 'Inter, system-ui, sans-serif',
-                transition: isDragging ? UI_CONSTANTS.TRANSITION_DRAGGING : UI_CONSTANTS.TRANSITION_DEFAULT
-            }}
-            onMouseDown={e => e.stopPropagation()}
-        >
-            <div style={{ ...popupStyles, background: theme.bg }}>
-                {/* Global loading bar */}
-                {loading && (
-                    <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '3px',
-                        background: `linear-gradient(90deg, ${theme.accent} 0%, ${theme.info} 50%, ${theme.accent} 100%)`,
-                        backgroundSize: '200% 100%',
-                        animation: 'flux-loading-bar 1.5s infinite linear',
-                        borderTopLeftRadius: '20px',
-                        borderTopRightRadius: '20px',
-                        zIndex: 10,
-                    }} />
-                )}
-
-                {/* Animation keyframes */}
-                <style>
-                    {`
-                        @keyframes flux-loading-bar {
-                            0% { background-position: 200% 0; }
-                            100% { background-position: -200% 0; }
-                        }
-                    `}
-                </style>
-
-                <div onMouseDown={handleMouseDown} style={{ padding: '16px 20px 8px' }}>
-                    <FluxHeader
-                        onClose={onClose}
-                        onPinToggle={handlePinToggle}
-                        onSave={handleInternalSave}
-                        isPinned={isPinned}
-                        isCollapsed={false}
-                        onCollapseToggle={() => setIsCollapsed(true)}
-                        isSaving={isSaving}
-                        result={result}
-                        loading={loading}
-                        theme={theme}
-                    />
-                </div>
-
-                {/* Translation result first — most important content */}
-                <div style={{ padding: '0 20px 12px' }}>
-                    <FluxContent
-                        loading={loading}
-                        error={error}
-                        result={result}
-                        theme={theme}
-                    />
-                </div>
-
-                <div style={{
-                    background: `${theme.surface}e6`, // 90% opacity to let blur through
-                    borderTop: `1px solid ${theme.borderLight}`,
-                    padding: '12px 20px 16px',
-                }}>
-                    <FluxControls
-                        mode={mode}
-                        targetLang={targetLang}
-                        sourceLang={sourceLang}
-                        result={result}
-                        selection={selection}
-                        onModeChange={onModeChange}
-                        onLangChange={onLangChange}
-                        onSourceLangChange={onSourceLangChange}
-                        onSwapLanguages={onSwapLanguages}
-                        onAction={onAction}
-                        autoSave={autoSave}
-                        onAutoSaveChange={onAutoSaveChange}
-                        isSaving={isSaving}
-                        theme={theme}
-                        themeId={themeId}
-                        onThemeChange={onThemeChange}
-                        model={model}
-                        availableModels={availableModels}
-                        onModelChange={onModelChange}
-                    />
-                </div>
-            </div>
-        </div>
+            onMouseLeave={onMouseLeave}
+            onAutoPlay={onAutoPlay}
+            positioning={positioning}
+            isDragging={isDragging}
+            handleMouseDown={handleMouseDown}
+            loading={loading}
+            error={error}
+            result={result}
+            theme={theme}
+            isSaving={isSaving}
+            onClose={onClose}
+            handlePinToggle={handlePinToggle}
+            handleInternalSave={handleInternalSave}
+            isPinned={isPinned}
+            setIsCollapsed={setIsCollapsed}
+            selection={selection}
+            mode={mode}
+            targetLang={targetLang}
+            sourceLang={sourceLang}
+            onModeChange={onModeChange}
+            onLangChange={onLangChange}
+            onSourceLangChange={onSourceLangChange}
+            onSwapLanguages={onSwapLanguages}
+            onAction={onAction}
+            autoSave={autoSave}
+            onAutoSaveChange={onAutoSaveChange}
+            themeId={themeId}
+            onThemeChange={onThemeChange}
+            model={model}
+            availableModels={availableModels}
+            onModelChange={onModelChange}
+        />
     );
 }

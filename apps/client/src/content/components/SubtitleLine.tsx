@@ -44,7 +44,12 @@ export function SubtitleLine({
                 }}
             >
                 {tokens.map((token, i) => (
-                    <span key={`p-t-${lineIdx}-${i}`} style={{ display: 'inline-block', margin: '0 1px', padding: '1px 3px', color: theme.textDim, fontWeight: 600 }}>
+                    <span key={`p-t-${lineIdx}-${i}`} style={{
+                        display: 'inline-block', margin: '0 1px', padding: '1px 3px', color: theme.textDim, fontWeight: 600,
+                        textShadow: theme.id.includes('light')
+                            ? '0 1px 2px rgba(255,255,255,0.7)'
+                            : '0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+                    }}>
                         {token}
                     </span>
                 ))}
@@ -84,6 +89,9 @@ export function SubtitleLine({
                             color: highlight ? theme.accent : theme.textSecondary, 
                             backgroundColor: isHov ? theme.accentGlow : 'transparent',
                             transform: highlight ? 'scale(1.05)' : 'scale(1)', fontWeight: highlight ? 700 : 600,
+                            textShadow: theme.id.includes('light')
+                                ? '0 1px 2px rgba(255,255,255,0.7)'
+                                : '0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
                         }}>
                         {token}
                     </span>
