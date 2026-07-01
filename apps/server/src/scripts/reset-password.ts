@@ -14,7 +14,7 @@ function askQuestion(query: string): Promise<string> {
     rl.question(query, (ans) => {
       rl.close();
       resolve(ans.trim());
-    })
+    }),
   );
 }
 
@@ -72,7 +72,9 @@ async function main() {
       data: { passwordHash },
     });
 
-    console.log(`\n✅ Success! Password for "${email}" has been successfully updated.`);
+    console.log(
+      `\n✅ Success! Password for "${email}" has been successfully updated.`,
+    );
   } catch (err) {
     console.error('\n❌ Error occurred during password reset:', err);
     process.exit(1);
