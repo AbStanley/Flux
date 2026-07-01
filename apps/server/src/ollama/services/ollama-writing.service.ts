@@ -17,8 +17,8 @@ function extractJsonArray(raw: string): RawCorrection[] {
   // Try direct parse first
   const trimmed = raw.trim();
   try {
-    const parsed = JSON.parse(trimmed);
-    if (Array.isArray(parsed)) return parsed;
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (Array.isArray(parsed)) return parsed as RawCorrection[];
   } catch {
     /* continue */
   }
@@ -28,8 +28,8 @@ function extractJsonArray(raw: string): RawCorrection[] {
   const end = trimmed.lastIndexOf(']');
   if (start !== -1 && end > start) {
     try {
-      const parsed = JSON.parse(trimmed.slice(start, end + 1));
-      if (Array.isArray(parsed)) return parsed;
+      const parsed = JSON.parse(trimmed.slice(start, end + 1)) as unknown;
+      if (Array.isArray(parsed)) return parsed as RawCorrection[];
     } catch {
       /* continue */
     }
@@ -94,6 +94,7 @@ export class OllamaWritingService {
     sourceLanguage: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<WritingAnalysisResponse> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = WRITING_ANALYSIS_PROMPT(params.text, params.sourceLanguage);
@@ -112,6 +113,7 @@ export class OllamaWritingService {
           num_predict: 4096,
         },
         params.signal,
+        params.traceId,
       );
 
       const rawText = response.response.trim();

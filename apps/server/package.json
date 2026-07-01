@@ -22,7 +22,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:llm": "jest --config ./test/jest-e2e.json test/translation-llm-de-es.e2e-spec.ts test/translation-llm-other.e2e-spec.ts test/translation-llm-es-ru.e2e-spec.ts test/translate-endpoint-de.e2e-spec.ts test/translate-endpoint-de-extra.e2e-spec.ts test/translate-endpoint-other.e2e-spec.ts --runInBand"
+    "test:llm": "jest --config ./test/jest-e2e.json test/translation-llm-de-es.e2e-spec.ts test/translation-llm-other.e2e-spec.ts test/translation-llm-es-ru.e2e-spec.ts test/translate-endpoint-de.e2e-spec.ts test/translate-endpoint-de-extra.e2e-spec.ts test/translate-endpoint-other.e2e-spec.ts --runInBand",
+    "reset-password": "ts-node src/scripts/reset-password.ts"
   },
   "dependencies": {
     "@nestjs/common": "11.1.18",
@@ -33,12 +34,14 @@
     "@nestjs/passport": "11.0.5",
     "@nestjs/platform-express": "11.1.18",
     "@nestjs/platform-socket.io": "11.1.18",
+    "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "11.1.18",
     "@prisma/client": "5.22.0",
     "bcrypt": "6.0.0",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.4",
     "epubjs": "0.3.93",
+    "express": "5.2.1",
     "ollama": "0.6.3",
     "passport": "0.7.0",
     "passport-jwt": "4.0.1",
@@ -46,8 +49,7 @@
     "prisma": "5.22.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.1",
-    "socket.io": "4.8.3",
-    "express": "5.2.1"
+    "socket.io": "4.8.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.5",

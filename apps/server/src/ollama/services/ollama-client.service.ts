@@ -1,19 +1,33 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { Ollama, Message, ChatResponse, GenerateResponse } from 'ollama';
 import { DebugTraceService } from './debug-trace.service';
+import { OpenRouterProviderService } from './openrouter-provider.service';
+import { GeminiProviderService } from './gemini-provider.service';
+import { OllamaModelManagerService } from './ollama-model-manager.service';
 
 @Injectable()
 export class OllamaClientService {
-  private ollama: Ollama;
+  private ollama!: Ollama;
   private readonly logger = new Logger(OllamaClientService.name);
   private readonly ollamaHost: string;
-  private verifiedModels = new Set<string>();
-  private verifiedAt = 0;
+  private readonly provider: string;
 
-  constructor(private readonly debugTraceService: DebugTraceService) {
+  constructor(
+    private readonly debugTraceService: DebugTraceService,
+    private readonly openRouter: OpenRouterProviderService,
+    private readonly gemini: GeminiProviderService,
+    private readonly modelManager: OllamaModelManagerService,
+  ) {
+    this.provider = process.env.AI_PROVIDER || 'ollama';
     this.ollamaHost = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
-    this.logger.log(`Initializing Ollama Client with Host: ${this.ollamaHost}`);
-    this.ollama = new Ollama({ host: this.ollamaHost });
+    this.logger.log(`Initializing AI Client (Provider: ${this.provider})`);
+    if (this.provider === 'ollama') {
+      this.ollama = new Ollama({ host: this.ollamaHost });
+    }
+  }
+
+  async ensureModel(model?: string): Promise<string> {
+    return this.modelManager.ensureModel(model);
   }
 
   async chat<S extends boolean = false>(
@@ -22,8 +36,8 @@ export class OllamaClientService {
     stream?: S,
     signal?: AbortSignal,
     traceId?: string,
+    userId?: string,
   ): Promise<S extends true ? AsyncIterable<ChatResponse> : ChatResponse> {
-    const action = `chat with model ${model}`;
     if (traceId) {
       const promptText = messages
         .map((m) => `[${m.role}]: ${m.content}`)
@@ -31,31 +45,128 @@ export class OllamaClientService {
       this.debugTraceService.recordTrace(traceId, {
         model,
         prompt: promptText,
+        userId,
       });
     }
 
-    if (stream) {
-      return this.execute(
-        (client) => client.chat({ model, messages, stream: true }),
-        action,
+    if (this.provider === 'openrouter') {
+      const response = await this.openRouter.chat(
+        model,
+        messages,
+        stream as boolean,
         signal,
-      ) as unknown as Promise<
-        S extends true ? AsyncIterable<ChatResponse> : ChatResponse
-      >;
+      );
+      if (stream) {
+        return this.wrapStream(
+          response as AsyncIterable<ChatResponse>,
+          traceId,
+          (promptTokens, completionTokens, fullText) => {
+            if (traceId) {
+              this.debugTraceService.recordTrace(traceId, {
+                rawResponse: fullText,
+                promptTokens,
+                completionTokens,
+                totalTokens: promptTokens + completionTokens,
+              });
+            }
+          },
+        ) as unknown as S extends true ? AsyncIterable<ChatResponse> : ChatResponse;
+      }
+
+      const nonStreamRes = response as ChatResponse;
+      if (traceId) {
+        const promptTokens = (nonStreamRes as any).prompt_eval_count || 0;
+        const completionTokens = (nonStreamRes as any).eval_count || 0;
+        this.debugTraceService.recordTrace(traceId, {
+          rawResponse: nonStreamRes.message?.content || JSON.stringify(nonStreamRes),
+          promptTokens,
+          completionTokens,
+          totalTokens: promptTokens + completionTokens,
+        });
+      }
+      return nonStreamRes as unknown as S extends true
+        ? AsyncIterable<ChatResponse>
+        : ChatResponse;
+    } else if (this.provider === 'gemini') {
+      const response = await this.gemini.chat(
+        model,
+        messages,
+        stream as boolean,
+        signal,
+      );
+      if (stream) {
+        return this.wrapStream(
+          response as AsyncIterable<ChatResponse>,
+          traceId,
+          (promptTokens, completionTokens, fullText) => {
+            if (traceId) {
+              this.debugTraceService.recordTrace(traceId, {
+                rawResponse: fullText,
+                promptTokens,
+                completionTokens,
+                totalTokens: promptTokens + completionTokens,
+              });
+            }
+          },
+        ) as unknown as S extends true ? AsyncIterable<ChatResponse> : ChatResponse;
+      }
+
+      const nonStreamRes = response as ChatResponse;
+      if (traceId) {
+        const promptTokens = (nonStreamRes as any).prompt_eval_count || 0;
+        const completionTokens = (nonStreamRes as any).eval_count || 0;
+        this.debugTraceService.recordTrace(traceId, {
+          rawResponse: nonStreamRes.message?.content || JSON.stringify(nonStreamRes),
+          promptTokens,
+          completionTokens,
+          totalTokens: promptTokens + completionTokens,
+        });
+      }
+      return nonStreamRes as unknown as S extends true
+        ? AsyncIterable<ChatResponse>
+        : ChatResponse;
     }
+
+    if (stream) {
+      const response = await this.execute(
+        (client) => client.chat({ model, messages, stream: true }),
+        `chat with ${model}`,
+        signal,
+      );
+      return this.wrapStream(
+        response,
+        traceId,
+        (promptTokens, completionTokens, fullText) => {
+          if (traceId) {
+            this.debugTraceService.recordTrace(traceId, {
+              rawResponse: fullText,
+              promptTokens,
+              completionTokens,
+              totalTokens: promptTokens + completionTokens,
+            });
+          }
+        },
+      ) as unknown as S extends true ? AsyncIterable<ChatResponse> : ChatResponse;
+    }
+
     const response = await this.execute(
       (client) => client.chat({ model, messages, stream: false }),
-      action,
+      `chat with ${model}`,
       signal,
     );
     if (traceId) {
+      const promptTokens = response.prompt_eval_count || 0;
+      const completionTokens = response.eval_count || 0;
       this.debugTraceService.recordTrace(traceId, {
         rawResponse: response.message?.content || JSON.stringify(response),
+        promptTokens,
+        completionTokens,
+        totalTokens: promptTokens + completionTokens,
       });
     }
-    return response as unknown as Promise<
-      S extends true ? AsyncIterable<ChatResponse> : ChatResponse
-    >;
+    return response as unknown as S extends true
+      ? AsyncIterable<ChatResponse>
+      : ChatResponse;
   }
 
   async generate<S extends boolean = false>(
@@ -73,15 +184,94 @@ export class OllamaClientService {
     },
     signal?: AbortSignal,
     traceId?: string,
+    userId?: string,
   ): Promise<
     S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
   > {
-    const action = `generate with model ${model}`;
     if (traceId) {
-      this.debugTraceService.recordTrace(traceId, {
+      this.debugTraceService.recordTrace(traceId, { model, prompt, userId });
+    }
+
+    if (this.provider === 'openrouter') {
+      const response = await this.openRouter.generate(
         model,
         prompt,
-      });
+        stream as boolean,
+        format,
+        options,
+        signal,
+      );
+      if (stream) {
+        return this.wrapStream(
+          response as AsyncIterable<GenerateResponse>,
+          traceId,
+          (promptTokens, completionTokens, fullText) => {
+            if (traceId) {
+              this.debugTraceService.recordTrace(traceId, {
+                rawResponse: fullText,
+                promptTokens,
+                completionTokens,
+                totalTokens: promptTokens + completionTokens,
+              });
+            }
+          },
+        ) as unknown as S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse;
+      }
+
+      const nonStreamRes = response as GenerateResponse;
+      if (traceId) {
+        const promptTokens = (nonStreamRes as any).prompt_eval_count || 0;
+        const completionTokens = (nonStreamRes as any).eval_count || 0;
+        this.debugTraceService.recordTrace(traceId, {
+          rawResponse: nonStreamRes.response || JSON.stringify(nonStreamRes),
+          promptTokens,
+          completionTokens,
+          totalTokens: promptTokens + completionTokens,
+        });
+      }
+      return nonStreamRes as unknown as S extends true
+        ? AsyncIterable<GenerateResponse>
+        : GenerateResponse;
+    } else if (this.provider === 'gemini') {
+      const response = await this.gemini.generate(
+        model,
+        prompt,
+        stream as boolean,
+        format,
+        options,
+        signal,
+      );
+      if (stream) {
+        return this.wrapStream(
+          response as AsyncIterable<GenerateResponse>,
+          traceId,
+          (promptTokens, completionTokens, fullText) => {
+            if (traceId) {
+              this.debugTraceService.recordTrace(traceId, {
+                rawResponse: fullText,
+                promptTokens,
+                completionTokens,
+                totalTokens: promptTokens + completionTokens,
+              });
+            }
+          },
+        ) as unknown as S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse;
+      }
+
+      const nonStreamRes = response as GenerateResponse;
+      if (traceId) {
+        const promptTokens = (nonStreamRes as any).prompt_eval_count || 0;
+        const completionTokens = (nonStreamRes as any).eval_count || 0;
+        this.debugTraceService.recordTrace(traceId, {
+          rawResponse: nonStreamRes.response || JSON.stringify(nonStreamRes),
+          promptTokens,
+          completionTokens,
+          totalTokens: promptTokens + completionTokens,
+        });
+      }
+      return nonStreamRes as unknown as S extends true
+        ? AsyncIterable<GenerateResponse>
+        : GenerateResponse;
     }
 
     const baseRequest = {
@@ -92,27 +282,81 @@ export class OllamaClientService {
     };
 
     if (stream) {
-      return this.execute(
+      const response = await this.execute(
         (client) => client.generate({ ...baseRequest, stream: true }),
-        action,
+        `generate with ${model}`,
         signal,
-      ) as unknown as Promise<
-        S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
-      >;
+      );
+      return this.wrapStream(
+        response,
+        traceId,
+        (promptTokens, completionTokens, fullText) => {
+          if (traceId) {
+            this.debugTraceService.recordTrace(traceId, {
+              rawResponse: fullText,
+              promptTokens,
+              completionTokens,
+              totalTokens: promptTokens + completionTokens,
+            });
+          }
+        },
+      ) as unknown as S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse;
     }
+
     const response = await this.execute(
       (client) => client.generate({ ...baseRequest, stream: false }),
-      action,
+      `generate with ${model}`,
       signal,
     );
     if (traceId) {
+      const promptTokens = response.prompt_eval_count || 0;
+      const completionTokens = response.eval_count || 0;
       this.debugTraceService.recordTrace(traceId, {
         rawResponse: response.response || JSON.stringify(response),
+        promptTokens,
+        completionTokens,
+        totalTokens: promptTokens + completionTokens,
       });
     }
-    return response as unknown as Promise<
-      S extends true ? AsyncIterable<GenerateResponse> : GenerateResponse
-    >;
+    return response as unknown as S extends true
+      ? AsyncIterable<GenerateResponse>
+      : GenerateResponse;
+  }
+
+  private async *wrapStream<
+    T extends {
+      done?: boolean;
+      prompt_eval_count?: number;
+      eval_count?: number;
+      response?: string;
+      message?: { role: string; content: string };
+    },
+  >(
+    stream: AsyncIterable<T>,
+    traceId?: string,
+    onFinish?: (
+      promptTokens: number,
+      completionTokens: number,
+      fullResponseText: string,
+    ) => void,
+  ): AsyncIterable<T> {
+    let finalPromptTokens = 0;
+    let finalCompletionTokens = 0;
+    let accumulatedText = '';
+
+    for await (const chunk of stream) {
+      if (chunk.prompt_eval_count) finalPromptTokens = chunk.prompt_eval_count;
+      if (chunk.eval_count) finalCompletionTokens = chunk.eval_count;
+
+      const chunkText = chunk.response || chunk.message?.content || '';
+      accumulatedText += chunkText;
+
+      yield chunk;
+    }
+
+    if (onFinish) {
+      onFinish(finalPromptTokens, finalCompletionTokens, accumulatedText);
+    }
   }
 
   private async execute<T>(
@@ -125,8 +369,8 @@ export class OllamaClientService {
       const client = signal
         ? new Ollama({
             host: this.ollamaHost,
-
-            fetch: (url: any, init: any) => fetch(url, { ...init, signal }),
+            fetch: (url: string | URL | Request, init?: RequestInit) =>
+              fetch(url, { ...init, signal }),
           })
         : this.ollama;
 
@@ -146,70 +390,5 @@ export class OllamaClientService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-  }
-
-  async listTags() {
-    try {
-      this.logger.log(`Attempting to list tags from ${this.ollamaHost}`);
-      return await this.execute((client) => client.list(), 'list tags');
-    } catch (e) {
-      this.logger.error(`Failed to list tags from ${this.ollamaHost}`, e);
-      throw e;
-    }
-  }
-
-  async pullModel(
-    model: string,
-  ): Promise<
-    AsyncIterable<{ status: string; total?: number; completed?: number }>
-  > {
-    return this.execute(
-      (client) =>
-        client.pull({ model, stream: true }) as unknown as Promise<
-          AsyncIterable<{ status: string; total?: number; completed?: number }>
-        >,
-      `pull model ${model}`,
-    );
-  }
-
-  async deleteModel(model: string): Promise<{ status: string }> {
-    return this.execute(
-      (client) =>
-        client.delete({ model }) as unknown as Promise<{
-          status: string;
-        }>,
-      `delete model ${model}`,
-    );
-  }
-
-  async ensureModel(model?: string): Promise<string> {
-    if (!model) {
-      throw new HttpException(
-        'No model specified. Please select a model first.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    // Cache verified models for 300s (5m) to avoid hammering /api/tags
-    const now = Date.now();
-    if (this.verifiedModels.has(model) && now - this.verifiedAt < 300_000) {
-      return model;
-    }
-
-    const tags = await this.listTags();
-    const available = tags.models?.map((m) => m.name) ?? [];
-    this.verifiedModels = new Set(available);
-    this.verifiedAt = now;
-
-    if (available.includes(model)) return model;
-
-    const hint =
-      available.length > 0
-        ? ` Available: ${available.join(', ')}`
-        : ' No models found in Ollama.';
-    throw new HttpException(
-      `Model '${model}' not found.${hint}`,
-      HttpStatus.NOT_FOUND,
-    );
   }
 }

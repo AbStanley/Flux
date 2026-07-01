@@ -211,6 +211,7 @@ export class OllamaTranslationService {
     context?: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<string> {
     const model = await this.ollamaClient.ensureModel(params.model);
     const prompt = getExplainPrompt(
@@ -225,6 +226,7 @@ export class OllamaTranslationService {
       undefined,
       undefined,
       params.signal,
+      params.traceId,
     );
     return cleanResponse(response);
   }

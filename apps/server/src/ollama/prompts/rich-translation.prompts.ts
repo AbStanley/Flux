@@ -44,11 +44,6 @@ export const getRichTranslationPrompt = (
   const isRussian =
     targetLanguage.toLowerCase() === 'russian' ||
     targetLanguage.toLowerCase() === 'ru';
-
-  const rule3 = isRussian
-    ? '\n3. Translate ONLY the selected segment. Do NOT translate it using another word from the surrounding context that belongs to a different part of the sentence. If the segment has no direct equivalent in the target language (such as articles when translating to Russian which does not use articles), the "translation" should represent its primary grammatical role or a close equivalent (e.g. a demonstrative pronoun), and the "explanation" must describe its correct grammatical function.'
-    : '';
-
   const translationDesc = isRussian
     ? `<Russian translation. MUST be the dictionary base form (pure INFINITIVE for verbs). For non-verbs, if there is no direct translation (like articles), you MUST write its grammatical role e.g. 'артикль' or a close equivalent like 'те'. NEVER omit this field. NEVER write 'n/a'. — REQUIRED>`
     : `<${targetLanguage} translation. MUST be the dictionary base form (pure INFINITIVE for verbs). NEVER the source language word. NEVER a conjugated form. NEVER write 'n/a'.>`;
@@ -87,12 +82,13 @@ Output ONE JSON object matching this exact shape:
     "explanation":  "<${targetLanguage} definition and a brief description of grammatical function in context sentence (1 sentence)>"
   },
   "examples":     [ {"${srcKey}":"<sentence in ${srcLang} containing '${text}'>","${tgtKey}":"<translation in ${targetLanguage}>"}, exactly 3 entries ],
-  "alternatives": [ "<alternative translation in ${targetLanguage}>", 1-2 entries ]${isSentence
+  "alternatives": [ "<alternative translation in ${targetLanguage}>", 1-2 entries ]${
+    isSentence
       ? `,
   "syntaxAnalysis": "<structure description in ${targetLanguage}>",
   "grammarRules":   [ "<grammar point in ${targetLanguage}>", 2-4 entries ]`
       : ''
-    }
+  }
 }
 
 Rules:
@@ -108,4 +104,3 @@ Rules:
 
 Output JSON only. No markdown, no preamble.${preferredInstruction}`;
 };
-

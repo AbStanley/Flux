@@ -9,6 +9,7 @@
     "start:local:dev": "start \"Client\" pnpm client:dev & start \"Server\" pnpm server:dev",
     "prisma-prepare": "pnpm --filter @flux/server exec prisma generate",
     "prisma-studio": "pnpm --filter @flux/server exec prisma studio --schema=prisma/schema.prisma",
+    "reset-password": "pnpm --filter @flux/server run reset-password",
     "test": "pnpm --recursive run test",
     "lint": "pnpm --recursive run lint",
     "prepare": "husky",

@@ -5,14 +5,15 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(json({ limit: '50mb' }));
+  app.use(json({ limit: '5mb' }));
   app.use((req: Request, res: Response, next: NextFunction) => {
     res.setHeader('Access-Control-Allow-Private-Network', 'true');
     next();
   });
 
+  const clientOrigin = process.env.CLIENT_ORIGIN;
   app.enableCors({
-    origin: true,
+    origin: clientOrigin ? clientOrigin.split(',').map((o) => o.trim()) : true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',

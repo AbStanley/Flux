@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { GenerateResponse } from 'ollama';
 import { OllamaClientService } from './ollama-client.service';
+import { OllamaModelManagerService } from './ollama-model-manager.service';
 import { OllamaTranslationService } from './ollama-translation.service';
 import { OllamaGrammarService } from './ollama-grammar.service';
 import { OllamaGenerationService } from './ollama-generation.service';
@@ -18,22 +19,23 @@ import { ContentType } from '../prompts';
 export class OllamaService {
   constructor(
     private readonly client: OllamaClientService,
+    private readonly modelManager: OllamaModelManagerService,
     private readonly translation: OllamaTranslationService,
     private readonly grammar: OllamaGrammarService,
     private readonly generation: OllamaGenerationService,
     private readonly writing: OllamaWritingService,
   ) {}
 
-  async chat(model: string, messages: Message[], stream: boolean = false) {
-    return this.client.chat(model, messages, stream);
+  async chat(model: string, messages: Message[], stream: boolean = false, traceId?: string, userId?: string) {
+    return this.client.chat(model, messages, stream, undefined, traceId, userId);
   }
 
-  async generate(model: string, prompt: string, stream: boolean = false) {
-    return this.client.generate(model, prompt, stream);
+  async generate(model: string, prompt: string, stream: boolean = false, traceId?: string, userId?: string) {
+    return this.client.generate(model, prompt, stream, undefined, undefined, undefined, traceId, userId);
   }
 
   async listTags() {
-    return this.client.listTags();
+    return this.modelManager.listTags();
   }
 
   async generateExamples(params: {
@@ -68,6 +70,7 @@ export class OllamaService {
     context?: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<string> {
     return this.translation.explainText(params);
   }
@@ -187,6 +190,7 @@ export class OllamaService {
     targetLanguage: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<GrammarAnalysisResponse> {
     return this.grammar.analyzeGrammar(params);
   }
@@ -196,6 +200,7 @@ export class OllamaService {
     sourceLanguage: string;
     model?: string;
     signal?: AbortSignal;
+    traceId?: string;
   }): Promise<WritingAnalysisResponse> {
     return this.writing.analyzeWriting(params);
   }
