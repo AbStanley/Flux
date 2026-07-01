@@ -94,7 +94,7 @@ export function ReaderTokenPopup({
                         </span>
 
                         <div className={cn(
-                            "flex items-center flex-shrink-0 gap-0.5 transition-all duration-300 ease-in-out",
+                           "flex items-center flex-shrink-0 gap-0.5 transition-all duration-300 ease-in-out",
                             isLoading ? "opacity-100 w-auto" : "opacity-0 group-hover/segment:opacity-100 w-0 group-hover/segment:w-auto overflow-hidden"
                         )}>
                             <button

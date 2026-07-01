@@ -33,7 +33,7 @@
     text-align: left;
     box-sizing: border-box;
     overflow-wrap: anywhere;
-    transition: opacity 0.15s ease;
+    transition: opacity 0.15s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     /* Prevent long words from causing overflow beyond max-width */
 }
 
@@ -63,7 +63,7 @@
     z-index: 30;
     display: flex;
     align-items: center;
-    transition: opacity 0.15s ease;
+    transition: opacity 0.15s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     max-width: 80vw;
     /* Mobile default */
     width: max-content;
